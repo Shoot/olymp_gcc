@@ -1,0 +1,3 @@
+/Users/whoami/CLionProjects/olymp_gcc/cmake-build-debug-gpp/CMakeFiles/olymp_gcc.dir
+/Users/whoami/CLionProjects/olymp_gcc/cmake-build-debug-gpp/CMakeFiles/edit_cache.dir
+/Users/whoami/CLionProjects/olymp_gcc/cmake-build-debug-gpp/CMakeFiles/rebuild_cache.dir
