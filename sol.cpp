@@ -1,43 +1,42 @@
-#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #include <bits/stdc++.h>
-#define ll long long
-#define ld long double
+#pragma GCC optimize("O3,unroll-loops")
+#pragma GCC target("avx2,bmi,bmi2,lzcnt,popcnt")
+using ll = long long;
 using namespace std;
-#ifdef LOCAL
-#include <algo/debug.h>
-#else
-#define debug(...) 69
-#endif
-const int N = 1e5+5;
 
-void solve () {
-    int n;
-    cin >> n;
-    vector<int> a(n+1);
-    int su = 0;
-    for (int i = 1; i <= n; ++i) {
-        cin >> a[i];
-        su += a[i];
-    }
-    bitset<N> shit;
-    shit[0] = 1;
-    for (int i = 1; i <= n; ++i) {
-        shit |= shit << a[i];
-    }
-    int maxi = a[0];
-    for (int i=0; i<=N-1000; i++) {
-        if (not shit[i]) continue;
-        maxi = max(i*(su-i), maxi);
-    }
-    cout << maxi << endl;
-}
-
-int main () {
-    ios::sync_with_stdio(false);
+signed main () {
+    ios_base::sync_with_stdio(false);
     cin.tie(nullptr);
+    cout.tie(nullptr);
 //    int tt;
 //    cin >> tt;
 //    while (tt--)
-        solve();
+//        solve()
+    int N = 1e6+3;
+    vector<int> p(N+1);
+    for (int i=2; i<=N; ++i) {
+        if (p[i] != 0) continue;
+        for (int j=i; j <= N; j+=i) {
+            if (p[j] == 0) p[j] = i;
+            else p[j] = min(p[j], i);
+        }
+    }
+    int Q; cin >> Q;
+    while (Q--) {
+        int q;
+        cin >> q;
+        if (q <= 1) {
+            cout << "No answer" << '\n';
+            continue;
+        }
+        while (q != 1) {
+            int v = p[q];
+            while (q%v==0) {
+                q/=v;
+                cout << v << " ";
+            }
+        }
+        cout << '\n';
+    }
     return 0;
 }
