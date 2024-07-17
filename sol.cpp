@@ -1,42 +1,49 @@
+#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #include <bits/stdc++.h>
-#pragma GCC optimize("O3,unroll-loops")
-#pragma GCC target("avx2,bmi,bmi2,lzcnt,popcnt")
-using ll = long long;
+typedef long long ll;
+typedef long double ld;
+#define all(x) x.begin(), x.end()
+#define endl '\n';
 using namespace std;
+#ifdef LOCAL
+#include <algo/debug.h>
+#else
+#define debug(...) 68
+#endif
+const ll N = 1e5+5;
+struct difficulty {
+    int value = -1;
+};
 
-signed main () {
-    ios_base::sync_with_stdio(false);
+void solve () {
+    int n, m;
+    cin >> n >> m;
+    vector<string> tasks (n);
+    for (string & j: tasks) cin >> j;
+    vector<string> course (m);
+    for (string & j: course) cin >> j;
+    int not_in_course; cin >> not_in_course;
+    map<string, difficulty> a;
+    for (int i=0; i<m; i++) {
+        difficulty x; cin >> x.value;
+        a[course[i]] = x;
+    }
+    int tot=0;
+    for (const string& j: tasks) {
+        difficulty diff = a[j];
+        if (diff.value != -1)
+            tot += diff.value;
+        else
+            tot += not_in_course;
+    }
+    cout << tot << endl;
+}
+
+int32_t main () {
+    ios::sync_with_stdio(false);
     cin.tie(nullptr);
-    cout.tie(nullptr);
-//    int tt;
+    ll tt = 1;
 //    cin >> tt;
-//    while (tt--)
-//        solve()
-    int N = 1e6+3;
-    vector<int> p(N+1);
-    for (int i=2; i<=N; ++i) {
-        if (p[i] != 0) continue;
-        for (int j=i; j <= N; j+=i) {
-            if (p[j] == 0) p[j] = i;
-            else p[j] = min(p[j], i);
-        }
-    }
-    int Q; cin >> Q;
-    while (Q--) {
-        int q;
-        cin >> q;
-        if (q <= 1) {
-            cout << "No answer" << '\n';
-            continue;
-        }
-        while (q != 1) {
-            int v = p[q];
-            while (q%v==0) {
-                q/=v;
-                cout << v << " ";
-            }
-        }
-        cout << '\n';
-    }
+    while (tt--) solve();
     return 0;
 }
