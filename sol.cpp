@@ -1,189 +1,160 @@
-//#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #include <bits/stdc++.h>
 typedef long long ll;
 typedef long double ld;
-#define all(x) x.begin(), x.end()
-#define endl '\n';
+#define all(value) value.begin(), value.end()
+#define endl '\n'
 using namespace std;
 #ifdef LOCAL
 #include <algo/debug.h>
 #else
 #define debug(...) 68
+#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #endif
-const ll N = 1e5+5;
-#define int __int128
-using namespace std;
-void solve() {
-    struct node {
-        int capacity_left; // value
-        int idx, add;
-    };
-    struct node2 {
-        int dead; // value
-        int idx, add;
-    };
-    ll n, queries; cin >> n >> queries;
-    vector<int> BIT_getting_dead_number_on_segment_updating_on_point(n + 1);
-    vector<node> ST(4 * n + 9);
-    vector<node2> ST2(4 * n + 9);
-    vector<ll> kills_right(n + 1), capacity(n + 1), dead_init(n+1, 0);
-    for (int i = 1; i <= n; ++i){
-        cin >> kills_right[i] >> capacity[i];
-        kills_right[i] -= 1;
-    }
-    function<node(node, node)> merge = [&](node a, node b) {
-        return (a.capacity_left < b.capacity_left)?a:b;
-    };
-    function<node2(node2, node2)> merge2 = [&](node2 a, node2 b) {
-        node2 temp{};
-        temp.dead = a.dead+b.dead;
-        return temp;
-    };
-    function<void(int, int, int)> build = [&](int current_vertex, int corresp_l, int corresp_r) {
-        if (corresp_l == corresp_r) {
-            ST[current_vertex] = {capacity[corresp_l], corresp_l, 0};
-            return;
-        }
-        int middle_idx = (corresp_l + corresp_r) >> 1;
-        build(current_vertex * 2, corresp_l, middle_idx);
-        build(current_vertex * 2 + 1, middle_idx + 1, corresp_r);
-        ST[current_vertex] = merge(ST[current_vertex * 2], ST[current_vertex * 2 + 1]);
-    };
-    function<void(int, int, int)> build2 = [&](int current_vertex, int corresp_l, int corresp_r) {
-        if (corresp_l == corresp_r) {
-            ST2[current_vertex] = {dead_init[corresp_l], corresp_l, 0};
-            return;
-        }
-        int middle_idx = (corresp_l + corresp_r) >> 1;
-        build2(current_vertex * 2, corresp_l, middle_idx);
-        build2(current_vertex * 2 + 1, middle_idx + 1, corresp_r);
-        ST2[current_vertex] = merge2(ST2[current_vertex * 2], ST2[current_vertex * 2 + 1]);
-    };
-    function<void(int)> push_down = [&](int current_vertex) {
-        int add = ST[current_vertex].add;
-        ST[current_vertex * 2].add += add;
-        ST[current_vertex * 2 + 1].add += add;
-        ST[current_vertex * 2].capacity_left += add;
-        ST[current_vertex * 2 + 1].capacity_left += add;
-        ST[current_vertex].add = 0;
-    };
-    function<void(int)> push_down2 = [&](int current_vertex) {
-        int add = ST2[current_vertex].add;
-        ST2[current_vertex * 2].add += add;
-        ST2[current_vertex * 2 + 1].add += add;
-        ST2[current_vertex * 2].dead += add;
-        ST2[current_vertex * 2 + 1].dead += add;
-        ST2[current_vertex].add = 0;
-    };
-    function<void(int, int, int, int, int, int)> add_on_segment = [&](int current_vertex, int corresp_l, int corresp_r, int l, int r, int x) {
-        if (l > r)
-            return;
-        if (corresp_l == l && corresp_r == r) {
-            ST[current_vertex].add += x;
-            ST[current_vertex].capacity_left += x;
-            return;
-        }
-        int middle_idx = (corresp_l + corresp_r) >> 1;
-        push_down(current_vertex);
-        add_on_segment(current_vertex * 2, corresp_l, middle_idx, l, min(r, middle_idx), x);
-        add_on_segment(current_vertex * 2 + 1, middle_idx + 1, corresp_r, max(l, middle_idx + 1), r, x);
-        ST[current_vertex] = merge(ST[current_vertex * 2], ST[current_vertex * 2 + 1]);
-        ST[current_vertex].add = 0;
-    };
-    function<void(int, int, int, int, int, int)> add_on_segment2 = [&](int current_vertex, int corresp_l, int corresp_r, int l, int r, int x) {
-        if (l > r)
-            return;
-        if (corresp_l == l && corresp_r == r) {
-            ST2[current_vertex].add += x;
-            ST2[current_vertex].dead += x;
-            return;
-        }
-        int middle_idx = (corresp_l + corresp_r) >> 1;
-        push_down2(current_vertex);
-        add_on_segment2(current_vertex * 2, corresp_l, middle_idx, l, min(r, middle_idx), x);
-        add_on_segment2(current_vertex * 2 + 1, middle_idx + 1, corresp_r, max(l, middle_idx + 1), r, x);
-        ST2[current_vertex] = merge2(ST2[current_vertex * 2], ST2[current_vertex * 2 + 1]);
-        ST2[current_vertex].add = 0;
-    };
-    function<node(int, int, int, int, int)> get = [&](int current_vertex, int corresp_l, int corresp_r, int l, int r) {
-        if (l > r)
-            return node{(int)(1e25), 0, 0};
-        if (corresp_l == l && corresp_r == r)
-            return ST[current_vertex];
-        int middle_idx = (corresp_l + corresp_r) >> 1;
-        push_down(current_vertex);
-        return merge(
-                get(current_vertex * 2, corresp_l, middle_idx, l, min(r, middle_idx)),
-                get(current_vertex * 2 + 1, middle_idx + 1, corresp_r, max(l, middle_idx + 1), r)
-        );
-    };
-    function<node2(int, int, int, int, int)> get2 = [&](int current_vertex, int corresp_l, int corresp_r, int l, int r) {
-        if (l > r)
-            return node2{0, 0};
-        if (corresp_l == l && corresp_r == r)
-            return ST2[current_vertex];
-        int middle_idx = (corresp_l + corresp_r) >> 1;
-        push_down2(current_vertex);
-        return merge2(
-                get2(current_vertex * 2, corresp_l, middle_idx, l, min(r, middle_idx)),
-                get2(current_vertex * 2 + 1, middle_idx + 1, corresp_r, max(l, middle_idx + 1), r)
-        );
-    };
-//    function<void(int)> mark_as_dead = [&](int current_vertex) {
-//        for (int i = current_vertex; i <= n; i |= i + 1)
-//            BIT_getting_dead_number_on_segment_updating_on_point[i]++;
-//    };
-//    function<int(int)> get_dead_to_the_left = [&](int current_vertex) {
-//        int res = 0;
-//        for (int i = current_vertex; i >= 1; i = (i & (i + 1)) - 1)
-//            res += BIT_getting_dead_number_on_segment_updating_on_point[i];
-//        return res;
-//    };
-    function<void(int)> fall = [&](int killer_idx) {
-        deque<int> deq;
-        deq.push_back(killer_idx);
-        add_on_segment(1, 1, n, killer_idx, killer_idx, 1e25);
-        while (!deq.empty()) {
-            int current_vertex = deq.front();
-            deq.pop_front();
-//            mark_as_dead(current_vertex);
-            add_on_segment2(1, 1, n, current_vertex, current_vertex, 1);
-            while (true) {
-                node nxt = get(1, 1, n, current_vertex, min((int)n, current_vertex + kills_right[current_vertex]));
-                if (nxt.capacity_left >= (int)1e20) break; // already fallen
-                deq.push_back(nxt.idx);
-                add_on_segment(1, 1, n, nxt.idx, nxt.idx, 1e25);
-            }
-        }
-    };
-    build(1, 1, n);
-    build2(1, 1, n);
-    while (queries--) {
-        long long type; cin >> type;
-        long long l, r; cin >> l >> r;
-        if (type == 2) {
-//            cout << (long long) (r - l + 1 - (get_dead_to_the_left(r) - get_dead_to_the_left(l - 1))) << endl;
-//            for (auto j : BIT_getting_dead_number_on_segment_updating_on_point) {
-//                cout << (ll) j << ' ';
-//            }
-//            cout << endl;
-//            for (auto j : ST2) {
-//                cout << (ll) j.dead << ' ';
-//            }
-//            cout << endl;
-            cout << (long long) (r - l + 1 - get2(1, 1, n, l, r).dead) << endl;
-            continue;
-        }
-        long long x; cin >> x;
-        add_on_segment(1, 1, n, l, r, -x);
-        while (ST[1].capacity_left <= 0) fall(ST[1].idx); // calling fall() bc min capacity is negative somewhere
+constexpr int N = (int)(2e5*1.2);
+struct node {
+    ll val1;
+    ll to_be_pushed_to_each_child;
+    node(ll _val1):val1(_val1), to_be_pushed_to_each_child(0){} // for merge()
+    node():val1(0), to_be_pushed_to_each_child(0){} // zeros
+};
+node merge(node node1, node node2) {
+    node _{min(node1.val1,node2.val1)};
+    return _;
+}
+void build(node ST[], vector<ll> & array, ll v, ll tl, ll tr) {
+    if (tl == tr) {
+        ST[v].val1 = array[tl];
+    } else {
+        ll tm = (tl+tr) >> 1;
+        build(ST, array, v*2, tl, tm);
+        build(ST, array, v*2+1, tm+1, tr);
+        ST[v] = merge(ST[v*2], ST[v*2+1]);
     }
 }
-
-int32_t main () {
-    ios::sync_with_stdio(false);
-    cin.tie(nullptr);
+void build_ez(node ST[], vector<ll> & array, ll size) {
+    build(ST, array, 1, 1, size);
+}
+void push_down(node ST[], ll v, ll tl, ll tr) {
+    ST[v*2].to_be_pushed_to_each_child += ST[v].to_be_pushed_to_each_child;
+    ST[v*2+1].to_be_pushed_to_each_child += ST[v].to_be_pushed_to_each_child;
+//    ll tm = (tl+tr) >> 1;
+//    ST[v*2].val1 += ST[v].to_be_pushed_to_each_child*(tm-tl+1);
+//    ST[v*2+1].val1 += ST[v].to_be_pushed_to_each_child*(tr-tm);
+    ST[v*2].val1 += ST[v].to_be_pushed_to_each_child;
+    ST[v*2+1].val1 += ST[v].to_be_pushed_to_each_child;
+    ST[v].to_be_pushed_to_each_child = 0;
+}
+void add_many(node ST[], ll l, ll r, ll x, ll v, ll tl, ll tr) {
+//    cerr << "upd: " << l << " " << r << " " << tl << " " << tr << endl;
+    if (tl == l && tr == r) {
+//        ST[v].val1 += x*(tr-tl+1);
+        ST[v].val1 += x;
+        ST[v].to_be_pushed_to_each_child += x;
+        return;
+    }
+    push_down(ST, v, tl, tr);
+    ll tm = (tl+tr) >> 1;
+    if (l <= tm) {
+        add_many(ST, l, min(r, tm), x, v*2, tl, tm);
+    }
+    if (r > tm) {
+        add_many(ST, max(l, tm+1), r, x, v*2+1, tm+1, tr);
+    }
+    ST[v] = merge(ST[v*2], ST[v*2+1]);
+    assert(ST[v].to_be_pushed_to_each_child == 0);
+}
+void add_many_ez(node ST[], ll l, ll r, ll x, ll size) {
+    add_many(ST, l, r, x, 1, 1, size);
+}
+void rewrite_one(node ST[], ll pos, node nw, ll v, ll tl, ll tr) {
+    if (pos == tl && pos == tr) {
+        ST[v] = nw;
+        return;
+    }
+    push_down(ST, v, tl, tr);
+    ll tm = (tl+tr) >> 1;
+    if (pos <= tm) {
+        rewrite_one(ST, pos, nw, v*2, tl, tm);
+    } else {
+        rewrite_one(ST, pos, nw, v*2+1, tm+1, tr);
+    }
+    ST[v] = merge(ST[2*v], ST[2*v+1]);
+//    cout << tl << " " << tr << ": " << ST[v].val1 << endl;
+}
+void rewrite_one_ez(node ST[], ll pos, node nw, ll size) {
+//    cout << "!\n";
+    rewrite_one(ST, pos, nw, 1, 1, size);
+}
+node get_many(node ST[], ll l, ll r, ll v, ll tl, ll tr) {
+//    cerr << "get: " << l << " " << r << " " << tl << " " << tr << endl;
+    if (tl == l && tr == r) return ST[v];
+    push_down(ST, v, tl, tr);
+    ll tm = (tl+tr)>>1;
+    if (l <= tm && r > tm) {
+        return merge(
+                get_many(ST, l, min(r, tm), 2 * v, tl, tm),
+                get_many(ST, max(l, tm+1), r, 2 * v + 1, tm+1, tr)
+        );
+    }
+    if (l <= tm) {
+        return get_many(ST, l, min(r, tm), 2 * v, tl, tm);
+    }
+    return get_many(ST, max(l, tm+1), r, 2 * v + 1, tm+1, tr); // (r > tm)
+}
+node get_many_ez(node ST[], ll l, ll r, ll size) {
+    return get_many(ST, l, r, 1, 1, size);
+}
+void solve() {
+    node tree[4*N];
+    ll n; cin >> n;
+    vector<ll> a(n+1);
+    for (int i=1; i<=n; i++) {
+        cin >> a[i];
+    }
+    build_ez(tree, a, n);
+    int q; cin >> q;
+    string input;
+    getline(cin, input);
+    while (q--) {
+        vector<int> numbers;
+        getline(cin, input);
+        istringstream stream(input);
+        int number;
+        while (stream >> number) {
+            numbers.push_back(number);
+        }
+        if (numbers.size() == 3) {
+            int l = numbers[0], r = numbers[1], x = numbers[2];
+            if (l > r) {
+                add_many_ez(tree, 1, r + 1, x, n);
+                add_many_ez(tree, l + 1, n, x, n);
+            } else {
+                add_many_ez(tree, l + 1, r + 1, x, n);
+            }
+        } else {
+            int l = numbers[0], r = numbers[1];
+            if (l > r) {
+                cout << merge(get_many_ez(tree, 1, r + 1, n), get_many_ez(tree, l + 1, n, n)).val1 << endl;
+            } else {
+                cout << get_many_ez(tree, l + 1, r + 1, n).val1 << endl;
+            }
+        }
+    }
+}
+int32_t main (int argc, char* argv[]) {
+    bool use_fast_io = true;
+    for (int i = 1; i < argc; ++i)
+        if (string(argv[i]) == "-local-no-fast-io") {
+            use_fast_io = false;
+            break;
+        }
+    if (use_fast_io) {
+        ios::sync_with_stdio(false);
+        cin.tie(nullptr);
+        cerr.tie(nullptr);
+    }
     ll tt = 1;
+//    cin >> tt;
     while (tt--) solve();
     return 0;
 }
