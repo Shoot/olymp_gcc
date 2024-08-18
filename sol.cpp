@@ -1,74 +1,53 @@
 #include <bits/stdc++.h>
+using namespace std;
 typedef long long ll;
 typedef long double ld;
 #define all(value) value.begin(), value.end()
 #define endl '\n'
-using namespace std;
 #ifdef LOCAL
 #include <algo/debug.h>
 #else
 #define debug(...) 68
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #endif
-const ll N = (ll)(2.2e5);
-ll n, k;
-ll dp[N], b[N];
-bool check(ll med, const ll a[]) {
-    for (int i = 0; i < n; i++) {
-        if (a[i] >= med) {
-            b[i] = 1;
-        } else {
-            b[i] = -1;
-        }
-    }
-
-    dp[0] = b[0];
-    for (ll i=1; i<k; i++) {
-        dp[i] = dp[i-1] + b[i]; // нечего удалять пока что
-    }
-    for (ll i = k; i < n; i+=k) {
-        dp[i] = max(dp[i-k], b[i]);
-    }
-    for (ll i = k; i < n; i++) { // MAX SUM OF b AFTER DELETIONS OF SEGMENTS of length k until |b| <= k
-        // ВВОДИМ НОВЫЙ ЭЛЕМЕНТ И ОБНОВЛЯЕМ dp
-        if (i%k != 0) {
-            dp[i] = max(
-                    dp[i-1] + b[i], // без удаления
-                    dp[i-k] // с удалением
-            );
-        }
-    }
-
-    return dp[n-1] > 0;
-}
+const int N = 1e7 + 1;
 void solve() {
-    cin >> n >> k;
+    ll n; cin >> n;
     ll a[n];
-    vector<ll> a_s(n);
-    ll i=-1;
-    for (ll &j: a_s) {
-        cin >> a[++i];
-        j = a[i];
+    ll cnt[n+1];
+    memset(cnt, 0, sizeof(cnt));
+    for (ll i=0; i<n; i++) {
+        cin >> a[i];
+        cnt[a[i]]++;
     }
-    sort(all(a_s), [](ll x, ll y) {return x<y;});
-    if (n<=k) {
-        cout << a[(n+1)/2-1] << endl;
-    } else {
-        ll l=0, r=n-1;
-        ll good = -1;
-        while (l <= r) {
-            ll mid = (l+r) >> 1;
-            if (check(a_s[mid], a)) {
-                good = a_s[mid];
-                l = mid+1;
-            } else {
-                r = mid-1;
+    ll done[n+1];
+    ll dp[n+1];
+    for (ll i=n; i>=1; i--) {
+        ll s = cnt[i];
+        ll числа_кратные_i_дают_нод_кратный_i_а_нам_нужен_только_равный_i = 0;
+        for (ll nxt=2*i; nxt<=n; nxt+=i) {
+            s += cnt[nxt];
+            числа_кратные_i_дают_нод_кратный_i_а_нам_нужен_только_равный_i += dp[nxt];
+        }
+        dp[i] = s*(s-1)/2 - числа_кратные_i_дают_нод_кратный_i_а_нам_нужен_только_равный_i;
+    }
+    memset(done, 0, sizeof(done));
+    ll tot = 0;
+    // Нам нужно просумировать все dp кроме тех что кратны какому-нибудь a_i
+    for (ll i=1; i<=n; i++) {
+        if (cnt[i] > 0 && (!done[i])) {
+            for (ll nxt=i; nxt<=n; nxt+=i) {
+                done[nxt] = 1;
             }
         }
-        cout << good << endl;
     }
+    for (ll i=1; i<=n; i++) {
+        if (!done[i]) {
+            tot += dp[i];
+        }
+    }
+    cout << tot << endl;
 }
-
 int32_t main (int argc, char* argv[]) {
     bool use_fast_io = true;
     for (int i = 1; i < argc; ++i)
@@ -81,6 +60,7 @@ int32_t main (int argc, char* argv[]) {
         cin.tie(nullptr);
         cout.tie(nullptr);
         cerr.tie(nullptr);
+        clog.tie(nullptr);
     }
     ll tt = 1;
     cin >> tt;
