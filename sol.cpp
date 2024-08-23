@@ -3,6 +3,8 @@ using namespace std;
 typedef long long ll;
 typedef long double ld;
 #define all(value) value.begin(), value.end()
+#define fo(x, st, fi) for(ll x = st; x < fi; x++)
+#define forr(x, st, fi) for(ll x = st; x <= fi; x++)
 #define endl '\n'
 #ifdef LOCAL
 #include <algo/debug.h>
@@ -10,99 +12,67 @@ typedef long double ld;
 #define debug(...) 68
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #endif
-//const int N = 3e4+10;
-const int N = 3e5+10;
-ll rnd_replacement[N+1];
-ll perm_xor[N+1];
-ll pref_xor[N+1];
-set<pair<ll, ll>> st;
-struct node {
-    ll val1;
-    ll idx;
-    explicit node(ll _idx, ll _val1) {
-        idx = _idx;
-        val1 = _val1;
-    }
-    node(): node(0, 0){}
-};
-node merge(node node1, node node2) {
-    if (node1.val1 > node2.val1) {
-        return node{node1.idx, node1.val1};
-    }
-    return node{node2.idx, node2.val1};
-}
-void build(array<node, 4*N> & ST, vector<ll> & array, ll v, ll tl, ll tr) {
-    if (tl == tr) {
-        ST[v].idx = tl;
-        ST[v].val1 = array[tl];
-    } else {
-        ll tm = (tl+tr) >> 1;
-        build(ST, array, v*2, tl, tm);
-        build(ST, array, v*2+1, tm+1, tr);
-        ST[v] = merge(ST[v*2], ST[v*2+1]);
-    }
-}
-void build_ez(array<node, 4*N> & ST, vector<ll> & array, ll size) {
-    build(ST, array, 1, 1, size);
-}
-node get_many(array<node, 4*N> & ST, ll l, ll r, ll v, ll tl, ll tr) {
-    if (tl == l && tr == r) return ST[v];
-    ll tm = (tl+tr)>>1;
-    if (l <= tm && r > tm) {
-        return merge(
-                get_many(ST, l, min(r, tm), 2 * v, tl, tm),
-                get_many(ST, max(l, tm+1), r, 2 * v + 1, tm+1, tr)
-        );
-    }
-    if (l <= tm) {
-        return get_many(ST, l, min(r, tm), 2 * v, tl, tm);
-    }
-    return get_many(ST, max(l, tm+1), r, 2 * v + 1, tm+1, tr); // (r > tm)
-}
-node get_many_ez(array<node, 4*N> & ST, ll l, ll r, ll size) {
-    return get_many(ST, l, r, 1, 1, size);
-}
-void process(ll l, ll r, ll val) {
-//    clog << "process: " << l << " " << r << endl;
-    if (perm_xor[val] != (pref_xor[r]^pref_xor[l-1])) return;
-//    clog << l << " " << r << " !" << endl;
-    st.insert(make_pair(l, r));
-}
-void f(array<node, 4*N> & ST, ll l, ll r, ll size) {
-    if (l > r) return;
-//    clog << "f: " << l << " " << r << endl;
-    node maxi = get_many_ez(ST, l, r, size);
-//    clog << "got " << maxi.idx << endl;
-    for (ll i=max(l, maxi.idx-maxi.val1+1); i<=min(r-maxi.val1+1, maxi.idx); i++) {
-        process(i, min(r, i+maxi.val1-1), maxi.val1);
-    }
-    f(ST, l, maxi.idx-1, size);
-    f(ST, maxi.idx+1, r, size);
-}
+const ll N = 3e5 + 1;
+bitset<N> used;
 void solve() {
-    ll n;
-    cin >> n;
-    vector<ll> a(n+1);
-    pref_xor[0] = 0;
-    for (ll j=1; j<=n; j++) {
-        cin >> a[j];
-        pref_xor[j] = pref_xor[j-1] ^ rnd_replacement[a[j]];
+    ll n; cin >> n;
+    ll a[n];
+    vector<ll> last_occurrence(n+1, N);
+    fo(i, 0, n) {
+        cin >> a[i];
+        last_occurrence[a[i]] = i;
     }
-    array<node, 4*N> tree;
-    build_ez(tree, a, n);
-    f(tree, 1, n, n);
-    cout << st.size() << endl;
+    priority_queue<ll, vector<ll>, greater<>> last_occurrences(last_occurrence.begin(), last_occurrence.end());
+    priority_queue<array<ll, 2>, vector<array<ll, 2>>, greater<>> mini;
+    priority_queue<array<ll, 2>, vector<array<ll, 2>>, less<>> maxi;
+    used.reset();
+    forr(i, 0, last_occurrences.top()) { // last_occurrences.top() == min (next el rightmost position)
+        maxi.push({a[i], -i});
+        mini.push({a[i], i});
+        clog << "new: " << a[i] << " (init)" << endl;
+        assert(a[i] <= n);
+    }
+    vector<ll> b;
+    ll nxt_el_window_l;
+    while(!mini.empty()) {
+        auto [x, pos] = (b.size() % 2 == 0 ? maxi.top() : mini.top());
+        if (b.size() % 2 == 0) {
+            maxi.pop();
+            pos = -pos;
+            clog << "maxi = " << x << endl;
+        } else {
+            mini.pop();
+            clog << "mini = " << x << endl;
+        }
+        nxt_el_window_l = pos + 1; used[x] = true; b.push_back(x);
+        clog << "new pos: " << nxt_el_window_l << endl;
+        while(last_occurrences.top() != N and used[a[last_occurrences.top()]]) {
+            ll j = last_occurrences.top(); last_occurrences.pop();
+            for(ll k = j + 1; k <= min(last_occurrences.top(), n - 1); k++) {
+                maxi.push({a[k], -k});
+                mini.push({a[k], k});
+                clog << "new: " << a[k] << endl;
+            }
+        }
+        while(!maxi.empty() and (used[maxi.top()[0]] or -maxi.top()[1] < nxt_el_window_l)) {
+            clog << "[maxi]fuck " << maxi.top()[0] << " at " << -maxi.top()[1] << endl;
+            maxi.pop();
+        }
+        while(!mini.empty() and (used[mini.top()[0]] or mini.top()[1] < nxt_el_window_l)) {
+            clog << "[mini]fuck " << mini.top()[0] << endl;
+            mini.pop();
+        }
+    }
+
+    cout << b.size() << endl;
+    for(ll j: b) cout << j << " ";
+    cout << endl;
 }
-int32_t main (int argc, char* argv[]) {
-    mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-    uniform_int_distribution<ll> distrib(1, LLONG_MAX);
-    perm_xor[0] = 0;
-    for (ll j=1; j<=N; j++) {
-        rnd_replacement[j] = distrib(rng);
-        perm_xor[j] = perm_xor[j-1] ^ rnd_replacement[j];
-    }
+int32_t main (int32_t argc, char* argv[]) {
+//    mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
+//    uniform_int_distribution<ll> distrib(1, LLONG_MAX);
     bool use_fast_io = true;
-    for (int i = 1; i < argc; ++i)
+    for (int32_t i = 1; i < argc; ++i)
         if (string(argv[i]) == "-local-no-fast-io") {
             use_fast_io = false;
 //            cout << "No fastIO" << endl;
@@ -116,7 +86,7 @@ int32_t main (int argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-//    cin >> tt;
+    cin >> tt;
     while (tt--) solve();
     return 0;
 }
