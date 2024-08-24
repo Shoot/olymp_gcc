@@ -17,54 +17,35 @@ typedef long double ld;
 #define debug(...) 68
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #endif
-const ll N = 3e5 + 1;
+const ll N = 1e6 + 1;
+/*
 void copy_this () {
     ll n; cin >> n;
-//    ll n, k; cin >> n >> k;
-    ll a[n]; fo(i, 0, n) cin >> a[i];
-//    vector<ll> a(n); fo(i, 0, n) cin >> a[i];
-}
-bool dozhivet(ll kto, ll dokogo, ll k) {
-    ll mod = 2*k;
-    if ((kto+k)%mod <= (kto)%mod) {
-        if (dokogo < (kto+k)%mod || dokogo >= (kto)%mod) return true;
-        return false;
-    }
-    return (dokogo >= kto && (kto+k)%mod > dokogo);
-}
-ll removeDuplicates(ll arr[], ll n)
-{
-    if (!n) return n;
-    ll j = 0;
-    fo(i, 0, n-1){
-        if (arr[i] != arr[i + 1]) {
-            arr[j++] = arr[i];
-        }
-    }
-    arr[j++] = arr[n - 1];
-    return j;
-}
-void solve() {
     ll n, k; cin >> n >> k;
+    ll n, q; cin >> n >> q;
     ll a[n]; fo(i, 0, n) cin >> a[i];
-    ll maxi = *max_element(a, a+n);
-    ll ost[n]; fo(i, 0, n) ost[i] = a[i]%(2*k);
-    sort(ost, ost+n);
-    n = removeDuplicates(ost, n);
-    set<ll> st;
-    fo(i, 0, n) {
-        if (dozhivet(ost[(i+1)%n], ost[i], k)) st.insert(ost[i]);
-    }
-    if (st.empty()) cout << -1 << endl;
-    else {
-        auto it = st.lower_bound(maxi%(2*k));
-        if (it == st.end()) {
-            cout << maxi-maxi%(2*k)+2*k+(*st.begin()) << endl;
-        } else {
-            cout << maxi-maxi%(2*k)+*it << endl;
+    vector<ll> a(n); fo(i, 0, n) cin >> a[i];
+}
+*/
+void solve() {
+    ll k; cin >> k;
+    string s; cin >> s;
+    ll n = (ll)s.size();
+    ll pref[n+1];
+    pref[0] = 0;
+    forr(i, 1, n) pref[i] = pref[i-1]+ s[i-1]-'0';
+//    ll prefmap[N];
+//    memset(prefmap, 0, sizeof(prefmap));
+    map<ll, ll> prefmap;
+    prefmap[0] = 1;
+    ll ans = 0;
+    forr(i, 1, n) {
+        if (pref[i] >= k) {
+            ans += prefmap[pref[i]-k];
         }
-
+        prefmap[pref[i]] += 1;
     }
+    cout << ans << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
 //    mt19937 rng(chrono::steady_clock::now().time_since_epoch().ans());
@@ -84,7 +65,7 @@ int32_t main (int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-    cin >> tt;
+//    cin >> tt;
     while (tt--) solve();
     return 0;
 }
