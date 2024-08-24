@@ -5,6 +5,11 @@ typedef long double ld;
 #define all(value) value.begin(), value.end()
 #define fo(x, st, fi) for(ll x = st; x < fi; x++)
 #define forr(x, st, fi) for(ll x = st; x <= fi; x++)
+#define rrof(x, st, fi) for(ll x = st; x >= fi; x--)
+#define roff(x, st, fi) for(ll x = st; x >= fi; x--)
+#define of(x, st, fi) for(ll x = st; x > fi; x--)
+#define ro(x, st, fi) for(ll x = st; x > fi; x--)
+#define yes(x) (x ? "YES" : "NO")
 #define endl '\n'
 #ifdef LOCAL
 #include <algo/debug.h>
@@ -13,63 +18,56 @@ typedef long double ld;
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #endif
 const ll N = 3e5 + 1;
-bitset<N> used;
-void solve() {
+void copy_this () {
     ll n; cin >> n;
-    ll a[n];
-    vector<ll> last_occurrence(n+1, N);
+//    ll n, k; cin >> n >> k;
+    ll a[n]; fo(i, 0, n) cin >> a[i];
+//    vector<ll> a(n); fo(i, 0, n) cin >> a[i];
+}
+bool dozhivet(ll kto, ll dokogo, ll k) {
+    ll mod = 2*k;
+    if ((kto+k)%mod <= (kto)%mod) {
+        if (dokogo < (kto+k)%mod || dokogo >= (kto)%mod) return true;
+        return false;
+    }
+    return (dokogo >= kto && (kto+k)%mod > dokogo);
+}
+ll removeDuplicates(ll arr[], ll n)
+{
+    if (!n) return n;
+    ll j = 0;
+    fo(i, 0, n-1){
+        if (arr[i] != arr[i + 1]) {
+            arr[j++] = arr[i];
+        }
+    }
+    arr[j++] = arr[n - 1];
+    return j;
+}
+void solve() {
+    ll n, k; cin >> n >> k;
+    ll a[n]; fo(i, 0, n) cin >> a[i];
+    ll maxi = *max_element(a, a+n);
+    ll ost[n]; fo(i, 0, n) ost[i] = a[i]%(2*k);
+    sort(ost, ost+n);
+    n = removeDuplicates(ost, n);
+    set<ll> st;
     fo(i, 0, n) {
-        cin >> a[i];
-        last_occurrence[a[i]] = i;
+        if (dozhivet(ost[(i+1)%n], ost[i], k)) st.insert(ost[i]);
     }
-    priority_queue<ll, vector<ll>, greater<>> last_occurrences(last_occurrence.begin(), last_occurrence.end());
-    priority_queue<array<ll, 2>, vector<array<ll, 2>>, greater<>> mini;
-    priority_queue<array<ll, 2>, vector<array<ll, 2>>, less<>> maxi;
-    used.reset();
-    forr(i, 0, last_occurrences.top()) { // last_occurrences.top() == min (next el rightmost position)
-        maxi.push({a[i], -i});
-        mini.push({a[i], i});
-        clog << "new: " << a[i] << " (init)" << endl;
-        assert(a[i] <= n);
-    }
-    vector<ll> b;
-    ll nxt_el_window_l;
-    while(!mini.empty()) {
-        auto [x, pos] = (b.size() % 2 == 0 ? maxi.top() : mini.top());
-        if (b.size() % 2 == 0) {
-            maxi.pop();
-            pos = -pos;
-            clog << "maxi = " << x << endl;
+    if (st.empty()) cout << -1 << endl;
+    else {
+        auto it = st.lower_bound(maxi%(2*k));
+        if (it == st.end()) {
+            cout << maxi-maxi%(2*k)+2*k+(*st.begin()) << endl;
         } else {
-            mini.pop();
-            clog << "mini = " << x << endl;
+            cout << maxi-maxi%(2*k)+*it << endl;
         }
-        nxt_el_window_l = pos + 1; used[x] = true; b.push_back(x);
-        clog << "new pos: " << nxt_el_window_l << endl;
-        while(last_occurrences.top() != N and used[a[last_occurrences.top()]]) {
-            ll j = last_occurrences.top(); last_occurrences.pop();
-            for(ll k = j + 1; k <= min(last_occurrences.top(), n - 1); k++) {
-                maxi.push({a[k], -k});
-                mini.push({a[k], k});
-                clog << "new: " << a[k] << endl;
-            }
-        }
-        while(!maxi.empty() and (used[maxi.top()[0]] or -maxi.top()[1] < nxt_el_window_l)) {
-            clog << "[maxi]fuck " << maxi.top()[0] << " at " << -maxi.top()[1] << endl;
-            maxi.pop();
-        }
-        while(!mini.empty() and (used[mini.top()[0]] or mini.top()[1] < nxt_el_window_l)) {
-            clog << "[mini]fuck " << mini.top()[0] << endl;
-            mini.pop();
-        }
-    }
 
-    cout << b.size() << endl;
-    for(ll j: b) cout << j << " ";
-    cout << endl;
+    }
 }
 int32_t main (int32_t argc, char* argv[]) {
-//    mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
+//    mt19937 rng(chrono::steady_clock::now().time_since_epoch().ans());
 //    uniform_int_distribution<ll> distrib(1, LLONG_MAX);
     bool use_fast_io = true;
     for (int32_t i = 1; i < argc; ++i)
