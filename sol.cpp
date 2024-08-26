@@ -19,6 +19,7 @@ typedef long double ld;
 #endif
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 uniform_int_distribution<ll> distrib(100, 900);
+constexpr ll N = (ll)(2e5);
 /*
 void copy_this () {
     ll n; cin >> n;
@@ -28,111 +29,82 @@ void copy_this () {
     vector<ll> a(n); fo(i, 0, n) cin >> a[i];
 }
 */
-ll n;
-ll cnt=0;
-//set<ll> skip;
-ll skip = distrib(rng);
-ll previ;
-ll ask(ll _1, ll _2, ll _3, ll _4) {
-    if (_3 == skip) return previ;
-    assert(cnt != 2007);
-    if (_1 == 1 && _2 == 1 && _3 == n && _4 == n) {
-        return 0;
+struct node {
+    ll val1;
+    explicit node(ll _val1) {
+        val1 = _val1;
     }
-    cout << "? " << _1 << " " << _2 << " " << _3 << " " << _4 << endl;
-    cout.flush();
-    ll x;
-    cin >> x;
-    assert(x != -1);
-    cnt += 1;
-    previ = x;
-    return x;
+    node(): node(0){};
+};
+node merge(node node1, node node2) {
+    return node{gcd(node1.val1, node2.val1)};
+}
+void build(array<node, 4*N> & ST, ll array[], ll v, ll tl, ll tr) {
+    if (tl == tr) {
+        ST[v].val1 = array[tl];
+    } else {
+        ll tm = (tl+tr) >> 1;
+        build(ST, array, v*2, tl, tm);
+        build(ST, array, v*2+1, tm+1, tr);
+        ST[v] = merge(ST[v*2], ST[v*2+1]);
+    }
+}
+void build_ez(array<node, 4*N> & ST, ll array[], ll size) {
+    build(ST, array, 1, 1, size);
+}
+node get_many(array<node, 4*N> & ST, ll l, ll r, ll v, ll tl, ll tr) {
+    if (tl == l && tr == r) return ST[v];
+    ll tm = (tl+tr)>>1;
+    if (l <= tm && r > tm) {
+        return merge(
+                get_many(ST, l, min(r, tm), 2 * v, tl, tm),
+                get_many(ST, max(l, tm+1), r, 2 * v + 1, tm+1, tr)
+        );
+    }
+    if (l <= tm) {
+        return get_many(ST, l, min(r, tm), 2 * v, tl, tm);
+    }
+    return get_many(ST, max(l, tm+1), r, 2 * v + 1, tm+1, tr); // (r > tm)
+}
+node get_many_ez(array<node, 4*N> & ST, ll l, ll r, ll size) {
+    return get_many(ST, l, r, 1, 1, size);
+}
+
+ll gcd(int a, int b) {
+    while (b) {
+        a = a % b;
+        swap(a, b);
+    }
+    return a;
 }
 void solve() {
-    cin >> n;
-    ll sni[n+1];
-    memset(sni, 0, sizeof(sni));
-    ll spr[n+1];
-    memset(spr, 0, sizeof(spr));
-    ll spr_nech = 0;
-    ll sni_nech = 0;
-    forr(i, 1, n) {
-        spr[i] = ask(1, 1, i, n);
-        if (spr[i] % 2 == 1) {
-            spr_nech = i;
-            break;
-        }
+    ll n, q; cin >> n >> q;
+    array<node, 4*N> tree_a;
+    array<node, 4*N> tree_b;
+    ll a[n+1]; forr(i, 1, n) cin >> a[i];
+    ll b[n+1]; forr(i, 1, n) cin >> b[i];
+    ll razna[n+1];
+    ll raznb[n+1];
+    razna[n] = raznb[n] = 0;
+    for (ll i = n-1; i >= 1; --i) {
+        razna[i] = a[i+1] - a[i];
+        raznb[i] = b[i+1] - b[i];
     }
-    ll spr_ch = 0;
-    if (spr_nech != 0) {
-        forr(i, spr_nech+1, n) {
-            spr[i] = ask(1, 1, i, n);
-            if (spr[i] % 2 == 0) {
-                spr_ch = i;
-                break;
-            }
-            if (spr[i] == 0) break;
-        }
+    build_ez(tree_a, razna, n);
+    build_ez(tree_b, raznb, n);
+    while (q--) {
+        int x1, x2, y1, y2;
+        cin >> x1 >> x2 >> y1 >> y2;
+        ll shita, shitb;
+        if (x2 != x1) shita = get_many_ez(tree_a, x1, x2-1, n).val1;
+        else shita = 0;
+        if (y2 != y1) shitb = get_many_ez(tree_b, y1, y2-1, n).val1;
+        else shitb = 0;
+        cout << gcd(
+                a[x1] + b[y1],
+                gcd(shita,
+                    shitb)) << endl;
     }
-    forr(i, 1, n) {
-        sni[i] = ask(1, 1, n, i);
-        if (sni[i] % 2 == 1) {
-            sni_nech = i;
-            break;
-        }
-    }
-    ll sni_ch = 0;
-    if (sni_nech != 0)
-        forr(i, sni_nech+1, n) {
-            sni[i] = ask(1, 1, n, i);
-            if (sni[i] % 2 == 0) {
-                sni_ch = i;
-                break;
-            }
-            if (sni[i] == 0) break;
-        }
-    if (spr_nech > 0 && sni_nech > 0 && ask(spr_nech, sni_ch, spr_nech, sni_ch) == 1) {
-        swap(sni_nech, sni_ch);
-    }
-    if (spr_nech == 0 && sni_nech == 0) {
-        cout << "! " << 1 << " " << 1 << " " << 2 << " " << 2 << endl;
-        cout.flush();
-        return;
-    }
-    if (spr_nech == 0) {
-        // на одной горизонтальной линии
-        ll l=1, r=n;
-        ll good = -1;
-        while (l <= r) {
-            ll mid = (l+r) >> 1;
-            ll x = ask(1, sni_nech, mid, sni_nech);
-            if (x%2==1) {
-                good = mid;
-                r = mid-1;
-            } else {
-                l = mid+1;
-            }
-        }
-        spr_nech = spr_ch = good;
-    }
-    if (sni_nech == 0) {
-        // на одной вертикальной линии
-        ll l=1, r=n;
-        ll good = -1;
-        while (l <= r) {
-            ll mid = (l+r) >> 1;
-            ll x = ask(spr_nech, 1, spr_nech, mid);
-            if (x%2==1) {
-                good = mid;
-                r = mid-1;
-            } else {
-                l = mid+1;
-            }
-        }
-        sni_nech = sni_ch = good;
-    }
-    cout << "! " << spr_nech << " " << sni_nech << " " << spr_ch << " " << sni_ch << endl;
-    cout.flush();
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
