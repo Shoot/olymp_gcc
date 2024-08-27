@@ -92,31 +92,31 @@ void solve () {
         else preddx = ss[i-1].b.x-ss[i-1].a.x;
         if (i == 0) preddy = ss[n-1].b.y-ss[n-1].a.y;
         else preddy = ss[i-1].b.y-ss[i-1].a.y;
-//        ll sleddx;
+        ll sleddx;
         ll sleddy;
-//        if (i == 0) sleddx = ss[0].b.x-ss[0].a.x;
-//        else sleddx = ss[i+1].b.x-ss[i+1].a.x;
+        if (i == 0) sleddx = ss[0].b.x-ss[0].a.x;
+        else sleddx = ss[i+1].b.x-ss[i+1].a.x;
         if (i == n-1) sleddy = ss[0].b.y-ss[0].a.y;
         else sleddy = ss[i+1].b.y-ss[i+1].a.y;
         ll dy = ss[i].b.y-ss[i].a.y;
         ll dx = ss[i].b.x-ss[i].a.x;
-//        double tg = (double)dy/((double)dx + 1e-8);
+        double tg = (double)dy/((double)dx + 1e-8);
         if (mnozh*dx < 0) {
 //            clog << "curr: " << ss[i].a.x << "," << ss[i].a.y << endl;
 //            clog << "prsl: " << preddy << "," << sleddy<< endl;
             clog << "dno" << endl;
             if (simplified.empty() || mnozh*preddx >= 0) {
-//                double predtg = (double)(preddy)/((double) preddx + 1e-8);
+                double predtg = (double)(preddy)/((double) preddx + 1e-8);
 //                cout << preddy << " " << preddx << endl;
-                predsledy.emplace_back(preddy<0, 0);
+                predsledy.emplace_back(preddy<0 && abs(predtg) > abs(tg), 0);
                 simplified.emplace_back();
                 clog << "+" << endl;
             }
             if (dy != 0) {
                 simplified[simplified.size()-1].push_back(dy);
             }
-//            double sledtg = (double)(sleddy)/((double) sleddx + 1e-8);
-            predsledy[predsledy.size()-1].second = sleddy>0;
+            double sledtg = (double)(sleddy)/((double) sleddx + 1e-8);
+            predsledy[predsledy.size()-1].second = sleddy>0 && abs(sledtg) > abs(tg);
         } else {
             clog << "krisha/vert" << endl;
         }
