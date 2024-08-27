@@ -30,78 +30,45 @@ void copy_this () {
     vector<ll> a(n); fo(i, 0, n) cin >> a[i];
 }
 */
-pair<ll, ll> ans[N];
-ll dfs_ind_by_val [N];
-ll lfs_ind_by_val [N];
-ll dfs[N];
-ll lfs[N];
-struct shit {
-    ll l, r, root;
+struct Point {
+    ll x, t;
 };
 void solve () {
     ll n; cin >> n;
-    fo(i, 0, n) cin >> dfs[i];
-    fo(i, 0, n) cin >> lfs[i];
-    fo (i, 0, n) {
-        dfs_ind_by_val[dfs[i]] = i;
+    vector<Point> ps (n);
+    for(Point & p: ps) {
+        cin >> p.x >> p.t;
     }
-    fo (i, 0, n) {
-        lfs_ind_by_val[lfs[i]] = i;
+    sort(all(ps), [](Point a, Point b) {
+        if (a.t == b.t) return a.x < b.x;
+        return a.t < b.t;
+    });
+    vector<vector<Point>> a;
+    ll last = LLONG_MAX;
+    for(auto & p: ps) {
+        clog << p.x << " " << p.t << endl;
+        if (p.t != last) {
+            a.emplace_back();
+        }
+        a[(ll)a.size()-1].push_back(p);
+        last = p.t;
     }
-    if (dfs[0] != 1) {
-        cout << -1 << endl;
-        return;
-    }
-    queue<shit> q;
-    q.push({0, n-1, dfs[0]});
+    ll x=0;
     ll tot = 0;
-//    set<pair<ll, ll>> b;
-    while (!q.empty()) {
-        ll l = q.front().l;
-        ll r = q.front().r;
-//        assert(!b.contains(make_pair(l, r)));
-//        b.insert(make_pair(l, r));
-        ll root = q.front().root;
-        clog << "l = " << l << ", r = " << r << "; root = " << root << endl;
-        q.pop();
-        tot += 1;
-//        if (tot > (ll)1e7) {
-//            cout << -1 << endl;
-//            return;
-//        }
-        ll left_size = lfs_ind_by_val[root]-l;
-        ll right_size = r-l+1-left_size-1;
-//        clog << "left size = " << left_size << endl;
-//        clog << "right size = " << right_size << endl;
-        ll left_value, right_value;
-        if (left_size >= 1) {
-            left_value = dfs[dfs_ind_by_val[root]+1];
-            ans[root].first = left_value;
+    for (const auto& v : a) {
+        if (abs(x-v[0].x) > abs(x-v[(ll)v.size()-1].x)) {
+            roff(i, v.size()-1, 0) {
+                tot += abs(v[i].x-x);
+                x = v[i].x;
+            }
         } else {
-            ans[root].first = 0;
+            forr(i, 0, v.size()-1) {
+                tot += abs(v[i].x-x);
+                x = v[i].x;
+            }
         }
-        if (right_size >= 1) {
-            right_value = dfs[dfs_ind_by_val[root]+left_size+1];
-            ans[root].second = right_value;
-        } else {
-            ans[root].second = 0;
-        }
-        if (left_size < 0 || right_size < 0) {
-            cout << -1 << endl;
-            return;
-        }
-        if (left_size > 1) {
-            q.push({l, l+left_size-1, left_value});
-//            clog << l << " " << l+left_size-1 << " " << left_value << endl;
-        };
-        if (right_size > 1) {
-            q.push({l + left_size + 1, r, right_value});
-//            clog << l + left_size + 1 << " " << r << " " << right_value << endl;
-        };
     }
-    forr(i, 1, n) {
-        cout << ans[i].first << " " << ans[i].second << endl;
-    }
+    cout << tot+x << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
@@ -119,8 +86,6 @@ int32_t main (int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-//    fo(i, 0, 1) skip.insert(distrib(rng));
-//    cin >> tt;
     while (tt--) solve();
     return 0;
 }
