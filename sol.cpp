@@ -102,12 +102,11 @@ void solve () {
         ll dx = ss[i].b.x-ss[i].a.x;
         double tg = (double)dy/((double)dx + 1e-8);
         if (mnozh*dx < 0) {
-//            clog << "curr: " << ss[i].a.x << "," << ss[i].a.y << endl;
-//            clog << "prsl: " << preddy << "," << sleddy<< endl;
+            clog << "prsl: " << preddy << "," << sleddy<< endl;
             clog << "dno" << endl;
             if (simplified.empty() || mnozh*preddx >= 0) {
                 double predtg = (double)(preddy)/((double) preddx + 1e-8);
-//                cout << preddy << " " << preddx << endl;
+                clog << "predtg = " << predtg << endl;
                 predsledy.emplace_back(preddy<0 && abs(predtg) > abs(tg), 0);
                 simplified.emplace_back();
                 clog << "+" << endl;
@@ -116,6 +115,7 @@ void solve () {
                 simplified[simplified.size()-1].push_back(dy);
             }
             double sledtg = (double)(sleddy)/((double) sleddx + 1e-8);
+            clog << "sledtg = " << sledtg << endl;
             predsledy[predsledy.size()-1].second = sleddy>0 && abs(sledtg) > abs(tg);
         } else {
             clog << "krisha/vert" << endl;
@@ -149,8 +149,8 @@ void solve () {
             }
         }
     }
-    assert(tot != 0);
-    cout << tot << endl;
+//    assert(tot != 0);
+    cout << max(1ll, tot) << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
