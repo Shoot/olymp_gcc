@@ -21,15 +21,6 @@ mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 uniform_int_distribution<ll> distrib(100, 900);
 constexpr ll N = (ll)(2e4);
 constexpr ll MOD = 998244353;
-ll powm(ll a, ll b){
-    ll d = 1;
-    while(b){
-        if (b&1) d = (d*a) % MOD;
-        b >>= 1;
-        a = (a*a) % MOD;
-    }
-    return d;
-}
 /*
 void copy_this () {
     ll n; cin >> n;
@@ -39,40 +30,104 @@ void copy_this () {
     vector<ll> a(n); fo(i, 0, n) cin >> a[i];
 }
 */
-ll mul(ll a, ll b) {
-    return (a*b)%MOD;
-}
-ll div2(ll a) {
-    return mul(a, powm(2, MOD-2));
-}
-void solve () {
-    ll a, b; cin >> a >> b;
-    if (b == 0) {
-        cout << 0 << endl;
-        return;
+struct Point {
+    ll x, y;
+    Point() {
+        x = 0;
+        y = 0;
     }
-//    b%=MOD; // !!!!!! ????????
-    map<ll, ll> divs;
-    for (int i = 2; i * i <= a; i++) {
-        while (a % i == 0) {
-            ++divs[i];
-            a /= i;
+};
+struct Seg {
+    Point a, b;
+    Seg(Point a, Point b) {
+        this->a = a;
+        this->b = b;
+    }
+    Seg() = default;
+};
+void solve () {
+    ll n; cin >> n;
+    vector<Point> ps(n);
+    vector<Seg> ss(n);
+    fo(i, 0, n) {
+        cin >> ps[i].x >> ps[i].y;
+    }
+    fo(i, 0, n) {
+        ss[i].a = ps[i];
+        ss[i].b = ps[(i+1)%n];
+    }
+    ll mini = LLONG_MAX;
+    ll mini_i = -1;
+    fo(i, 0, n) {
+        if (ss[i].a.x < mini) {
+            mini_i = i;
+            mini = ss[i].a.x;
         }
     }
-    if (a > 1) divs[a]++; // мб простое
-    ll d = b;
-    clog << "d = " << d << endl;
-    for (auto [div, pwr] : divs) {
-        cout << "div=" << div << endl;
-        d*=b*pwr+1;
-        clog << b*pwr+1 << endl;
+    for (Seg _: ss) {
+        clog << _.a.x << "," << _.a.y << " -> " << _.b.x << "," << _.b.y << endl;
     }
-    d/=2;
-    d%=MOD;
-    // d = (b*e_1+1)*(b*e_2+1)*...*(b*e_n+1)/2, тк было p_i^e_i а стало p_i^(e_i*b)
-    // C=(a^b)^(d/2)=a^(b*d/2)
-    // Ответ: (b*d/2)  ^^^^^^^
-    cout << (ll)d << endl;
+    clog << endl;
+    rotate(ss.begin(), ss.begin()+mini_i, ss.end());
+    for (Seg _: ss) {
+        clog << _.a.x << "," << _.a.y << " -> " << _.b.x << "," << _.b.y << endl;
+    }
+    ll mnozh = 0;
+    double tg_first = (double)(ss[0].b.y-ss[0].a.y)/(double)(ss[0].b.x-ss[0].a.x);
+    double tg_last = (double)(ss[n-1].a.y-ss[n-1].b.y)/(double)(ss[n-1].a.x-ss[n-1].b.x);
+    double diff = (double)(ss[0].b.y-ss[0].a.y)/(double)(ss[0].b.x-ss[0].a.y) - (double)(ss[n-1].a.y-ss[n-1].b.y)/(double)(ss[n-1].a.x-ss[n-1].b.x);
+    assert(abs(diff) > 1e-8);
+    if (diff > 0) {
+        mnozh = 1;
+    } else {
+        mnozh = -1;
+    }
+    clog << "Tangs: " << tg_first  << " " <<  tg_last << endl;
+    assert(mnozh != 0);
+    /*
+    0,0 -> 1,2
+    1,2 -> 2,2
+    2,2 -> 0,0
+    Assertion failed: (false), function solve, file sol.cpp, line 78.
+     */
+    clog << "mnozh = " << mnozh << (mnozh == 1 ? " (dx > 0 -> krisha)" : " (dx < 0 -> krisha)") << endl;
+    assert(mnozh);
+    ll tot = 0;
+    fo(i, 0, n) {
+        clog << ss[i].a.x << "," << ss[i].a.y << " -> " << ss[i].b.x << "," << ss[i].b.y << endl;
+        ll dx = ss[i].b.x-ss[i].a.x;
+        ll preddx, preddy;
+        if (i == 0) preddx = ss[n-1].b.x-ss[n-1].a.x;
+        else preddx = ss[i-1].b.x-ss[i-1].a.x;
+        ll dy = ss[i].b.y-ss[i].a.y;
+        if (i == 0) preddy = ss[n-1].b.y-ss[n-1].a.y;
+        else preddy = ss[i-1].b.y-ss[i-1].a.y;
+        if (mnozh*dx > 0) {
+            clog << "krisha" << endl;
+            if (mnozh*preddx < 0 && preddy <= 0 && dy > 0) {
+                clog << "adding 1 specialkrisha" << endl;
+                tot += 1;
+            }
+        } else if (mnozh*dx < 0) {
+            clog << "dno" << endl;
+            if (mnozh*preddx < 0) {
+                clog << "pred = dno" << endl;
+                if (preddy <= 0 && dy > 0) {
+                    clog << "adding 1" << endl;
+                    tot += 1;
+                }
+            }
+        } else {
+            clog << "vert" << endl;
+            if (mnozh*preddx < 0 && preddy <= 0 && dy > 0) {
+                clog << "adding 1 specialvert" << endl;
+                tot += 1;
+            }
+            continue;
+        }
+    }
+    assert(tot != 0);
+    cout << tot << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
