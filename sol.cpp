@@ -47,30 +47,50 @@ ll div2(ll a) {
 }
 void solve () {
     ll a, b; cin >> a >> b;
+    b%=MOD;
     if (b == 0) {
         cout << 0 << endl;
         return;
     }
     map<ll, ll> divs;
-    for (int i = 2; i * i <= a; i++) {
+    for (ll i = 2; i * i <= a; i++) {
         while (a % i == 0) {
             ++divs[i];
             a /= i;
         }
     }
+    ll realpar = true;
     if (a > 1) divs[a]++; // мб простое
     ll d = 1;
-    for (auto [div, pwr] : divs) {
-        d = mul(d, (mul(b, pwr) + 1));
+    bool done = b%2 == 0;
+    ll b_ = b;
+    if (done) {
+        b_/=2;
+        clog << "done!" << endl;
     }
-    if (b == 1) {
-        cout << d/2 << endl;
-        return;
+    for (auto [div, pwr] : divs) {
+        ll m = mul(b, pwr) + 1;
+        if (m % 2 == 0 && !done) {
+            clog << "Ok!" << endl;
+            m/=2;
+            done = true;
+            clog << "done!" << endl;
+        }
+        d = mul(d, m);
     }
     // d = b*(e_1+1)*(e_2+1)*...*(e_n+1)/2, тк было p_i^e_i а стало p_i^(e_i*b)
     // C=(a^b)^(d/2)=a^(b*d/2)
     // Ответ: (b*d/2)  ^^^^^^^
-    cout << mul((b%MOD)/2, d) << endl;
+    if (!done && b_ != 1) {
+        clog << "Bad" << endl;
+        d = div2(d);
+        done = true;
+    }
+    if (!done) {
+        cout << d/2 << endl;
+        return;
+    }
+    cout << mul(b_, d) << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
