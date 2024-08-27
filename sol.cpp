@@ -19,7 +19,7 @@ typedef long double ld;
 #endif
 //mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 //uniform_int_distribution<ll> distrib(100, 900);
-constexpr ll N = (ll)(2e5+1);
+constexpr ll N = (ll)(1e5+1);
 //constexpr ll MOD = 998244353;
 /*
 void copy_this () {
@@ -30,45 +30,64 @@ void copy_this () {
     vector<ll> a(n); fo(i, 0, n) cin >> a[i];
 }
 */
-struct Point {
-    ll x, t;
-};
+ll last[N];
 void solve () {
-    ll n; cin >> n;
-    vector<Point> ps (n);
-    for(Point & p: ps) {
-        cin >> p.x >> p.t;
-    }
-    sort(all(ps), [](Point a, Point b) {
-        if (a.t == b.t) return a.x < b.x;
-        return a.t < b.t;
-    });
-    vector<vector<Point>> a;
-    ll last = LLONG_MAX;
-    for(auto & p: ps) {
-        clog << p.x << " " << p.t << endl;
-        if (p.t != last) {
-            a.emplace_back();
-        }
-        a[(ll)a.size()-1].push_back(p);
-        last = p.t;
-    }
-    ll x=0;
-    ll tot = 0;
-    for (const auto& v : a) {
-        if (abs(x-v[0].x) > abs(x-v[(ll)v.size()-1].x)) {
-            roff(i, v.size()-1, 0) {
-                tot += abs(v[i].x-x);
-                x = v[i].x;
+    memset(last, -1, sizeof(last));
+    ll n, m, vmest; cin >> n >> m >> vmest;
+    ll prev = -1;
+    ll cnt = 0;
+    unordered_map<ll, vector<pair<ll, ll>>> mp;
+    fo(i, 0, n) {
+        ll x; cin >> x;
+        if (x != prev) {
+            if (prev != -1) {
+                if (last[prev] == -1) mp[prev].emplace_back(0, cnt);
+                else mp[prev].emplace_back(i-last[prev]-cnt, cnt);
+                last[prev] = i;
             }
+            cnt = 1;
         } else {
-            forr(i, 0, v.size()-1) {
-                tot += abs(v[i].x-x);
-                x = v[i].x;
+            cnt += 1;
+        }
+        prev = x;
+    }
+    if (last[prev] == -1) mp[prev].emplace_back(0, cnt);
+    else mp[prev].emplace_back(n-last[prev]-cnt, cnt);
+    ll maxi = 0;
+    for (auto [i, v]: mp) {
+        clog << i << ": " << endl;
+        for (auto [l, c] : v) {
+            clog << l << " " << c << endl;
+        }
+        ll st = 0;
+        ll fi = 0;
+        ll current_balance = vmest;
+        ll total = v[0].second;
+        while (st < v.size()) {
+            clog << st << " -1> " << fi << " = " << total << endl;
+            while (current_balance >= 0 && fi+1 < v.size()) {
+                clog << st << " -2> " << fi << " = " << total << endl;
+                maxi = max(maxi, total);
+                fi += 1;
+                total += v[fi].second;
+                current_balance -= v[fi].first;
             }
+            if (current_balance >= 0) {
+                clog << st << " -3> " << fi << " = " << total << endl;
+                maxi = max(maxi, total);
+            }
+            bool stdv = false;
+            while (current_balance < 0 && st+1 < v.size()) {
+                clog << st << " -<> " << fi << endl;
+                current_balance += v[st].first;
+                total -= v[st].second;
+                st += 1;
+                stdv = true;
+            }
+            if (!stdv) st += 1;
         }
     }
-    cout << tot+x << endl;
+    cout << maxi << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
