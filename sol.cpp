@@ -47,50 +47,48 @@ ll div2(ll a) {
 }
 void solve () {
     ll a, b; cin >> a >> b;
-    b%=MOD;
+//    b%=MOD; // !!!!!! ????????
     if (b == 0) {
         cout << 0 << endl;
         return;
     }
     map<ll, ll> divs;
-    for (ll i = 2; i * i <= a; i++) {
+    for (int i = 2; i * i <= a; i++) {
         while (a % i == 0) {
             ++divs[i];
             a /= i;
         }
     }
-    ll realpar = true;
     if (a > 1) divs[a]++; // мб простое
-    ll d = 1;
-    bool done = b%2 == 0;
-    ll b_ = b;
-    if (done) {
-        b_/=2;
-        clog << "done!" << endl;
+    vector<ll> m;
+    bool done = false;
+    if (b%2==0) {
+        clog << "EZ b" << endl;
+        done = true;
+        m.push_back(b/2);
+    } else {
+        m.push_back(b);
     }
     for (auto [div, pwr] : divs) {
-        ll m = mul(b, pwr) + 1;
-        if (m % 2 == 0 && !done) {
-            clog << "Ok!" << endl;
-            m/=2;
+        if (b%2==1 && pwr%2==1 && !done) {
+            clog << "EZ div" << endl;
+            m.push_back((b*pwr+1)/2);
             done = true;
-            clog << "done!" << endl;
+        } else {
+            m.push_back(b*pwr+1);
         }
-        d = mul(d, m);
     }
+    __int128 d = 1;
+    for (ll j : m) {
+        clog << j << endl;
+        d *= j;
+    }
+    if (!done) d/=2;
+    d%=MOD;
     // d = b*(e_1+1)*(e_2+1)*...*(e_n+1)/2, тк было p_i^e_i а стало p_i^(e_i*b)
     // C=(a^b)^(d/2)=a^(b*d/2)
     // Ответ: (b*d/2)  ^^^^^^^
-    if (!done && b_ != 1) {
-        clog << "Bad" << endl;
-        d = div2(d);
-        done = true;
-    }
-    if (!done) {
-        cout << d/2 << endl;
-        return;
-    }
-    cout << mul(b_, d) << endl;
+    cout << (ll)d << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
