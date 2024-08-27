@@ -21,14 +21,14 @@ mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 uniform_int_distribution<ll> distrib(100, 900);
 constexpr ll N = (ll)(2e4);
 constexpr ll MOD = 998244353;
-ll pow(ll a, ll b){
-    ll ans = 1;
+ll powm(ll a, ll b){
+    ll d = 1;
     while(b){
-        if (b&1) ans = (ans*a) % MOD;
+        if (b&1) d = (d*a) % MOD;
         b >>= 1;
         a = (a*a) % MOD;
     }
-    return ans;
+    return d;
 }
 /*
 void copy_this () {
@@ -39,30 +39,38 @@ void copy_this () {
     vector<ll> a(n); fo(i, 0, n) cin >> a[i];
 }
 */
-map<ll, ll> prime_factors(ll n) {
-    map<ll, ll> factors;
-    for (int i = 2; i * i <= n; i++) {
-        while (n % i == 0) {
-            ++factors[i];
-            n /= i;
-        }
-    }
-    if (n > 1) factors[n]++; // мб простое
-    return factors;
+ll mul(ll a, ll b) {
+    return (a*b)%MOD;
 }
-
 ll div2(ll a) {
-    return (a*(MOD+1)/2)%MOD;
+    return mul(a, powm(2, MOD-2));
 }
-
 void solve () {
     ll a, b; cin >> a >> b;
-    ll ans = b;
-    for (auto [divisor, powweerr] : prime_factors(a)) {
-        ans = (ans*(b * powweerr + 1))%MOD;
+    if (b == 0) {
+        cout << 0 << endl;
+        return;
     }
-    // b*(e_1+1)*(e_2+1)*...*(e_n+1)/2
-    cout << (((ans)%MOD)*powmod)%MOD << endl;
+    map<ll, ll> divs;
+    for (int i = 2; i * i <= a; i++) {
+        while (a % i == 0) {
+            ++divs[i];
+            a /= i;
+        }
+    }
+    if (a > 1) divs[a]++; // мб простое
+    ll d = 1;
+    for (auto [div, pwr] : divs) {
+        d = mul(d, (mul(b, pwr) + 1));
+    }
+    if (b == 1) {
+        cout << d/2 << endl;
+        return;
+    }
+    // d = b*(e_1+1)*(e_2+1)*...*(e_n+1)/2, тк было p_i^e_i а стало p_i^(e_i*b)
+    // C=(a^b)^(d/2)=a^(b*d/2)
+    // Ответ: (b*d/2)  ^^^^^^^
+    cout << mul((b%MOD)/2, d) << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
