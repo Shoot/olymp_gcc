@@ -19,7 +19,7 @@ typedef long double ld;
 #endif
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 uniform_int_distribution<ll> distrib(100, 900);
-constexpr ll N = (ll)(2005);
+constexpr ll N = (ll)(2e5+1);
 constexpr ll MOD = 998244353;
 /*
 void copy_this () {
@@ -30,67 +30,52 @@ void copy_this () {
     vector<ll> a(n); fo(i, 0, n) cin >> a[i];
 }
 */
-
+pair<ll, ll> ans[N];
+ll dfs_ind_by_val [N];
+ll lfs_ind_by_val [N];
+ll dfs[N];
+ll lfs[N];
+void search (ll l, ll r, ll root) {
+    clog << "l = " << l << ", r = " << r << "; root = " << root << endl;
+    ll left_size = lfs_ind_by_val[root]-l;
+    ll right_size = r-l+1-left_size-1;
+    clog << "left size = " << left_size << endl;
+    clog << "right size = " << right_size << endl;
+    ll left_value, right_value;
+    if (left_size >= 1) {
+        left_value = dfs[dfs_ind_by_val[root]+1];
+        clog << "left value = " << left_value << endl;
+        ans[root].first = left_value;
+    } else {
+        ans[root].first = 0;
+    }
+    if (right_size >= 1) {
+        right_value = dfs[dfs_ind_by_val[root]+left_size+1];
+        clog << "right value = " << right_value << endl;
+        ans[root].second = right_value;
+    } else {
+        ans[root].second = 0;
+    }
+    if (left_size > 1) search(l, l+left_size-1, left_value);
+    if (right_size > 1) search(l+left_size+1, r, right_value);
+}
 void solve () {
     ll n; cin >> n;
-    vector<vector<ll>> sm (n+1);
-    forr(i, 1, n) {
-        string s;
-        cin >> s;
-        forr(j, i+1, s.size()) {
-            if (s[j-1] == '1') {
-                sm[i].push_back(j);
-                sm[j].push_back(i);
-            }
-        }
+    fo(i, 0, n) cin >> dfs[i];
+    fo(i, 0, n) cin >> lfs[i];
+    fo (i, 0, n) {
+        dfs_ind_by_val[dfs[i]] = i;
     }
-    ll maxi = 0;
-    unordered_map<ll, ll> cnt;
-    forr(i, 1, n){
-        maxi = max(maxi, (ll)sm[i].size());
-        cnt[(ll)sm[i].size()]+=1;
+    fo (i, 0, n) {
+        lfs_ind_by_val[lfs[i]] = i;
     }
-    if (maxi > 2) {
+    if (dfs[0] != 1) {
         cout << -1 << endl;
         return;
     }
+    search(0, n-1, dfs[0]);
     forr(i, 1, n) {
-        clog << i << ": ";
-        for (ll j: sm[i]) {
-            clog << j << ' ';
-        }
-        clog << endl;
-    }
-    for (auto [i, j]: cnt) {
-        clog << i << " x " << j << endl;
-    }
-    while (cnt[1] > 0) {
-        forr(i, 1, n) {
-            if ((ll)sm[i].size() == 1) {
-                queue<ll> q;
-                q.push(i);
-                while (!q.empty()) {
-                    ll de = q.back(); q.pop();
-                    clog << "new: " << de << endl;
-                    clog << "size: " << (ll)sm[de].size() << endl;
-                    if (sm[de].empty()) continue;
-                    for (ll nxt: sm[de]) {
-                        clog << "nxt: " << nxt << endl;
-                        q.push(nxt);
-                    }
-                    cnt[(ll)sm[de].size()] -= 1;
-                    sm[de].clear();
-                }
-            }
-        }
-    }
-    for (auto [i, j]: cnt) {
-        assert(j >= 0);
-    }
-    if (cnt[2] > 0) {
-        cout << -1 << endl;
-    } else {
-        cout << n << endl;
+        cout << ans[i].first << " " << ans[i].second << endl;
     }
 }
 int32_t main (int32_t argc, char* argv[]) {
