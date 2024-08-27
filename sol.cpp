@@ -64,7 +64,6 @@ void solve () {
         ll current_balance = vmest;
         ll total = v[0].second;
         while (st < v.size()) {
-            clog << st << " -1> " << fi << " = " << total << endl;
             while (current_balance >= 0 && fi+1 < v.size()) {
                 clog << st << " -2> " << fi << " = " << total << endl;
                 maxi = max(maxi, total);
@@ -79,7 +78,7 @@ void solve () {
             bool stdv = false;
             while (current_balance < 0 && st+1 < v.size()) {
                 clog << st << " -<> " << fi << endl;
-                current_balance += v[st].first;
+                current_balance += v[st+1].first;
                 total -= v[st].second;
                 st += 1;
                 stdv = true;
