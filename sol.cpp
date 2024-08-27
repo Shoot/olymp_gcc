@@ -19,7 +19,7 @@ typedef long double ld;
 #endif
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 uniform_int_distribution<ll> distrib(100, 900);
-constexpr ll N = (ll)(2e4);
+constexpr ll N = (ll)(2005);
 constexpr ll MOD = 998244353;
 /*
 void copy_this () {
@@ -64,10 +64,6 @@ void solve () {
             mini = ss[i].a.x;
         }
     }
-    for (Seg _: ss) {
-        clog << _.a.x << "," << _.a.y << " -> " << _.b.x << "," << _.b.y << endl;
-    }
-    clog << endl;
     rotate(ss.begin(), ss.begin()+mini_i, ss.end());
     for (Seg _: ss) {
         clog << _.a.x << "," << _.a.y << " -> " << _.b.x << "," << _.b.y << endl;
@@ -75,14 +71,14 @@ void solve () {
     ll mnozh = 0;
     double tg_first = (double)(ss[0].b.y-ss[0].a.y)/(double)(ss[0].b.x-ss[0].a.x);
     double tg_last = (double)(ss[n-1].a.y-ss[n-1].b.y)/(double)(ss[n-1].a.x-ss[n-1].b.x);
-    double diff = (double)(ss[0].b.y-ss[0].a.y)/(double)(ss[0].b.x-ss[0].a.y) - (double)(ss[n-1].a.y-ss[n-1].b.y)/(double)(ss[n-1].a.x-ss[n-1].b.x);
+    double diff = tg_first-tg_last;
+    clog << "Tangs: " << tg_first  << " " <<  tg_last << endl;
     assert(abs(diff) > 1e-8);
     if (diff > 0) {
         mnozh = 1;
     } else {
         mnozh = -1;
     }
-    clog << "Tangs: " << tg_first  << " " <<  tg_last << endl;
     assert(mnozh != 0);
     /*
     0,0 -> 1,2
@@ -91,43 +87,65 @@ void solve () {
     Assertion failed: (false), function solve, file sol.cpp, line 78.
      */
     clog << "mnozh = " << mnozh << (mnozh == 1 ? " (dx > 0 -> krisha)" : " (dx < 0 -> krisha)") << endl;
-    assert(mnozh);
     ll tot = 0;
+    vector<vector<ll>> simplified;
+    vector<pair<bool, bool>> predsledy;
     fo(i, 0, n) {
         clog << ss[i].a.x << "," << ss[i].a.y << " -> " << ss[i].b.x << "," << ss[i].b.y << endl;
-        ll dx = ss[i].b.x-ss[i].a.x;
-        ll preddx, preddy;
+        ll preddx;
+//        ll preddy;
         if (i == 0) preddx = ss[n-1].b.x-ss[n-1].a.x;
         else preddx = ss[i-1].b.x-ss[i-1].a.x;
+//        if (i == 0) preddy = ss[n-1].b.y-ss[n-1].a.y;
+//        else preddy = ss[i-1].b.y-ss[i-1].a.y;
         ll dy = ss[i].b.y-ss[i].a.y;
-        if (i == 0) preddy = ss[n-1].b.y-ss[n-1].a.y;
-        else preddy = ss[i-1].b.y-ss[i-1].a.y;
-        if (mnozh*dx > 0) {
-            clog << "krisha" << endl;
-            if (mnozh*preddx < 0 && preddy <= 0 && dy > 0) {
-                clog << "adding 1 specialkrisha" << endl;
-                tot += 1;
-            }
-        } else if (mnozh*dx < 0) {
+        ll dx = ss[i].b.x-ss[i].a.x;
+        if (mnozh*dx < 0) {
             clog << "dno" << endl;
-            if (mnozh*preddx < 0) {
-                clog << "pred = dno" << endl;
-                if (preddy <= 0 && dy > 0) {
-                    clog << "adding 1" << endl;
-                    tot += 1;
-                }
+            if (simplified.empty() || mnozh*preddx >= 0) {
+                predsledy.emplace_back((i == 0 ? ss[n-1].a.y>ss[i].a.y : ss[i-1].a.y>ss[i].a.y), 0);
+                simplified.emplace_back();
+                clog << "+" << endl;
             }
+            if (dy != 0) {
+                simplified[simplified.size()-1].push_back(dy);
+            }
+            predsledy[predsledy.size()-1].second = (i == n-1 ? ss[0].b.y>ss[i].b.y : ss[i+1].b.y>ss[i].b.y);
         } else {
-            clog << "vert" << endl;
-            if (mnozh*preddx < 0 && preddy <= 0 && dy > 0) {
-                clog << "adding 1 specialvert" << endl;
+            clog << "krisha/vert" << endl;
+        }
+    }
+    ll predsledy_i = 0;
+    for (const auto& dno: simplified) {
+        for (auto edge: dno) {
+            clog << edge << "; ";
+        }
+        clog << "l: " << predsledy[predsledy_i].first << ", r: " << predsledy[predsledy_i].second << " ";
+        if (dno.empty()) {
+            if (predsledy[predsledy_i].first && predsledy[predsledy_i].second) {
                 tot += 1;
+                clog << " --> 1" << endl;
+            } else {
+                clog << " --> 0" << endl;
             }
             continue;
         }
+        clog << endl;
+        if (predsledy[predsledy_i].first) {
+            tot += dno[0] > 0;
+        }
+        if (predsledy[predsledy_i].second) {
+            tot += dno[dno.size()-1] < 0;
+        }
+        fo(i, 0, dno.size()-1) {
+            if ((dno[i] < 0) && (dno[i+1] > 0)) {
+                tot += 1;
+            }
+        }
+        predsledy_i += 1;
     }
-    assert(tot != 0);
-    cout << tot << endl;
+//    assert(tot != 0);
+    cout << max(1ll, tot) << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
