@@ -69,8 +69,8 @@ void solve () {
         clog << _.a.x << "," << _.a.y << " -> " << _.b.x << "," << _.b.y << endl;
     }
     ll mnozh = 0;
-    double tg_first = (double)(ss[0].b.y-ss[0].a.y)/(double)(ss[0].b.x-ss[0].a.x);
-    double tg_last = (double)(ss[n-1].a.y-ss[n-1].b.y)/(double)(ss[n-1].a.x-ss[n-1].b.x);
+    double tg_first = (double)(ss[0].b.y-ss[0].a.y)/((double)(ss[0].b.x-ss[0].a.x) + 1e-8);
+    double tg_last = (double)(ss[n-1].a.y-ss[n-1].b.y)/((double)(ss[n-1].a.x-ss[n-1].b.x) + 1e-8);
     double diff = tg_first-tg_last;
     clog << "Tangs: " << tg_first  << " " <<  tg_last << endl;
     assert(abs(diff) > 1e-8);
@@ -79,13 +79,7 @@ void solve () {
     } else {
         mnozh = -1;
     }
-    assert(mnozh != 0);
-    /*
-    0,0 -> 1,2
-    1,2 -> 2,2
-    2,2 -> 0,0
-    Assertion failed: (false), function solve, file sol.cpp, line 78.
-     */
+    assert(mnozh == -1);
     clog << "mnozh = " << mnozh << (mnozh == 1 ? " (dx > 0 -> krisha)" : " (dx < 0 -> krisha)") << endl;
     ll tot = 0;
     vector<vector<ll>> simplified;
@@ -93,34 +87,46 @@ void solve () {
     fo(i, 0, n) {
         clog << ss[i].a.x << "," << ss[i].a.y << " -> " << ss[i].b.x << "," << ss[i].b.y << endl;
         ll preddx;
-//        ll preddy;
+        ll preddy;
         if (i == 0) preddx = ss[n-1].b.x-ss[n-1].a.x;
         else preddx = ss[i-1].b.x-ss[i-1].a.x;
-//        if (i == 0) preddy = ss[n-1].b.y-ss[n-1].a.y;
-//        else preddy = ss[i-1].b.y-ss[i-1].a.y;
+        if (i == 0) preddy = ss[n-1].b.y-ss[n-1].a.y;
+        else preddy = ss[i-1].b.y-ss[i-1].a.y;
+//        ll sleddx;
+        ll sleddy;
+//        if (i == 0) sleddx = ss[0].b.x-ss[0].a.x;
+//        else sleddx = ss[i+1].b.x-ss[i+1].a.x;
+        if (i == n-1) sleddy = ss[0].b.y-ss[0].a.y;
+        else sleddy = ss[i+1].b.y-ss[i+1].a.y;
         ll dy = ss[i].b.y-ss[i].a.y;
         ll dx = ss[i].b.x-ss[i].a.x;
+//        double tg = (double)dy/((double)dx + 1e-8);
         if (mnozh*dx < 0) {
+//            clog << "curr: " << ss[i].a.x << "," << ss[i].a.y << endl;
+//            clog << "prsl: " << preddy << "," << sleddy<< endl;
             clog << "dno" << endl;
             if (simplified.empty() || mnozh*preddx >= 0) {
-                predsledy.emplace_back((i == 0 ? ss[n-1].a.y>ss[i].a.y : ss[i-1].a.y>ss[i].a.y), 0);
+//                double predtg = (double)(preddy)/((double) preddx + 1e-8);
+//                cout << preddy << " " << preddx << endl;
+                predsledy.emplace_back(preddy<0, 0);
                 simplified.emplace_back();
                 clog << "+" << endl;
             }
             if (dy != 0) {
                 simplified[simplified.size()-1].push_back(dy);
             }
-            predsledy[predsledy.size()-1].second = (i == n-1 ? ss[0].b.y>ss[i].b.y : ss[i+1].b.y>ss[i].b.y);
+//            double sledtg = (double)(sleddy)/((double) sleddx + 1e-8);
+            predsledy[predsledy.size()-1].second = sleddy>0;
         } else {
             clog << "krisha/vert" << endl;
         }
     }
-    ll predsledy_i = 0;
+    ll predsledy_i = -1;
     for (const auto& dno: simplified) {
+        predsledy_i += 1;
         for (auto edge: dno) {
             clog << edge << "; ";
         }
-        clog << "l: " << predsledy[predsledy_i].first << ", r: " << predsledy[predsledy_i].second << " ";
         if (dno.empty()) {
             if (predsledy[predsledy_i].first && predsledy[predsledy_i].second) {
                 tot += 1;
@@ -142,10 +148,9 @@ void solve () {
                 tot += 1;
             }
         }
-        predsledy_i += 1;
     }
-//    assert(tot != 0);
-    cout << max(1ll, tot) << endl;
+    assert(tot != 0);
+    cout << tot << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
