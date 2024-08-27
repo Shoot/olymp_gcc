@@ -47,11 +47,11 @@ ll div2(ll a) {
 }
 void solve () {
     ll a, b; cin >> a >> b;
-//    b%=MOD; // !!!!!! ????????
     if (b == 0) {
         cout << 0 << endl;
         return;
     }
+//    b%=MOD; // !!!!!! ????????
     map<ll, ll> divs;
     for (int i = 2; i * i <= a; i++) {
         while (a % i == 0) {
@@ -60,32 +60,16 @@ void solve () {
         }
     }
     if (a > 1) divs[a]++; // мб простое
-    vector<ll> m;
-    bool done = false;
-    if (b%2==0) {
-        clog << "EZ b" << endl;
-        done = true;
-        m.push_back(b/2);
-    } else {
-        m.push_back(b);
-    }
+    ll d = b;
+    clog << "d = " << d << endl;
     for (auto [div, pwr] : divs) {
-        if (b%2==1 && pwr%2==1 && !done) {
-            clog << "EZ div" << endl;
-            m.push_back((b*pwr+1)/2);
-            done = true;
-        } else {
-            m.push_back(b*pwr+1);
-        }
+        cout << "div=" << div << endl;
+        d*=b*pwr+1;
+        clog << b*pwr+1 << endl;
     }
-    __int128 d = 1;
-    for (ll j : m) {
-        clog << j << endl;
-        d *= j;
-    }
-    if (!done) d/=2;
+    d/=2;
     d%=MOD;
-    // d = b*(e_1+1)*(e_2+1)*...*(e_n+1)/2, тк было p_i^e_i а стало p_i^(e_i*b)
+    // d = (b*e_1+1)*(b*e_2+1)*...*(b*e_n+1)/2, тк было p_i^e_i а стало p_i^(e_i*b)
     // C=(a^b)^(d/2)=a^(b*d/2)
     // Ответ: (b*d/2)  ^^^^^^^
     cout << (ll)d << endl;
