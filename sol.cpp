@@ -17,10 +17,10 @@ typedef long double ld;
 #define debug(...) 68
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #endif
-mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-uniform_int_distribution<ll> distrib(100, 900);
+//mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
+//uniform_int_distribution<ll> distrib(100, 900);
 constexpr ll N = (ll)(2e5+1);
-constexpr ll MOD = 998244353;
+//constexpr ll MOD = 998244353;
 /*
 void copy_this () {
     ll n; cin >> n;
@@ -35,30 +35,9 @@ ll dfs_ind_by_val [N];
 ll lfs_ind_by_val [N];
 ll dfs[N];
 ll lfs[N];
-void search (ll l, ll r, ll root) {
-    clog << "l = " << l << ", r = " << r << "; root = " << root << endl;
-    ll left_size = lfs_ind_by_val[root]-l;
-    ll right_size = r-l+1-left_size-1;
-    clog << "left size = " << left_size << endl;
-    clog << "right size = " << right_size << endl;
-    ll left_value, right_value;
-    if (left_size >= 1) {
-        left_value = dfs[dfs_ind_by_val[root]+1];
-        clog << "left value = " << left_value << endl;
-        ans[root].first = left_value;
-    } else {
-        ans[root].first = 0;
-    }
-    if (right_size >= 1) {
-        right_value = dfs[dfs_ind_by_val[root]+left_size+1];
-        clog << "right value = " << right_value << endl;
-        ans[root].second = right_value;
-    } else {
-        ans[root].second = 0;
-    }
-    if (left_size > 1) search(l, l+left_size-1, left_value);
-    if (right_size > 1) search(l+left_size+1, r, right_value);
-}
+struct shit {
+    ll l, r, root;
+};
 void solve () {
     ll n; cin >> n;
     fo(i, 0, n) cin >> dfs[i];
@@ -73,7 +52,53 @@ void solve () {
         cout << -1 << endl;
         return;
     }
-    search(0, n-1, dfs[0]);
+    queue<shit> q;
+    q.push({0, n-1, dfs[0]});
+    ll tot = 0;
+//    set<pair<ll, ll>> b;
+    while (!q.empty()) {
+        ll l = q.front().l;
+        ll r = q.front().r;
+//        assert(!b.contains(make_pair(l, r)));
+//        b.insert(make_pair(l, r));
+        ll root = q.front().root;
+        clog << "l = " << l << ", r = " << r << "; root = " << root << endl;
+        q.pop();
+        tot += 1;
+//        if (tot > (ll)1e7) {
+//            cout << -1 << endl;
+//            return;
+//        }
+        ll left_size = lfs_ind_by_val[root]-l;
+        ll right_size = r-l+1-left_size-1;
+//        clog << "left size = " << left_size << endl;
+//        clog << "right size = " << right_size << endl;
+        ll left_value, right_value;
+        if (left_size >= 1) {
+            left_value = dfs[dfs_ind_by_val[root]+1];
+            ans[root].first = left_value;
+        } else {
+            ans[root].first = 0;
+        }
+        if (right_size >= 1) {
+            right_value = dfs[dfs_ind_by_val[root]+left_size+1];
+            ans[root].second = right_value;
+        } else {
+            ans[root].second = 0;
+        }
+        if (left_size < 0 || right_size < 0) {
+            cout << -1 << endl;
+            return;
+        }
+        if (left_size > 1) {
+            q.push({l, l+left_size-1, left_value});
+//            clog << l << " " << l+left_size-1 << " " << left_value << endl;
+        };
+        if (right_size > 1) {
+            q.push({l + left_size + 1, r, right_value});
+//            clog << l + left_size + 1 << " " << r << " " << right_value << endl;
+        };
+    }
     forr(i, 1, n) {
         cout << ans[i].first << " " << ans[i].second << endl;
     }
