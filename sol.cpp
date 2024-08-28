@@ -59,7 +59,7 @@ void solve () {
     roff(i, yea.size()-2, 0) {
         ll ltot_n = (yea[i].second-yea[i].first)+min(abs(yea[i+1].second-yea[i].second)+rtot,
                                                 abs(yea[i+1].first-yea[i].second)+ltot);
-        ll rtot_n = rtot = (yea[i].second-yea[i].first)+min(abs(yea[i+1].second-yea[i].first)+rtot,
+        ll rtot_n = (yea[i].second-yea[i].first)+min(abs(yea[i+1].second-yea[i].first)+rtot,
                                                 abs(yea[i+1].first-yea[i].first)+ltot);
         ltot = ltot_n;
         rtot = rtot_n;
