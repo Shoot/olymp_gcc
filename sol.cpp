@@ -19,7 +19,7 @@ typedef long double ld;
 #endif
 //mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 //uniform_int_distribution<ll> distrib(100, 900);
-constexpr ll N = (ll)(1e5+1);
+constexpr ll N = (ll)(2e5+1);
 //constexpr ll MOD = 998244353;
 /*
 void copy_this () {
@@ -30,63 +30,59 @@ void copy_this () {
     vector<ll> a(n); fo(i, 0, n) cin >> a[i];
 }
 */
-ll last[N];
+struct Point {
+    ll x, t;
+};
 void solve () {
-    memset(last, -1, sizeof(last));
-    ll n, m, vmest; cin >> n >> m >> vmest;
-    ll prev = -1;
-    ll cnt = 0;
-    unordered_map<ll, vector<pair<ll, ll>>> mp;
+    ll n; cin >> n;
+    map<ll, pair<ll, ll>> shit;
     fo(i, 0, n) {
-        ll x; cin >> x;
-        if (x != prev) {
-            if (prev != -1) {
-                if (last[prev] == -1) mp[prev].emplace_back(0, cnt);
-                else mp[prev].emplace_back(i-last[prev]-cnt, cnt);
-                last[prev] = i;
-            }
-            cnt = 1;
+        ll x, t; cin >> x >> t;
+        if (!shit.contains(t)) {
+            shit[t].first = x;
+            shit[t].second = x;
         } else {
-            cnt += 1;
-        }
-        prev = x;
-    }
-    if (last[prev] == -1) mp[prev].emplace_back(0, cnt);
-    else mp[prev].emplace_back(n-last[prev]-cnt, cnt);
-    ll maxi = 0;
-    for (auto [i, v]: mp) {
-        clog << i << ": " << endl;
-        for (auto [l, c] : v) {
-            clog << l << " " << c << endl;
-        }
-        ll st = 0;
-        ll fi = 0;
-        ll current_balance = vmest;
-        ll total = v[0].second;
-        while (st < v.size()) {
-            while (current_balance >= 0 && fi+1 < v.size()) {
-                clog << st << " -2> " << fi << " = " << total << endl;
-                maxi = max(maxi, total);
-                fi += 1;
-                total += v[fi].second;
-                current_balance -= v[fi].first;
-            }
-            if (current_balance >= 0) {
-                clog << st << " -3> " << fi << " = " << total << endl;
-                maxi = max(maxi, total);
-            }
-            bool stdv = false;
-            while (current_balance < 0 && st+1 < v.size()) {
-                clog << st << " -<> " << fi << endl;
-                current_balance += v[st+1].first;
-                total -= v[st].second;
-                st += 1;
-                stdv = true;
-            }
-            if (!stdv) st += 1;
+            shit[t].first = min(shit[t].first, x);
+            shit[t].second = max(shit[t].second, x);
         }
     }
-    cout << maxi << endl;
+    shit[0] = make_pair(0, 0);
+    shit[LLONG_MAX] = make_pair(0, 0);
+    vector<pair<ll, ll>> yea (shit.size());
+    ll h = 0;
+    for (auto [i, j] : shit) {
+        yea[h] = j;
+        h += 1;
+    }
+    ll ltot = 0;
+    ll rtot = 0;
+    roff(i, yea.size()-2, 0) {
+        ll ltot_n = (yea[i].second-yea[i].first)+min(abs(yea[i+1].second-yea[i].second)+rtot,
+                                                abs(yea[i+1].first-yea[i].second)+ltot);
+        ll rtot_n = rtot = (yea[i].second-yea[i].first)+min(abs(yea[i+1].second-yea[i].first)+rtot,
+                                                abs(yea[i+1].first-yea[i].first)+ltot);
+        ltot = ltot_n;
+        rtot = rtot_n;
+        clog << ltot << " " << rtot << endl;
+    }
+    assert(ltot == rtot);
+    cout << ltot << endl;
+//    ll x=0;
+//    ll tot = 0;
+//    for (const auto& v : a) {
+//        if (abs(x-v[0].x) > abs(x-v[(ll)v.size()-1].x)) {
+//            roff(i, v.size()-1, 0) {
+//                tot += abs(v[i].x-x);
+//                x = v[i].x;
+//            }
+//        } else {
+//            forr(i, 0, v.size()-1) {
+//                tot += abs(v[i].x-x);
+//                x = v[i].x;
+//            }
+//        }
+//    }
+//    cout << tot+x << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
