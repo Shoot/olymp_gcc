@@ -30,59 +30,66 @@ void copy_this () {
     vector<ll> a(n); fo(i, 0, n) cin >> a[i];
 }
 */
-struct Point {
-    ll x, t;
+struct shit {
+    ll opens=0, closes=0, i=0;
 };
 void solve () {
     ll n; cin >> n;
-    map<ll, pair<ll, ll>> shit;
-    fo(i, 0, n) {
-        ll x, t; cin >> x >> t;
-        if (!shit.contains(t)) {
-            shit[t].first = x;
-            shit[t].second = x;
-        } else {
-            shit[t].first = min(shit[t].first, x);
-            shit[t].second = max(shit[t].second, x);
+    vector<shit> a(n);
+    ll i=0;
+    string test[n+1];
+    for(shit & x: a) {
+        i += 1;
+        cin >> test[i];
+        ll this_closes=0;
+        ll this_opens=0;
+        for (char j: test[i]) {
+            if (j == ')' && this_opens == 0) {
+                this_closes += 1;
+                continue;
+            }
+            if (j == ')') {
+                this_opens -= 1;
+                continue;
+            }
+            if (j == '(') {
+                this_opens += 1;
+            }
+        }
+        x.opens = this_opens;
+        x.closes = this_closes;
+        x.i = i;
+    }
+    sort(all(a), [] (shit a, shit b) {
+        if (a.opens == 0 && b.opens != 0) return false;
+        if (b.opens == 0 && a.opens != 0) return true;
+        if (a.closes == b.closes) return a.opens > b.opens;
+        return a.closes < b.closes;
+    });
+    ll curr = 0;
+    for(shit & x: a) {
+        clog << x.opens << " " << x.closes << " (" << x.i << ")" << endl;
+        curr += x.closes;
+        if (curr > 0) {
+            cout << -1 << endl;
+            return;
+        }
+        curr -= x.opens;
+    }
+    if (curr != 0) {
+        cout << -1 << endl;
+        return;
+    }
+    ll curr_test = 0;
+    for(shit & x: a) {
+        cout << x.i << " ";
+        for (char j: test[x.i]) {
+            curr_test += (j == '(');
+            curr_test -= (j == ')');
+            assert(curr_test >= 0);
         }
     }
-    shit[0] = make_pair(0, 0);
-    shit[LLONG_MAX] = make_pair(0, 0);
-    vector<pair<ll, ll>> yea (shit.size());
-    ll h = 0;
-    for (auto [i, j] : shit) {
-        yea[h] = j;
-        h += 1;
-    }
-    ll ltot = 0;
-    ll rtot = 0;
-    roff(i, yea.size()-2, 0) {
-        ll ltot_n = (yea[i].second-yea[i].first)+min(abs(yea[i+1].second-yea[i].second)+rtot,
-                                                abs(yea[i+1].first-yea[i].second)+ltot);
-        ll rtot_n = (yea[i].second-yea[i].first)+min(abs(yea[i+1].second-yea[i].first)+rtot,
-                                                abs(yea[i+1].first-yea[i].first)+ltot);
-        ltot = ltot_n;
-        rtot = rtot_n;
-        clog << ltot << " " << rtot << endl;
-    }
-    assert(ltot == rtot);
-    cout << ltot << endl;
-//    ll x=0;
-//    ll tot = 0;
-//    for (const auto& v : a) {
-//        if (abs(x-v[0].x) > abs(x-v[(ll)v.size()-1].x)) {
-//            roff(i, v.size()-1, 0) {
-//                tot += abs(v[i].x-x);
-//                x = v[i].x;
-//            }
-//        } else {
-//            forr(i, 0, v.size()-1) {
-//                tot += abs(v[i].x-x);
-//                x = v[i].x;
-//            }
-//        }
-//    }
-//    cout << tot+x << endl;
+    cout << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
