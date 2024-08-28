@@ -26,52 +26,39 @@ void copy_this () {
     ll n; cin >> n;
     ll n, k; cin >> n >> k;
     ll n, q; cin >> n >> q;
-    ll a[n]; fo(i, 0, n) cin >> a[i];
-    vector<ll> a(n); fo(i, 0, n) cin >> a[i];
+    ll pref[n]; fo(i, 0, n) cin >> pref[i];
+    vector<ll> pref(n); fo(i, 0, n) cin >> pref[i];
 }
 */
-int count_unique_strings(const string& S) {
-    int n = (int)S.size();
-    unordered_set<string> unique_strings;
-    unique_strings.insert(S);
+ll shit(const vector<ll>& pref) {
 
-    for (int i = 0; i < n; ++i) {
-        for (int j = i; j < n; ++j) {
-            string prefix = S.substr(0, i);
-            string to_reverse = S.substr(i, j - i + 1);
-            string suffix = S.substr(j + 1);
-            reverse(to_reverse.begin(), to_reverse.end());
-            string new_string = prefix;
-            new_string += to_reverse + suffix;
-            unique_strings.insert(new_string);
+    return max(ans, suff[0]);
+}
+
+void solve () {
+    ll n; cin >> n;
+    vector<ll> pref(n); fo(i, 0, n) cin >> pref[i];
+    vector<int> pref(n, 1);
+    vector<int> suff(n+1, 1);
+    int ans = 1;
+    fo(i, 1, n) {
+        if (pref[i] > pref[i - 1]) {
+            pref[i] = pref[i - 1] + 1;
+            ans = max(ans, pref[i]);
         }
     }
-
-    return (int)unique_strings.size();
-}
-void solve () {
-    string s; cin >> s;
-    ll n = (ll)s.size();
-    ll kol[1000];
-    memset(kol, 0, sizeof(kol));
-    set<char> st;
-    for (char j : s) {
-        kol[j-'a'] += 1;
-        st.insert(j);
+    if (ans != n)
+        ++ans;
+    suff[n] = 0;
+    roff (i, n-1, 1) {
+        if (pref[i - 1] < pref[i])
+            suff[i] = suff[i + 1] + 1;
     }
-    ll res = n*(n-1)/2+1;
-    fo(i, 0, 1000) {
-        res -= kol[i]*(kol[i]-1)/2;
+    roff (i, n-2, 1) {
+        if (pref[i + 1] - pref[i - 1] > 1) ans = max(ans, pref[i - 1] + suff[i + 1] + 1);
     }
-    if (st.size() == 1) {
-        assert(n > 10000 || res == 1);
-        cout << 1 << endl;
-//        clog << res << endl;
-        return;
-    }
-//        assert(count_unique_strings(s) == res+1);
-    cout << res << endl;
-//    cout << count_unique_strings(s) << endl;
+    assert(shit(pref) == max(ans, suff[0]));
+    cout << shit(pref) << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
