@@ -30,66 +30,44 @@ void copy_this () {
     vector<ll> a(n); fo(i, 0, n) cin >> a[i];
 }
 */
-struct shit {
-    ll opens=0, closes=0, i=0;
-};
+int count_unique_strings(const string& S) {
+    int n = (int)S.size();
+    unordered_set<string> unique_strings;
+    unique_strings.insert(S);
+
+    for (int i = 0; i < n; ++i) {
+        for (int j = i; j < n; ++j) {
+            string prefix = S.substr(0, i);
+            string to_reverse = S.substr(i, j - i + 1);
+            string suffix = S.substr(j + 1);
+            reverse(to_reverse.begin(), to_reverse.end());
+            string new_string = prefix;
+            new_string += to_reverse + suffix;
+            unique_strings.insert(new_string);
+        }
+    }
+
+    return (int)unique_strings.size();
+}
 void solve () {
-    ll n; cin >> n;
-    vector<shit> a(n);
-    ll i=0;
-    string test[n+1];
-    for(shit & x: a) {
-        i += 1;
-        cin >> test[i];
-        ll this_closes=0;
-        ll this_opens=0;
-        for (char j: test[i]) {
-            if (j == ')' && this_opens == 0) {
-                this_closes += 1;
-                continue;
-            }
-            if (j == ')') {
-                this_opens -= 1;
-                continue;
-            }
-            if (j == '(') {
-                this_opens += 1;
-            }
-        }
-        x.opens = this_opens;
-        x.closes = this_closes;
-        x.i = i;
+    string s; cin >> s;
+    int n = (int)s.size();
+    unordered_map<ll, ll> mp;
+    for (char j : s) {
+        mp[j] += 1;
     }
-    sort(all(a), [] (shit a, shit b) {
-        if (a.opens == 0 && b.opens != 0) return false;
-        if (b.opens == 0 && a.opens != 0) return true;
-        if (a.closes == b.closes) return a.opens > b.opens;
-        return a.closes < b.closes;
-    });
-    ll curr = 0;
-    for(shit & x: a) {
-        clog << x.opens << " " << x.closes << " (" << x.i << ")" << endl;
-        curr += x.closes;
-        if (curr > 0) {
-            cout << -1 << endl;
-            return;
-        }
-        curr -= x.opens;
-    }
-    if (curr != 0) {
-        cout << -1 << endl;
+    if (mp.size() == 1) {
+        cout << 1 << endl;
         return;
     }
-    ll curr_test = 0;
-    for(shit & x: a) {
-        cout << x.i << " ";
-        for (char j: test[x.i]) {
-            curr_test += (j == '(');
-            curr_test -= (j == ')');
-            assert(curr_test >= 0);
-        }
+    ll res = n*(n-1)/2;
+    for (auto [i, j]: mp) {
+        if (j == 1) continue;
+        res -= j*(j-1)/2;
     }
-    cout << endl;
+//        assert(count_unique_strings(s) == res+1);
+    cout << res+1 << endl;
+//    cout << count_unique_strings(s) << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
