@@ -26,39 +26,41 @@ void copy_this () {
     ll n; cin >> n;
     ll n, k; cin >> n >> k;
     ll n, q; cin >> n >> q;
-    ll pref[n]; fo(i, 0, n) cin >> pref[i];
-    vector<ll> pref(n); fo(i, 0, n) cin >> pref[i];
+    ll a[n]; fo(i, 0, n) cin >> a[i];
+    vector<ll> a(n); fo(i, 0, n) cin >> a[i];
 }
 */
-ll shit(const vector<ll>& pref) {
-
-    return max(ans, suff[0]);
-}
 
 void solve () {
     ll n; cin >> n;
-    vector<ll> pref(n); fo(i, 0, n) cin >> pref[i];
-    vector<int> pref(n, 1);
-    vector<int> suff(n+1, 1);
-    int ans = 1;
+    vector<ll> a(n); fo(i, 0, n) cin >> a[i];
+    vector<ll> pref(n, 1);
+    vector<ll> suff(n, 1);
     fo(i, 1, n) {
-        if (pref[i] > pref[i - 1]) {
-            pref[i] = pref[i - 1] + 1;
-            ans = max(ans, pref[i]);
+        if (a[i-1] < a[i]) pref[i] = pref[i-1]+1;
+        else pref[i] = pref[i-1];
+    }
+    ll ans = pref[n-1];
+    if (a[0] >= a[1] || a[n-2] >= a[n-1]) {
+        cout << ans+1 << endl;
+        return;
+    }
+    suff[n-1] = 1;
+    roff(i, n-2, 0) {
+        if (a[i] < a[i+1]) suff[i] = suff[i+1]+1;
+        else suff[i] = suff[i+1];
+    }
+    fo(i, 0, n) clog << pref[i] << ' ';
+    clog << endl;
+    fo(i, 0, n) clog << suff[i] << ' ';
+    clog << endl;
+    fo(i, 1, n-1) {
+        if (a[i + 1] - a[i - 1] > 1) {
+            clog << a[i - 1] << " & " << a[i + 1] << endl;
+            ans = max(ans, pref[i - 1] + suff[i+1] + 1);
         }
     }
-    if (ans != n)
-        ++ans;
-    suff[n] = 0;
-    roff (i, n-1, 1) {
-        if (pref[i - 1] < pref[i])
-            suff[i] = suff[i + 1] + 1;
-    }
-    roff (i, n-2, 1) {
-        if (pref[i + 1] - pref[i - 1] > 1) ans = max(ans, pref[i - 1] + suff[i + 1] + 1);
-    }
-    assert(shit(pref) == max(ans, suff[0]));
-    cout << shit(pref) << endl;
+    cout << ans << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
