@@ -52,22 +52,18 @@ int count_unique_strings(const string& S) {
 void solve () {
     string s; cin >> s;
     int n = (int)s.size();
-    unordered_map<ll, ll> mp;
+    ll kol[1000];
+    memset(kol, 0, sizeof(kol));
     for (char j : s) {
-        mp[j] += 1;
+        kol[j-'a'] += 1;
     }
-    if (mp.size() == 1) {
-        cout << 1 << endl;
-        return;
-    }
-    ll res = n*(n-1)/2;
-    for (auto [i, j]: mp) {
-        if (j == 1) continue;
-        res -= j*(j-1)/2;
+    ll res = n*(n-1)/2+1;
+    fo(i, 0, 1000) {
+        res -= kol[i]*(kol[i]-1)/2;
     }
 //        assert(count_unique_strings(s) == res+1);
-    cout << res+1 << endl;
-//    cout << count_unique_strings(s) << endl;
+    cout << res << endl;
+    cout << count_unique_strings(s) << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
