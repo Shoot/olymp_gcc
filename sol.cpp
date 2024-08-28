@@ -47,85 +47,123 @@ void su_shit (ll l, ll r) {
     tot += (ll)su_st.order_of_key(l);
     clog << "Отн su до " << l << endl;
 }
+ll temp;
 void solve () {
     ll n, m; cin >> n >> m;
     ll q; cin >> q;
-//    vector<ll> razn_pol (m);
-//    vector<ll> razn_otr (n);
-//    vector<ll> su (m+n+1);
-//    fo(r_p, 0, n) {
-//        razn_pol[r_p] = min(n-r_p, m);
-//        clog << "r_p: " << r_p << " = " << razn_pol[r_p] << endl;
-//    }
-//    fo(r_o, 1, m) {
-//        razn_otr[r_o] = min(m-r_o, n);
-//        clog << "r_o: " << r_o << " = " << razn_otr[r_o] << endl;
-//    }
-//    forr(s, 2, m+n) {
-//        if (s > max(n, m)) {
-//            su[s] = min(n, m) - (s - max(m, n)) + 1;
-//        } else {
-//            su[s] = min(s-1, min(n, m));
-//        }
-//        clog << "su: " << s << " = " << su[s] << endl;
-//    }
-
-    while (q--) {
+    unordered_set<ll> was_sum;
+    unordered_set<ll> was_raz;
+    fo(iii, 0, q) {
+        ll _tot = tot;
         char type; cin >> type;
         if (type == '+') {
             ll su_add; cin >> su_add;
             clog << "su: " << su_add << endl;
-            su_st.insert(su_add);
-            if (su_add > max(n, m)) {
-                tot += min(n, m) - (su_add - max(m, n)) + 1;
-            } else {
-                tot += min(su_add-1, min(n, m));
+            if (was_sum.contains(su_add)) {
+                clog << "skip" << endl;
+                continue;
             }
-            if (su_add <= min(n, m)+1) {
-                tot -= (ll)razn_otr_st.order_of_key(su_add-2+1);
-                clog << "Отр до " << su_add-2+1 << endl;
-                tot -= (ll)razn_pol_st.order_of_key(su_add-2+1);
-                clog << "Пол до " << su_add-2+1 << endl;
-            } else if (su_add <= max(n, m)+1) {
-                ll d = su_add-(min(n, m)+1);
-                ll base = min(n, m)+1-2;
-                tot -= (ll)razn_otr_st.order_of_key(base-d+1);
-                clog << "Отр до " << base-d+1 << endl;
-                tot -= (ll)razn_pol_st.order_of_key(base+d+1);
-                clog << "Пол до " << base+d+1 << endl;
+            su_st.insert(su_add);
+            was_sum.insert(su_add);
+            ll dlina;
+            if (su_add > max(n, m)) {
+                dlina = min(n, m) - (su_add - max(m, n)) + 1;
             } else {
-                ll shit_d = max(n, m)+1-(min(n, m)+1);
-                ll shit_base = min(n, m)+1-2;
-                ll base_otr = -(shit_base-shit_d);
-                ll base_pol = shit_base+shit_d;
-                ll d = su_add-(max(n, m)+1);
-                ll l = base_otr+d;
-                ll r = base_pol-d;
-                if (l < 0) {
-                    tot -= (ll)razn_otr_st.order_of_key(-l+1);
-                    clog << "Добавляем пересечения отр до " << -l+1 << endl;
+                dlina = min(su_add-1, min(n, m));
+            }
+            clog << "dlina: " << dlina << endl;
+            tot += dlina;
+            if (n <= m) {
+                if (su_add <= min(n, m) + 1) {
+                    tot -= (ll) razn_otr_st.order_of_key(su_add - 2 + 1);
+                    clog << "(1)Отр до " << su_add - 2 + 1 << endl;
+                    tot -= (ll) razn_pol_st.order_of_key(su_add - 2 + 1);
+                    clog << "(1)Пол до " << su_add - 2 + 1 << endl;
+                } else if (su_add <= max(n, m) + 1) {
+                    ll d = su_add - (min(n, m) + 1);
+                    ll base = min(n, m) + 1 - 2;
+                    tot -= (ll) razn_otr_st.order_of_key(base + d + 1);
+                    clog << "(2)Отр до " << base + d + 1 << endl;
+                    tot -= (ll) razn_pol_st.order_of_key(base - d + 1);
+                    clog << "(2)Пол до " << base - d + 1 << endl;
                 } else {
-                    tot += (ll)razn_pol_st.order_of_key(l);
-                    clog << "Отнимаем пересечения пол до " << l << endl;
+                    ll shit_d = max(n, m) + 1 - (min(n, m) + 1);
+                    ll shit_base = min(n, m) + 1 - 2;
+                    ll base_otr = -(shit_base - shit_d);
+                    ll base_pol = shit_base + shit_d;
+                    ll d = su_add - (max(n, m) + 1);
+                    ll l = base_otr + d;
+                    ll r = base_pol - d;
+                    if (l < 0) {
+                        tot -= (ll) razn_otr_st.order_of_key(-l + 1);
+                        clog << "Добавляем пересечения отр до " << -l + 1 << endl;
+                    } else {
+                        tot += (ll) razn_pol_st.order_of_key(l);
+                        clog << "Отнимаем пересечения пол до " << l << endl;
+                    }
+                    if (r > 0) {
+                        tot -= (ll) razn_pol_st.order_of_key(r + 1);
+                        clog << "Добавляем пересечения пол до " << r + 1 << endl;
+                    } else {
+                        tot += (ll) razn_otr_st.order_of_key(-l);
+                        clog << "Отнимаем пересечения отр до " << -l << endl;
+                    }
                 }
-                if (r > 0) {
-                    tot -= (ll)razn_pol_st.order_of_key(r+1);
-                    clog << "Добавляем пересечения пол до " << r+1 << endl;
+            } else {
+                if (su_add <= min(n, m) + 1) {
+                    tot -= (ll) razn_otr_st.order_of_key(su_add - 2 + 1);
+                    clog << "(1)Отр до " << su_add - 2 + 1 << endl;
+                    tot -= (ll) razn_pol_st.order_of_key(su_add - 2 + 1);
+                    clog << "(1)Пол до " << su_add - 2 + 1 << endl;
+                } else if (su_add <= max(n, m) + 1) {
+                    ll d = su_add - (min(n, m) + 1);
+                    ll base = min(n, m) + 1 - 2;
+                    tot -= (ll) razn_otr_st.order_of_key(base - d + 1);
+                    clog << "(2)Отр до " << base - d + 1 << endl;
+                    tot -= (ll) razn_pol_st.order_of_key(base + d + 1);
+                    clog << "(2)Пол до " << base + d + 1 << endl;
                 } else {
-                    tot += (ll)razn_otr_st.order_of_key(-l);
-                    clog << "Отнимаем пересечения отр до " << -l << endl;
+                    ll shit_d = max(n, m) + 1 - (min(n, m) + 1);
+                    ll shit_base = min(n, m) + 1 - 2;
+                    ll base_otr = -(shit_base - shit_d);
+                    ll base_pol = shit_base + shit_d;
+                    ll d = su_add - (max(n, m) + 1);
+                    ll l = base_otr + d;
+                    ll r = base_pol - d;
+                    if (l < 0) {
+                        tot -= (ll) razn_otr_st.order_of_key(-l + 1);
+                        clog << "Добавляем пересечения отр до " << -l + 1 << endl;
+                    } else {
+                        tot += (ll) razn_pol_st.order_of_key(l);
+                        clog << "Отнимаем пересечения пол до " << l << endl;
+                    }
+                    if (r > 0) {
+                        tot -= (ll) razn_pol_st.order_of_key(r + 1);
+                        clog << "Добавляем пересечения пол до " << r + 1 << endl;
+                    } else {
+                        tot += (ll) razn_otr_st.order_of_key(-l);
+                        clog << "Отнимаем пересечения отр до " << -l << endl;
+                    }
                 }
             }
         } else {
             ll razn_add; cin >> razn_add;
             clog << "raz: " << razn_add << endl;
+            if(was_raz.contains(razn_add)) {
+                clog << "skip" << endl;
+                continue;
+            }
+            was_raz.insert(razn_add);
+            ll dlina;
             if (razn_add < 0) {
-                tot += min(m-(-razn_add), n);
+                dlina = min(m-(-razn_add), n);
                 razn_otr_st.insert(-razn_add);
             } else {
-                tot += min(n-razn_add, m);
+                dlina = min(n-razn_add, m);
                 razn_pol_st.insert(razn_add);
             }
+            clog << "dlina: " << dlina << endl;
+            tot += dlina;
             if (n <= m) {
                 if (razn_add >= 0) {
                     su_shit(2+razn_add, 2*min(n, m)-razn_add);
@@ -138,11 +176,18 @@ void solve () {
                 }
             } else {
                 if (razn_add < 0) {
-
+                    su_shit(2-razn_add, 2*min(n, m)+razn_add);
+                } else if (razn_add <= max(n, m)-min(n, m)) {
+                    su_shit(2+razn_add, 2*min(n, m)+razn_add);
+                } else {
+                    ll d = razn_add-(max(n, m)-min(n, m));
+                    su_shit(2+max(n, m)-min(n, m)+d, 2*min(n, m)+max(n, m)-min(n, m)-d);
                 }
             }
         }
+        clog << "dtot: " << tot-_tot << endl;
     }
+    assert(tot > 0 || q == 0);
     cout << tot << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
