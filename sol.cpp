@@ -31,7 +31,11 @@ void copy_this () {
 }
 */
 ll color[201];
+ll newcomponent[201];
 void solve () {
+    forr(i, 1, 200) {
+        newcomponent[i] = 1;
+    }
     ll n; cin >> n;
     vector<vector<ll>> sm (n+1);
     forr(i, 1, n) {
@@ -50,42 +54,72 @@ void solve () {
 //        sm[x_DELETE].push_back(y_DELETE);
 //        sm[y_DELETE].push_back(x_DELETE);
 //    }
-    ll maxi = 0;
-    forr(starting_point, 1, n) {
-        clog << "start = " << starting_point << endl;
-        memset(color, 0, sizeof(color));
-        bool wrong = false;
-        queue<ll> q;
-        color[starting_point] = 1;
-        q.push(starting_point);
-        ll current_number = 1;
-        while (!q.empty()) {
-            ll v = q.front();
-            clog << "v = " << v << endl;
-            q.pop();
-            bool plus = false;
-            for(ll nei: sm[v]) {
-                if (color[nei] == 0) {
-                    color[nei] = current_number+1;
-                    clog << nei << " = " << current_number+1 << endl;
-                    q.push(nei);
-                    plus = true;
+    ll tot = 0;
+    forr(i, 1, n) { // comp search
+        if (newcomponent[i] == 1) {
+            unordered_set<ll> comp_pool;
+            queue<ll> comp_dfs_q;
+            comp_dfs_q.push(i);
+            while (!comp_dfs_q.empty()) {
+                ll curr = comp_dfs_q.front();
+                comp_dfs_q.pop();
+                newcomponent[curr] = 0;
+                comp_pool.insert(curr);
+                for (ll nxt: sm[curr]) {
+                    if (newcomponent[nxt] == 1) {
+                        comp_dfs_q.push(nxt);
+                    }
                 }
-                if (abs(color[v]-color[nei]) != 1) {
-                    clog << color[v] << " vs. " << color[nei] << endl;
-                    wrong = true;
-                }
-//                assert(color[v] != color[nei]);
             }
-            if (plus) current_number += 1;
-        }
-        if (!wrong) {
-            maxi = max(maxi, current_number);
-            clog << current_number << "!" << endl;
+            clog << "comp pool length: " << comp_pool.size() << endl;
+            ll maxi = 0;
+            for(ll starting_point: comp_pool) clog << starting_point << ' ';
+            clog << endl;
+            for(ll starting_point: comp_pool) {
+                clog << "start = " << starting_point << endl;
+                memset(color, 0, sizeof(color));
+                bool wrong = false;
+                queue<ll> q;
+                color[starting_point] = 1;
+                q.push(starting_point);
+                ll current_number = 1;
+                while (!q.empty()) {
+                    ll v = q.front();
+                    clog << "v = " << v << endl;
+                    q.pop();
+                    bool plus = false;
+                    for(ll nei: sm[v]) {
+                        if (color[nei] == 0) {
+                            color[nei] = current_number+1;
+                            clog << nei << " = " << current_number+1 << endl;
+                            q.push(nei);
+                            plus = true;
+                        }
+                        if (abs(color[v]-color[nei]) != 1) {
+                            clog << color[v] << " vs. " << color[nei] << endl;
+                            wrong = true;
+                        }
+//                assert(color[v] != clor[nei]);
+                    }
+                    if (plus) current_number += 1;
+                }
+                if (!wrong) {
+                    maxi = max(maxi, current_number);
+                    clog << current_number << "!" << endl;
+                }
+            }
+            if (maxi == 0) {
+                cout << -1 << endl;
+                return;
+            }
+            assert(maxi > 0);
+            tot += maxi;
+        } else {
+            clog << i << " isnt new comp " << endl;
         }
     }
-    if (maxi == 0) cout << -1 << endl;
-    else cout << maxi << endl;
+    assert(tot > 0);
+    cout << tot << endl;
 //    forr(i, 1, n) {
 //        clog << i << ": ";
 //        for (ll j: sm[i]) {
