@@ -61,91 +61,55 @@ void solve () {
 //        sm[x_DELETE].push_back(y_DELETE);
 //        sm[y_DELETE].push_back(x_DELETE);
 //    }
-    ll tot = 0;
-    forr(i, 1, n) { // comp search
-        if (newcomponent[i] == 1) {
-            clog << i << " IS new comp" << endl;
-            unordered_set<ll> comp_pool;
-            queue<ll> comp_dfs_q;
-            comp_dfs_q.push(i);
-            while (!comp_dfs_q.empty()) {
-                ll curr = comp_dfs_q.front();
-                comp_dfs_q.pop();
-                newcomponent[curr] = 0;
-                comp_pool.insert(curr);
-                for (ll nxt: sm[curr]) {
-                    if (newcomponent[nxt] == 1) {
-                        comp_dfs_q.push(nxt);
-                    }
-                }
-            }
-            if (comp_pool.empty() || comp_pool.size() > 1000) {
-                fuck();
-                return;
-            }
-            clog << "comp pool length: " << comp_pool.size() << endl;
-            ll maxi = 0;
-            for(ll starting_point: comp_pool) clog << starting_point << ' ';
-            clog << endl;
-            for(ll starting_point: comp_pool) {
-                clog << "start = " << starting_point << endl;
-                forr(iii, 1, 200) {
-                    color[iii] = 0;
-                }
-                bool wrong = false;
-                queue<ll> q;
-                if (starting_point < 1 || starting_point > 200) {
-                    fuck();
+    ll maxi = 0;
+    forr(starting_point, 1, n) {
+        clog << "start = " << starting_point << endl;
+        forr(iii, 1, 200) {
+            color[iii] = 0;
+        }
+        bool wrong = false;
+        queue<ll> q;
+        if (starting_point < 1 || starting_point > 200) {
+            fuck();
+            return;
+        }
+        color[starting_point] = 1;
+        q.push(starting_point);
+        ll color_count = 1;
+        while (!q.empty()) {
+            ll v = q.front();
+            clog << "v = " << v << endl;
+            q.pop();
+            for(ll nei: sm[v]) {
+                if (color[nei] == color[v]) {
+                    cout << -1 << endl;
                     return;
                 }
-                color[starting_point] = 1;
-                q.push(starting_point);
-                ll color_count = 1;
-                while (!q.empty()) {
-                    ll v = q.front();
-                    clog << "v = " << v << endl;
-                    q.pop();
-                    for(ll nei: sm[v]) {
-                        if (color[nei] == color[v]) {
-                            cout << -1 << endl;
-                            return;
-                        }
-                        if (color[nei] == 0) {
-                            color[nei] = color[v]+1;
-                            clog << nei << " = " << color[v]+1 << endl;
-                            color_count = max(color_count, color[v]+1);
-                            q.push(nei);
-                        } else if (color[nei] < color[v]) {
-                            ll cycle_length = color[v]-color[nei]+1;
-                            if (cycle_length % 2 == 1) {
-                                cout << -1 << endl;
-                                return;
-                            }
-                            color_count -= cycle_length/2-1;
-                        }
+                if (color[nei] == 0) {
+                    color[nei] = color[v]+1;
+                    clog << nei << " = " << color[v]+1 << endl;
+                    color_count = max(color_count, color[v]+1);
+                    q.push(nei);
+                } else if (color[nei] < color[v]) {
+                    ll cycle_length = color[v]-color[nei]+1;
+                    if (cycle_length % 2 == 1) {
+                        cout << -1 << endl;
+                        return;
                     }
-                }
-                if (!wrong) {
-                    maxi = max(maxi, color_count);
-                    clog << color_count << "!" << endl;
+                    color_count -= cycle_length/2-1;
                 }
             }
-            if (maxi == 0) {
-                cout << -1 << endl;
-                return;
-            }
-//            assert(maxi > 0);
-            tot += maxi;
-        } else {
-            clog << i << " isnt new comp" << endl;
+        }
+        if (!wrong) {
+            maxi = max(maxi, color_count);
+            clog << color_count << "!" << endl;
         }
     }
-//    assert(tot > 0);
-    if (tot <= 0) {
-        fuck();
+    if (maxi <= 0) {
+        cout << -1 << endl;
         return;
     }
-    cout << tot << endl;
+    cout << maxi << endl;
 //    forr(i, 1, n) {
 //        clog << i << ": ";
 //        for (ll j: sm[i]) {
