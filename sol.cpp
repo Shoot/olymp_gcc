@@ -22,8 +22,8 @@ typedef long double ld;
 using namespace __gnu_pbds;
 using namespace std;
 template <typename T> using ordered_set =  tree<T, null_type, less<T>, rb_tree_tag, tree_order_statistics_node_update>;
-mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-uniform_int_distribution<ll> distrib_1(0, 1);
+//mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
+//uniform_int_distribution<ll> distrib_1(0, 1);
 constexpr ll N = (ll)(2e5+1);
 //constexpr ll MOD = 998244353;
 /*
@@ -58,31 +58,25 @@ void su_shit_nech (ll l, ll r) {
 }
 void solve () {
     ll n, m;
-//    cin >> n >> m;
-    n = 20;
-    m = 5;
-    bool slow[n][m];
-    fo(i, 0, n) {
-        fo(j, 0, m) {
-            slow[i][j] = false;
-        }
-    }
+    cin >> n >> m;
+//    bool slow[n][m];
+//    fo(i, 0, n) {
+//        fo(j, 0, m) {
+//            slow[i][j] = false;
+//        }
+//    }
     ll q;
-//    cin >> q;
-    q = 4;
+    cin >> q;
     unordered_set<ll> was_sum;
     unordered_set<ll> was_raz;
     fo(iii, 0, q) {
         ll _tot = tot;
         char type;
-//        cin >> type;
-        type = (distrib_1(rng) ? '+' : '-');
+        cin >> type;
         ll su_add;
         ll razn_add;
         if (type == '+') {
-//            cin >> su_add;
-            uniform_int_distribution<ll> distrib(2, n+m);
-            su_add = distrib(rng);
+            cin >> su_add;
             clog << "su: " << su_add << endl;
             if (was_sum.contains(su_add)) {
                 clog << "skip" << endl;
@@ -123,18 +117,26 @@ void solve () {
                             r -= su_add - (max(n, m) + 1);
                         }
                         if (l <= 0) {
-                            tot -= (ll) razn_otr_st_ch.order_of_key(-l + 1);
-                            clog << "Добавляем пересечения отр ч до " << -l + 1 << endl;
+                            ll x = (ll)razn_otr_st_ch.order_of_key(-l + 1);
+                            assert(x >= 0);
+                            tot -= x;
+                            clog << "97. Добавляем отр чт до " << -l+1 << ": " << x << endl;
                         } else {
-                            tot += (ll) razn_pol_st_ch.order_of_key(l);
-                            clog << "Отнимаем пересечения пол до " << l << endl;
+                            ll x = (ll)razn_pol_st_ch.order_of_key(l);
+                            assert(x >= 0);
+                            tot += x;
+                            clog << "98. Отнимаем пол чт до " << l << ": " << x << endl;
                         }
                         if (r >= 0) {
-                            tot -= (ll) razn_pol_st_ch.order_of_key(r + 1);
-                            clog << "Добавляем пересечения пол до " << r + 1 << endl;
+                            ll x = (ll) razn_pol_st_ch.order_of_key(r + 1);
+                            assert(x >= 0);
+                            tot -= x;
+                            clog << "99. Добавляем пол чт до " << r+1 << ": " << x << endl;
                         } else {
-                            tot += (ll) razn_otr_st_ch.order_of_key(-r);
-                            clog << "Отнимаем пересечения отр до " << -r << endl;
+                            ll x = (ll) razn_otr_st_ch.order_of_key(-r);
+                            assert(x >= 0);
+                            tot += x;
+                            clog << "100. Отнимаем отр чт до " << -r << ": " << x << endl;
                         }
                     }
                 } else {
@@ -160,18 +162,26 @@ void solve () {
                             r -= su_add - (max(n, m) + 1);
                         }
                         if (l <= 0) {
-                            tot -= (ll) razn_otr_st_ch.order_of_key(-l + 1);
-                            clog << "Добавляем пересечения отр ч до " << -l + 1 << endl;
+                            ll x = (ll)razn_otr_st_ch.order_of_key(-l + 1);
+                            assert(x >= 0);
+                            tot -= x;
+                            clog << "245. Добавляем отр чт до " << -l+1 << ": " << x << endl;
                         } else {
-                            tot += (ll) razn_pol_st_ch.order_of_key(l);
-                            clog << "Отнимаем пересечения пол до " << l << endl;
+                            ll x = (ll)razn_pol_st_ch.order_of_key(l);
+                            assert(x >= 0);
+                            tot += x;
+                            clog << "250. Отнимаем пол чт до " << l << ": " << x << endl;
                         }
                         if (r >= 0) {
-                            tot -= (ll) razn_pol_st_ch.order_of_key(r + 1);
-                            clog << "Добавляем пересечения пол до " << r + 1 << endl;
+                            ll x = (ll) razn_pol_st_ch.order_of_key(r + 1);
+                            assert(x >= 0);
+                            tot -= x;
+                            clog << "256. Добавляем пол чт до " << r+1 << ": " << x << endl;
                         } else {
-                            tot += (ll) razn_otr_st_ch.order_of_key(-r);
-                            clog << "Отнимаем пересечения отр до " << -r << endl;
+                            ll x = (ll) razn_otr_st_ch.order_of_key(-l);
+                            assert(x >= 0);
+                            tot += x;
+                            clog << "261. Отнимаем отр чт до " << -r << ": " << x << endl;
                         }
                     }
                 }
@@ -189,30 +199,38 @@ void solve () {
                         if (su_add <= max(n, m) + 1) {
                             ll d = su_add - (min(n, m) + 1);
                             ll base = min(n, m) + 1 - 2;
-                            l = -base + d;
-                            r = base + d;
+                            l = -base - d;
+                            r = base - d;
                         } else {
                             // отталкиваемся от su_add == (max(n, m) + 1)
                             ll d = max(n, m) + 1 - (min(n, m) + 1);
                             ll base = min(n, m) + 1 - 2;
-                            l = -base + d;
-                            r = base + d;
+                            l = -base - d;
+                            r = base - d;
                             l += su_add - (max(n, m) + 1);
                             r -= su_add - (max(n, m) + 1);
                         }
                         if (l <= 0) {
-                            tot -= (ll) razn_otr_st_nech.order_of_key(-l + 1);
-                            clog << "Добавляем пересечения отр нч до " << -l + 1 << endl;
+                            ll x = (ll)razn_otr_st_nech.order_of_key(-l + 1);
+                            assert(x >= 0);
+                            tot -= x;
+                            clog << "207. Добавляем отр нч до " << -l+1 << ": " << x << endl;
                         } else {
-                            tot += (ll) razn_pol_st_nech.order_of_key(l);
-                            clog << "Отнимаем пересечения пол до " << l << endl;
+                            ll x = (ll)razn_pol_st_nech.order_of_key(l);
+                            assert(x >= 0);
+                            tot += x;
+                            clog << "212. Отнимаем пол нч до " << l << ": " << x << endl;
                         }
                         if (r >= 0) {
-                            tot -= (ll) razn_pol_st_nech.order_of_key(r + 1);
-                            clog << "Добавляем пересечения пол до " << r + 1 << endl;
+                            ll x = (ll) razn_pol_st_nech.order_of_key(r + 1);
+                            assert(x >= 0);
+                            tot -= x;
+                            clog << "218. Добавляем пол нч до " << r+1 << ": " << x << endl;
                         } else {
-                            tot += (ll) razn_otr_st_nech.order_of_key(-l);
-                            clog << "Отнимаем пересечения отр до " << -r << endl;
+                            ll x = (ll) razn_otr_st_nech.order_of_key(-r);
+                            assert(x >= 0);
+                            tot += x;
+                            clog << "223. Отнимаем отр нч до " << -r << ": " << x << endl;
                         }
                     }
                 } else {
@@ -226,39 +244,47 @@ void solve () {
                         if (su_add <= max(n, m) + 1) {
                             ll d = su_add - (min(n, m) + 1);
                             ll base = min(n, m) + 1 - 2;
-                            l = -base - d;
-                            r = base - d;
+                            l = -base + d;
+                            r = base + d;
+                            // xz!!!!
                         } else {
                             // отталкиваемся от su_add == (max(n, m) + 1)
                             ll d = max(n, m) + 1 - (min(n, m) + 1);
                             ll base = min(n, m) + 1 - 2;
-                            l = -base - d;
-                            r = base - d;
+                            l = -base + d;
+                            r = base + d;
+                            // xz!!!!!
                             l += su_add - (max(n, m) + 1);
                             r -= su_add - (max(n, m) + 1);
                         }
 
                         if (l <= 0) {
-                            tot -= (ll) razn_otr_st_nech.order_of_key(-l + 1);
-                            clog << "Добавляем пересечения отр нч до " << -l + 1 << endl;
+                            ll x = (ll)razn_otr_st_nech.order_of_key(-l + 1);
+                            assert(x >= 0);
+                            tot -= x;
+                            clog << "245. Добавляем отр нч до " << -l+1 << ": " << x << endl;
                         } else {
-                            tot += (ll) razn_pol_st_nech.order_of_key(l);
-                            clog << "Отнимаем пересечения пол до " << l << endl;
+                            ll x = (ll)razn_pol_st_nech.order_of_key(l);
+                            assert(x >= 0);
+                            tot += x;
+                            clog << "250. Отнимаем пол нч до " << l << ": " << x << endl;
                         }
                         if (r >= 0) {
-                            tot -= (ll) razn_pol_st_nech.order_of_key(r + 1);
-                            clog << "Добавляем пересечения пол до " << r + 1 << endl;
+                            ll x = (ll) razn_pol_st_nech.order_of_key(r + 1);
+                            assert(x >= 0);
+                            tot -= x;
+                            clog << "256. Добавляем пол нч до " << r+1 << ": " << x << endl;
                         } else {
-                            tot += (ll) razn_otr_st_nech.order_of_key(-l);
-                            clog << "Отнимаем пересечения отр до " << -r << endl;
+                            ll x = (ll) razn_otr_st_nech.order_of_key(-r);
+                            assert(x >= 0);
+                            tot += x;
+                            clog << "261. Отнимаем отр нч до " << -r << ": " << x << endl;
                         }
                     }
                 }
             }
         } else {
-//            cin >> razn_add;
-            uniform_int_distribution<ll> distrib(1-m, n-1);
-            razn_add = distrib(rng);
+            cin >> razn_add;
             clog << "raz: " << razn_add << endl;
             if(was_raz.contains(razn_add)) {
                 clog << "skip" << endl;
@@ -276,10 +302,12 @@ void solve () {
             if (abs(razn_add) % 2 == 0) {
                 if (razn_add < 0) {
                     razn_otr_st_ch.insert(-razn_add);
-                    cout << "razn_otr_st_ch" << -razn_add << endl;
+                    clog << ".280 " << -razn_add << endl;
+                    clog << ".280 " << razn_otr_st_ch.order_of_key(-razn_add+1) << endl;
                 } else {
                     razn_pol_st_ch.insert(razn_add);
-                    cout << "razn_pol_st_ch" << razn_add << endl;
+                    clog << ".283 " << razn_add << endl;
+                    clog << ".283 " << razn_pol_st_ch.order_of_key(razn_add+1) << endl;
                 }
                 if (n <= m) {
                     if (razn_add >= 0) {
@@ -304,10 +332,12 @@ void solve () {
             } else {
                 if (razn_add < 0) {
                     razn_otr_st_nech.insert(-razn_add);
-                    cout << "razn_otr_st_nech" << -razn_add << endl;
+                    clog << ".10101 " << -razn_add << endl;
+                    clog << ".11111 " << razn_otr_st_nech.order_of_key(-razn_add+1) << endl;
                 } else {
                     razn_pol_st_nech.insert(razn_add);
-                    cout << "razn_pol_st_nech" << razn_add << endl;
+                    clog << ".1111110 " << razn_add << endl;
+                    clog << ".1111111 " << razn_pol_st_nech.order_of_key(razn_add+1) << endl;
                 }
                 if (n <= m) {
                     if (razn_add >= 0) {
@@ -332,33 +362,6 @@ void solve () {
             }
         }
         clog << "dtot: " << tot-_tot << endl;
-        ll slowtot = 0;
-        if (type == '+') {
-            fo(i, 0, n) {
-                fo(j, 0, m) {
-                    if (i+1+j+1 == su_add && !slow[i][j]) {
-                        slowtot += 1;
-//                        cout << i << " " << j << endl;
-                        slow[i][j] = true;
-                    }
-                }
-            }
-        }
-        if (type == '-') {
-            fo(i, 0, n) {
-                fo(j, 0, m) {
-                    if ((i+1)-(j+1) == razn_add && !slow[i][j]) {
-//                        cout << i << " " << j << endl;
-                        slowtot += 1;
-                        slow[i][j] = true;
-                    }
-                }
-            }
-        }
-        if (slowtot != tot-_tot) {
-            cout << slowtot << " instead of " << tot-_tot << endl;
-            return;
-        }
     }
     assert(tot > 0 || q == 0);
     cout << tot << endl;
