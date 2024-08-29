@@ -74,7 +74,7 @@ void solve () {
 //                    return;
 //                }
                 if (newcomponent[nxt]) {
-                    comp_dfs_q.push_back(nxt);
+                    comp_dfs_q.push_front(nxt);
                 }
             }
         }
