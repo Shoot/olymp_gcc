@@ -20,7 +20,8 @@ typedef long double ld;
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 uniform_int_distribution<ll> distrib(100, 900);
 constexpr ll N = (ll)(2005);
-constexpr ll MOD = 998244353;
+constexpr ll MOD99 = 998244353;
+constexpr ll MOD7 = 1e9 + 7;
 /*
 void copy_this () {
     ll n; cin >> n;
@@ -30,89 +31,59 @@ void copy_this () {
     vector<ll> a(n); fo(i, 0, n) cin >> a[i];
 }
 */
-ll color[2201];
-bool newcomponent[2201];
 void solve () {
-    forr(i, 1, 2000) {
-        newcomponent[i] = true;
-    }
     ll n; cin >> n;
-    vector<unordered_set<ll>> sm (n+1);
-    forr(i, 1, n) {
-        string s;
-        cin >> s;
-        forr(j, i+1, n) {
-            if (s[j-1] == '1') {
-                sm[i].insert(j);
-                sm[j].insert(i);
-            }
-        }
+    ll a[n];
+    fo(i, 0, n) {
+        cin >> a[i];
     }
+    ll perm[n];
+    fo(i, 0, n) {
+        perm[i] = i;
+    }
+    ll perm_ind_by_val[n];
     ll maxi = 0;
-    forr(starting_point, 1, n) {
-        deque<ll> comp_dfs_q = {};
-        while (!comp_dfs_q.empty())
-        {
-            comp_dfs_q.pop_front();
+    vector<vector<ll>> bests;
+    while (next_permutation(perm, perm+n)) {
+        fo(i, 0, n) {
+            perm_ind_by_val[perm[i]] = i;
         }
-        comp_dfs_q.push_front(starting_point);
-        while (!comp_dfs_q.empty()) {
-            ll curr = comp_dfs_q.front();
-            comp_dfs_q.pop_front();
-//            if (curr <= 0 || curr > 200) {
-//                cout << 1;
-//                return;
-//            }
-//            if (sm[curr].empty() || sm[curr].size() > 200) {
-//                cout << 1;
-//                return;
-//            }
-            newcomponent[curr] = false;
-            for (ll nxt: sm[curr]) {
-//                if (nxt <= 0 || nxt > 200) {
-//                    cout << 1;
-//                    return;
-//                }
-                if (newcomponent[nxt]) {
-                    comp_dfs_q.push_front(nxt);
-                }
+        ll tot = 0;
+        fo(i, 0, n) {
+            tot += a[i]*(abs(i-perm_ind_by_val[i]));
+        }
+        if (tot > maxi) {
+            maxi = tot;
+            bests.clear();
+        }
+        if (tot >= maxi) {
+            bests.emplace_back();
+            bests[bests.size()-1].resize(n);
+            fo(i, 0, n) {
+                bests[bests.size()-1][i] = a[perm[i]];
             }
         }
-        clog << "start = " << starting_point << endl;
-        memset(color, 0, sizeof(color));
-        queue<ll> q;
-        color[starting_point] = 1;
-        q.push(starting_point);
-        ll color_count = 1;
-        while (!q.empty()) {
-            ll v = q.front();
-            clog << "v = " << v << endl;
-            q.pop();
-            for(ll nei: sm[v]) {
-                if (color[nei] == color[v]) {
-                    cout << -1 << endl;
-                    return;
-                }
-                if (color[nei] == 0) {
-                    color[nei] = color[v]+1;
-                    clog << nei << " = " << color[v]+1 << endl;
-                    color_count = max(color_count, color[v]+1);
-                    q.push(nei);
-                } else if (color[nei] < color[v]) {
-                    ll cycle_length = color[v]-color[nei]+1;
-                    if (cycle_length % 2 == 1) {
-                        cout << -1 << endl;
-                        return;
-                    }
-                    color_count -= cycle_length/2-1;
-                }
-            }
-        }
-        maxi = max(maxi, color_count);
-        clog << color_count << "!" << endl;
     }
-    if (maxi == 0) cout << -1 << endl;
-    else cout << maxi << endl;
+    cout << "(OG) BEST SCORE: " << maxi << endl;
+    cout << "NUMBER OF PERMS: " << bests.size() << endl;
+
+    vector<vector<ll>> dp(n+1, vector<ll>(n, 0)); // dp[i][j] = max sum considering first i elements with j as the current index
+
+    fo(i, 1, n+1) {
+        fo(j, 0, n) {
+            dp[i][j] = max(dp[i][j], dp[i-1][j] + a[i-1] * abs(i-1 - j));
+            if (j > 0) {
+                dp[i][j] = max(dp[i][j], dp[i-1][j-1] + a[i-1] * abs(i-1 - (j-1)));
+            }
+        }
+    }
+
+    ll result = 0;
+    fo(j, 0, n) {
+        result = max(result, dp[n][j]);
+    }
+
+    cout << "BEST SCORE: " << result << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
