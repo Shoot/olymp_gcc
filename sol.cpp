@@ -83,35 +83,34 @@ void solve () {
                 queue<ll> q;
                 color[starting_point] = 1;
                 q.push(starting_point);
-                ll current_number = 1;
+                ll color_count = 1;
                 while (!q.empty()) {
                     ll v = q.front();
                     clog << "v = " << v << endl;
                     q.pop();
-                    bool plus = false;
                     for(ll nei: sm[v]) {
-                        if (color[nei] == 0) {
-                            color[nei] = current_number+1;
-                            clog << nei << " = " << current_number+1 << endl;
-                            q.push(nei);
-                            plus = true;
-                        } else {
-                            assert(color[nei] < color[v]);
-                            ll cycle_length = color[v]-color[nei]+1;
-                            if (cycle)
+                        if (color[nei] == color[v]) {
+                            cout << -1 << endl;
+                            return;
                         }
-                        if (color[nei])
-//                        if (abs(color[v]-color[nei]) != 1) {
-//                            clog << color[v] << " vs. " << color[nei] << endl;
-//                            wrong = true;
-//                        }
-//                assert(color[v] != clor[nei]);
+                        if (color[nei] == 0) {
+                            color[nei] = color[v]+1;
+                            clog << nei << " = " << color[v]+1 << endl;
+                            color_count = max(color_count, color[v]+1);
+                            q.push(nei);
+                        } else if (color[nei] < color[v]) {
+                            ll cycle_length = color[v]-color[nei]+1;
+                            if (cycle_length % 2 == 1) {
+                                cout << -1 << endl;
+                                return;
+                            }
+                            color_count -= cycle_length/2-1;
+                        }
                     }
-                    if (plus) current_number += 1;
                 }
                 if (!wrong) {
-                    maxi = max(maxi, current_number);
-                    clog << current_number << "!" << endl;
+                    maxi = max(maxi, color_count);
+                    clog << color_count << "!" << endl;
                 }
             }
             if (maxi == 0) {
