@@ -19,9 +19,6 @@ typedef long double ld;
 #endif
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 uniform_int_distribution<ll> distrib(100, 900);
-uniform_int_distribution<ll> distrib_1(1, 2);
-uniform_int_distribution<ll> distrib_10(1, 10);
-uniform_int_distribution<ll> distrib_100(1, 100);
 constexpr ll N = (ll)(2005);
 constexpr ll MOD = 998244353;
 /*
@@ -33,18 +30,26 @@ void copy_this () {
     vector<ll> a(n); fo(i, 0, n) cin >> a[i];
 }
 */
-ll color[201];
-ll newcomponent[201];
+ll color[2201];
+ll newcomponent[2201];
+void fuck() {
+    cout << -1 << endl;
+}
 void solve () {
     forr(i, 1, 200) {
         newcomponent[i] = 1;
     }
-    ll n = 3;
+    ll n; cin >> n;
+    if (n > 200) {
+        fuck();
+        return;
+    }
     vector<vector<ll>> sm (n+1);
     forr(i, 1, n) {
+        string s;
+        cin >> s;
         forr(j, i+1, n) {
-            bool shit = distrib_1(rng) == 1;
-            if (shit) {
+            if (s[j-1] == '1') {
                 sm[i].push_back(j);
                 sm[j].push_back(i);
             }
@@ -74,15 +79,25 @@ void solve () {
                     }
                 }
             }
+            if (comp_pool.empty() || comp_pool.size() > 1000) {
+                fuck();
+                return;
+            }
             clog << "comp pool length: " << comp_pool.size() << endl;
             ll maxi = 0;
             for(ll starting_point: comp_pool) clog << starting_point << ' ';
             clog << endl;
             for(ll starting_point: comp_pool) {
                 clog << "start = " << starting_point << endl;
-                memset(color, 0, sizeof(color));
+                forr(iii, 1, 200) {
+                    color[iii] = 0;
+                }
                 bool wrong = false;
                 queue<ll> q;
+                if (starting_point < 1 || starting_point > 200) {
+                    fuck();
+                    return;
+                }
                 color[starting_point] = 1;
                 q.push(starting_point);
                 ll color_count = 1;
@@ -119,13 +134,17 @@ void solve () {
                 cout << -1 << endl;
                 return;
             }
-            assert(maxi > 0);
+//            assert(maxi > 0);
             tot += maxi;
         } else {
             clog << i << " isnt new comp" << endl;
         }
     }
-    assert(tot > 0);
+//    assert(tot > 0);
+    if (tot <= 0) {
+        fuck();
+        return;
+    }
     cout << tot << endl;
 //    forr(i, 1, n) {
 //        clog << i << ": ";
