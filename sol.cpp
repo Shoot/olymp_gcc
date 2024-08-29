@@ -31,19 +31,8 @@ void copy_this () {
 }
 */
 ll color[2201];
-ll newcomponent[2201];
-void fuck() {
-    cout << -1 << endl;
-}
 void solve () {
-    forr(i, 1, 200) {
-        newcomponent[i] = 1;
-    }
     ll n; cin >> n;
-    if (n > 200) {
-        fuck();
-        return;
-    }
     vector<vector<ll>> sm (n+1);
     forr(i, 1, n) {
         string s;
@@ -55,24 +44,11 @@ void solve () {
             }
         }
     }
-//    ll reb_DELETE; cin >> reb_DELETE;
-//    while (reb_DELETE--) {
-//        ll x_DELETE, y_DELETE; cin >> x_DELETE >> y_DELETE;
-//        sm[x_DELETE].push_back(y_DELETE);
-//        sm[y_DELETE].push_back(x_DELETE);
-//    }
     ll maxi = 0;
     forr(starting_point, 1, n) {
         clog << "start = " << starting_point << endl;
-        forr(iii, 1, 200) {
-            color[iii] = 0;
-        }
-        bool wrong = false;
+        memset(color, 0, sizeof(color));
         queue<ll> q;
-        if (starting_point < 1 || starting_point > 200) {
-            fuck();
-            return;
-        }
         color[starting_point] = 1;
         q.push(starting_point);
         ll color_count = 1;
@@ -100,26 +76,11 @@ void solve () {
                 }
             }
         }
-        if (!wrong) {
-            maxi = max(maxi, color_count);
-            clog << color_count << "!" << endl;
-        }
+        maxi = max(maxi, color_count);
+        clog << color_count << "!" << endl;
     }
-    if (maxi <= 0) {
-        cout << -1 << endl;
-        return;
-    }
-    cout << maxi << endl;
-//    forr(i, 1, n) {
-//        clog << i << ": ";
-//        for (ll j: sm[i]) {
-//            clog << j << ' ';
-//        }
-//        clog << endl;
-//    }
-//    for (auto [i, j]: cnt) {
-//        clog << i << " x " << j << endl;
-//    }
+    if (maxi == 0) cout << -1 << endl;
+    else cout << maxi << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
@@ -137,7 +98,6 @@ int32_t main (int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-//    fo(i, 0, 1) skip.insert(distrib(rng));
 //    cin >> tt;
     while (tt--) solve();
     return 0;
