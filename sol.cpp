@@ -31,46 +31,50 @@ void copy_this () {
 }
 */
 ll color[2201];
-ll newcomponent[2201];
+bool newcomponent[2201];
 void solve () {
-    forr(i, 1, 200) {
-        newcomponent[i] = 1;
+    forr(i, 1, 2000) {
+        newcomponent[i] = true;
     }
     ll n; cin >> n;
-    vector<vector<ll>> sm (n+1);
+    vector<unordered_set<ll>> sm (n+1);
     forr(i, 1, n) {
         string s;
         cin >> s;
         forr(j, i+1, n) {
             if (s[j-1] == '1') {
-                sm[i].push_back(j);
-                sm[j].push_back(i);
+                sm[i].insert(j);
+                sm[j].insert(i);
             }
         }
     }
     ll maxi = 0;
     forr(starting_point, 1, n) {
-        queue<ll> comp_dfs_q;
-        comp_dfs_q.push(starting_point);
+        deque<ll> comp_dfs_q = {};
+        while (!comp_dfs_q.empty())
+        {
+            comp_dfs_q.pop_front();
+        }
+        comp_dfs_q.push_front(starting_point);
         while (!comp_dfs_q.empty()) {
             ll curr = comp_dfs_q.front();
-            comp_dfs_q.pop();
-            if (curr <= 0 || curr > 200) {
-                cout << -1;
-                return;
-            }
-            if (sm[curr].empty() || sm[curr].size() > 200) {
-                cout << -1;
-                return;
-            }
-            newcomponent[curr] = 0;
+            comp_dfs_q.pop_front();
+//            if (curr <= 0 || curr > 200) {
+//                cout << 1;
+//                return;
+//            }
+//            if (sm[curr].empty() || sm[curr].size() > 200) {
+//                cout << 1;
+//                return;
+//            }
+            newcomponent[curr] = false;
             for (ll nxt: sm[curr]) {
-                if (nxt <= 0 || nxt > 200) {
-                    cout << -1;
-                    return;
-                }
-                if (newcomponent[nxt] == 1) {
-                    comp_dfs_q.push(nxt);
+//                if (nxt <= 0 || nxt > 200) {
+//                    cout << 1;
+//                    return;
+//                }
+                if (newcomponent[nxt]) {
+                    comp_dfs_q.push_back(nxt);
                 }
             }
         }
