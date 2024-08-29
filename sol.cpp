@@ -19,6 +19,9 @@ typedef long double ld;
 #endif
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 uniform_int_distribution<ll> distrib(100, 900);
+uniform_int_distribution<ll> distrib_1(1, 2);
+uniform_int_distribution<ll> distrib_10(1, 10);
+uniform_int_distribution<ll> distrib_100(1, 100);
 constexpr ll N = (ll)(2005);
 constexpr ll MOD = 998244353;
 /*
@@ -36,24 +39,23 @@ void solve () {
     forr(i, 1, 200) {
         newcomponent[i] = 1;
     }
-    ll n; cin >> n;
+    ll n = 3;
     vector<vector<ll>> sm (n+1);
-//    forr(i, 1, n) {
-//        string s;
-//        cin >> s;
-//        forr(j, i+1, s.size()) {
-//            if (s[j-1] == '1') {
-//                sm[i].push_back(j);
-//                sm[j].push_back(i);
-//            }
-//        }
-//    }
-    ll reb_DELETE; cin >> reb_DELETE;
-    while (reb_DELETE--) {
-        ll x_DELETE, y_DELETE; cin >> x_DELETE >> y_DELETE;
-        sm[x_DELETE].push_back(y_DELETE);
-        sm[y_DELETE].push_back(x_DELETE);
+    forr(i, 1, n) {
+        forr(j, i+1, n) {
+            bool shit = distrib_1(rng) == 1;
+            if (shit) {
+                sm[i].push_back(j);
+                sm[j].push_back(i);
+            }
+        }
     }
+//    ll reb_DELETE; cin >> reb_DELETE;
+//    while (reb_DELETE--) {
+//        ll x_DELETE, y_DELETE; cin >> x_DELETE >> y_DELETE;
+//        sm[x_DELETE].push_back(y_DELETE);
+//        sm[y_DELETE].push_back(x_DELETE);
+//    }
     ll tot = 0;
     forr(i, 1, n) { // comp search
         if (newcomponent[i] == 1) {
