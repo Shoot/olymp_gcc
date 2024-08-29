@@ -38,25 +38,26 @@ void solve () {
     }
     ll n; cin >> n;
     vector<vector<ll>> sm (n+1);
-    forr(i, 1, n) {
-        string s;
-        cin >> s;
-        forr(j, i+1, s.size()) {
-            if (s[j-1] == '1') {
-                sm[i].push_back(j);
-                sm[j].push_back(i);
-            }
-        }
-    }
-//    ll reb_DELETE; cin >> reb_DELETE;
-//    while (reb_DELETE--) {
-//        ll x_DELETE, y_DELETE; cin >> x_DELETE >> y_DELETE;
-//        sm[x_DELETE].push_back(y_DELETE);
-//        sm[y_DELETE].push_back(x_DELETE);
+//    forr(i, 1, n) {
+//        string s;
+//        cin >> s;
+//        forr(j, i+1, s.size()) {
+//            if (s[j-1] == '1') {
+//                sm[i].push_back(j);
+//                sm[j].push_back(i);
+//            }
+//        }
 //    }
+    ll reb_DELETE; cin >> reb_DELETE;
+    while (reb_DELETE--) {
+        ll x_DELETE, y_DELETE; cin >> x_DELETE >> y_DELETE;
+        sm[x_DELETE].push_back(y_DELETE);
+        sm[y_DELETE].push_back(x_DELETE);
+    }
     ll tot = 0;
     forr(i, 1, n) { // comp search
         if (newcomponent[i] == 1) {
+            clog << i << " IS new comp" << endl;
             unordered_set<ll> comp_pool;
             queue<ll> comp_dfs_q;
             comp_dfs_q.push(i);
@@ -94,11 +95,16 @@ void solve () {
                             clog << nei << " = " << current_number+1 << endl;
                             q.push(nei);
                             plus = true;
+                        } else {
+                            assert(color[nei] < color[v]);
+                            ll cycle_length = color[v]-color[nei]+1;
+                            if (cycle)
                         }
-                        if (abs(color[v]-color[nei]) != 1) {
-                            clog << color[v] << " vs. " << color[nei] << endl;
-                            wrong = true;
-                        }
+                        if (color[nei])
+//                        if (abs(color[v]-color[nei]) != 1) {
+//                            clog << color[v] << " vs. " << color[nei] << endl;
+//                            wrong = true;
+//                        }
 //                assert(color[v] != clor[nei]);
                     }
                     if (plus) current_number += 1;
@@ -115,7 +121,7 @@ void solve () {
             assert(maxi > 0);
             tot += maxi;
         } else {
-            clog << i << " isnt new comp " << endl;
+            clog << i << " isnt new comp" << endl;
         }
     }
     assert(tot > 0);
