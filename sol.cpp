@@ -31,7 +31,11 @@ void copy_this () {
 }
 */
 ll color[2201];
+ll newcomponent[2201];
 void solve () {
+    forr(i, 1, 200) {
+        newcomponent[i] = 1;
+    }
     ll n; cin >> n;
     vector<vector<ll>> sm (n+1);
     forr(i, 1, n) {
@@ -46,6 +50,30 @@ void solve () {
     }
     ll maxi = 0;
     forr(starting_point, 1, n) {
+        queue<ll> comp_dfs_q;
+        comp_dfs_q.push(starting_point);
+        while (!comp_dfs_q.empty()) {
+            ll curr = comp_dfs_q.front();
+            comp_dfs_q.pop();
+            if (curr <= 0 || curr > 200) {
+                cout << -1;
+                return;
+            }
+            if (sm[curr].empty() || sm[curr].size() > 200) {
+                cout << -1;
+                return;
+            }
+            newcomponent[curr] = 0;
+            for (ll nxt: sm[curr]) {
+                if (nxt <= 0 || nxt > 200) {
+                    cout << -1;
+                    return;
+                }
+                if (newcomponent[nxt] == 1) {
+                    comp_dfs_q.push(nxt);
+                }
+            }
+        }
         clog << "start = " << starting_point << endl;
         memset(color, 0, sizeof(color));
         queue<ll> q;
