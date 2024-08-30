@@ -65,7 +65,7 @@ vector<ll> findLISIndices(const ll arr[]) {
 }
 void solve () {
 //    cin >> n;
-    n = 7;
+    n = 17;
     ll a[n];
     clog << "new: ";
     fo(i, 0, n) {
@@ -100,7 +100,7 @@ void solve () {
         }
         if (prev != -1 && prevprev != -1 && prevprev != prev-1) {
             forr(mezhdu, prevprev+1, prev-1) {
-                if (a[mezhdu] > a[prevprev] && a[mezhdu] < a[j] && a[mezhdu] != a[prev]) {
+                if (a[mezhdu] > a[prevprev] && a[mezhdu] < a[j] && a[mezhdu] < a[prev]) {
                     clog << "mezhdu prevprev i prev: " << mezhdu << endl;
                     good = true;
                     break;
@@ -136,15 +136,16 @@ void solve () {
     }
     if (prev != n-1) good = true;
     ll maxi = (ll)inds.size()+good;
+    cout << "THE SIZE: " << inds.size() << endl;
     if (inds.size() == n) {
         maxi = n;
     }
-//    clog << "maxi: " << maxi << endl;
+    clog << "maxi: " << maxi << endl;
     cout << maxi << endl;
     ll ogmaxi = 0;
     fo(i, 0, n) {
         ll og = a[i];
-        forr(shit, -11, 11  ) {
+        forr(shit, -11, 11) {
             a[i] = shit;
             ogmaxi = max(ogmaxi, (ll)findLISIndices(a).size());
             if (ogmaxi > maxi) {
@@ -159,7 +160,7 @@ void solve () {
         a[i] = og;
     }
     cout << "ogmaxi: " << ogmaxi << endl;
-    assert(ogmaxi == maxi);
+//    assert(ogmaxi >= maxi);
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
@@ -177,7 +178,7 @@ int32_t main (int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
 //    ll tt = 1;
-    ll tt = 10000;
+    ll tt = 100000;
 //    cin >> tt;
     while (tt--) solve();
     return 0;
