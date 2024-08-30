@@ -38,10 +38,16 @@ void computeLIS(ll arr[], ll output[]) {
         auto it = lower_bound(lis.begin(), lis.end(), arr[i]);
         if (it == lis.end()) {
             lis.push_back(arr[i]);
+            output[i] = lis.size();
         } else {
             *it = arr[i];
+            output[i] = it-lis.begin()+1;
         }
-        output[i] = lis.size();
+//        clog << "lis: ";
+//        fo(iii, 0, lis.size()) {
+//            clog << lis[iii] << ' ';
+//        }
+//        clog << endl;
     }
 }
 vector<ll> findLISIndices(const ll arr[]) {
@@ -168,20 +174,20 @@ void solve () {
     }
     if (prev != n-1) good = true;
     ll maxi = (ll)inds.size()+good;
-    cout << "THE SIZE: " << inds.size() << endl;
+    clog << "THE SIZE: " << inds.size() << endl;
     if (inds.size() == n) {
         maxi = n;
     }
-//    fo(i, 0, n-2) {
-//        if (a[i+2]-a[i]>1) {
-//            if (pref[i]+suff[i+2]+1 > maxi) {
-//                cout << i << ":)" << endl;
-//                maxi = pref[i]+suff[i+2]+1;
-//            }
-//        }
-//    }
+    fo(i, 0, n-2) {
+        if (a[i+2]-a[i]>1) {
+            if (pref[i]+suff[i+2]+1 > maxi) {
+                clog << i << ":)" << endl;
+                maxi = pref[i]+suff[i+2]+1;
+            }
+        }
+    }
     clog << "maxi: " << maxi << endl;
-    cout << maxi << endl;
+//    cout << maxi << endl;
     ll ogmaxi = 0;
     fo(i, 0, n) {
         ll og = a[i];
@@ -189,17 +195,17 @@ void solve () {
             a[i] = shit;
             ogmaxi = max(ogmaxi, (ll)findLISIndices(a).size());
             if (ogmaxi > maxi) {
-                cout << "ogmaxi (better): " << ogmaxi << endl;
+                clog << "ogmaxi (better): " << ogmaxi << " :::: ";
                 fo(iii, 0, n) {
-                    cout << a[iii] << ' ';
+                    clog << a[iii] << ' ';
                 }
-                cout << endl;
+                clog << endl;
                 assert(false);
             }
         }
         a[i] = og;
     }
-    cout << "ogmaxi: " << ogmaxi << endl;
+    clog << "ogmaxi: " << ogmaxi << endl;
     assert(ogmaxi == maxi);
 }
 int32_t main (int32_t argc, char* argv[]) {
