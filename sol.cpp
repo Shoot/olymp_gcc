@@ -31,112 +31,78 @@ void copy_this () {
     vector<ll> a(n); fo(i, 0, n) cin >> a[i];
 }
 */
+ll n;
+void computeLIS(ll arr[], ll output[]) {
+    vector<ll> lis;
+    for (int i = 0; i < n; ++i) {
+        auto it = std::lower_bound(lis.begin(), lis.end(), arr[i]);
+        if (it == lis.end()) {
+            lis.push_back(arr[i]);
+        } else {
+            *it = arr[i];
+        }
+        output[i] = lis.size();
+    }
+}
+ll count (const ll a[]) {
+    ll tot = 1;
+    fo(i, 1, n) {
+        if (a[i] > a[i-1]) {
+            tot += 1;
+        }
+    }
+    return tot;
+}
 void solve () {
-    ll n;
-    cin >> n;
-//    n = 3;
+//    cin >> n;
+    n = 5;
     ll a[n];
     fo(i, 0, n) {
-//        a[i] = distrib(rng);
-//        cout << a[i] << ' ';
-        cin >> a[i];
+        a[i] = distrib(rng);
+        cout << a[i] << ' ';
+//        cin >> a[i];
     }
-//    cout << endl;
-//    ll perm[n];
-//    fo(i, 0, n) {
-//        perm[i] = i;
-//    }
-//    ll perm_ind_by_val[n];
-//    ll maxi = 0;
-//    vector<vector<ll>> bests;
-//    while (next_permutation(perm, perm+n)) {
-//        fo(i, 0, n) {
-//            perm_ind_by_val[perm[i]] = i;
-//        }
-//        ll tot = 0;
-//        fo(i, 0, n) {
-//            tot += a[i]*(abs(i-perm_ind_by_val[i]));
-//        }
-//        if (tot > maxi) {
-//            maxi = tot;
-//            bests.clear();
-//        }
-//        if (tot >= maxi) {
-//            bests.emplace_back();
-//            bests[bests.size()-1].resize(n);
-//            fo(i, 0, n) {
-//                bests[bests.size()-1][i] = a[perm[i]];
-//            }
-//        }
-//    }
-//    cout << "(OG) BEST SCORE: " << maxi << endl;
-//    cout << "NUMBER OF PERMS: " << bests.size() << endl;
-//    for(const auto& best_perm: bests) {
-//        for(ll x : best_perm) {
-//            cout << x << ' ';
-//        }
-//        cout << endl;
-//    }
-
-    vector<pair<ll, ll>> x (n);
+     cout << endl;
+    if (n == 1) {
+        cout << 1 << endl;
+        return;
+    }
+    vector<ll> pref (n, 1);
+    vector<ll> suff (n, 1);
+    fo(i, 1, n) {
+        if (a[i] > a[i-1]) {
+            pref[i] = pref[i-1] + 1;
+        } else {
+            pref[i] = pref[i-1];
+        }
+    }
+    roff(i, n-2, 0) {
+        if (a[i] < a[i+1]) {
+            suff[i] = suff[i-1] + 1;
+        } else {
+            suff[i] = suff[i-1];
+        }
+    }
+    ll maxi = pref[n-1];
+    if (a[0] >= a[1]) maxi = pref[n-1]+1;
+    if (a[n-1] <= a[n-2]) maxi = pref[n-1]+1;
+    fo(i, 0, n-2) {
+        if (a[i+2] - a[i] > 1) {
+            maxi = max(maxi, pref[i]+suff[i+2]+1);
+        }
+    }
+    cout << maxi << endl;
+    ll ogmaxi = 0;
     fo(i, 0, n) {
-        x[i].first = a[i];
-        x[i].second = i;
-    }
-    ll dp[2001][2001];
-    forr(i, 0, 2000) {
-        forr(j, 0, 2000) {
-            dp[i][j] = 0;
+        ll og = a[i];
+        forr(shit, -1000, 1000) {
+            a[i] = shit;
+            ogmaxi = max(ogmaxi, count(a));
         }
+        a[i] = og;
     }
-    sort(all(x), greater<>());
-    forr(hod, 1, n) {
-        forr(l, 0, hod) {
-            ll r = hod-l;
-            if (l != 0) {
-                dp[l][r] = max(dp[l][r],
-                               dp[l-1][r]+abs(x[hod-1].second-(l-1))*x[hod-1].first
-                               );
-//                clog << "1.[" << l << "]" << "[" << r << "] = " << dp[l][r] << endl;
-            }
-            if (r != 0) {
-                dp[l][r] = max(dp[l][r],
-                               dp[l][r-1]+abs(x[hod-1].second-(n-1-(r-1)))*x[hod-1].first
-                               );
-//                clog << "2.[" << l << "]" << "[" << r << "] = " << dp[l][r] << endl;
-            }
-        }
-    }
-    ll mymaxi = 0;
-    forr(l, 0, n) {
-        ll r = n-l;
-        mymaxi = max(mymaxi, dp[l][r]);
-    }
-    cout << mymaxi << endl;
-//    ll res[n];
-//    ll leftmost = 0;
-//    ll rightmost = n-1;
-//    ll mytot = 0;
-//    fo(i, 0, n) {
-//        clog << x[i].first << " @ " << x[i].second << endl;
-//        if (abs(x[i].second-leftmost) > abs(x[i].second-rightmost)) {
-//            mytot += abs(x[i].second-leftmost)*x[i].first;
-//            res[leftmost] = x[i].first;
-//            clog << "Left: " << leftmost << endl;
-//            leftmost+=1;
-//        } else {
-//            mytot += abs(x[i].second-rightmost)*x[i].first;
-//            res[rightmost] = x[i].first;
-//            clog << "Right: " << rightmost << endl;
-//            rightmost-=1;
-//        }
-//    }
-//    cout << "my perm: ";
-//    fo(i, 0, n) {
-//        cout << res[i] << ' ';
-//    }
-//    cout << endl;
-//    cout << "my score: " << mytot << endl;
+    cout << ogmaxi << endl;
+    if (maxi != ogmaxi) assert(false);
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
@@ -153,7 +119,7 @@ int32_t main (int32_t argc, char* argv[]) {
         cerr.tie(nullptr);
         clog.tie(nullptr);
     }
-    ll tt = 1;
+    ll tt = 10000;
 //    cin >> tt;
     while (tt--) solve();
     return 0;
