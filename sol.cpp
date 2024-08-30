@@ -173,8 +173,11 @@ void solve () {
         maxi = n;
     }
     fo(i, 0, n-2) {
-        if (a[i] < a[i+2]) {
-            maxi = max(maxi, pref[i]+suff[i+2]+1);
+        if (a[i+2]-a[i]>1) {
+            if (pref[i]+suff[i+2]+1 > maxi) {
+                cout << i << ":)" << endl;
+                maxi = pref[i]+suff[i+2]+1;
+            }
         }
     }
     clog << "maxi: " << maxi << endl;
@@ -197,7 +200,7 @@ void solve () {
         a[i] = og;
     }
     cout << "ogmaxi: " << ogmaxi << endl;
-//    assert(ogmaxi >= maxi);
+    assert(ogmaxi == maxi);
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
