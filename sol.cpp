@@ -35,7 +35,7 @@ ll n;
 void computeLIS(ll arr[], ll output[]) {
     vector<ll> lis;
     for (int i = 0; i < n; ++i) {
-        auto it = std::lower_bound(lis.begin(), lis.end(), arr[i]);
+        auto it = lower_bound(lis.begin(), lis.end(), arr[i]);
         if (it == lis.end()) {
             lis.push_back(arr[i]);
         } else {
@@ -57,52 +57,71 @@ void solve () {
 //    cin >> n;
     n = 5;
     ll a[n];
+    clog << "new: ";
     fo(i, 0, n) {
         a[i] = distrib(rng);
-        cout << a[i] << ' ';
+        clog << a[i] << ' ';
 //        cin >> a[i];
     }
-     cout << endl;
+    clog << endl;
     if (n == 1) {
         cout << 1 << endl;
         return;
     }
-    vector<ll> pref (n, 1);
-    vector<ll> suff (n, 1);
-    fo(i, 1, n) {
-        if (a[i] > a[i-1]) {
-            pref[i] = pref[i-1] + 1;
-        } else {
-            pref[i] = pref[i-1];
-        }
+    ll pref[n];
+    computeLIS(a, pref);
+    fo(i, 0, n) {
+        clog << pref[i] << ' ';
     }
-    roff(i, n-2, 0) {
-        if (a[i] < a[i+1]) {
-            suff[i] = suff[i-1] + 1;
-        } else {
-            suff[i] = suff[i-1];
-        }
+    clog << endl;
+    ll minus[n];
+    fo(i, 0, n) {
+        minus[i] = -a[n-1-i];
     }
+    fo(i, 0, n) {
+        clog << minus[i] << ' ';
+    }
+    clog << endl;
+    ll revsuff[n];
+    computeLIS(minus, revsuff);
+    ll suff[n];
+    for (int i = 0; i < n; ++i) {
+        suff[i] = revsuff[n - 1 - i];
+    }
+    fo(i, 0, n) {
+        clog << suff[i] << ' ';
+    }
+    clog << endl;
     ll maxi = pref[n-1];
     if (a[0] >= a[1]) maxi = pref[n-1]+1;
-    if (a[n-1] <= a[n-2]) maxi = pref[n-1]+1;
+    if (a[n-2] >= a[n-1]) maxi = pref[n-1]+1;
     fo(i, 0, n-2) {
         if (a[i+2] - a[i] > 1) {
             maxi = max(maxi, pref[i]+suff[i+2]+1);
         }
     }
-    cout << maxi << endl;
+    cout << "maxi: " << maxi << endl;
     ll ogmaxi = 0;
     fo(i, 0, n) {
         ll og = a[i];
         forr(shit, -1000, 1000) {
             a[i] = shit;
-            ogmaxi = max(ogmaxi, count(a));
+            ll ogtemp[n];
+            computeLIS(a, ogtemp);
+            ogmaxi = max(ogmaxi, ogtemp[n-1]);
+            if (ogmaxi > maxi) {
+                cout << "ogmaxi (better): " << ogmaxi << endl;
+                fo(iii, 0, n) {
+                    cout << a[iii] << ' ';
+                }
+                cout << endl;
+                assert(false);
+            }
         }
         a[i] = og;
     }
-    cout << ogmaxi << endl;
-    if (maxi != ogmaxi) assert(false);
+    cout << "ogmaxi: " << ogmaxi << endl;
+    assert(ogmaxi == maxi);
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
