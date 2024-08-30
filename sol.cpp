@@ -18,7 +18,7 @@ typedef long double ld;
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #endif
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-uniform_int_distribution<ll> distrib(-10, 10);
+uniform_int_distribution<ll> distrib(1, 10);
 constexpr ll N = (ll)(2005);
 constexpr ll MOD99 = 998244353;
 constexpr ll MOD7 = 1e9 + 7;
@@ -83,7 +83,7 @@ vector<ll> findLISIndices(const ll arr[]) {
 }
 void solve () {
 //    cin >> n;
-    n = 17;
+    n = 5;
     ll a[n];
     clog << "new: ";
     fo(i, 0, n) {
