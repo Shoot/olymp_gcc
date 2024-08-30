@@ -172,14 +172,14 @@ void solve () {
     if (inds.size() == n) {
         maxi = n;
     }
-    fo(i, 0, n-2) {
-        if (a[i+2]-a[i]>1) {
-            if (pref[i]+suff[i+2]+1 > maxi) {
-                cout << i << ":)" << endl;
-                maxi = pref[i]+suff[i+2]+1;
-            }
-        }
-    }
+//    fo(i, 0, n-2) {
+//        if (a[i+2]-a[i]>1) {
+//            if (pref[i]+suff[i+2]+1 > maxi) {
+//                cout << i << ":)" << endl;
+//                maxi = pref[i]+suff[i+2]+1;
+//            }
+//        }
+//    }
     clog << "maxi: " << maxi << endl;
     cout << maxi << endl;
     ll ogmaxi = 0;
