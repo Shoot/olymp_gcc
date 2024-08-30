@@ -32,6 +32,18 @@ void copy_this () {
 }
 */
 ll n;
+void computeLIS(ll arr[], ll output[]) {
+    vector<ll> lis;
+    for (int i = 0; i < n; ++i) {
+        auto it = lower_bound(lis.begin(), lis.end(), arr[i]);
+        if (it == lis.end()) {
+            lis.push_back(arr[i]);
+        } else {
+            *it = arr[i];
+        }
+        output[i] = lis.size();
+    }
+}
 vector<ll> findLISIndices(const ll arr[]) {
     vector<ll> dp;
     vector<ll> parent(n, -1);
@@ -78,6 +90,26 @@ void solve () {
         cout << 1 << endl;
         return;
     }
+    ll pref[n];
+    ll suffrev[n];
+    ll suff[n];
+    ll rev[n];
+    fo(i, 0, n) {
+        rev[i] = -a[n-1-i];
+    }
+    computeLIS(a, pref);
+    computeLIS(rev, suffrev);
+    fo(i, 0, n) {
+        suff[i] = suffrev[n-1-i];
+    }
+    fo(i, 0, n) {
+        clog << pref[i] << ' ';
+    }
+    clog << endl;
+    fo(i, 0, n) {
+        clog << suff[i] << ' ';
+    }
+    clog << endl;
 //    ll pref[n];
     ll prev = -1;
     ll prevprev = -1;
@@ -139,6 +171,11 @@ void solve () {
     cout << "THE SIZE: " << inds.size() << endl;
     if (inds.size() == n) {
         maxi = n;
+    }
+    fo(i, 0, n-2) {
+        if (a[i] < a[i+2]) {
+            maxi = max(maxi, pref[i]+suff[i+2]+1);
+        }
     }
     clog << "maxi: " << maxi << endl;
     cout << maxi << endl;
