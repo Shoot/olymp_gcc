@@ -1,7 +1,15 @@
 #include <bits/stdc++.h>
 using namespace std;
 typedef long long ll;
+typedef long double ld;
 #define all(value) value.begin(), value.end()
+#define fo(x, temp_set_for_mex, fi) for(ll x = temp_set_for_mex; x < fi; x++)
+#define forr(x, temp_set_for_mex, fi) for(ll x = temp_set_for_mex; x <= fi; x++)
+#define rrof(x, temp_set_for_mex, fi) for(ll x = temp_set_for_mex; x >= fi; x--)
+#define roff(x, temp_set_for_mex, fi) for(ll x = temp_set_for_mex; x >= fi; x--)
+#define of(x, temp_set_for_mex, fi) for(ll x = temp_set_for_mex; x > fi; x--)
+#define ro(x, temp_set_for_mex, fi) for(ll x = temp_set_for_mex; x > fi; x--)
+#define yes(x) (x ? "YES" : "NO")
 #define endl '\n'
 #ifdef LOCAL
 #include <algo/debug.h>
@@ -9,119 +17,228 @@ typedef long long ll;
 #define debug(...) 68
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #endif
+mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
+uniform_int_distribution<ll> distrib(1, 10);
+constexpr ll N = (ll)(2005);
+constexpr ll MOD99 = 998244353;
+constexpr ll MOD7 = 1e9 + 7;
+/*
+void copy_this () {
+    ll n; cin >> n;
+    ll n, k; cin >> n >> k;
+    ll n, q; cin >> n >> q;
+    ll a[n]; fo(i, 0, n) cin >> a[i];
+    vector<ll> a(n); fo(i, 0, n) cin >> a[i];
+}
+*/
+ll n;
+vector<ll> findLISIndices(const ll arr[]) {
+    vector<ll> dp;
+    vector<ll> parent(n, -1);
+    vector<ll> lisIndices;
 
-const int N = 3e5+10;
-const int MAXN = 1e3; // Adjust based on your needs
-
-// 2D Segment Tree Node
-struct node {
-    ll val;
-    ll idx_x, idx_y;
-    node() : val(0), idx_x(0), idx_y(0) {}
-    node(ll _val, ll _idx_x, ll _idx_y) : val(_val), idx_x(_idx_x), idx_y(_idx_y) {}
+    for (ll i = 0; i < n; ++i) {
+        auto it = lower_bound(dp.begin(), dp.end(), arr[i]);
+        ll pos = it - dp.begin();
+        if (it == dp.end()) {
+            dp.push_back(arr[i]);
+        } else {
+            *it = arr[i];
+        }
+        if (pos > 0) {
+            parent[i] = lisIndices[pos - 1];
+        }
+        if (pos == lisIndices.size()) {
+            lisIndices.push_back(i);
+        } else {
+            lisIndices[pos] = i;
+        }
+    }
+    vector<ll> result;
+    ll k = lisIndices.back();
+    for (ll i = (ll)dp.size() - 1; i >= 0; --i) {
+        result.push_back(k);
+        k = parent[k];
+    }
+    reverse(result.begin(), result.end());
+    return result;
+}
+void computeLIS(ll arr[], ll output[]) {
+    vector<ll> lis;
+    for (ll i = 0; i < n; ++i) {
+        auto it = lower_bound(lis.begin(), lis.end(), arr[i]);
+        if (it == lis.end()) {
+            lis.push_back(arr[i]);
+            output[i] = lis.size();
+        } else {
+            *it = arr[i];
+            output[i] = it-lis.begin()+1;
+        }
+    }
+}
+struct shit {
+    ll ind, znach, lis;
 };
-
-// 2D Segment Tree Arrays
-array<array<node, 4*MAXN>, 4*MAXN> tree;
-vector<vector<ll>> matrix(MAXN, vector<ll>(MAXN));
-vector<vector<ll>> pref_xor(MAXN, vector<ll>(MAXN));
-
-node merge(node a, node b) {
-    return (a.val > b.val) ? a : b;
-}
-
-// Build segment tree for a single dimension (1D)
-void build_1D(array<node, 4*MAXN> &ST, vector<ll> &array, ll v, ll tl, ll tr) {
-    if (tl == tr) {
-        ST[v] = node(array[tl], tl, 0);
-    } else {
-        ll tm = (tl + tr) >> 1;
-        build_1D(ST, array, v*2, tl, tm);
-        build_1D(ST, array, v*2+1, tm+1, tr);
-        ST[v] = merge(ST[v*2], ST[v*2+1]);
+void solve () {
+//    cin >> n;
+    n = 10;
+    ll a[n];
+    clog << "new: ";
+    fo(i, 0, n) {
+        a[i] = distrib(rng);
+//        cin >> a[i];
+        clog << a[i] << ' ';
     }
-}
-
-// Build 2D segment tree
-void build_2D(array<array<node, 4*MAXN>, 4*MAXN> &ST, vector<vector<ll>> &matrix, ll v, ll tl, ll tr, ll l, ll r) {
-    if (tl == tr) {
-        vector<ll> row(matrix[0].size());
-        for (ll j = 0; j < matrix[0].size(); j++) {
-            row[j] = matrix[tl][j];
-        }
-        build_1D(ST[tl], row, 1, 0, matrix[0].size() - 1);
-    } else {
-        ll tm = (tl + tr) >> 1;
-        build_2D(ST, matrix, v*2, tl, tm, l, r);
-        build_2D(ST, matrix, v*2+1, tm+1, tr, l, r);
-        // For each row in this segment
-        for (ll i = l; i <= r; i++) {
-            ST[v][i] = merge(ST[v*2][i], ST[v*2+1][i]);
-        }
+    clog << endl;
+    if (n == 1) {
+        cout << 1 << endl;
+        return;
     }
-}
-
-// Query 1D segment tree
-node query_1D(array<node, 4*MAXN> &ST, ll l, ll r, ll v, ll tl, ll tr) {
-    if (tl == l && tr == r) return ST[v];
-    ll tm = (tl + tr) >> 1;
-    if (r <= tm) {
-        return query_1D(ST, l, r, v*2, tl, tm);
-    } else if (l > tm) {
-        return query_1D(ST, l, r, v*2+1, tm+1, tr);
-    } else {
-        return merge(query_1D(ST, l, tm, v*2, tl, tm), query_1D(ST, tm+1, r, v*2+1, tm+1, tr));
+    ll pref[n];
+    ll suffrev[n];
+    ll suff[n];
+    ll rev[n];
+    fo(i, 0, n) {
+        rev[i] = -a[n-1-i];
     }
-}
-
-// Query 2D segment tree
-node query_2D(array<array<node, 4*MAXN>, 4*MAXN> &ST, ll x1, ll x2, ll y1, ll y2, ll v, ll tl, ll tr, ll l, ll r) {
-    if (tl == x1 && tr == x2) {
-        return query_1D(ST[v], y1, y2, 1, l, r);
+    computeLIS(a, pref);
+    computeLIS(rev, suffrev);
+    fo(i, 0, n) {
+        suff[i] = suffrev[n-1-i];
     }
-    ll tm = (tl + tr) >> 1;
-    if (x2 <= tm) {
-        return query_2D(ST, x1, x2, y1, y2, v*2, tl, tm, l, r);
-    } else if (x1 > tm) {
-        return query_2D(ST, x1, x2, y1, y2, v*2+1, tm+1, tr, l, r);
-    } else {
-        return merge(query_2D(ST, x1, tm, y1, y2, v*2, tl, tm, l, r),
-                     query_2D(ST, tm+1, x2, y1, y2, v*2+1, tm+1, tr, l, r));
+    fo(i, 0, n) {
+        clog << pref[i] << ' ';
     }
-}
+    clog << endl;
+    fo(i, 0, n) {
+        clog << suff[i] << ' ';
+    }
+    clog << endl;
 
-void solve() {
-    ll n, m;
-    cin >> n >> m;
-    matrix.resize(n+1, vector<ll>(m+1));
-    pref_xor.resize(n+1, vector<ll>(m+1));
-
-    // Read matrix and compute prefix XOR
-    for (ll i = 1; i <= n; i++) {
-        for (ll j = 1; j <= m; j++) {
-            cin >> matrix[i][j];
-            pref_xor[i][j] = matrix[i][j] ^ pref_xor[i-1][j] ^ pref_xor[i][j-1] ^ pref_xor[i-1][j-1];
+    ll maxi = 0;
+    fo(i, 0, n) {
+        fo(j, i+2, min(n, i+100)) {
+            if (a[j]-a[i] > 1) {
+                maxi = max(maxi, pref[i]+suff[j]+1);
+            }
         }
     }
-
-    // Build 2D segment tree
-    build_2D(tree, matrix, 1, 1, n, 1, m);
-
-    // Example Query
-    ll x1, x2, y1, y2;
-    cin >> x1 >> x2 >> y1 >> y2;
-    node result = query_2D(tree, x1, x2, y1, y2, 1, 1, n, 1, m);
-    cout << "Maximum value: " << result.val << " at position (" << result.idx_x << ", " << result.idx_y << ")" << endl;
+//    cout << maxi << endl;
+    ll prev = -1;
+    ll prevprev = -1;
+    bool good = false;
+    vector<ll> inds = findLISIndices(a);
+    if (inds[0] != 0) good = true;
+    ll ind = 0;
+    for (ll j: inds) {
+        ind += 1;
+        clog << j << endl;
+        if (prevprev == -1 && prev != -1 && prev != j-1) {
+            forr(mezhdu0, prev+1, j-1) {
+                if (a[mezhdu0] < a[j]) {
+                    clog << "mezhdu prev i j: " << mezhdu0 << endl;
+                    good = true;
+                    break;
+                }
+            }
+            if (good) break;
+        }
+        if (prev != -1 && prevprev != -1 && prevprev != prev-1) {
+            forr(mezhdu, prevprev+1, prev-1) {
+                if (a[mezhdu] > a[prevprev] && a[mezhdu] < a[j] && a[mezhdu] < a[prev]) {
+                    clog << "mezhdu prevprev i prev: " << mezhdu << endl;
+                    good = true;
+                    break;
+                }
+            }
+            if (good) break;
+        }
+        if (prev != -1 && a[prev] != a[j]-1 && prev-prevprev>1 && a[prevprev] !=a[prev]-1) {
+            clog << a[prev] << "!!!" << a[j] << endl;
+            good = true;
+            break;
+        }
+        if (prevprev != -1 && prev != -1 && a[prevprev] !=a[prev]-1 && prevprev!=prev-1 && prev != j-1) {
+            clog << a[prevprev] << "!!!!" << a[prev] << endl;
+            good = true;
+            break;
+        }
+        if (prevprev != -1 && a[prevprev] != a[prev]-1 && prevprev != prev-1) {
+            clog << a[prevprev] << "!!" << a[prev] << endl;
+            good = true;
+            break;
+        }
+        if (prev > 0 && a[prev-1] == a[prev] && a[j]-a[prev] > 1) {
+            good = true;
+            break;
+        }
+        if (j - prev > 1 && prev != -1 && a[j] != a[prev]+1) {
+            good = true;
+            break;
+        }
+        if (ind >= 2) prevprev = prev;
+        prev = j;
+    }
+    if (prev != n-1) good = true;
+    fo(i, 0, n-1) {
+        if (pref[i] == (ll)inds.size()) {
+            good = true;
+            break;
+        }
+    }
+    maxi = max(maxi, (ll)inds.size()+good);
+    clog << "THE SIZE: " << inds.size() << endl;
+    if (inds.size() == n) {
+        maxi = n;
+    }
+    fo(i, 0, n-2) {
+        if (a[i+2]-a[i]>1) {
+            if (pref[i]+suff[i+2]+1 > maxi) {
+                clog << i << ":)" << endl;
+                maxi = pref[i]+suff[i+2]+1;
+            }
+        }
+    }
+    clog << "maxi: " << maxi << endl;
+//    cout << maxi << endl;
+    ll ogmaxi = 0;
+    fo(i, 0, n) {
+        ll og = a[i];
+        forr(shit, -11, 11) {
+            a[i] = shit;
+            ogmaxi = max(ogmaxi, (ll)findLISIndices(a).size());
+            if (ogmaxi > maxi) {
+                clog << "ogmaxi (better): " << ogmaxi << " :::: ";
+                fo(iii, 0, n) {
+                    clog << a[iii] << ' ';
+                }
+                clog << endl;
+                assert(false);
+            }
+        }
+        a[i] = og;
+    }
+    clog << "ogmaxi: " << ogmaxi << endl;
+    assert(ogmaxi == maxi);
 }
-
-int32_t main(int argc, char* argv[]) {
-    ios::sync_with_stdio(false);
-    cin.tie(nullptr);
-    cout.tie(nullptr);
-    cerr.tie(nullptr);
-    clog.tie(nullptr);
-
-    ll tt = 1;
+int32_t main (int32_t argc, char* argv[]) {
+    bool use_fast_io = true;
+    for (int32_t i = 1; i < argc; ++i)
+        if (string(argv[i]) == "-local-no-fast-io") {
+            use_fast_io = false;
+//            cout << "No fastIO" << endl;
+            break;
+        }
+    if (use_fast_io) {
+        ios::sync_with_stdio(false);
+        cin.tie(nullptr);
+        cout.tie(nullptr);
+        cerr.tie(nullptr);
+        clog.tie(nullptr);
+    }
+//    ll tt = 1;
+    ll tt = 100000;
+//    cin >> tt;
     while (tt--) solve();
     return 0;
 }
