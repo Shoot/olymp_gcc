@@ -18,7 +18,7 @@ typedef long double ld;
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #endif
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-uniform_int_distribution<ll> distrib(1, 10);
+uniform_int_distribution<ll> distrib(1, 11);
 constexpr ll N = (ll)(2005);
 constexpr ll MOD99 = 998244353;
 constexpr ll MOD7 = 1e9 + 7;
@@ -39,7 +39,19 @@ struct shit {
 void solve () {
     ll cnt_DELETE = 0;
     cin >> n >> x;
-    ll a[n]; fo(i, 0, n) cin >> a[i];
+    unordered_set<ll> st_DELETE;
+    ll prev_DELETE=0;
+    ll cnt_prev_DELETE=0;
+    ll a[n]; fo(i, 0, n) {
+        cin >> a[i];
+        if (prev_DELETE > a[i]) {
+            cnt_prev_DELETE += 1;
+        }
+        prev_DELETE = a[i];
+    }
+    if (cnt_prev_DELETE > 1e4) {
+        assert(false);
+    }
     ll b[n]; fo(i, 0, n) cin >> b[i];
     ll b_pref[n];
     b_pref[0] = 0;
@@ -72,10 +84,13 @@ void solve () {
 //        clog << "i: " << i << endl;
         bool can_jump = true;
         if (jumps.contains(nxt[vozr_end_by_ind+1])) {
+            ll jmpcntrb = jump[nxt[vozr_end_by_ind+1]].contrib;
+            ll jmpstart = jump[nxt[vozr_end_by_ind+1]].start;
+            ll jmptarg = jump[nxt[vozr_end_by_ind+1]].target;
 //            clog << "found jump by r = " << nxt[vozr_end_by_ind+1] << ": " << jump[nxt[vozr_end_by_ind+1]].target << " " << jump[nxt[vozr_end_by_ind+1]].start << " " << jump[nxt[vozr_end_by_ind+1]].contrib << endl;
 //            clog << "damn, konec pred moved " << vozr_end_by_ind << " -> " << jump[nxt[vozr_end_by_ind+1]].target << endl;
-            this_one = jump[nxt[vozr_end_by_ind+1]].contrib-abs(jump[nxt[vozr_end_by_ind+1]].start-i);
-            vozr_end_by_ind = jump[nxt[vozr_end_by_ind+1]].target;
+            this_one = jmpcntrb-abs(jmpstart-i);
+            vozr_end_by_ind = jmptarg;
         }
         vector<ll> rki;
 
