@@ -59,14 +59,24 @@ void solve () {
     }
     clog << endl;
     ll tot = 0;
+    map<ll, ll> optimal_bisearch_l;
     fo(i, 0, n) {
         ll this_one = 0;
         ll vozr_end_by_ind = i-1;
         while (vozr_end_by_ind != n-1) {
             clog << "new vozr_end_by_ind: " << vozr_end_by_ind << endl;
             ll minim = a[vozr_end_by_ind+1];
-            ll l = vozr_end_by_ind+1, r = nxt[vozr_end_by_ind+1];
-
+            ll r = nxt[vozr_end_by_ind+1];
+            if (optimal_bisearch_l.contains(r) && optimal_bisearch_l[r] == r) {
+                this_one += r-vozr_end_by_ind;
+                clog << "contrib: " << r-(vozr_end_by_ind+1)+1 << endl;
+                clog << "(good: " << r << ")" << endl;
+                optimal_bisearch_l[nxt[vozr_end_by_ind+1]] = r;
+                vozr_end_by_ind = nxt[vozr_end_by_ind+1];
+                continue;
+            }
+            ll l = max(vozr_end_by_ind+1,optimal_bisearch_l[r]);
+            
             ll good = -666;
             while (l <= r) {
                 ll mid = (l+r) >> 1;
@@ -79,8 +89,9 @@ void solve () {
             }
             if (good != -666) {
                 this_one += good-vozr_end_by_ind;
-                clog << "contrib: " << good-vozr_end_by_ind << endl;
+                clog << "contrib: " << good-(vozr_end_by_ind+1)+1 << endl;
                 clog << "(good: " << good << ")" << endl;
+                optimal_bisearch_l[nxt[vozr_end_by_ind+1]] = good;
             }
             vozr_end_by_ind = nxt[vozr_end_by_ind+1];
         }
