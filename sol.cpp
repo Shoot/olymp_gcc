@@ -80,13 +80,13 @@ struct shit {
     ll ind, znach, lis;
 };
 void solve () {
-//    cin >> n;
-    n = 10;
+    cin >> n;
+//    n = 10;
     ll a[n];
     clog << "new: ";
     fo(i, 0, n) {
-        a[i] = distrib(rng);
-//        cin >> a[i];
+//        a[i] = distrib(rng);
+        cin >> a[i];
         clog << a[i] << ' ';
     }
     clog << endl;
@@ -200,26 +200,26 @@ void solve () {
         }
     }
     clog << "maxi: " << maxi << endl;
-//    cout << maxi << endl;
-    ll ogmaxi = 0;
-    fo(i, 0, n) {
-        ll og = a[i];
-        forr(shit, -11, 11) {
-            a[i] = shit;
-            ogmaxi = max(ogmaxi, (ll)findLISIndices(a).size());
-            if (ogmaxi > maxi) {
-                clog << "ogmaxi (better): " << ogmaxi << " :::: ";
-                fo(iii, 0, n) {
-                    clog << a[iii] << ' ';
-                }
-                clog << endl;
-                assert(false);
-            }
-        }
-        a[i] = og;
-    }
-    clog << "ogmaxi: " << ogmaxi << endl;
-    assert(ogmaxi == maxi);
+    cout << maxi << endl;
+//    ll ogmaxi = 0;
+//    fo(i, 0, n) {
+//        ll og = a[i];
+//        forr(shit, -11, 11) {
+//            a[i] = shit;
+//            ogmaxi = max(ogmaxi, (ll)findLISIndices(a).size());
+//            if (ogmaxi > maxi) {
+//                clog << "ogmaxi (better): " << ogmaxi << " :::: ";
+//                fo(iii, 0, n) {
+//                    clog << a[iii] << ' ';
+//                }
+//                clog << endl;
+//                assert(false);
+//            }
+//        }
+//        a[i] = og;
+//    }
+//    clog << "ogmaxi: " << ogmaxi << endl;
+//    assert(ogmaxi == maxi);
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
@@ -236,8 +236,8 @@ int32_t main (int32_t argc, char* argv[]) {
         cerr.tie(nullptr);
         clog.tie(nullptr);
     }
-//    ll tt = 1;
-    ll tt = 100000;
+    ll tt = 1;
+//    ll tt = 100000;
 //    cin >> tt;
     while (tt--) solve();
     return 0;
