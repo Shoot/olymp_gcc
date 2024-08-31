@@ -33,7 +33,11 @@ void copy_this () {
 */
 ll n;
 ll x;
+struct shit {
+    ll target, contrib, start;
+};
 void solve () {
+    ll cnt_DELETE = 0;
     cin >> n >> x;
     ll a[n]; fo(i, 0, n) cin >> a[i];
     ll b[n]; fo(i, 0, n) cin >> b[i];
@@ -53,30 +57,51 @@ void solve () {
         }
         stck.push(i);
     }
-    clog << "array \"nxt min decrease wont be until\": " << endl;
+//    clog << "array \"nxt min decrease wont be until\": " << endl;
     fo(i, 0, n) {
-        clog << nxt[i] << ' ';
+//        clog << nxt[i] << ' ';
     }
-    clog << endl;
+//    clog << endl;
     ll tot = 0;
-    map<ll, ll> optimal_bisearch_l;
+    unordered_map<ll, ll> optimal_bisearch_l;
+    vector<shit> jump(n);
+    unordered_set<ll> jumps;
     fo(i, 0, n) {
         ll this_one = 0;
         ll vozr_end_by_ind = i-1;
+//        clog << "i: " << i << endl;
+        bool can_jump = true;
+        if (jumps.contains(nxt[vozr_end_by_ind+1])) {
+//            clog << "found jump by r = " << nxt[vozr_end_by_ind+1] << ": " << jump[nxt[vozr_end_by_ind+1]].target << " " << jump[nxt[vozr_end_by_ind+1]].start << " " << jump[nxt[vozr_end_by_ind+1]].contrib << endl;
+//            clog << "damn, konec pred moved " << vozr_end_by_ind << " -> " << jump[nxt[vozr_end_by_ind+1]].target << endl;
+            this_one = jump[nxt[vozr_end_by_ind+1]].contrib-abs(jump[nxt[vozr_end_by_ind+1]].start-i);
+            vozr_end_by_ind = jump[nxt[vozr_end_by_ind+1]].target;
+        }
+        vector<ll> rki;
+
         while (vozr_end_by_ind != n-1) {
-            clog << "new vozr_end_by_ind: " << vozr_end_by_ind << endl;
+            cnt_DELETE += 1;
+//            if (cnt_DELETE >= 1e7 && jumps.size() == 0) {
+//                break;
+//            }
+//            clog << "new vozr_end_by_ind: " << vozr_end_by_ind << endl;
             ll minim = a[vozr_end_by_ind+1];
             ll r = nxt[vozr_end_by_ind+1];
+            rki.push_back(r);
             if (optimal_bisearch_l.contains(r) && optimal_bisearch_l[r] == r) {
                 this_one += r-vozr_end_by_ind;
-                clog << "contrib: " << r-(vozr_end_by_ind+1)+1 << endl;
-                clog << "(good: " << r << ")" << endl;
+//                clog << "contrib: " << r-(vozr_end_by_ind+1)+1 << endl;
+//                clog << "(good: " << r << ")" << endl;
                 optimal_bisearch_l[nxt[vozr_end_by_ind+1]] = r;
                 vozr_end_by_ind = nxt[vozr_end_by_ind+1];
                 continue;
             }
-            ll l = max(vozr_end_by_ind+1,optimal_bisearch_l[r]);
-            
+            ll l = vozr_end_by_ind+1;
+            if (optimal_bisearch_l.contains(r)) {
+//                assert(optimal_bisearch_l[r] >= l);
+                l = max(l, optimal_bisearch_l[r]);
+            }
+            ll r_=r;
             ll good = -666;
             while (l <= r) {
                 ll mid = (l+r) >> 1;
@@ -89,13 +114,26 @@ void solve () {
             }
             if (good != -666) {
                 this_one += good-vozr_end_by_ind;
-                clog << "contrib: " << good-(vozr_end_by_ind+1)+1 << endl;
-                clog << "(good: " << good << ")" << endl;
+//                clog << "contrib: " << good-(vozr_end_by_ind+1)+1 << endl;
+//                clog << "(good: " << good << ")" << endl;
                 optimal_bisearch_l[nxt[vozr_end_by_ind+1]] = good;
+            }
+            if (good != r_) {
+                can_jump = false;
+            }
+            if (can_jump) {
+                for (ll rka: rki) {
+                    jump[rka].target = good;
+                    jump[rka].contrib = this_one;
+                    jump[rka].start = i;
+//                    clog << "added " << rka << " -> " << good << endl;
+                    jumps.insert(rka);
+                }
+                rki.clear();
             }
             vozr_end_by_ind = nxt[vozr_end_by_ind+1];
         }
-        clog << i << " contributes " << this_one << endl;
+//        clog << i << " contributes " << this_one << endl;
         tot += this_one;
     }
     cout << tot << endl;
