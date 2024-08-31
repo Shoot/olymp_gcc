@@ -32,194 +32,62 @@ void copy_this () {
 }
 */
 ll n;
-vector<ll> findLISIndices(const ll arr[]) {
-    vector<ll> dp;
-    vector<ll> parent(n, -1);
-    vector<ll> lisIndices;
-
-    for (ll i = 0; i < n; ++i) {
-        auto it = lower_bound(dp.begin(), dp.end(), arr[i]);
-        ll pos = it - dp.begin();
-        if (it == dp.end()) {
-            dp.push_back(arr[i]);
-        } else {
-            *it = arr[i];
-        }
-        if (pos > 0) {
-            parent[i] = lisIndices[pos - 1];
-        }
-        if (pos == lisIndices.size()) {
-            lisIndices.push_back(i);
-        } else {
-            lisIndices[pos] = i;
-        }
-    }
-    vector<ll> result;
-    ll k = lisIndices.back();
-    for (ll i = (ll)dp.size() - 1; i >= 0; --i) {
-        result.push_back(k);
-        k = parent[k];
-    }
-    reverse(result.begin(), result.end());
-    return result;
-}
-void computeLIS(ll arr[], ll output[]) {
-    vector<ll> lis;
-    for (ll i = 0; i < n; ++i) {
-        auto it = lower_bound(lis.begin(), lis.end(), arr[i]);
-        if (it == lis.end()) {
-            lis.push_back(arr[i]);
-            output[i] = lis.size();
-        } else {
-            *it = arr[i];
-            output[i] = it-lis.begin()+1;
-        }
-    }
-}
-struct shit {
-    ll ind, znach, lis;
-};
+ll x;
 void solve () {
-    cin >> n;
-//    n = 10;
-    ll a[n];
-    clog << "new: ";
+    cin >> n >> x;
+    ll a[n]; fo(i, 0, n) cin >> a[i];
+    ll b[n]; fo(i, 0, n) cin >> b[i];
+    ll b_pref[n];
+    b_pref[0] = 0;
+    forr(i, 1, n) b_pref[i] = b_pref[i-1]+b[i-1];
+    stack<ll> stck;
+    ll nxt[n];
+    roff(i, n-1, 0) {
+        while(!stck.empty() && a[stck.top()] >= a[i]) {
+            stck.pop();
+        }
+        if (!stck.empty()) {
+            nxt[i] = stck.top()-1;
+        } else {
+            nxt[i] = n - 1;
+        }
+        stck.push(i);
+    }
+    clog << "array \"nxt min decrease wont be until\": " << endl;
     fo(i, 0, n) {
-//        a[i] = distrib(rng);
-        cin >> a[i];
-        clog << a[i] << ' ';
+        clog << nxt[i] << ' ';
     }
     clog << endl;
-    if (n == 1) {
-        cout << 1 << endl;
-        return;
-    }
-    ll pref[n];
-    ll suffrev[n];
-    ll suff[n];
-    ll rev[n];
+    ll tot = 0;
     fo(i, 0, n) {
-        rev[i] = -a[n-1-i];
-    }
-    computeLIS(a, pref);
-    computeLIS(rev, suffrev);
-    fo(i, 0, n) {
-        suff[i] = suffrev[n-1-i];
-    }
-    fo(i, 0, n) {
-        clog << pref[i] << ' ';
-    }
-    clog << endl;
-    fo(i, 0, n) {
-        clog << suff[i] << ' ';
-    }
-    clog << endl;
+        ll this_one = 0;
+        ll vozr_end_by_ind = i-1;
+        while (vozr_end_by_ind != n-1) {
+            clog << "new vozr_end_by_ind: " << vozr_end_by_ind << endl;
+            ll minim = a[vozr_end_by_ind+1];
+            ll l = vozr_end_by_ind+1, r = nxt[vozr_end_by_ind+1];
 
-    ll maxi = 0;
-    fo(i, 0, n) {
-        fo(j, i+2, min(n, i+100)) {
-            if (a[j]-a[i] > 1) {
-                maxi = max(maxi, pref[i]+suff[j]+1);
-            }
-        }
-    }
-//    cout << maxi << endl;
-    ll prev = -1;
-    ll prevprev = -1;
-    bool good = false;
-    vector<ll> inds = findLISIndices(a);
-    if (inds[0] != 0) good = true;
-    ll ind = 0;
-    for (ll j: inds) {
-        ind += 1;
-        clog << j << endl;
-        if (prevprev == -1 && prev != -1 && prev != j-1) {
-            forr(mezhdu0, prev+1, j-1) {
-                if (a[mezhdu0] < a[j]) {
-                    clog << "mezhdu prev i j: " << mezhdu0 << endl;
-                    good = true;
-                    break;
+            ll good = -666;
+            while (l <= r) {
+                ll mid = (l+r) >> 1;
+                if (b_pref[mid+1]-b_pref[i]+minim <= x) {
+                    l = mid + 1;
+                    good = mid;
+                } else {
+                    r = mid-1;
                 }
             }
-            if (good) break;
-        }
-        if (prev != -1 && prevprev != -1 && prevprev != prev-1) {
-            forr(mezhdu, prevprev+1, prev-1) {
-                if (a[mezhdu] > a[prevprev] && a[mezhdu] < a[j] && a[mezhdu] < a[prev]) {
-                    clog << "mezhdu prevprev i prev: " << mezhdu << endl;
-                    good = true;
-                    break;
-                }
+            if (good != -666) {
+                this_one += good-vozr_end_by_ind;
+                clog << "contrib: " << good-vozr_end_by_ind << endl;
+                clog << "(good: " << good << ")" << endl;
             }
-            if (good) break;
+            vozr_end_by_ind = nxt[vozr_end_by_ind+1];
         }
-        if (prev != -1 && a[prev] != a[j]-1 && prev-prevprev>1 && a[prevprev] !=a[prev]-1) {
-            clog << a[prev] << "!!!" << a[j] << endl;
-            good = true;
-            break;
-        }
-        if (prevprev != -1 && prev != -1 && a[prevprev] !=a[prev]-1 && prevprev!=prev-1 && prev != j-1) {
-            clog << a[prevprev] << "!!!!" << a[prev] << endl;
-            good = true;
-            break;
-        }
-        if (prevprev != -1 && a[prevprev] != a[prev]-1 && prevprev != prev-1) {
-            clog << a[prevprev] << "!!" << a[prev] << endl;
-            good = true;
-            break;
-        }
-        if (prev > 0 && a[prev-1] == a[prev] && a[j]-a[prev] > 1) {
-            good = true;
-            break;
-        }
-        if (j - prev > 1 && prev != -1 && a[j] != a[prev]+1) {
-            good = true;
-            break;
-        }
-        if (ind >= 2) prevprev = prev;
-        prev = j;
+        clog << i << " contributes " << this_one << endl;
+        tot += this_one;
     }
-    if (prev != n-1) good = true;
-    fo(i, 0, n-1) {
-        if (pref[i] == (ll)inds.size()) {
-            good = true;
-            break;
-        }
-    }
-    maxi = max(maxi, (ll)inds.size()+good);
-    clog << "THE SIZE: " << inds.size() << endl;
-    if (inds.size() == n) {
-        maxi = n;
-    }
-    fo(i, 0, n-2) {
-        if (a[i+2]-a[i]>1) {
-            if (pref[i]+suff[i+2]+1 > maxi) {
-                clog << i << ":)" << endl;
-                maxi = pref[i]+suff[i+2]+1;
-            }
-        }
-    }
-    clog << "maxi: " << maxi << endl;
-    cout << maxi << endl;
-//    ll ogmaxi = 0;
-//    fo(i, 0, n) {
-//        ll og = a[i];
-//        forr(shit, -11, 11) {
-//            a[i] = shit;
-//            ogmaxi = max(ogmaxi, (ll)findLISIndices(a).size());
-//            if (ogmaxi > maxi) {
-//                clog << "ogmaxi (better): " << ogmaxi << " :::: ";
-//                fo(iii, 0, n) {
-//                    clog << a[iii] << ' ';
-//                }
-//                clog << endl;
-//                assert(false);
-//            }
-//        }
-//        a[i] = og;
-//    }
-//    clog << "ogmaxi: " << ogmaxi << endl;
-//    assert(ogmaxi == maxi);
+    cout << tot << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
@@ -237,7 +105,6 @@ int32_t main (int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-//    ll tt = 100000;
 //    cin >> tt;
     while (tt--) solve();
     return 0;
