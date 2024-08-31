@@ -32,7 +32,37 @@ void copy_this () {
 }
 */
 ll n;
+vector<ll> findLISIndices(const ll arr[]) {
+    vector<ll> dp;
+    vector<ll> parent(n, -1);
+    vector<ll> lisIndices;
 
+    for (ll i = 0; i < n; ++i) {
+        auto it = lower_bound(dp.begin(), dp.end(), arr[i]);
+        ll pos = it - dp.begin();
+        if (it == dp.end()) {
+            dp.push_back(arr[i]);
+        } else {
+            *it = arr[i];
+        }
+        if (pos > 0) {
+            parent[i] = lisIndices[pos - 1];
+        }
+        if (pos == lisIndices.size()) {
+            lisIndices.push_back(i);
+        } else {
+            lisIndices[pos] = i;
+        }
+    }
+    vector<ll> result;
+    ll k = lisIndices.back();
+    for (ll i = (ll)dp.size() - 1; i >= 0; --i) {
+        result.push_back(k);
+        k = parent[k];
+    }
+    reverse(result.begin(), result.end());
+    return result;
+}
 void computeLIS(ll arr[], ll output[]) {
     vector<ll> lis;
     for (ll i = 0; i < n; ++i) {
@@ -97,26 +127,19 @@ void solve () {
 //        l[i].lis = suff[i];
 //    }
 
-    // l[i], r[j]; ind_j-ind_i>1, znach_j-zhach_i>1,
-    ll maxi = 0;
-//    fo(i, 0, n) {
-//        fo(j, i+2, n) {
-//            if (a[j]-a[i] > 1) {
-//                maxi = max(maxi, pref[i]+suff[j]);
-//            }
-//        }
-//    }
-    vector<ll> max_fuck(n, -1);
-    max_fuck[n - 1] = suff[n - 1];
-    for (ll j = n - 2; j >= 0; j--) {
-        max_fuck[j] = max(max_fuck[j + 1], suff[j]);
-    }
-
-    for (ll i = 0; i < n; i++) {
-        if (i + 2 < n && a[i + 2] - a[i] > 1) {
-            maxi = max(maxi, pref[i] + max_fuck[i + 2]);
+    ll maxi = 1;
+    fo(i, 0, n) {
+        maxi = max(maxi, get(
+                getcord(a[i])
+                ))
+        fo(j, i+2, n) {
+            if (a[j]-a[i] > 1) {
+                maxi = max(maxi, pref[i]+suff[j]+1);
+            }
         }
     }
+
+
 //    for(ll i=0; i<n; i++) {
 //        for(ll j=i+2; j<n; j++) {
 //            if (a[j]-a[i] > 1) {
@@ -124,71 +147,75 @@ void solve () {
 //            }
 //        }
 //    }
-    maxi += 1;
-    cout << maxi << endl;
+//    is (a[j]-a[i] > 1) ensured?
 
 
-//    ll prev = -1;
-//    ll prevprev = -1;
-//    bool good = false;
-//    vector<ll> inds = findLISIndices(a);
-//    if (inds[0] != 0) good = true;
-//    ll ind = 0;
-//    for (ll j: inds) {
-//        ind += 1;
-//        clog << j << endl;
-//        if (prevprev == -1 && prev != -1 && prev != j-1) {
-//            forr(mezhdu0, prev+1, j-1) {
-//                if (a[mezhdu0] < a[j]) {
-//                    clog << "mezhdu prev i j: " << mezhdu0 << endl;
-//                    good = true;
-//                    break;
-//                }
-//            }
-//            if (good) break;
-//        }
-//        if (prev != -1 && prevprev != -1 && prevprev != prev-1) {
-//            forr(mezhdu, prevprev+1, prev-1) {
-//                if (a[mezhdu] > a[prevprev] && a[mezhdu] < a[j] && a[mezhdu] < a[prev]) {
-//                    clog << "mezhdu prevprev i prev: " << mezhdu << endl;
-//                    good = true;
-//                    break;
-//                }
-//            }
-//            if (good) break;
-//        }
-//        if (prev != -1 && a[prev] != a[j]-1 && prev-prevprev>1 && a[prevprev] !=a[prev]-1) {
-//            clog << a[prev] << "!!!" << a[j] << endl;
-//            good = true;
-//            break;
-//        }
-//        if (prevprev != -1 && prev != -1 && a[prevprev] !=a[prev]-1 && prevprev!=prev-1 && prev != j-1) {
-//            clog << a[prevprev] << "!!!!" << a[prev] << endl;
-//            good = true;
-//            break;
-//        }
-//        if (prevprev != -1 && a[prevprev] != a[prev]-1 && prevprev != prev-1) {
-//            clog << a[prevprev] << "!!" << a[prev] << endl;
-//            good = true;
-//            break;
-//        }
-//        if (prev > 0 && a[prev-1] == a[prev] && a[j]-a[prev] > 1) {
-//            good = true;
-//            break;
-//        }
-//        if (j - prev > 1 && prev != -1 && a[j] != a[prev]+1) {
-//            good = true;
-//            break;
-//        }
-//        if (ind >= 2) prevprev = prev;
-//        prev = j;
-//    }
-//    if (prev != n-1) good = true;
-//    ll maxi = (ll)inds.size()+good;
-//    clog << "THE SIZE: " << inds.size() << endl;
-//    if (inds.size() == n) {
-//        maxi = n;
-//    }
+    ll prev = -1;
+    ll prevprev = -1;
+    bool good = false;
+    vector<ll> inds = findLISIndices(a);
+    if (inds[0] != 0) good = true;
+    ll ind = 0;
+    for (ll j: inds) {
+        ind += 1;
+        clog << j << endl;
+        if (prevprev == -1 && prev != -1 && prev != j-1) {
+            forr(mezhdu0, prev+1, j-1) {
+                if (a[mezhdu0] < a[j]) {
+                    clog << "mezhdu prev i j: " << mezhdu0 << endl;
+                    good = true;
+                    break;
+                }
+            }
+            if (good) break;
+        }
+        if (prev != -1 && prevprev != -1 && prevprev != prev-1) {
+            forr(mezhdu, prevprev+1, prev-1) {
+                if (a[mezhdu] > a[prevprev] && a[mezhdu] < a[j] && a[mezhdu] < a[prev]) {
+                    clog << "mezhdu prevprev i prev: " << mezhdu << endl;
+                    good = true;
+                    break;
+                }
+            }
+            if (good) break;
+        }
+        if (prev != -1 && a[prev] != a[j]-1 && prev-prevprev>1 && a[prevprev] !=a[prev]-1) {
+            clog << a[prev] << "!!!" << a[j] << endl;
+            good = true;
+            break;
+        }
+        if (prevprev != -1 && prev != -1 && a[prevprev] !=a[prev]-1 && prevprev!=prev-1 && prev != j-1) {
+            clog << a[prevprev] << "!!!!" << a[prev] << endl;
+            good = true;
+            break;
+        }
+        if (prevprev != -1 && a[prevprev] != a[prev]-1 && prevprev != prev-1) {
+            clog << a[prevprev] << "!!" << a[prev] << endl;
+            good = true;
+            break;
+        }
+        if (prev > 0 && a[prev-1] == a[prev] && a[j]-a[prev] > 1) {
+            good = true;
+            break;
+        }
+        if (j - prev > 1 && prev != -1 && a[j] != a[prev]+1) {
+            good = true;
+            break;
+        }
+        if (ind >= 2) prevprev = prev;
+        prev = j;
+    }
+    if (prev != n-1) good = true;
+    ll maxi = (ll)inds.size()+good;
+    clog << "THE SIZE: " << inds.size() << endl;
+    for (ll i = 0; i < n; i++) {
+        if (i + 2 < n && a[i + 2] - a[i] > 1) {
+            maxi = max(maxi, pref[i] + max_fuck[i + 2]+1);
+        }
+    }
+    if (inds.size() == n) {
+        maxi = n;
+    }
 //    fo(i, 0, n-2) {
 //        if (a[i+2]-a[i]>1) {
 //            if (pref[i]+suff[i+2]+1 > maxi) {
@@ -234,8 +261,8 @@ int32_t main (int32_t argc, char* argv[]) {
         cerr.tie(nullptr);
         clog.tie(nullptr);
     }
-    ll tt = 1;
-//    ll tt = 100000;
+//    ll tt = 1;
+    ll tt = 100000;
 //    cin >> tt;
     while (tt--) solve();
     return 0;
