@@ -74,8 +74,8 @@ ll query(ll x1, ll y1, ll x2, ll y2, vector<unordered_map<ll, ll>> & bit) {
     return ans;
 }
 ll tot=0;
-//ll n, x;
-ll n=1e5, x=distrib(rng);
+ll n, x;
+//ll n=1e5, x=distrib(rng);
 void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
     //clog << "L,R: " << l <<  "," << r << endl;
     if (l == r) {
@@ -192,7 +192,7 @@ void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
     compute(mid+1, r, a, b);
 }
 void solve() {
-//    cin >> n >> x;
+    cin >> n >> x;
     ll oldn = n;
     forr(i, 0, 20) {
         if ((1 << i) >= n) {
@@ -205,12 +205,12 @@ void solve() {
     vector<ll> b(n, N);
     fo(i, 0, oldn) {
         a[i] = distrib(rng);
-//        cin >> a[i];
+        cin >> a[i];
 //        assert(a[i] > 0);
     }
     fo(i, 0, oldn) {
         b[i] = distrib(rng);
-//        cin >> b[i];
+        cin >> b[i];
 //        assert(b[i] > 0);
     }
     auto start = chrono::high_resolution_clock::now();
