@@ -74,8 +74,9 @@ ll query(ll y1, ll x1, ll y2, ll x2, vector<unordered_map<ll, ll>> & bit) {
     return ans;
 }
 ll tot=0;
-ll n, x;
+//ll n, x;
 //ll n=1e5, x=distrib(rng);
+ll n=1e5, x=3e14;
 void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
     //clog << "L,R: " << l <<  "," << r << endl;
     if (l == r) {
@@ -95,7 +96,7 @@ void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
     fo(i, 0, sz) {
         su += b[mid-i];
         mini = min(mini, a[mid-i]);
-        if (su >= N) {
+        if (su >= x) {
             break;
         }
         su_l[i] = su;
@@ -106,7 +107,7 @@ void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
     fo(i, 0, sz) {
         su += b[mid+1+i];
         mini = min(mini, a[mid+1+i]);
-        if (su >= N) {
+        if (su >= x) {
             break;
         }
         su_r[i] = su;
@@ -127,7 +128,7 @@ void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
     vector<unordered_map<ll, ll>> mp_l (su_l_szh.size()+2);
     vector<unordered_map<ll, ll>> mp_r (su_r_szh.size()+2);
     fo(i, 0, sz) {
-        if (su_l[i] >= N) {
+        if (su_l[i] >= x) {
             break;
         }
         //clog << "adding to mp_l: " << mi_l[i] << "," << su_l[i] << endl;
@@ -138,7 +139,7 @@ void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
         add_one(lb_min, lb_sum, mp_l);
     }
     fo(i, 0, sz) {
-        if (su_r[i] >= N) {
+        if (su_r[i] >= x) {
             break;
         }
         //clog << "adding to mp_r: " << mi_r[i] << "," << su_r[i] << endl;
@@ -222,7 +223,7 @@ void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
     compute(mid+1, r, a, b);
 }
 void solve() {
-    cin >> n >> x;
+//    cin >> n >> x;
     ll oldn = n;
     forr(i, 0, 20) {
         if ((1 << i) >= n) {
@@ -234,13 +235,13 @@ void solve() {
     vector<ll> a(n, N);
     vector<ll> b(n, N);
     fo(i, 0, oldn) {
-//        a[i] = distrib(rng);
-        cin >> a[i];
+        a[i] = distrib(rng);
+//        cin >> a[i];
 //        assert(a[i] > 0);
     }
     fo(i, 0, oldn) {
-//        b[i] = distrib(rng);
-        cin >> b[i];
+        b[i] = distrib(rng);
+//        cin >> b[i];
 //        assert(b[i] > 0);
     }
     auto start = chrono::high_resolution_clock::now();
@@ -248,8 +249,8 @@ void solve() {
     cout << tot << endl;
     auto stop = chrono::high_resolution_clock::now();
     auto duration = duration_cast<chrono::microseconds>(stop - start);
-    //clog << "Time taken by function: " << duration.count() << " microseconds" << endl;
-    //clog << queries << " queries" << endl;
+    clog << "Time taken by function: " << duration.count() << " microseconds" << endl;
+    clog << queries << " queries" << endl;
 //    //clog << (double)queries_time/(double)queries*2e5/1e6 << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
