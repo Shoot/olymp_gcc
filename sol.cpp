@@ -31,7 +31,7 @@ void copy_this () {
     vector<ll> a(n); fo(i, 0, n) cin >> a[i];
 }
 */
-void add_one(ll x, ll y, vector<unordered_map<ll, ll>> & bit) {
+void add_one(ll y, ll x, vector<unordered_map<ll, ll>> & bit) {
     x += 1; y += 1;
     for (; x <= bit.size()-1; x += (x & (-x))) {
         for (ll i = y; i <= N; i += (i & (-i))) { bit[x][i] += 1ll; }
@@ -39,7 +39,7 @@ void add_one(ll x, ll y, vector<unordered_map<ll, ll>> & bit) {
 }
 ll queries = 0;
 //ll queries_time;
-ll query(ll x1, ll y1, ll x2, ll y2, vector<unordered_map<ll, ll>> & bit) {
+ll query(ll y1, ll x1, ll y2, ll x2, vector<unordered_map<ll, ll>> & bit) {
     x1 += 1; y1 += 1; x2 += 1; y2 += 1;
     queries += 1;
 //    auto start = chrono::high_resolution_clock::now();
@@ -74,8 +74,8 @@ ll query(ll x1, ll y1, ll x2, ll y2, vector<unordered_map<ll, ll>> & bit) {
     return ans;
 }
 ll tot=0;
-//ll n, x;
-ll n=1e5, x=distrib(rng);
+ll n, x;
+//ll n=1e5, x=distrib(rng);
 void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
     //clog << "L,R: " << l <<  "," << r << endl;
     if (l == r) {
@@ -95,7 +95,7 @@ void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
     fo(i, 0, sz) {
         su += b[mid-i];
         mini = min(mini, a[mid-i]);
-        if (su >= x) {
+        if (su >= N) {
             break;
         }
         su_l[i] = su;
@@ -106,7 +106,7 @@ void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
     fo(i, 0, sz) {
         su += b[mid+1+i];
         mini = min(mini, a[mid+1+i]);
-        if (su >= x) {
+        if (su >= N) {
             break;
         }
         su_r[i] = su;
@@ -124,10 +124,10 @@ void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
     su_l_szh.erase(unique(all(su_l_szh)), su_l_szh.end());
     mi_r_szh.erase(unique(all(mi_r_szh)), mi_r_szh.end());
     su_r_szh.erase(unique(all(su_r_szh)), su_r_szh.end());
-    vector<unordered_map<ll, ll>> mp_l (mi_l_szh.size()+2);
-    vector<unordered_map<ll, ll>> mp_r (mi_r_szh.size()+2);
+    vector<unordered_map<ll, ll>> mp_l (su_l_szh.size()+2);
+    vector<unordered_map<ll, ll>> mp_r (su_r_szh.size()+2);
     fo(i, 0, sz) {
-        if (su_l[i] >= x) {
+        if (su_l[i] >= N) {
             break;
         }
         //clog << "adding to mp_l: " << mi_l[i] << "," << su_l[i] << endl;
@@ -138,7 +138,7 @@ void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
         add_one(lb_min, lb_sum, mp_l);
     }
     fo(i, 0, sz) {
-        if (su_r[i] >= x) {
+        if (su_r[i] >= N) {
             break;
         }
         //clog << "adding to mp_r: " << mi_r[i] << "," << su_r[i] << endl;
@@ -149,44 +149,44 @@ void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
         add_one(lb_min, lb_sum, mp_r);
     }
     //clog << "su_l: ";
-    for (ll j: su_l) {
+//    for (ll j: su_l) {
         //clog << j << ' ';
-    }
+//    }
     //clog << endl;
     //clog << "mi_l: ";
-    for (ll j: mi_l) {
+//    for (ll j: mi_l) {
         //clog << j << ' ';
-    }
+//    }
     //clog << endl;
     //clog << "su_r: ";
-    for (ll j: su_r) {
+//    for (ll j: su_r) {
         //clog << j << ' ';
-    }
+//    }
     //clog << endl;
     //clog << "mi_r: ";
-    for (ll j: mi_r) {
+//    for (ll j: mi_r) {
         //clog << j << ' ';
-    }
+//    }
     //clog << endl;
     //clog << "su_l_szh: ";
-    for (ll j: su_l_szh) {
+//    for (ll j: su_l_szh) {
         //clog << j << ' ';
-    }
+//    }
     //clog << endl;
     //clog << "mi_l_szh: ";
-    for (ll j: mi_l_szh) {
+//    for (ll j: mi_l_szh) {
         //clog << j << ' ';
-    }
+//    }
     //clog << endl;
     //clog << "su_r_szh: ";
-    for (ll j: su_r_szh) {
+//    for (ll j: su_r_szh) {
         //clog << j << ' ';
-    }
+//    }
     //clog << endl;
     //clog << "mi_r_szh: ";
-    for (ll j: mi_r_szh) {
+//    for (ll j: mi_r_szh) {
         //clog << j << ' ';
-    }
+//    }
     //clog << endl;
     fo(i, 0, sz) {
         ll minimum = mi_l[i];
@@ -222,7 +222,7 @@ void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
     compute(mid+1, r, a, b);
 }
 void solve() {
-//    cin >> n >> x;
+    cin >> n >> x;
     ll oldn = n;
     forr(i, 0, 20) {
         if ((1 << i) >= n) {
@@ -234,13 +234,13 @@ void solve() {
     vector<ll> a(n, N);
     vector<ll> b(n, N);
     fo(i, 0, oldn) {
-        a[i] = distrib(rng);
-//        cin >> a[i];
+//        a[i] = distrib(rng);
+        cin >> a[i];
 //        assert(a[i] > 0);
     }
     fo(i, 0, oldn) {
-        b[i] = distrib(rng);
-//        cin >> b[i];
+//        b[i] = distrib(rng);
+        cin >> b[i];
 //        assert(b[i] > 0);
     }
     auto start = chrono::high_resolution_clock::now();
@@ -248,8 +248,8 @@ void solve() {
     cout << tot << endl;
     auto stop = chrono::high_resolution_clock::now();
     auto duration = duration_cast<chrono::microseconds>(stop - start);
-    clog << "Time taken by function: " << duration.count() << " microseconds" << endl;
-    clog << queries << " queries" << endl;
+    //clog << "Time taken by function: " << duration.count() << " microseconds" << endl;
+    //clog << queries << " queries" << endl;
 //    //clog << (double)queries_time/(double)queries*2e5/1e6 << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
@@ -265,7 +265,7 @@ int32_t main (int32_t argc, char* argv[]) {
         cin.tie(nullptr);
         cout.tie(nullptr);
         cerr.tie(nullptr);
-        clog.tie(nullptr);
+        //clog.tie(nullptr);
     }
     ll tt = 1;
 //    cin >> tt;
