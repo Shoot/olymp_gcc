@@ -77,10 +77,10 @@ ll tot=0;
 ll n, x;
 //ll n=1e5, x=distrib(rng);
 void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
-    //clog << "L,R: " << l <<  "," << r << endl;
+    clog << "L,R: " << l <<  "," << r << endl;
     if (l == r) {
         ll single_good = (a[l]+b[l] <= x);
-        //clog << "l=r=" << l << ", adding " << single_good << endl;
+        clog << "l=r=" << l << ", adding " << single_good << endl;
         tot += single_good;
         return;
     }
@@ -88,8 +88,8 @@ void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
     ll mid = (l+r) >> 1;
     vector<ll> su_l (sz, N);
     vector<ll> su_r (sz, N);
-    vector<ll> mi_l (sz);
-    vector<ll> mi_r (sz);
+    vector<ll> mi_l (sz, N);
+    vector<ll> mi_r (sz, N);
     ll su = 0;
     ll mini = N;
     fo(i, 0, sz) {
@@ -113,80 +113,110 @@ void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
         mi_r[i] = mini;
     }
     vector<ll> mi_l_szh = mi_l;
+    vector<ll> su_l_szh = su_l;
     vector<ll> mi_r_szh = mi_r;
+    vector<ll> su_r_szh = su_r;
     sort(all(mi_l_szh));
+    sort(all(su_l_szh));
     sort(all(mi_r_szh));
+    sort(all(su_r_szh));
     mi_l_szh.erase(unique(all(mi_l_szh)), mi_l_szh.end());
+    su_l_szh.erase(unique(all(su_l_szh)), su_l_szh.end());
     mi_r_szh.erase(unique(all(mi_r_szh)), mi_r_szh.end());
+    su_r_szh.erase(unique(all(su_r_szh)), su_r_szh.end());
     vector<unordered_map<ll, ll>> mp_l (mi_l_szh.size()+2);
     vector<unordered_map<ll, ll>> mp_r (mi_r_szh.size()+2);
     fo(i, 0, sz) {
         if (su_l[i] >= x) {
             break;
         }
-        //clog << "adding to mp_l: " << mi_l[i] << "," << su_l[i] << endl;
-        ll lb = lower_bound(all(mi_l_szh), mi_l[i])-mi_l_szh.begin();
-        //clog << "lb: " << lb << endl;
-        add_one(lb, su_l[i], mp_l);
+        clog << "adding to mp_l: " << mi_l[i] << "," << su_l[i] << endl;
+        ll lb_min = lower_bound(all(mi_l_szh), mi_l[i])-mi_l_szh.begin();
+        ll lb_sum = lower_bound(all(su_l_szh), su_l[i])-su_l_szh.begin();
+        clog << "lb_min: " << lb_min << endl;
+        clog << "lb_sum: " << lb_sum << endl;
+        add_one(lb_min, lb_sum, mp_l);
     }
     fo(i, 0, sz) {
         if (su_r[i] >= x) {
             break;
         }
-        //clog << "adding to mp_r: " << mi_r[i] << "," << su_r[i] << endl;
-        ll lb = lower_bound(all(mi_r_szh), mi_r[i])-mi_r_szh.begin();
-        //clog << "lb: " << lb << endl;
-        add_one(lb, su_r[i], mp_r);
+        clog << "adding to mp_r: " << mi_r[i] << "," << su_r[i] << endl;
+        ll lb_min = lower_bound(all(mi_r_szh), mi_r[i])-mi_r_szh.begin();
+        ll lb_sum = lower_bound(all(su_r_szh), su_r[i])-su_r_szh.begin();
+        clog << "lb_min: " << lb_min << endl;
+        clog << "lb_sum: " << lb_sum << endl;
+        add_one(lb_min, lb_sum, mp_r);
     }
-    //clog << "su_l: ";
+    clog << "su_l: ";
     for (ll j: su_l) {
-        //clog << j << ' ';
+        clog << j << ' ';
     }
-    //clog << endl;
-    //clog << "mi_l: ";
+    clog << endl;
+    clog << "mi_l: ";
     for (ll j: mi_l) {
-        //clog << j << ' ';
+        clog << j << ' ';
     }
-    //clog << endl;
-    //clog << "su_r: ";
+    clog << endl;
+    clog << "su_r: ";
     for (ll j: su_r) {
-        //clog << j << ' ';
+        clog << j << ' ';
     }
-    //clog << endl;
-    //clog << "mi_r: ";
+    clog << endl;
+    clog << "mi_r: ";
     for (ll j: mi_r) {
-        //clog << j << ' ';
+        clog << j << ' ';
     }
-    //clog << endl;
+    clog << endl;
+    clog << "su_l_szh: ";
+    for (ll j: su_l_szh) {
+        clog << j << ' ';
+    }
+    clog << endl;
+    clog << "mi_l_szh: ";
+    for (ll j: mi_l_szh) {
+        clog << j << ' ';
+    }
+    clog << endl;
+    clog << "su_r_szh: ";
+    for (ll j: su_r_szh) {
+        clog << j << ' ';
+    }
+    clog << endl;
+    clog << "mi_r_szh: ";
+    for (ll j: mi_r_szh) {
+        clog << j << ' ';
+    }
+    clog << endl;
     fo(i, 0, sz) {
         ll minimum = mi_l[i];
         ll summa = su_l[i];
-        ll looking_lb = lower_bound(all(mi_r_szh), minimum)-mi_r_szh.begin();
-        //clog << minimum << "," << summa << " looking for lb>=" << looking_lb;
-        ll from_here;
-        if (x-summa-minimum < 0) {
-            //clog << " (cant) ";
-            from_here = 0;
+        if (su_r_szh[0] <= x-summa-minimum) {
+            ll looking_lb_min = lower_bound(all(mi_r_szh), minimum)-mi_r_szh.begin();
+            ll looking_lb_sum = lower_bound(all(su_r_szh), x-summa-minimum)-su_r_szh.begin();
+            if (su_r_szh[looking_lb_sum] > x-summa-minimum) looking_lb_sum -= 1;
+            clog << minimum << "," << summa << " looking for lb_min>=" << looking_lb_min << " and lb_sum<=" << looking_lb_sum;
+            ll from_here = query(looking_lb_min, 0, mp_r.size()-2, looking_lb_sum, mp_r);
+            clog << " (l -> r) from " << i << ": " << from_here << endl;
+            tot += from_here;
         } else {
-            from_here = query(looking_lb, 0, mp_r.size()-2, x-summa-minimum, mp_r);
+            clog << "(l -> r) from " << i << ": " << "su_r_szh[0] > x-summa-minimum=" << x-summa-minimum << endl;
         }
-        //clog << " (l -> r) from " << i << ": " << from_here << endl;
-        tot += from_here;
     }
     fo(i, 0, sz) {
         ll minimum = mi_r[i];
         ll summa = su_r[i];
-        ll looking_lb = lower_bound(all(mi_l_szh), minimum+1)-mi_l_szh.begin();
-        ll from_here;
-        if (x-summa-minimum < 0) {
-            //clog << " (cant) ";
-            from_here = 0;
+        if (su_l_szh[0] <= x-summa-minimum) {
+            ll looking_lb_min = lower_bound(all(mi_l_szh), minimum+1)-mi_l_szh.begin();
+            ll looking_lb_sum = lower_bound(all(su_l_szh), x-summa-minimum)-su_l_szh.begin();
+            if (su_l_szh[looking_lb_sum] > x-summa-minimum) looking_lb_sum -= 1;
+            clog << minimum << "," << summa << " looking for lb_min>=" << looking_lb_min << " and lb_sum<=" << looking_lb_sum;
+            ll from_here = query(looking_lb_min, 0, mp_l.size()-2, looking_lb_sum, mp_l);
+            clog << " (l <- r) from " << i << ": " << from_here << endl;
+            tot += from_here;
         } else {
-            from_here = query(looking_lb, 0, mp_l.size()-2, x-summa-minimum, mp_l);
+            clog << "(l <- r) from " << i << ": " << "su_l_szh[0] > x-summa-minimum=" << x-summa-minimum << endl;
         }
-        //clog << minimum << "," << summa << " looking for lb>=" << looking_lb;
-        //clog << " (r -> l) from " << i << ": " << from_here << endl;
-        tot += from_here;
     }
     compute(l, mid, a, b);
     compute(mid+1, r, a, b);
@@ -235,7 +265,7 @@ int32_t main (int32_t argc, char* argv[]) {
         cin.tie(nullptr);
         cout.tie(nullptr);
         cerr.tie(nullptr);
-        //clog.tie(nullptr);
+        clog.tie(nullptr);
     }
     ll tt = 1;
 //    cin >> tt;
