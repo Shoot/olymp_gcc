@@ -31,7 +31,7 @@ void copy_this () {
     vector<ll> a(n); fo(i, 0, n) cin >> a[i];
 }
 */
-void add_one(ll y, ll x, vector<unordered_map<ll, ll>> & bit) {
+void add_one(ll x, ll y, vector<unordered_map<ll, ll>> & bit) {
     x += 1; y += 1;
     for (; x <= bit.size()-1; x += (x & (-x))) {
         for (ll i = y; i <= N; i += (i & (-i))) { bit[x][i] += 1ll; }
@@ -39,7 +39,7 @@ void add_one(ll y, ll x, vector<unordered_map<ll, ll>> & bit) {
 }
 ll queries = 0;
 //ll queries_time;
-ll query(ll y1, ll x1, ll y2, ll x2, vector<unordered_map<ll, ll>> & bit) {
+ll query(ll x1, ll y1, ll x2, ll y2, vector<unordered_map<ll, ll>> & bit) {
     x1 += 1; y1 += 1; x2 += 1; y2 += 1;
     queries += 1;
 //    auto start = chrono::high_resolution_clock::now();
@@ -125,8 +125,8 @@ void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
     su_l_szh.erase(unique(all(su_l_szh)), su_l_szh.end());
     mi_r_szh.erase(unique(all(mi_r_szh)), mi_r_szh.end());
     su_r_szh.erase(unique(all(su_r_szh)), su_r_szh.end());
-    vector<unordered_map<ll, ll>> mp_l (su_l_szh.size()+2);
-    vector<unordered_map<ll, ll>> mp_r (su_r_szh.size()+2);
+    vector<unordered_map<ll, ll>> mp_l (mi_l_szh.size()+2);
+    vector<unordered_map<ll, ll>> mp_r (mi_r_szh.size()+2);
     fo(i, 0, sz) {
         if (su_l[i] >= x) {
             break;
