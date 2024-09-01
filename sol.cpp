@@ -36,7 +36,11 @@ void add_one(ll x, ll y, unordered_map<ll, unordered_map<ll, ll>> & bit) {
         for (ll i = y; i <= N; i += (i & (-i))) { bit[x][i] += 1ll; }
     }
 }
+ll queries = 0;
+ll queries_time;
 ll query(ll x1, ll y1, ll x2, ll y2, unordered_map<ll, unordered_map<ll, ll>> & bit) {
+    queries += 1;
+    auto start = chrono::high_resolution_clock::now();
     ll ans = 0;
     for (ll i = x2; i; i -= (i & (-i))) {
         for (ll j = y2; j; j -= (j & (-j))) {
@@ -62,12 +66,14 @@ ll query(ll x1, ll y1, ll x2, ll y2, unordered_map<ll, unordered_map<ll, ll>> & 
                 ans += bit[i][j];
         }
     }
+    auto stop = chrono::high_resolution_clock::now();
+    auto duration = duration_cast<chrono::microseconds>(stop - start);
+    queries_time += duration.count();
     return ans;
 }
 ll tot=0;
-ll n=1e5, x=10000;
+ll n=500, x=1000;
 void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
-    clog << l << " " << r << endl;
     if (l == r) {
         ll single_good = (a[l]+b[l] <= x);
         //clog << "l=r=" << l << ", adding " << single_good << endl;
@@ -109,24 +115,24 @@ void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
         mi_r[i] = mini;
     }
     //clog << "su_l: ";
-//    for (ll j: su_l) {
+    for (ll j: su_l) {
         //clog << j << ' ';
-//    }
+    }
     //clog << endl;
     //clog << "mi_l: ";
-//    for (ll j: mi_l) {
+    for (ll j: mi_l) {
         //clog << j << ' ';
-//    }
+    }
     //clog << endl;
     //clog << "su_r: ";
-//    for (ll j: su_r) {
+    for (ll j: su_r) {
         //clog << j << ' ';
-//    }
+    }
     //clog << endl;
     //clog << "mi_r: ";
-//    for (ll j: mi_r) {
+    for (ll j: mi_r) {
         //clog << j << ' ';
-//    }
+    }
     //clog << endl;
     fo(i, 0, sz) {
         ll minimum = mi_l[i];
@@ -149,7 +155,6 @@ void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
 }
 void solve() {
 //    cin >> n >> x;
-    auto start = chrono::high_resolution_clock::now();
     ll oldn = n;
     forr(i, 0, 20) {
         if ((1 << i) >= n) {
@@ -170,12 +175,15 @@ void solve() {
 //        cin >> b[i];
 //        assert(b[i] > 0);
     }
+    auto start = chrono::high_resolution_clock::now();
     compute(0, n-1, a, b);
     cout << tot << endl;
     auto stop = chrono::high_resolution_clock::now();
     auto duration = duration_cast<chrono::microseconds>(stop - start);
     clog << "Time taken by function: "
          << duration.count() << " microseconds" << endl;
+    clog << queries << endl;
+    clog << queries_time/queries*2e5/1e6 << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
@@ -190,7 +198,7 @@ int32_t main (int32_t argc, char* argv[]) {
         cin.tie(nullptr);
         cout.tie(nullptr);
         cerr.tie(nullptr);
-        //clog.tie(nullptr);
+        clog.tie(nullptr);
     }
     ll tt = 1;
 //    cin >> tt;
