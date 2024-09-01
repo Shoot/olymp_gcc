@@ -65,23 +65,14 @@ ll query(ll x1, ll y1, ll x2, ll y2, unordered_map<ll, unordered_map<ll, ll>> & 
     return ans;
 }
 ll tot=0;
-void solve() {
-    ll n, x;
-    cin >> n >> x;
-    ll oldn = n;
-    forr(i, 0, 20) {
-        if ((1 << i) >= n) {
-            n = (1 << i);
-            break;
-        }
+ll n, x;
+void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
+    if (l == r) {
+        ll single_good = (a[l]+b[l] <= x);
+        clog << "l=r=" << l << ", adding " << single_good << endl;
+        tot += single_good;
+        return;
     }
-    assert((n & (n-1)) == 0);
-    vector<ll> a(n, N);
-    vector<ll> b(n, N);
-    fo(i, 0, oldn) cin >> a[i];
-    fo(i, 0, oldn) cin >> b[i];
-    ll l = 0;
-    ll r = n-1;
     ll sz = (r-l+1)/2;
     ll mid = (l+r) >> 1;
     vector<ll> su_l (sz, N);
@@ -98,7 +89,7 @@ void solve() {
         if (su >= N) {
             break;
         }
-        cout << "adding to mp_l: " << su << "," << mini << endl;
+        clog << "adding to mp_l: " << su << "," << mini << endl;
         add_one(mini, su, mp_l);
         su_l[i] = su;
         mi_l[i] = mini;
@@ -111,48 +102,72 @@ void solve() {
         if (su >= N) {
             break;
         }
-        cout << "adding to mp_r: " << su << "," << mini << endl;
+        clog << "adding to mp_r: " << su << "," << mini << endl;
         add_one(mini, su, mp_r);
         su_r[i] = su;
         mi_r[i] = mini;
     }
-    cout << "su_l: ";
+    clog << "su_l: ";
     for (ll j: su_l) {
-        cout << j << ' ';
+        clog << j << ' ';
     }
-    cout << endl;
-    cout << "mi_l: ";
+    clog << endl;
+    clog << "mi_l: ";
     for (ll j: mi_l) {
-        cout << j << ' ';
+        clog << j << ' ';
     }
-    cout << endl;
-    cout << "su_r: ";
+    clog << endl;
+    clog << "su_r: ";
     for (ll j: su_r) {
-        cout << j << ' ';
+        clog << j << ' ';
     }
-    cout << endl;
-    cout << "mi_r: ";
+    clog << endl;
+    clog << "mi_r: ";
     for (ll j: mi_r) {
-        cout << j << ' ';
+        clog << j << ' ';
     }
-    cout << endl;
-    ll tot = 0;
+    clog << endl;
     fo(i, 0, sz) {
         ll minimum = mi_l[i];
         ll summa = su_l[i];
-        cout << minimum << "," << summa;
+        clog << minimum << "," << summa;
         ll from_here = query(minimum, 0, N, x-summa-minimum, mp_r);
-        cout << " (l -> r) from " << i << ": " << from_here << endl;
+        clog << " (l -> r) from " << i << ": " << from_here << endl;
         tot += from_here;
     }
     fo(i, 0, sz) {
         ll minimum = mi_r[i];
         ll summa = su_r[i];
         ll from_here = query(minimum+1, 0, N, x-summa-minimum, mp_l);
-        cout << minimum << "," << summa;
-        cout << " (r -> l) from " << i << ": " << from_here << endl;
+        clog << minimum << "," << summa;
+        clog << " (r -> l) from " << i << ": " << from_here << endl;
         tot += from_here;
     }
+    compute(l, mid, a, b);
+    compute(mid+1, r, a, b);
+}
+void solve() {
+    cin >> n >> x;
+    ll oldn = n;
+    forr(i, 0, 20) {
+        if ((1 << i) >= n) {
+            n = (1 << i);
+            break;
+        }
+    }
+    assert((n & (n-1)) == 0);
+    vector<ll> a(n, N);
+    vector<ll> b(n, N);
+    fo(i, 0, oldn) {
+        cin >> a[i];
+        assert(a[i] > 0);
+    }
+    fo(i, 0, oldn) {
+        cin >> b[i];
+        assert(b[i] > 0);
+    }
+    compute(0, n-1, a, b);
+    cout << tot << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
