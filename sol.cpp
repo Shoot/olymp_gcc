@@ -32,6 +32,7 @@ void copy_this () {
 }
 */
 void add_one(ll x, ll y, unordered_map<ll, unordered_map<ll, ll>> & bit) {
+    x += 1; y += 1;
     for (; x <= N; x += (x & (-x))) {
         for (ll i = y; i <= N; i += (i & (-i))) { bit[x][i] += 1ll; }
     }
@@ -39,6 +40,7 @@ void add_one(ll x, ll y, unordered_map<ll, unordered_map<ll, ll>> & bit) {
 ll queries = 0;
 ll queries_time;
 ll query(ll x1, ll y1, ll x2, ll y2, unordered_map<ll, unordered_map<ll, ll>> & bit) {
+    x1 += 1; y1 += 1; x2 += 1; y2 += 1;
     queries += 1;
     auto start = chrono::high_resolution_clock::now();
     ll ans = 0;
@@ -72,11 +74,14 @@ ll query(ll x1, ll y1, ll x2, ll y2, unordered_map<ll, unordered_map<ll, ll>> & 
     return ans;
 }
 ll tot=0;
-ll n=500, x=1000;
+ll n, x;
+//n=1e4;
+//x=1000;
 void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
+    clog << "L,R: " << l <<  "," << r << endl;
     if (l == r) {
         ll single_good = (a[l]+b[l] <= x);
-        //clog << "l=r=" << l << ", adding " << single_good << endl;
+        clog << "l=r=" << l << ", adding " << single_good << endl;
         tot += single_good;
         return;
     }
@@ -96,8 +101,6 @@ void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
         if (su >= N) {
             break;
         }
-        //clog << "adding to mp_l: " << su << "," << mini << endl;
-        add_one(mini, su, mp_l);
         su_l[i] = su;
         mi_l[i] = mini;
     }
@@ -109,52 +112,76 @@ void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
         if (su >= N) {
             break;
         }
-        //clog << "adding to mp_r: " << su << "," << mini << endl;
-        add_one(mini, su, mp_r);
         su_r[i] = su;
         mi_r[i] = mini;
     }
-    //clog << "su_l: ";
+    vector<ll> mi_l_szh = mi_l;
+    vector<ll> mi_r_szh = mi_r;
+    sort(all(mi_l_szh));
+    sort(all(mi_r_szh));
+    mi_l_szh.erase(unique(all(mi_l_szh)), mi_l_szh.end());
+    mi_r_szh.erase(unique(all(mi_r_szh)), mi_r_szh.end());
+    fo(i, 0, sz) {
+        if (su_l[i] >= N) {
+            break;
+        }
+        clog << "adding to mp_l: " << mi_l[i] << "," << su_l[i] << endl;
+        ll lb = lower_bound(all(mi_l_szh), mi_l[i])-mi_l_szh.begin();
+        clog << "lb: " << lb << endl;
+        add_one(lb, su_l[i], mp_l);
+    }
+    fo(i, 0, sz) {
+        if (su_r[i] >= N) {
+            break;
+        }
+        clog << "adding to mp_r: " << mi_r[i] << "," << su_r[i] << endl;
+        ll lb = lower_bound(all(mi_r_szh), mi_r[i])-mi_r_szh.begin();
+        clog << "lb: " << lb << endl;
+        add_one(lb, su_r[i], mp_r);
+    }
+    clog << "su_l: ";
     for (ll j: su_l) {
-        //clog << j << ' ';
+        clog << j << ' ';
     }
-    //clog << endl;
-    //clog << "mi_l: ";
+    clog << endl;
+    clog << "mi_l: ";
     for (ll j: mi_l) {
-        //clog << j << ' ';
+        clog << j << ' ';
     }
-    //clog << endl;
-    //clog << "su_r: ";
+    clog << endl;
+    clog << "su_r: ";
     for (ll j: su_r) {
-        //clog << j << ' ';
+        clog << j << ' ';
     }
-    //clog << endl;
-    //clog << "mi_r: ";
+    clog << endl;
+    clog << "mi_r: ";
     for (ll j: mi_r) {
-        //clog << j << ' ';
+        clog << j << ' ';
     }
-    //clog << endl;
+    clog << endl;
     fo(i, 0, sz) {
         ll minimum = mi_l[i];
         ll summa = su_l[i];
-        //clog << minimum << "," << summa;
-        ll from_here = query(minimum, 0, N, x-summa-minimum, mp_r);
-        //clog << " (l -> r) from " << i << ": " << from_here << endl;
+        ll looking_lb = lower_bound(all(mi_r_szh), minimum)-mi_r_szh.begin();
+        clog << minimum << "," << summa << " looking for lb>=" << looking_lb;
+        ll from_here = query(looking_lb, 0, N, x-summa-minimum, mp_r);
+        clog << " (l -> r) from " << i << ": " << from_here << endl;
         tot += from_here;
     }
     fo(i, 0, sz) {
         ll minimum = mi_r[i];
         ll summa = su_r[i];
-        ll from_here = query(minimum+1, 0, N, x-summa-minimum, mp_l);
-        //clog << minimum << "," << summa;
-        //clog << " (r -> l) from " << i << ": " << from_here << endl;
+        ll looking_lb = lower_bound(all(mi_l_szh), minimum+1)-mi_l_szh.begin();
+        ll from_here = query(looking_lb, 0, N, x-summa-minimum, mp_l);
+        clog << minimum << "," << summa << " looking for lb>=" << looking_lb;
+        clog << " (r -> l) from " << i << ": " << from_here << endl;
         tot += from_here;
     }
     compute(l, mid, a, b);
     compute(mid+1, r, a, b);
 }
 void solve() {
-//    cin >> n >> x;
+    cin >> n >> x;
     ll oldn = n;
     forr(i, 0, 20) {
         if ((1 << i) >= n) {
@@ -166,13 +193,13 @@ void solve() {
     vector<ll> a(n, N);
     vector<ll> b(n, N);
     fo(i, 0, oldn) {
-        a[i] = distrib(rng);
-//        cin >> a[i];
+//        a[i] = distrib(rng);
+        cin >> a[i];
 //        assert(a[i] > 0);
     }
     fo(i, 0, oldn) {
-        b[i] = distrib(rng);
-//        cin >> b[i];
+//        b[i] = distrib(rng);
+        cin >> b[i];
 //        assert(b[i] > 0);
     }
     auto start = chrono::high_resolution_clock::now();
@@ -183,7 +210,7 @@ void solve() {
     clog << "Time taken by function: "
          << duration.count() << " microseconds" << endl;
     clog << queries << endl;
-    clog << queries_time/queries*2e5/1e6 << endl;
+    clog << (double)queries_time/(double)queries*2e5/1e6 << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
