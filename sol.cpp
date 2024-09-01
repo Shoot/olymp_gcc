@@ -31,40 +31,40 @@ void copy_this () {
     vector<ll> a(n); fo(i, 0, n) cin >> a[i];
 }
 */
-void add_one(ll x, ll y, unordered_map<ll, unordered_map<ll, ll>> & bit) {
+void add_one(ll x, ll y, vector<unordered_map<ll, ll>> & bit) {
     x += 1; y += 1;
-    for (; x <= N; x += (x & (-x))) {
+    for (; x <= bit.size()-1; x += (x & (-x))) {
         for (ll i = y; i <= N; i += (i & (-i))) { bit[x][i] += 1ll; }
     }
 }
 ll queries = 0;
 ll queries_time;
-ll query(ll x1, ll y1, ll x2, ll y2, unordered_map<ll, unordered_map<ll, ll>> & bit) {
+ll query(ll x1, ll y1, ll x2, ll y2, vector<unordered_map<ll, ll>> & bit) {
     x1 += 1; y1 += 1; x2 += 1; y2 += 1;
     queries += 1;
     auto start = chrono::high_resolution_clock::now();
     ll ans = 0;
     for (ll i = x2; i; i -= (i & (-i))) {
         for (ll j = y2; j; j -= (j & (-j))) {
-            if (bit.contains(i) && bit[i].contains(j))
+            if (bit[i].contains(j))
                 ans += bit[i][j];
         }
     }
     for (ll i = x2; i; i -= (i & (-i))) {
         for (ll j = y1 - 1; j; j -= (j & (-j))) {
-            if (bit.contains(i) && bit[i].contains(j))
+            if (bit[i].contains(j))
                 ans -= bit[i][j];
         }
     }
     for (ll i = x1 - 1; i; i -= (i & (-i))) {
         for (ll j = y2; j; j -= (j & (-j))) {
-            if (bit.contains(i) && bit[i].contains(j))
+            if (bit[i].contains(j))
                 ans -= bit[i][j];
         }
     }
     for (ll i = x1 - 1; i; i -= (i & (-i))) {
         for (ll j = y1 - 1; j; j -= (j & (-j))) {
-            if (bit.contains(i) && bit[i].contains(j))
+            if (bit[i].contains(j))
                 ans += bit[i][j];
         }
     }
@@ -74,9 +74,8 @@ ll query(ll x1, ll y1, ll x2, ll y2, unordered_map<ll, unordered_map<ll, ll>> & 
     return ans;
 }
 ll tot=0;
-ll n, x;
-//n=1e4;
-//x=1000;
+//ll n, x;
+ll n=1e4, x=1000;
 void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
     clog << "L,R: " << l <<  "," << r << endl;
     if (l == r) {
@@ -91,8 +90,6 @@ void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
     vector<ll> su_r (sz, N);
     vector<ll> mi_l (sz);
     vector<ll> mi_r (sz);
-    unordered_map<ll, unordered_map<ll, ll>> mp_l;
-    unordered_map<ll, unordered_map<ll, ll>> mp_r;
     ll su = 0;
     ll mini = N;
     fo(i, 0, sz) {
@@ -121,6 +118,8 @@ void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
     sort(all(mi_r_szh));
     mi_l_szh.erase(unique(all(mi_l_szh)), mi_l_szh.end());
     mi_r_szh.erase(unique(all(mi_r_szh)), mi_r_szh.end());
+    vector<unordered_map<ll, ll>> mp_l (mi_l_szh.size()+2);
+    vector<unordered_map<ll, ll>> mp_r (mi_r_szh.size()+2);
     fo(i, 0, sz) {
         if (su_l[i] >= N) {
             break;
@@ -164,7 +163,7 @@ void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
         ll summa = su_l[i];
         ll looking_lb = lower_bound(all(mi_r_szh), minimum)-mi_r_szh.begin();
         clog << minimum << "," << summa << " looking for lb>=" << looking_lb;
-        ll from_here = query(looking_lb, 0, N, x-summa-minimum, mp_r);
+        ll from_here = query(looking_lb, 0, mp_r.size()-2, x-summa-minimum, mp_r);
         clog << " (l -> r) from " << i << ": " << from_here << endl;
         tot += from_here;
     }
@@ -172,7 +171,7 @@ void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
         ll minimum = mi_r[i];
         ll summa = su_r[i];
         ll looking_lb = lower_bound(all(mi_l_szh), minimum+1)-mi_l_szh.begin();
-        ll from_here = query(looking_lb, 0, N, x-summa-minimum, mp_l);
+        ll from_here = query(looking_lb, 0, mp_l.size()-2, x-summa-minimum, mp_l);
         clog << minimum << "," << summa << " looking for lb>=" << looking_lb;
         clog << " (r -> l) from " << i << ": " << from_here << endl;
         tot += from_here;
@@ -181,7 +180,7 @@ void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
     compute(mid+1, r, a, b);
 }
 void solve() {
-    cin >> n >> x;
+//    cin >> n >> x;
     ll oldn = n;
     forr(i, 0, 20) {
         if ((1 << i) >= n) {
