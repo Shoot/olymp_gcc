@@ -22,7 +22,21 @@ uniform_int_distribution<ll> distrib(1ll, 1000000000000000000ll);
 constexpr ll N = (ll)(1e15);
 constexpr ll MOD99 = 998244353;
 constexpr ll MOD7 = 1e9 + 7;
-ll replaces[200001];
+ll powm(ll a, ll b, ll MOD){
+    ll d = 1;
+    while(b){
+        if (b&1) d = (d*a) % MOD;
+        b >>= 1;
+        a = (a*a) % MOD;
+    }
+    return d;
+}
+ll p = 200001;
+ll revp7 = powm(p, MOD7-2, MOD7);
+ll revp99 = powm(p, MOD99-2, MOD99);
+vector<ll> pp(200001, 1);
+vector<ll> pp_rev7(200001, 1);
+vector<ll> pp_rev99(200001, 1);
 /*
 void copy_this () {
     ll n; cin >> n;
@@ -33,24 +47,31 @@ void copy_this () {
 }
 */
 void solve() {
+    fo(i, 1, 200001) {
+        pp[i] = (pp[i-1]*p)%MOD7;
+    }
+    fo(i, 1, 200001) {
+        pp_rev7[i] = (pp_rev7[i-1]*revp7)%MOD7;
+    }
     ll n; cin >> n;
     vector<ll> a(n);
     fo(i, 0, n) {
         cin >> a[i];
     }
+    clog << "got that" << endl;
     ll m; cin >> m;
     vector<ll> b(m);
     vector<ll> rb(m+1, 0);
     fo(i, 0, m) {
         cin >> b[i];
-        rb[i+1] = replaces[b[i]]^rb[i];
+        rb[i+1] = (rb[i]+b[i]*pp[i])%MOD7;
     }
     ll k; cin >> k;
     vector<ll> c(k);
     vector<ll> rc(k+1, 0);
     fo(i, 0, k) {
         cin >> c[i];
-        rc[i+1] = replaces[c[i]]^rc[i];
+        rc[i+1] = (rc[i]+c[i]*pp[i])%MOD7;
     }
     ll l=1, r=min(m, k);
     ll good = 0;
@@ -59,10 +80,10 @@ void solve() {
         unordered_set<ll> b_st;
         unordered_set<ll> c_st;
         fo(i, 0, m+1-mid) {
-            b_st.insert(rb[i+mid]-rb[i]);
+            b_st.insert(((rb[i+mid]-rb[i])*pp_rev7[i])%MOD7);
         }
         fo(i, 0, k+1-mid) {
-            c_st.insert(rc[i+mid]-rc[i]);
+            c_st.insert(((rc[i+mid]-rc[i])*pp_rev7[i])%MOD7);
         }
         bool intersected = false;
         for (const ll& element : b_st) {
@@ -79,19 +100,6 @@ void solve() {
         }
     }
     if (good > 0) {
-        unordered_set<ll> c_st;
-        fo(i, 0, k+1-good) {
-            c_st.insert(rc[i+good]-rc[i]);
-        }
-        fo(i, 0, m+1-good) {
-            if (c_st.find(rb[i+good]-rb[i]) != c_st.end()) {
-                forr(j, i, i+good-1) {
-                    clog << b[j] << ' ';
-                }
-                clog << endl;
-                break;
-            }
-        }
         cout << m-good+k-good << endl;
     } else {
         clog << "lets see" << endl;
@@ -99,45 +107,59 @@ void solve() {
         forr(i, 1, 200000) {
             dp[i] = INT_MAX;
         }
-        fo(i, 0, k) {
-            dp[c[i]] = k-1;
+        fo(i, 0, m) {
+            dp[b[i]] = m-1;
         }
-        ll start = -1;
-        fo(i, 0, n) {
-            if (dp[a[i]] == k-1) {
-                start = i;
-                break;
+//        ll start = -1;
+//        fo(i, 0, n) {
+//            if (dp[a[i]] == m-1) {
+//                start = i;
+//                break;
+//            }
+//        }
+//        assert(start != -1);
+//        roff(i, start-1, 0) {
+//            dp[a[i]] = min(dp[a[i]], dp[a[i+1]]+2);
+//        }
+//        forr(i, start+1, n-1) {
+//            dp[a[i]] = min(dp[a[i]], dp[a[i-1]]+2);
+//        }
+        while(true) {
+            forr(i, 1, n-1) {
+                dp[a[i]] = min(dp[a[i]], dp[a[i-1]]+2);
             }
+            roff(i, n-2, 0) {
+                dp[a[i]] = min(dp[a[i]], dp[a[i+1]]+2);
+            }
+            bool enough = true;
+            forr(i, 1, n-1) {
+                if (dp[a[i]] != min(dp[a[i]], dp[a[i-1]]+2)) {
+                    enough = false;
+                }
+            }
+            roff(i, n-2, 0) {
+                if (dp[a[i]] != min(dp[a[i]], dp[a[i+1]]+2)) {
+                    enough = false;
+                }
+            }
+            if (enough) break;
         }
-        assert(start != -1);
-        roff(i, start-1, 0) {
-            dp[a[i]] = min(dp[a[i]], dp[a[i+1]]+2);
-        }
-        forr(i, start+1, n-1) {
-            dp[a[i]] = min(dp[a[i]], dp[a[i-1]]+2);
-        }
-        forr(i, 1, n-1) {
-            dp[a[i]] = min(dp[a[i]], dp[a[i-1]]+2);
-        }
-        roff(i, n-2, 0) {
-            dp[a[i]] = min(dp[a[i]], dp[a[i+1]]+2);
+
+        fo(i, 0, k) {
+            assert(dp[b[i]] == m-1);
         }
         fo(i, 0, n) {
             clog << dp[a[i]] << ' ';
         }
         clog << endl;
-
         ll res = INT_MAX;
-        fo(i, 0, m) {
-            res = min(res, dp[b[i]]+m-1);
+        fo(i, 0, k) {
+            res = min(res, dp[c[i]]+k-1);
         }
         cout << res << endl;
     }
 }
 int32_t main (int32_t argc, char* argv[]) {
-    forr(i, 1, 200000) {
-        replaces[i] = distrib(rng);
-    }
     bool use_fast_io = true;
     for (int32_t i = 1; i < argc; ++i)
         if (string(argv[i]) == "-local-no-fast-io") {
