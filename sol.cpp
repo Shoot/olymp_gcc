@@ -74,7 +74,7 @@ void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
     fo(i, 0, sz) {
         su += b[mid-i];
         mini = min(mini, a[mid-i]);
-        if (su >= x) {
+        if (su >= N) {
             break;
         }
         su_l[i] = su;
@@ -85,7 +85,7 @@ void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
     fo(i, 0, sz) {
         su += b[mid+1+i];
         mini = min(mini, a[mid+1+i]);
-        if (su >= x) {
+        if (su >= N) {
             break;
         }
         su_r[i] = su;
@@ -148,7 +148,7 @@ void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
     vector<vector<ll>> points (mi_r_szh.size()+1);
     vector<ll> tree(su_r_szh.size()+10);
     fo(i, 0, sz) {
-        if (su_r[i] >= x) {
+        if (su_r[i] >= N) {
             break;
         }
         //clog << "adding to mp_r: " << mi_r[i] << "," << su_r[i] << endl;
@@ -189,7 +189,7 @@ void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
     vector<vector<ll>> points2 (mi_l_szh.size()+1);
     vector<ll> tree2(su_l_szh.size()+10);
     fo(i, 0, sz) {
-        if (su_l[i] >= x) {
+        if (su_l[i] >= N) {
             break;
         }
         //clog << "adding to mp_l: " << mi_l[i] << "," << su_l[i] << endl;
@@ -229,7 +229,7 @@ void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
     compute(mid+1, r, a, b);
 }
 void solve() {
-//    cin >> n >> x;
+    cin >> n >> x;
     ll oldn = n;
     forr(i, 0, 20) {
         if ((1 << i) >= n) {
@@ -242,12 +242,12 @@ void solve() {
     vector<ll> b(n, N);
     fo(i, 0, oldn) {
         a[i] = distrib(rng);
-//        cin >> a[i];
+        cin >> a[i];
 //        assert(a[i] > 0);
     }
     fo(i, 0, oldn) {
         b[i] = distrib(rng);
-//        cin >> b[i];
+        cin >> b[i];
 //        assert(b[i] > 0);
     }
     auto start = chrono::high_resolution_clock::now();
