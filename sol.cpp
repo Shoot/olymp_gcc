@@ -31,12 +31,14 @@ ll powm(ll a, ll b, ll MOD){
     }
     return d;
 }
-ll p = 200001;
-ll revp7 = powm(p, MOD7-2, MOD7);
-ll revp99 = powm(p, MOD99-2, MOD99);
-vector<ll> pp(200001, 1);
-vector<ll> pp_rev7(200001, 1);
-vector<ll> pp_rev99(200001, 1);
+ll MAXN = 2e5+1;
+ll base = MAXN;
+ll revbase7 = powm(base, MOD7-2, MOD7);
+ll revbase99 = powm(base, MOD99-2, MOD99);
+vector<ll> base_power7(MAXN, 1);
+vector<ll> base_power99(MAXN, 1);
+vector<ll> base_rev7_power(MAXN, 1);
+vector<ll> base_rev99_power(MAXN, 1);
 /*
 void copy_this () {
     ll n; cin >> n;
@@ -47,11 +49,15 @@ void copy_this () {
 }
 */
 void solve() {
-    fo(i, 1, 200001) {
-        pp[i] = (pp[i-1]*p)%MOD7;
+    fo(i, 1, MAXN) {
+        base_power7[i] = (base_power7[i-1]*base)%MOD7;
+        base_power99[i] = (base_power99[i-1]*base)%MOD99;
     }
-    fo(i, 1, 200001) {
-        pp_rev7[i] = (pp_rev7[i-1]*revp7)%MOD7;
+    fo(i, 1, MAXN) {
+        base_rev7_power[i] = (base_rev7_power[i-1]*revbase7)%MOD7;
+    }
+    fo(i, 1, MAXN) {
+        base_rev99_power[i] = (base_rev99_power[i-1]*revbase99)%MOD99;
     }
     ll n; cin >> n;
     vector<ll> a(n);
@@ -61,38 +67,53 @@ void solve() {
     clog << "got that" << endl;
     ll m; cin >> m;
     vector<ll> b(m);
-    vector<ll> rb(m+1, 0);
+    vector<ll> rb7(m+1, 0);
+    vector<ll> rb99(m+1, 0);
     fo(i, 0, m) {
         cin >> b[i];
-        rb[i+1] = (rb[i]+b[i]*pp[i])%MOD7;
+        rb7[i+1] = (rb7[i]+b[i]*base_power7[i])%MOD7;
+        rb99[i+1] = (rb99[i]+b[i]*base_power99[i])%MOD99;
     }
     ll k; cin >> k;
     vector<ll> c(k);
-    vector<ll> rc(k+1, 0);
+    vector<ll> rc7(k+1, 0);
+    vector<ll> rc99(k+1, 0);
     fo(i, 0, k) {
         cin >> c[i];
-        rc[i+1] = (rc[i]+c[i]*pp[i])%MOD7;
+        rc7[i+1] = (rc7[i]+c[i]*base_power7[i])%MOD7;
+        rc99[i+1] = (rc99[i]+c[i]*base_power99[i])%MOD99;
     }
     ll l=1, r=min(m, k);
     ll good = 0;
     while (l <= r) {
         ll mid = (l+r) >> 1;
-        unordered_set<ll> b_st;
-        unordered_set<ll> c_st;
+        unordered_set<ll> b_st7;
+        unordered_set<ll> b_st99;
+        unordered_set<ll> c_st7;
+        unordered_set<ll> c_st99;
         fo(i, 0, m+1-mid) {
-            b_st.insert(((rb[i+mid]-rb[i])*pp_rev7[i])%MOD7);
+            b_st7.insert(((rb7[i+mid]-rb7[i])*base_rev7_power[i])%MOD7);
+            b_st99.insert(((rb99[i+mid]-rb99[i])*base_rev99_power[i])%MOD99);
         }
         fo(i, 0, k+1-mid) {
-            c_st.insert(((rc[i+mid]-rc[i])*pp_rev7[i])%MOD7);
+            c_st7.insert(((rc7[i+mid]-rc7[i])*base_rev7_power[i])%MOD7);
+            c_st99.insert(((rc99[i+mid]-rc99[i])*base_rev99_power[i])%MOD99);
         }
-        bool intersected = false;
-        for (const ll& element : b_st) {
-            if (c_st.find(element) != c_st.end()) {
-                intersected = true;
+        bool intersected7 = false;
+        bool intersected99 = false;
+        for (const ll& element : b_st7) {
+            if (c_st7.find(element) != c_st7.end()) {
+                intersected7 = true;
                 break;
             }
         }
-        if (intersected) {
+        for (const ll& element : b_st99) {
+            if (c_st99.find(element) != c_st99.end()) {
+                intersected99 = true;
+                break;
+            }
+        }
+        if (intersected7 && intersected99) {
             good = mid;
             l = mid+1;
         } else {
@@ -103,8 +124,8 @@ void solve() {
         cout << m-good+k-good << endl;
     } else {
         clog << "lets see" << endl;
-        ll dp[200001];
-        forr(i, 1, 200000) {
+        ll dp[MAXN];
+        fo(i, 1, MAXN) {
             dp[i] = INT_MAX;
         }
         fo(i, 0, m) {
