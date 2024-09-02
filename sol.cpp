@@ -95,6 +95,43 @@ void solve() {
         cout << m-good+k-good << endl;
     } else {
         clog << "lets see" << endl;
+        ll dp[200001];
+        forr(i, 1, 200000) {
+            dp[i] = INT_MAX;
+        }
+        fo(i, 0, k) {
+            dp[c[i]] = k-1;
+        }
+        ll start = -1;
+        fo(i, 0, n) {
+            if (dp[a[i]] == k-1) {
+                start = i;
+                break;
+            }
+        }
+        assert(start != -1);
+        roff(i, start-1, 0) {
+            dp[a[i]] = min(dp[a[i]], dp[a[i+1]]+2);
+        }
+        forr(i, start+1, n-1) {
+            dp[a[i]] = min(dp[a[i]], dp[a[i-1]]+2);
+        }
+        forr(i, 1, n-1) {
+            dp[a[i]] = min(dp[a[i]], dp[a[i-1]]+2);
+        }
+        roff(i, n-2, 0) {
+            dp[a[i]] = min(dp[a[i]], dp[a[i+1]]+2);
+        }
+        fo(i, 0, n) {
+            clog << dp[a[i]] << ' ';
+        }
+        clog << endl;
+
+        ll res = INT_MAX;
+        fo(i, 0, m) {
+            res = min(res, dp[b[i]]+m-1);
+        }
+        cout << res << endl;
     }
 }
 int32_t main (int32_t argc, char* argv[]) {
