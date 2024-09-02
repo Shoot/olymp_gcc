@@ -31,52 +31,30 @@ void copy_this () {
     vector<ll> a(n); fo(i, 0, n) cin >> a[i];
 }
 */
-void add_one(ll x, ll y, vector<unordered_map<ll, ll>> & bit) {
-    x += 1; y += 1;
-    for (; x <= bit.size()-1; x += (x & (-x))) {
-        for (ll i = y; i <= N; i += (i & (-i))) { bit[x][i] += 1ll; }
-    }
-}
-ll queries = 0;
-//ll queries_time;
-ll query(ll x1, ll y1, ll x2, ll y2, vector<unordered_map<ll, ll>> & bit) {
-    x1 += 1; y1 += 1; x2 += 1; y2 += 1;
-    queries += 1;
-//    auto start = chrono::high_resolution_clock::now();
-    ll ans = 0;
-    for (ll i = x2; i; i -= (i & (-i))) {
-        for (ll j = y2; j; j -= (j & (-j))) {
-            if (bit[i].contains(j))
-                ans += bit[i][j];
-        }
-    }
-    for (ll i = x2; i; i -= (i & (-i))) {
-        for (ll j = y1 - 1; j; j -= (j & (-j))) {
-            if (bit[i].contains(j))
-                ans -= bit[i][j];
-        }
-    }
-    for (ll i = x1 - 1; i; i -= (i & (-i))) {
-        for (ll j = y2; j; j -= (j & (-j))) {
-            if (bit[i].contains(j))
-                ans -= bit[i][j];
-        }
-    }
-    for (ll i = x1 - 1; i; i -= (i & (-i))) {
-        for (ll j = y1 - 1; j; j -= (j & (-j))) {
-            if (bit[i].contains(j))
-                ans += bit[i][j];
-        }
-    }
-//    auto stop = chrono::high_resolution_clock::now();
-//    auto duration = duration_cast<chrono::microseconds>(stop - start);
-//    queries_time += duration.count();
-    return ans;
-}
 ll tot=0;
 //ll n, x;
 //ll n=1e5, x=distrib(rng);
 ll n=1e5, x=3e14;
+ll query (ll index, vector<ll> & tree)  {
+    ll sum = 0;
+    while (index > 0) {
+        sum += tree[index];
+        index -= index & -index;
+    }
+    return sum;
+}
+
+ll get_segment_sum(ll left, ll right, vector<ll> & tree) {
+    return query(right+2, tree) - query(left+2 - 1, tree);
+}
+
+void increment_point(ll index, vector<ll> & tree) {
+    index += 2;
+    while (index < tree.size()) {
+        tree[index] += 1ll;
+        index += index & -index;
+    }
+}
 void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
     //clog << "L,R: " << l <<  "," << r << endl;
     if (l == r) {
@@ -125,17 +103,6 @@ void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
     su_l_szh.erase(unique(all(su_l_szh)), su_l_szh.end());
     mi_r_szh.erase(unique(all(mi_r_szh)), mi_r_szh.end());
     su_r_szh.erase(unique(all(su_r_szh)), su_r_szh.end());
-    fo(i, 0, sz) {
-        if (su_r[i] >= x) {
-            break;
-        }
-        //clog << "adding to mp_r: " << mi_r[i] << "," << su_r[i] << endl;
-        ll lb_min = lower_bound(all(mi_r_szh), mi_r[i])-mi_r_szh.begin();
-        ll lb_sum = lower_bound(all(su_r_szh), su_r[i])-su_r_szh.begin();
-        //clog << "lb_min: " << lb_min << endl;
-        //clog << "lb_sum: " << lb_sum << endl;
-        add_point_r(lb_min, lb_sum);
-    }
     //clog << "su_l: ";
 //    for (ll j: su_l) {
     //clog << j << ' ';
@@ -176,6 +143,21 @@ void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
     //clog << j << ' ';
 //    }
     //clog << endl;
+    vector<vector<pair<ll, ll>>> starts (mi_r_szh.size()+1);
+    vector<pair<ll, ll>> finishes;
+    vector<vector<ll>> points (mi_r_szh.size()+1);
+    vector<ll> tree(su_r_szh.size()+10);
+    fo(i, 0, sz) {
+        if (su_r[i] >= x) {
+            break;
+        }
+        //clog << "adding to mp_r: " << mi_r[i] << "," << su_r[i] << endl;
+        ll lb_min = lower_bound(all(mi_r_szh), mi_r[i])-mi_r_szh.begin();
+        ll lb_sum = lower_bound(all(su_r_szh), su_r[i])-su_r_szh.begin();
+        //clog << "lb_min: " << lb_min << endl;
+        //clog << "lb_sum: " << lb_sum << endl;
+        points[lb_min].push_back(lb_sum);
+    }
     fo(i, 0, sz) {
         ll minimum = mi_l[i];
         ll summa = su_l[i];
@@ -184,13 +166,28 @@ void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
             ll looking_lb_sum = lower_bound(all(su_r_szh), x-summa-minimum)-su_r_szh.begin();
             if (su_r_szh[looking_lb_sum] > x-summa-minimum) looking_lb_sum -= 1;
             //clog << minimum << "," << summa << " looking for lb_min>=" << looking_lb_min << " and lb_sum<=" << looking_lb_sum;
-            add_query(looking_lb_min, 0, mi_r_szh.size(), looking_lb_sum);
+            starts[looking_lb_min].push_back(make_pair(0, looking_lb_sum));
+            finishes.push_back(make_pair(0, looking_lb_sum));
             //clog << " (l -> r) from " << i << ": " << from_here << endl;
         } else {
             //clog << "(l -> r) from " << i << ": " << "su_r_szh[0] > x-summa-minimum=" << x-summa-minimum << endl;
         }
     }
-    do_queries();
+    fo(i, 0, mi_r_szh.size()+1) {
+        for (auto [ll, rr] : starts[i]) {
+            tot -= get_segment_sum(ll, rr, tree);
+        }
+        for (ll coord : points[i]) {
+            increment_point(coord, tree);
+        }
+    }
+    for(auto [lll, rrr] : finishes) {
+        tot += get_segment_sum(lll, rrr, tree);
+    }
+    vector<vector<pair<ll, ll>>> starts2 (mi_l_szh.size()+1);
+    vector<pair<ll, ll>> finishes2;
+    vector<vector<ll>> points2 (mi_l_szh.size()+1);
+    vector<ll> tree2(su_l_szh.size()+10);
     fo(i, 0, sz) {
         if (su_l[i] >= x) {
             break;
@@ -200,7 +197,7 @@ void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
         ll lb_sum = lower_bound(all(su_l_szh), su_l[i])-su_l_szh.begin();
         //clog << "lb_min: " << lb_min << endl;
         //clog << "lb_sum: " << lb_sum << endl;
-        add_point(lb_min, lb_sum);
+        points2[lb_min].push_back(lb_sum);
     }
     fo(i, 0, sz) {
         ll minimum = mi_r[i];
@@ -210,13 +207,24 @@ void compute(ll l, ll r, vector<ll> & a, vector<ll> & b) {
             ll looking_lb_sum = lower_bound(all(su_l_szh), x-summa-minimum)-su_l_szh.begin();
             if (su_l_szh[looking_lb_sum] > x-summa-minimum) looking_lb_sum -= 1;
             //clog << minimum << "," << summa << " looking for lb_min>=" << looking_lb_min << " and lb_sum<=" << looking_lb_sum;
-            add_query(looking_lb_min, 0, mi_l_szh.size(), looking_lb_sum);
+            starts2[looking_lb_min].push_back(make_pair(0, looking_lb_sum));
+            finishes2.push_back(make_pair(0, looking_lb_sum));
             //clog << " (l <- r) from " << i << ": " << from_here << endl;
         } else {
             //clog << "(l <- r) from " << i << ": " << "su_l_szh[0] > x-summa-minimum=" << x-summa-minimum << endl;
         }
     }
-    do_queries();
+    fo(i, 0, mi_l_szh.size()+1) {
+        for (auto [ll, rr] : starts2[i]) {
+            tot -= get_segment_sum(ll, rr, tree2);
+        }
+        for (ll coord : points2[i]) {
+            increment_point(coord, tree2);
+        }
+    }
+    for(auto [lll, rrr] : finishes2) {
+        tot += get_segment_sum(lll, rrr, tree2);
+    }
     compute(l, mid, a, b);
     compute(mid+1, r, a, b);
 }
@@ -248,7 +256,7 @@ void solve() {
     auto stop = chrono::high_resolution_clock::now();
     auto duration = duration_cast<chrono::microseconds>(stop - start);
     clog << "Time taken by function: " << duration.count() << " microseconds" << endl;
-    clog << queries << " queries" << endl;
+//    clog << queries << " queries" << endl;
 //    //clog << (double)queries_time/(double)queries*2e5/1e6 << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
