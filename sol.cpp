@@ -20,8 +20,8 @@ typedef long double ld;
 //mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 //uniform_int_distribution<ll> distrib(1ll, 1000000000000000000ll);
 //constexpr ll N = (ll)(1e15);
-constexpr ll MOD99 = 998303639;
-constexpr ll MOD7 = 958299887;
+constexpr ll MOD99 = 9583757;
+constexpr ll MOD7 = 998266601;
 ll powm(ll a, ll b, ll MOD){
     ll d = 1;
     while(b){
