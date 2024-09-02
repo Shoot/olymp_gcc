@@ -17,11 +17,11 @@ typedef long double ld;
 #define debug(...) 68
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #endif
-mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-uniform_int_distribution<ll> distrib(1ll, 1000000000000000000ll);
-constexpr ll N = (ll)(1e15);
-constexpr ll MOD99 = 998244353;
-constexpr ll MOD7 = 1e9 + 7;
+//mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
+//uniform_int_distribution<ll> distrib(1ll, 1000000000000000000ll);
+//constexpr ll N = (ll)(1e15);
+constexpr ll MOD99 = 998302111;
+constexpr ll MOD7 = 998266601;
 ll powm(ll a, ll b, ll MOD){
     ll d = 1;
     while(b){
@@ -37,8 +37,8 @@ ll revbase7 = powm(base, MOD7-2, MOD7);
 ll revbase99 = powm(base, MOD99-2, MOD99);
 vector<ll> base_power7(MAXN, 1);
 vector<ll> base_power99(MAXN, 1);
-vector<ll> base_rev7_power(MAXN, 1);
-vector<ll> base_rev99_power(MAXN, 1);
+vector<ll> base_rev_power7(MAXN, 1);
+vector<ll> base_rev_power99(MAXN, 1);
 /*
 void copy_this () {
     ll n; cin >> n;
@@ -52,12 +52,8 @@ void solve() {
     fo(i, 1, MAXN) {
         base_power7[i] = (base_power7[i-1]*base)%MOD7;
         base_power99[i] = (base_power99[i-1]*base)%MOD99;
-    }
-    fo(i, 1, MAXN) {
-        base_rev7_power[i] = (base_rev7_power[i-1]*revbase7)%MOD7;
-    }
-    fo(i, 1, MAXN) {
-        base_rev99_power[i] = (base_rev99_power[i-1]*revbase99)%MOD99;
+        base_rev_power7[i] = (base_rev_power7[i-1]*revbase7)%MOD7;
+        base_rev_power99[i] = (base_rev_power99[i-1]*revbase99)%MOD99;
     }
     ll n; cin >> n;
     vector<ll> a(n);
@@ -67,21 +63,21 @@ void solve() {
     clog << "got that" << endl;
     ll m; cin >> m;
     vector<ll> b(m);
-    vector<ll> rb7(m+1, 0);
-    vector<ll> rb99(m+1, 0);
+    vector<ll> pref_b_7(m+1, 0);
+    vector<ll> pref_b_99(m+1, 0);
     fo(i, 0, m) {
         cin >> b[i];
-        rb7[i+1] = (rb7[i]+b[i]*base_power7[i])%MOD7;
-        rb99[i+1] = (rb99[i]+b[i]*base_power99[i])%MOD99;
+        pref_b_7[i+1] = (pref_b_7[i]+b[i]*base_power7[i])%MOD7;
+        pref_b_99[i+1] = (pref_b_99[i]+b[i]*base_power99[i])%MOD99;
     }
     ll k; cin >> k;
     vector<ll> c(k);
-    vector<ll> rc7(k+1, 0);
-    vector<ll> rc99(k+1, 0);
+    vector<ll> pref_c_7(k+1, 0);
+    vector<ll> pref_c_99(k+1, 0);
     fo(i, 0, k) {
         cin >> c[i];
-        rc7[i+1] = (rc7[i]+c[i]*base_power7[i])%MOD7;
-        rc99[i+1] = (rc99[i]+c[i]*base_power99[i])%MOD99;
+        pref_c_7[i+1] = (pref_c_7[i]+c[i]*base_power7[i])%MOD7;
+        pref_c_99[i+1] = (pref_c_99[i]+c[i]*base_power99[i])%MOD99;
     }
     ll l=1, r=min(m, k);
     ll good = 0;
@@ -92,12 +88,12 @@ void solve() {
         unordered_set<ll> c_st7;
         unordered_set<ll> c_st99;
         fo(i, 0, m+1-mid) {
-            b_st7.insert(((rb7[i+mid]-rb7[i])*base_rev7_power[i])%MOD7);
-            b_st99.insert(((rb99[i+mid]-rb99[i])*base_rev99_power[i])%MOD99);
+            b_st7.insert(((pref_b_7[i+mid]-pref_b_7[i])*base_rev_power7[i])%MOD7);
+            b_st99.insert(((pref_b_99[i+mid]-pref_b_99[i])*base_rev_power99[i])%MOD99);
         }
         fo(i, 0, k+1-mid) {
-            c_st7.insert(((rc7[i+mid]-rc7[i])*base_rev7_power[i])%MOD7);
-            c_st99.insert(((rc99[i+mid]-rc99[i])*base_rev99_power[i])%MOD99);
+            c_st7.insert(((pref_c_7[i+mid]-pref_c_7[i])*base_rev_power7[i])%MOD7);
+            c_st99.insert(((pref_c_99[i+mid]-pref_c_99[i])*base_rev_power99[i])%MOD99);
         }
         bool intersected7 = false;
         bool intersected99 = false;
@@ -113,6 +109,9 @@ void solve() {
                 break;
             }
         }
+        if (intersected7 + intersected99 == 1) {
+            clog << "alert" << endl;
+        }
         if (intersected7 && intersected99) {
             good = mid;
             l = mid+1;
@@ -121,6 +120,7 @@ void solve() {
         }
     }
     if (good > 0) {
+        clog << "peresech_size: " << good << endl;
         cout << m-good+k-good << endl;
     } else {
         clog << "lets see" << endl;
@@ -164,6 +164,7 @@ void solve() {
                 }
             }
             if (enough) break;
+            else clog << "not enough" << endl;
         }
 
         fo(i, 0, k) {
