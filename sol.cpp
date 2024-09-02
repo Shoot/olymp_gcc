@@ -20,8 +20,8 @@ typedef long double ld;
 //mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 //uniform_int_distribution<ll> distrib(1ll, 1000000000000000000ll);
 //constexpr ll N = (ll)(1e15);
-constexpr ll MOD99 = 998302111;
-constexpr ll MOD7 = 998266601;
+constexpr ll MOD99 = 998303639;
+constexpr ll MOD7 = 958299887;
 ll powm(ll a, ll b, ll MOD){
     ll d = 1;
     while(b){
@@ -125,7 +125,7 @@ void solve() {
     } else {
         clog << "lets see" << endl;
         ll dp[MAXN];
-        fo(i, 1, MAXN) {
+        fo(i, 0, MAXN) {
             dp[i] = INT_MAX;
         }
         fo(i, 0, m) {
@@ -178,6 +178,8 @@ void solve() {
         fo(i, 0, k) {
             res = min(res, dp[c[i]]+k-1);
         }
+        assert(res > 0);
+        assert(res < 4.1e5);
         cout << res << endl;
     }
 }
