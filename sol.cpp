@@ -34,7 +34,14 @@ void copy_this () {
 struct segment {
     ld x1, y1, x2, y2;
 };
-
+bool touches_point(segment s, ld Ox, ld Oy, ld Or) {
+    ld Or_squared=Or*Or;
+    ld tocenter1 = (s.x1-Ox)*(s.x1-Ox)+(s.y1-Oy)*(s.y1-Oy);
+    if (tocenter1 < Or_squared) {
+        return true;
+    }
+    return false;
+}
 bool touches(segment s, ld Ox, ld Oy, ld Or) {
     s.x1 -= Ox;
     s.y1 -= Oy;
@@ -67,12 +74,12 @@ void solve() {
         ld y = -100+0.5;
         while (y <= 100) {
             ld rad_l=0, rad_r=1e4;
-            while (rad_r-rad_l > 1e-5) {
+            while (rad_r-rad_l > 1e-9) {
                 ld rad_mid = (rad_l+rad_r)/2;
                 bool touches_everything = true;
                 fo(i, 0, n) {
-                    if (!touches_point(a[i], x, y, rad_mid)) {
-//                    if (!touches(a[i], x, y, rad_mid)) {
+//                    if (!touches_point(a[i], x, y, rad_mid)) {
+                    if (!touches(a[i], x, y, rad_mid)) {
                         touches_everything = false;
                         break;
                     }
