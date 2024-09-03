@@ -34,31 +34,20 @@ void copy_this () {
 struct segment {
     ld x1, y1, x2, y2;
 };
-bool touches_point(segment s, ld Ox, ld Oy, ld Or) {
-    ld Or_squared=Or*Or;
-    ld tocenter1 = (s.x1-Ox)*(s.x1-Ox)+(s.y1-Oy)*(s.y1-Oy);
-    if (abs(tocenter1-Or_squared) <= 1e-7) {
-        return true;
-    }
-    if (tocenter1 < Or_squared) {
-        return true;
-    }
-    return false;
-}
+
 bool touches(segment s, ld Ox, ld Oy, ld Or) {
-    ld Or_squared=Or*Or;
-    ld tocenter1 = (s.x1-Ox)*(s.x1-Ox)+(s.y1-Oy)*(s.y1-Oy);
-    ld tocenter2 = (s.x2-Ox)*(s.x2-Ox)+(s.y2-Oy)*(s.y2-Oy);
-    if (abs(tocenter1-Or_squared) <= 1e-7) {
-        return true;
-    }
-    if (abs(tocenter2-Or_squared) <= 1e-7) {
-        return true;
-    }
-    if (tocenter1 < Or_squared || tocenter2 < Or_squared) {
-        return true;
-    }
-    return false;
+    s.x1 -= Ox;
+    s.y1 -= Oy;
+    s.x2 -= Ox;
+    s.y2 -= Oy;
+    ld dx = s.x2 - s.x1;
+    ld dy = s.y2 - s.y1;
+    ld a = dx*dx + dy*dy;
+    ld b = 2.*(s.x1*dx + s.y1*dy);
+    ld c = s.x1*s.x1 + s.y1*s.y1 - Or*Or;
+    if (-b < 0) return (c < 0);
+    if (-b < (2.*a)) return ((4.*a*c - b*b) < 0);
+    return (a+b+c < 0);
 }
 void solve() {
     cout << setprecision(10);
@@ -68,12 +57,13 @@ void solve() {
     fo(i, 0, n) {
         cin >> a[i].x1 >> a[i].y1 >> a[i].x2 >> a[i].y2;
     }
-    ld x = -100;
+    ld x = -100+0.875;
     ld best = 1e9;
+    ld prevmaxi = -1;
     while (x <= 100) {
         ld maxi = 0;
         ld mini = 1e9;
-        ld y = -100;
+        ld y = -100+0.5;
         while (y <= 100) {
             ld rad_l=0, rad_r=1e4;
             while (rad_r-rad_l > 1e-5) {
@@ -81,7 +71,7 @@ void solve() {
                 bool touches_everything = true;
                 fo(i, 0, n) {
 //                    if (!touches(a[i], x, y, rad_mid)) {
-                    if (!touches_point(a[i], x, y, rad_mid)) {
+                    if (!touches(a[i], x, y, rad_mid)) {
                         touches_everything = false;
                         break;
                     }
@@ -100,6 +90,10 @@ void solve() {
             y += 0.1;
         }
         clog << x << ": " << mini << " " << maxi << endl;
+        if (prevmaxi != -1) {
+            clog << maxi-prevmaxi << endl;
+        }
+        prevmaxi = maxi;
         x += 0.1;
     }
 
