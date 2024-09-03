@@ -67,7 +67,6 @@ void solve() {
     ld x = 0+0.875;
     ld best = 1e9;
     ld prevmini = -1;
-    ld prevmaxi = -1;
     while (x <= 100) {
         ld maxi = 0;
         ld mini = 1e9;
@@ -102,7 +101,6 @@ void solve() {
         }
         clog << x << ": " << mini << " " << maxi << endl;
         prevmini = mini;
-        prevmaxi = maxi;
         x += 0.01;
     }
 
