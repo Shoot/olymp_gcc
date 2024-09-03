@@ -56,54 +56,54 @@ bool touches(segment s, ld Ox, ld Oy, ld Or) {
     if (-b < (2.*a)) return ((4.*a*c - b*b) < 0);
     return (a+b+c < 0);
 }
+ll n;
+vector<segment> a;
+ld f(ld x) {
+    ld mini = 1e9;
+    ld y = -100;
+    while (y <= 100) {
+        ld rad_l=0, rad_r=1e4;
+        while (rad_r-rad_l > 1e-9) {
+            ld rad_mid = (rad_l+rad_r)/2;
+            bool touches_everything = true;
+            fo(i, 0, n) {
+                if (!touches(a[i], x, y, rad_mid)) {
+                    touches_everything = false;
+                    break;
+                }
+            }
+            if (touches_everything) {
+                rad_r = rad_mid;
+            } else {
+                rad_l = rad_mid;
+            }
+        }
+        mini = min(mini, rad_l);
+        y += 0.01;
+    }
+    return mini;
+}
 void solve() {
     cout << setprecision(10);
     clog << setprecision(10);
-    ll n; cin >> n;
-    vector<segment> a(n);
+    cin >> n;
+    a.resize(n);
     fo(i, 0, n) {
         cin >> a[i].x1 >> a[i].y1 >> a[i].x2 >> a[i].y2;
     }
-    ld x = 0+0.875;
-    ld best = 1e9;
-    ld prevmini = -1;
-    while (x <= 100) {
-        ld maxi = 0;
-        ld mini = 1e9;
-        ld y = -100+0.5;
-        while (y <= 100) {
-            ld rad_l=0, rad_r=1e4;
-            while (rad_r-rad_l > 1e-9) {
-                ld rad_mid = (rad_l+rad_r)/2;
-                bool touches_everything = true;
-                fo(i, 0, n) {
-//                    if (!touches_point(a[i], x, y, rad_mid)) {
-                    if (!touches(a[i], x, y, rad_mid)) {
-                        touches_everything = false;
-                        break;
-                    }
-                }
-                if (touches_everything) {
-                    rad_r = rad_mid;
-                } else {
-                    rad_l = rad_mid;
-                }
-            }
-            maxi = max(maxi, rad_l);
-            mini = min(mini, rad_l);
-            best = min(best, rad_l);
-//            cout << x << "," << y << ": " << rad_l << endl;
+    ld l = -2e4;
+    ld r = 2e4;
+    while (r-l > 1e-9) {
 
-            y += 0.01;
+        ld x1 = l + (r - l) / 3;
+        ld x2 = r - (r - l) / 3;
+        if (f(x1) > f(x2)) {
+            l = x1;
+        } else {
+            r = x2;
         }
-        if (prevmini != -1) {
-            clog << mini-prevmini << " ";
-        }
-        clog << x << ": " << mini << " " << maxi << endl;
-        prevmini = mini;
-        x += 0.01;
     }
-
+    clog << l << " " << r << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
