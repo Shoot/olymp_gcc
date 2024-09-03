@@ -93,17 +93,20 @@ void solve() {
     }
     ld l = -2e4;
     ld r = 2e4;
+    ld res = 1e9;
     while (r-l > 1e-9) {
-
         ld x1 = l + (r - l) / 3;
         ld x2 = r - (r - l) / 3;
-        if (f(x1) > f(x2)) {
+        ld fx1 = f(x1);
+        ld fx2 = f(x2);
+        if (fx1 > fx2) {
             l = x1;
         } else {
             r = x2;
+            res = fx2;
         }
     }
-    clog << l << " " << r << endl;
+    clog << res << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
