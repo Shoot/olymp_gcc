@@ -3,12 +3,12 @@ using namespace std;
 typedef long long ll;
 typedef long double ld;
 #define all(value) value.begin(), value.end()
-#define fo(x, temp_set_for_mex, fi) for(ll x = temp_set_for_mex; x < fi; x++)
-#define forr(x, temp_set_for_mex, fi) for(ll x = temp_set_for_mex; x <= fi; x++)
-#define rrof(x, temp_set_for_mex, fi) for(ll x = temp_set_for_mex; x >= fi; x--)
-#define roff(x, temp_set_for_mex, fi) for(ll x = temp_set_for_mex; x >= fi; x--)
-#define of(x, temp_set_for_mex, fi) for(ll x = temp_set_for_mex; x > fi; x--)
-#define ro(x, temp_set_for_mex, fi) for(ll x = temp_set_for_mex; x > fi; x--)
+#define fo(x, temp_set_for_mex, fi) for(__int128 x = temp_set_for_mex; x < fi; x++)
+#define forr(x, temp_set_for_mex, fi) for(__int128 x = temp_set_for_mex; x <= fi; x++)
+#define rrof(x, temp_set_for_mex, fi) for(__int128 x = temp_set_for_mex; x >= fi; x--)
+#define roff(x, temp_set_for_mex, fi) for(__int128 x = temp_set_for_mex; x >= fi; x--)
+#define of(x, temp_set_for_mex, fi) for(__int128 x = temp_set_for_mex; x > fi; x--)
+#define ro(x, temp_set_for_mex, fi) for(__int128 x = temp_set_for_mex; x > fi; x--)
 #define yes(x) (x ? "YES" : "NO")
 #define endl '\n'
 #ifdef LOCAL
@@ -18,11 +18,12 @@ typedef long double ld;
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math,trapv")
 #endif
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-uniform_int_distribution<ll> distrib(20ll, 20ll);
-constexpr ll MOD7 =  999987301;
-constexpr ll MOD99 = 989989103;
-constexpr ll MOD33 = 979989193;
-
+uniform_int_distribution<ll> distrib(1ll, 200000ll);
+constexpr __int128 MOD7 =  957363431467152001;
+constexpr __int128 MOD99 = 695407781356532897;
+constexpr __int128 MOD33 = 257354202279932701;
+ll m=2e5;
+ll k=2e5;
 ll og_counter(const vector<ll>& A, const vector<ll>& B) {
     ll a_sz = (ll)A.size();
     ll b_sz = (ll)B.size();
@@ -30,8 +31,8 @@ ll og_counter(const vector<ll>& A, const vector<ll>& B) {
     vector<ll> prev(b_sz + 1, 0);
     vector<ll> curr(b_sz + 1, 0);
     ll maxL = 0;
-    for (ll i = 1; i <= a_sz; ++i) {
-        for (ll j = 1; j <= b_sz; ++j) {
+    for (__int128 i = 1; i <= a_sz; ++i) {
+        for (__int128 j = 1; j <= b_sz; ++j) {
             if (A[i - 1] == B[j - 1]) {
                 curr[j] = prev[j - 1] + 1;
                 maxL = max(maxL, curr[j]);
@@ -43,8 +44,8 @@ ll og_counter(const vector<ll>& A, const vector<ll>& B) {
     }
     return maxL;
 }
-ll powm(ll a, ll b, ll MOD){
-    ll d = 1;
+__int128 powm(__int128 a, __int128 b, __int128 MOD){
+    __int128 d = 1;
     while(b){
         if (b&1) d = (d*a) % MOD;
         b >>= 1;
@@ -52,28 +53,27 @@ ll powm(ll a, ll b, ll MOD){
     }
     return d;
 }
-ll MAXN = 2e5+10;
-ll base = MAXN;
-ll revbase7 = powm(base, MOD7-2, MOD7);
-ll revbase99 = powm(base, MOD99-2, MOD99);
-ll revbase33 = powm(base, MOD33-2, MOD33);
-vector<ll> base_power7(MAXN, 1);
-vector<ll> base_power99(MAXN, 1);
-vector<ll> base_power33(MAXN, 1);
-vector<ll> base_rev_power7(MAXN, 1);
-vector<ll> base_rev_power99(MAXN, 1);
-vector<ll> base_rev_power33(MAXN, 1);
+__int128 MAXN = 2e5+10;
+__int128 base = MAXN;
+__int128 revbase7 = powm(base, MOD7-2, MOD7);
+__int128 revbase99 = powm(base, MOD99-2, MOD99);
+__int128 revbase33 = powm(base, MOD33-2, MOD33);
+vector<__int128> base_power7(MAXN, 1);
+vector<__int128> base_power99(MAXN, 1);
+vector<__int128> base_power33(MAXN, 1);
+vector<__int128> base_rev_power7(MAXN, 1);
+vector<__int128> base_rev_power99(MAXN, 1);
+vector<__int128> base_rev_power33(MAXN, 1);
 /*
 void copy_this () {
-    ll n; cin >> n;
-    ll n, k; cin >> n >> k;
-    ll n, q; cin >> n >> q;
-    ll a[n]; fo(i, 0, n) cin >> a[i];
-    vector<ll> a(n); fo(i, 0, n) cin >> a[i];
+    __int128 n; cin >> n;
+    __int128 n, k; cin >> n >> k;
+    __int128 n, q; cin >> n >> q;
+    __int128 a[n]; fo(i, 0, n) cin >> a[i];
+    vector<__int128> a(n); fo(i, 0, n) cin >> a[i];
 }
 */
-ll m=2e4;
-ll k=2e5;
+
 void solve() {
     fo(i, 1, MAXN) {
         assert(i-1 < base_power7.size());
@@ -84,17 +84,17 @@ void solve() {
         base_rev_power99[i] = (base_rev_power99[i-1]*revbase99)%MOD99;
         base_rev_power33[i] = (base_rev_power33[i-1]*revbase33)%MOD33;
     }
-//    ll n; cin >> n;
-//    vector<ll> a(n);
+//    __int128 n; cin >> n;
+//    vector<__int128> a(n);
 //    fo(i, 0, n) {
 //        cin >> a[i];
 //    }
 //    cin >> m;
     vector<ll> b(m);
-    vector<ll> pref_b_7(m+1, 0);
-    vector<ll> pref_b_99(m+1, 0);
-    vector<ll> pref_b_33(m+1, 0);
-    vector<ll> pref_b_44(m+1, 0);
+    vector<__int128> pref_b_7(m+1, 0);
+    vector<__int128> pref_b_99(m+1, 0);
+    vector<__int128> pref_b_33(m+1, 0);
+    vector<__int128> pref_b_44(m+1, 0);
     fo(i, 0, m) {
         assert(i < b.size());
         b[i] = distrib(rng);
@@ -109,9 +109,9 @@ void solve() {
     }clog << endl;
 //    cin >> k;
     vector<ll> c(k);
-    vector<ll> pref_c_7(k+1, 0);
-    vector<ll> pref_c_99(k+1, 0);
-    vector<ll> pref_c_33(k+1, 0);
+    vector<__int128> pref_c_7(k+1, 0);
+    vector<__int128> pref_c_99(k+1, 0);
+    vector<__int128> pref_c_33(k+1, 0);
     fo(i, 0, k) {
         c[i] = distrib(rng);
         clog << c[i] << ' ';
@@ -128,12 +128,12 @@ void solve() {
     ll good = 0;
     while (l <= r) {
         ll mid = (l+r) >> 1;
-        unordered_set<ll> b_st7;
-        unordered_set<ll> b_st99;
-        unordered_set<ll> b_st33;
-        unordered_set<ll> c_st7;
-        unordered_set<ll> c_st99;
-        unordered_set<ll> c_st33;
+        unordered_set<__int128> b_st7;
+        unordered_set<__int128> b_st99;
+        unordered_set<__int128> b_st33;
+        unordered_set<__int128> c_st7;
+        unordered_set<__int128> c_st99;
+        unordered_set<__int128> c_st33;
         fo(i, 0, m+1-mid) {
             assert(i+mid < pref_b_7.size());
             assert(i < pref_b_7.size());
@@ -153,19 +153,19 @@ void solve() {
         bool intersected7 = false;
         bool intersected99 = false;
         bool intersected33 = false;
-        for (const ll& element : b_st7) {
+        for (const __int128& element : b_st7) {
             if (c_st7.find(element) != c_st7.end()) {
                 intersected7 = true;
                 break;
             }
         }
-        for (const ll& element : b_st99) {
+        for (const __int128& element : b_st99) {
             if (c_st99.find(element) != c_st99.end()) {
                 intersected99 = true;
                 break;
             }
         }
-        for (const ll& element : b_st33) {
+        for (const __int128& element : b_st33) {
             if (c_st33.find(element) != c_st33.end()) {
                 intersected33 = true;
                 break;
@@ -194,7 +194,7 @@ void solve() {
 //        cout << m-good+k-good << endl;
 //    } else {
 //        clog << "lets see" << endl;
-//        ll dp[MAXN];
+//        __int128 dp[MAXN];
 //        fo(i, 0, MAXN) {
 //            dp[i] = INT_MAX;
 //        }
@@ -227,7 +227,7 @@ void solve() {
 //        fo(i, 0, k) {
 //            assert(dp[b[i]] == m-1);
 //        }
-//        ll res = INT_MAX;
+//        __int128 res = INT_MAX;
 //        fo(i, 0, k) {
 //            res = min(res, dp[c[i]]+k-1);
 //        }
@@ -251,7 +251,7 @@ int32_t main (int32_t argc, char* argv[]) {
         cerr.tie(nullptr);
         //clog.tie(nullptr);
     }
-    ll tt = 1;
+    __int128 tt = 1;
 //    cin >> tt;
     while (tt--) solve();
     return 0;
