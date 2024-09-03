@@ -57,8 +57,9 @@ void solve() {
     fo(i, 0, n) {
         cin >> a[i].x1 >> a[i].y1 >> a[i].x2 >> a[i].y2;
     }
-    ld x = -100+0.875;
+    ld x = 0+0.875;
     ld best = 1e9;
+    ld prevmini = -1;
     ld prevmaxi = -1;
     while (x <= 100) {
         ld maxi = 0;
@@ -70,8 +71,8 @@ void solve() {
                 ld rad_mid = (rad_l+rad_r)/2;
                 bool touches_everything = true;
                 fo(i, 0, n) {
+                    if (!touches_point(a[i], x, y, rad_mid)) {
 //                    if (!touches(a[i], x, y, rad_mid)) {
-                    if (!touches(a[i], x, y, rad_mid)) {
                         touches_everything = false;
                         break;
                     }
@@ -87,14 +88,15 @@ void solve() {
             best = min(best, rad_l);
 //            cout << x << "," << y << ": " << rad_l << endl;
 
-            y += 0.1;
+            y += 0.01;
+        }
+        if (prevmini != -1) {
+            clog << mini-prevmini << " ";
         }
         clog << x << ": " << mini << " " << maxi << endl;
-        if (prevmaxi != -1) {
-            clog << maxi-prevmaxi << endl;
-        }
+        prevmini = mini;
         prevmaxi = maxi;
-        x += 0.1;
+        x += 0.01;
     }
 
 }
