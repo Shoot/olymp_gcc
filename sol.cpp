@@ -43,6 +43,7 @@ bool touches_point(segment s, ld Ox, ld Oy, ld Or) {
     return false;
 }
 bool touches(segment s, ld Ox, ld Oy, ld Or) {
+    ld Or_squared=Or*Or;
     s.x1 -= Ox;
     s.y1 -= Oy;
     s.x2 -= Ox;
@@ -51,37 +52,49 @@ bool touches(segment s, ld Ox, ld Oy, ld Or) {
     ld dy = s.y2 - s.y1;
     ld a = dx*dx + dy*dy;
     ld b = 2.*(s.x1*dx + s.y1*dy);
-    ld c = s.x1*s.x1 + s.y1*s.y1 - Or*Or;
+    ld c = s.x1*s.x1 + s.y1*s.y1 - Or_squared;
     if (-b < 0) return (c < 0);
     if (-b < (2.*a)) return ((4.*a*c - b*b) < 0);
     return (a+b+c < 0);
 }
 ll n;
 vector<segment> a;
-ld f(ld x) {
-    ld mini = 1e9;
-    ld y = -100;
-    while (y <= 100) {
-        ld rad_l=0, rad_r=1e4;
-        while (rad_r-rad_l > 1e-9) {
-            ld rad_mid = (rad_l+rad_r)/2;
-            bool touches_everything = true;
-            fo(i, 0, n) {
-                if (!touches(a[i], x, y, rad_mid)) {
-                    touches_everything = false;
-                    break;
-                }
-            }
-            if (touches_everything) {
-                rad_r = rad_mid;
-            } else {
-                rad_l = rad_mid;
+ld g(ld x, ld y) {
+    ld rad_l=0, rad_r=1e4;
+    while (rad_r-rad_l > 1e-9) {
+        ld rad_mid = (rad_l+rad_r)/2;
+        bool touches_everything = true;
+        fo(i, 0, n) {
+            if (!touches(a[i], x, y, rad_mid)) {
+                touches_everything = false;
+                break;
             }
         }
-        mini = min(mini, rad_l);
-        y += 0.01;
+        if (touches_everything) {
+            rad_r = rad_mid;
+        } else {
+            rad_l = rad_mid;
+        }
     }
-    return mini;
+    return rad_l;
+}
+ld f(ld x) {
+    ld res = 1e9;
+    ld l = -1e4;
+    ld r = 1e4;
+    while (r-l > 1e-9) {
+        ld y1 = l + (r - l) / 3;
+        ld y2 = r - (r - l) / 3;
+        ld gy1 = g(x, y1);
+        ld gy2 = g(x, y2);
+        if (gy1 > gy2) {
+            l = y1;
+        } else {
+            r = y2;
+            res = gy2;
+        }
+    }
+    return res;
 }
 void solve() {
     cout << setprecision(10);
@@ -106,7 +119,7 @@ void solve() {
             res = fx2;
         }
     }
-    clog << res << endl;
+    cout << res << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
