@@ -22,6 +22,7 @@ uniform_int_distribution<ll> distrib(1ll, 200000ll);
 constexpr ll N = (ll)(1e15);
 constexpr ll MOD99 = 998244353;
 constexpr ll MOD7 = 1e9 + 7;
+ll maxi_init = 1e9;
 /*
 void copy_this () {
     ll n; cin >> n;
@@ -31,95 +32,63 @@ void copy_this () {
     vector<ll> a(n); fo(i, 0, n) cin >> a[i];
 }
 */
-struct segment {
-    ld x1, y1, x2, y2;
-};
-bool touches_point(segment s, ld Ox, ld Oy, ld Or) {
-    ld Or_squared=Or*Or;
-    ld tocenter1 = (s.x1-Ox)*(s.x1-Ox)+(s.y1-Oy)*(s.y1-Oy);
-    if (tocenter1 < Or_squared) {
-        return true;
-    }
-    return false;
-}
-bool touches(segment s, ld Ox, ld Oy, ld Or) {
-    ld Or_squared=Or*Or;
-    s.x1 -= Ox;
-    s.y1 -= Oy;
-    s.x2 -= Ox;
-    s.y2 -= Oy;
-    ld dx = s.x2 - s.x1;
-    ld dy = s.y2 - s.y1;
-    ld a = dx*dx + dy*dy;
-    ld b = 2.*(s.x1*dx + s.y1*dy);
-    ld c = s.x1*s.x1 + s.y1*s.y1 - Or_squared;
-    if (-b < 0) return (c < 0);
-    if (-b < (2.*a)) return ((4.*a*c - b*b) < 0);
-    return (a+b+c < 0);
-}
-ll n;
-vector<segment> a;
-ld g(ld x, ld y) {
-    ld rad_l=0, rad_r=1e4;
-    while (rad_r-rad_l > 1e-9) {
-        ld rad_mid = (rad_l+rad_r)/2;
-        bool touches_everything = true;
-        fo(i, 0, n) {
-            if (!touches(a[i], x, y, rad_mid)) {
-                touches_everything = false;
-                break;
+void solve() {
+    ll k; cin >> k;
+    vector<pair<ll, ll>> DELETE;
+    fo(ii, 0, k) {
+        ll n, m; cin >> n >> m;
+        vector<pair<ll, ll>> a (n+1);
+        forr(i, 0, n) {
+            a[i].first = maxi_init;
+            a[i].second = maxi_init;
+        }
+        vector<vector<ll>> sm(n+1);
+        fo(i, 0, m) {
+            ll u, v; cin >> u >> v;
+            sm[u].push_back(v);
+            sm[v].push_back(u);
+        }
+        queue<pair<ll, ll>> q;
+        q.push(make_pair(1, 0));
+        while(!q.empty()) {
+            auto tp = q.front();
+//            clog << "got " << tp.first << " " << tp.second << endl;
+            q.pop();
+            if (tp.second % 2 == 0 && a[tp.first].first == maxi_init) {
+                a[tp.first].first = tp.second;
+//                clog << "setting " << tp.first << "[0]=" << tp.second << endl;
+            } else if (tp.second % 2 == 1 && a[tp.first].second == maxi_init) {
+                a[tp.first].second = tp.second;
+//                clog << "setting " << tp.first << "[1]=" << tp.second << endl;
+            } else {
+                continue;
+            }
+            for (ll nxt: sm[tp.first]) {
+                q.push(make_pair(nxt, tp.second+1));
             }
         }
-        if (touches_everything) {
-            rad_r = rad_mid;
+        if (DELETE.empty()) {
+            forr(i, 1, n) {
+                DELETE.push_back(a[i]);
+            }
         } else {
-            rad_l = rad_mid;
+            vector<pair<ll, ll>> DELETE2;
+            for(auto [i, j]: DELETE) {
+                forr(iii, 1, n) {
+                    DELETE2.push_back(make_pair(max(i, a[iii].first), max(j, a[iii].second)));
+                }
+            }
+            DELETE = DELETE2;
         }
     }
-    return rad_l;
-}
-ld f(ld x) {
-    ld res = 1e9;
-    ld l = -1e4;
-    ld r = 1e4;
-    while (r-l > 1e-9) {
-        ld y1 = l + (r - l) / 3;
-        ld y2 = r - (r - l) / 3;
-        ld gy1 = g(x, y1);
-        ld gy2 = g(x, y2);
-        if (gy1 > gy2) {
-            l = y1;
-        } else {
-            r = y2;
-            res = gy2;
+    ll OG = 0;
+    for(auto [i, j]: DELETE) {
+        ll l = min(i, j);
+        if (l != maxi_init) {
+            OG += l;
         }
     }
-    return res;
-}
-void solve() {
-    cout << setprecision(10);
-    clog << setprecision(10);
-    cin >> n;
-    a.resize(n);
-    fo(i, 0, n) {
-        cin >> a[i].x1 >> a[i].y1 >> a[i].x2 >> a[i].y2;
-    }
-    ld l = -2e4;
-    ld r = 2e4;
-    ld res = 1e9;
-    while (r-l > 1e-9) {
-        ld x1 = l + (r - l) / 3;
-        ld x2 = r - (r - l) / 3;
-        ld fx1 = f(x1);
-        ld fx2 = f(x2);
-        if (fx1 > fx2) {
-            l = x1;
-        } else {
-            r = x2;
-            res = fx2;
-        }
-    }
-    cout << res << endl;
+    cout << "OG = " << OG << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
