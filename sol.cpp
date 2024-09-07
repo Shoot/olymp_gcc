@@ -15,6 +15,7 @@ typedef long double ld;
 #include <algo/debug.h>
 #else
 #define debug(...) 68
+//#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math,trapv")
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #endif
 //mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
@@ -35,7 +36,7 @@ struct shit {
     ll chet, nechet;
 };
 struct answer {
-    ll less_or_eq_any, less_or_eq_less, less_less_or_eq;
+    ll less_or_eq__any, less__any, less_or_eq__less, less__less_or_eq;
 };
 ll __query__ (ll index, vector<ll> & tree)  {
     ll sum = 0;
@@ -187,55 +188,51 @@ void solve() {
         ll adding_first = 0;
         ll adding_second = 0;
         while (curr_ans <= max_length) {
-//            //clog << "curr_ans=" << curr_ans << endl;
             if (curr_ans%2 == 0) {
-                answ[ii][curr_ans].less_less_or_eq = get(0, curr_ans, first_tree);
+                answ[ii][curr_ans].less__any = get(0, N-100, first_tree);
+                answ[ii][curr_ans].less__less_or_eq = get(0, curr_ans, first_tree);
                 while (adding_first < G[ii].first.size() && G[ii].first[adding_first].chet <= curr_ans) {
                     add(G[ii].first[adding_first].nechet, 1, first_tree);
                     adding_first += 1;
                 }
-                answ[ii][curr_ans].less_or_eq_any = get(0, N-100, first_tree);
-//                //clog << "answ[" << ii << "][curr_ans].less_or_eq_any=" << answ[ii][curr_ans].less_or_eq_any << endl;
-                answ[ii][curr_ans].less_or_eq_less = get(0, curr_ans-1, first_tree);
-//                //clog << "answ[" << ii << "][curr_ans].less_or_eq_less=" << answ[ii][curr_ans].less_or_eq_less << endl;
+                answ[ii][curr_ans].less_or_eq__any = get(0, N-100, first_tree);
+                answ[ii][curr_ans].less_or_eq__less = get(0, curr_ans-1, first_tree);
             } else {
-                answ[ii][curr_ans].less_less_or_eq = get(0, curr_ans, second_tree);
+                answ[ii][curr_ans].less__any = get(0, N-100, second_tree);
+                answ[ii][curr_ans].less__less_or_eq = get(0, curr_ans, second_tree);
                 while (adding_second < G[ii].second.size() && G[ii].second[adding_second].nechet <= curr_ans) {
                     add(G[ii].second[adding_second].chet, 1, second_tree);
-                    //clog << "+1" << G[ii].second[adding_second].chet << endl;
                     adding_second += 1;
                 }
-                answ[ii][curr_ans].less_or_eq_any = get(0, N-100, second_tree);
-//                //clog << "answ[" << ii << "][curr_ans].less_or_eq_any=" << answ[ii][curr_ans].less_or_eq_any << endl;
-                answ[ii][curr_ans].less_or_eq_less = get(0, curr_ans-1, second_tree);
-//                //clog << "answ[" << ii << "][curr_ans].less_or_eq_less=" << answ[ii][curr_ans].less_or_eq_less << endl;
+                answ[ii][curr_ans].less_or_eq__any = get(0, N-100, second_tree);
+                answ[ii][curr_ans].less_or_eq__less = get(0, curr_ans-1, second_tree);
             }
             curr_ans += 1;
         }
     }
     ll myans = 0;
     forr(length, 1, max_length) {
-        //clog << "--------------------------length=" << length << endl;
-        //clog << "--------------------------length=" << length << endl;
-        //clog << "--------------------------length=" << length << endl;
+        clog << "--------------------------length=" << length << endl;
+        clog << "--------------------------length=" << length << endl;
+        clog << "--------------------------length=" << length << endl;
         ll ALL = 1;
         ll FIRST_COND_NOT_MET = 1;
         ll SECOND_COND_NOT_MET = 1;
         ll BOTH_CONDs_NOT_MET = 1;
         fo(ii, 0, k) {
-            ALL *= answ[ii][length].less_or_eq_any;
-            //clog << "all*=" << answ[ii][length].less_or_eq_any << endl;
-            FIRST_COND_NOT_MET *= answ[ii][length-2].less_or_eq_any;
-            //clog << "first*=" << answ[ii][length-2].less_or_eq_any << endl;
-            SECOND_COND_NOT_MET *= answ[ii][length].less_or_eq_less;
-            //clog << "second*=" << answ[ii][length].less_or_eq_less << endl;
-            BOTH_CONDs_NOT_MET *= answ[ii][length].less_less_or_eq;
-            //clog << "both*=" << answ[ii][length].less_less_or_eq << endl;
+            ALL *= answ[ii][length].less_or_eq__any;
+            clog << "all*=" << answ[ii][length].less_or_eq__any << endl;
+            FIRST_COND_NOT_MET *= answ[ii][length].less__any;
+            clog << "first*=" << answ[ii][length].less__any << endl;
+            SECOND_COND_NOT_MET *= answ[ii][length].less_or_eq__less;
+            clog << "second*=" << answ[ii][length].less_or_eq__less << endl;
+            BOTH_CONDs_NOT_MET *= answ[ii][length].less__less_or_eq;
+            clog << "both*=" << answ[ii][length].less__less_or_eq << endl;
         }
-        //clog << "ALL: " << ALL << endl;
-        //clog << "FIRST_COND_NOT_MET: " << FIRST_COND_NOT_MET << endl;
-        //clog << "SECOND_COND_NOT_MET: " << SECOND_COND_NOT_MET << endl;
-        //clog << "BOTH_CONDs_NOT_MET: " << BOTH_CONDs_NOT_MET << endl;
+        clog << "ALL: " << ALL << endl;
+        clog << "FIRST_COND_NOT_MET: " << FIRST_COND_NOT_MET << endl;
+        clog << "SECOND_COND_NOT_MET: " << SECOND_COND_NOT_MET << endl;
+        clog << "BOTH_CONDs_NOT_MET: " << BOTH_CONDs_NOT_MET << endl;
         myans += length*(ALL - FIRST_COND_NOT_MET - SECOND_COND_NOT_MET + BOTH_CONDs_NOT_MET);
     }
     cout << myans%MOD7 << endl;
