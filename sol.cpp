@@ -34,7 +34,10 @@ void copy_this () {
 struct shit {
     ll chet, nechet;
 };
-ll query (ll index, vector<ll> & tree)  {
+struct answer {
+    ll less_or_eq_any, less_or_eq_less, less_less_or_eq;
+};
+ll __query__ (ll index, vector<ll> & tree)  {
     ll sum = 0;
     while (index > 0) {
         sum += tree[index];
@@ -44,11 +47,11 @@ ll query (ll index, vector<ll> & tree)  {
 }
 
 ll get(ll left, ll right, vector<ll> & tree) {
-    return query(right+2, tree) - query(left+2 - 1, tree);
+    return __query__(right+5, tree) - __query__(left+5 - 1, tree);
 }
 
 void add(ll index, ll inc, vector<ll> & tree) {
-    index += 2;
+    index += 5;
     while (index < tree.size()) {
         tree[index] += inc;
         index += index & -index;
@@ -102,7 +105,7 @@ void solve() {
             G[ii].first[i-1] = shit(a[i].first, a[i].second);
             G[ii].second[i-1] = shit(a[i].first, a[i].second);
             max_length = max({max_length, a[i].first, a[i].second});
-            clog << a[i].first << " " << a[i].second << endl;
+            //clog << a[i].first << " " << a[i].second << endl;
             if (a[i].first == maxi_init || a[i].second == maxi_init) {
                 graph_with_no_odd_cycle_exists = true;
             }
@@ -115,7 +118,7 @@ void solve() {
                 add(a[i].second, 1, t_new_nech);
             }
         }
-        clog << endl;
+        //clog << endl;
         if (ii == 0) {
             swap(t_nak_chet, t_new_chet);
             swap(t_nak_nech, t_new_nech);
@@ -159,7 +162,7 @@ void solve() {
         st_nak_nech.merge(st_nak_deriv_nech);
     }
     if (graph_with_no_odd_cycle_exists) {
-        clog << "ez" << endl;
+        //clog << "ez" << endl;
         ll ans = 0;
         for(ll jjjj: st_nak_chet) {
             ans += jjjj*get(jjjj, jjjj, t_nak_chet);
@@ -167,131 +170,75 @@ void solve() {
         for(ll jjjj: st_nak_nech) {
             ans += jjjj*get(jjjj, jjjj, t_nak_nech);
         }
-        cout << ans%MOD7 <<  endl;
+        cout << ans%MOD7 << endl;
         return;
     }
+    vector<vector<answer>> answ (k, vector<answer> (max_length+1));
     fo(ii, 0, k) {
+        vector<ll> first_tree (N, 0);
+        vector<ll> second_tree (N, 0);
         sort(all(G[ii].first), [](shit a, shit b) {
             return a.chet < b.chet;
         });
         sort(all(G[ii].second), [](shit a, shit b) {
             return a.nechet < b.nechet;
         });
+        ll curr_ans=0;
+        ll adding_first = 0;
+        ll adding_second = 0;
+        while (curr_ans <= max_length) {
+//            //clog << "curr_ans=" << curr_ans << endl;
+            if (curr_ans%2 == 0) {
+                answ[ii][curr_ans].less_less_or_eq = get(0, curr_ans, first_tree);
+                while (adding_first < G[ii].first.size() && G[ii].first[adding_first].chet <= curr_ans) {
+                    add(G[ii].first[adding_first].nechet, 1, first_tree);
+                    adding_first += 1;
+                }
+                answ[ii][curr_ans].less_or_eq_any = get(0, N-100, first_tree);
+//                //clog << "answ[" << ii << "][curr_ans].less_or_eq_any=" << answ[ii][curr_ans].less_or_eq_any << endl;
+                answ[ii][curr_ans].less_or_eq_less = get(0, curr_ans-1, first_tree);
+//                //clog << "answ[" << ii << "][curr_ans].less_or_eq_less=" << answ[ii][curr_ans].less_or_eq_less << endl;
+            } else {
+                answ[ii][curr_ans].less_less_or_eq = get(0, curr_ans, second_tree);
+                while (adding_second < G[ii].second.size() && G[ii].second[adding_second].nechet <= curr_ans) {
+                    add(G[ii].second[adding_second].chet, 1, second_tree);
+                    //clog << "+1" << G[ii].second[adding_second].chet << endl;
+                    adding_second += 1;
+                }
+                answ[ii][curr_ans].less_or_eq_any = get(0, N-100, second_tree);
+//                //clog << "answ[" << ii << "][curr_ans].less_or_eq_any=" << answ[ii][curr_ans].less_or_eq_any << endl;
+                answ[ii][curr_ans].less_or_eq_less = get(0, curr_ans-1, second_tree);
+//                //clog << "answ[" << ii << "][curr_ans].less_or_eq_less=" << answ[ii][curr_ans].less_or_eq_less << endl;
+            }
+            curr_ans += 1;
+        }
     }
     ll myans = 0;
-    forr(x, 0, max_length) {
-        vector<ll> both(k, 0);
-        vector<ll> first_cond(k, 0);
-        vector<ll> second_cond(k, 0);
-        vector<ll> good_length(k, 0);
-        if (x%2==1) {
-            fo(ii, 0, k) {
-                ll l=0, r=G[ii].second.size()-1;
-                while (l <= r) {
-                    ll mid = (l+r) >> 1;
-                    if (G[ii].second[mid].nechet <= x) {
-                        good_length[ii] = mid+1;
-                        l = mid+1;
-                    } else {
-                        r = mid-1;
-                    }
-                }
-                fo(ji, 0, good_length[ii]) {
-                    if (G[ii].second[ji].chet <= x) {
-                        second_cond[ii] += 1;
-                    }
-                }
-                fo(ji, 0, good_length[ii]) {
-                    if (G[ii].second[ji].nechet != x && G[ii].second[ji].chet <= x) {
-                        both[ii] += 1;
-                    }
-                }
-                l=0; r=good_length[ii]-1;
-                ll posl_vh = good_length[ii];
-                while (l <= r) {
-                    ll mid = (l+r) >> 1;
-                    if (G[ii].second[mid].nechet > x) {
-                        posl_vh = mid;
-                        r = mid-1;
-                    } else {
-                        l = mid+1;
-                    }
-                }
-                l=0; r=good_length[ii]-1;
-                ll perv_vh = -1;
-                while (l <= r) {
-                    ll mid = (l+r) >> 1;
-                    if (G[ii].second[mid].nechet < x) {
-                        perv_vh = mid;
-                        l = mid+1;
-                    } else {
-                        r = mid-1;
-                    }
-                }
-                first_cond[ii] = good_length[ii]-(posl_vh-perv_vh-1);
-            }
-        } else {
-            fo(ii, 0, k) {
-                ll l=0, r=G[ii].first.size()-1;
-                while (l <= r) {
-                    ll mid = (l+r) >> 1;
-                    if (G[ii].first[mid].chet <= x) {
-                        good_length[ii] = mid+1;
-                        l = mid+1;
-                    } else {
-                        r = mid-1;
-                    }
-                }
-                fo(ji, 0, good_length[ii]) {
-                    if (G[ii].first[ji].nechet <= x) {
-                        second_cond[ii] += 1;
-                    }
-                }
-                fo(ji, 0, good_length[ii]) {
-                    if (G[ii].first[ji].chet != x && G[ii].first[ji].nechet <= x) {
-                        both[ii] += 1;
-                    }
-                }
-                l=0; r=good_length[ii]-1;
-                ll posl_vh = good_length[ii];
-                while (l <= r) {
-                    ll mid = (l+r) >> 1;
-                    if (G[ii].first[mid].chet > x) {
-                        posl_vh = mid;
-                        r = mid-1;
-                    } else {
-                        l = mid+1;
-                    }
-                }
-                l=0; r=good_length[ii]-1;
-                ll perv_vh = -1;
-                while (l <= r) {
-                    ll mid = (l+r) >> 1;
-                    if (G[ii].first[mid].chet < x) {
-                        perv_vh = mid;
-                        l = mid+1;
-                    } else {
-                        r = mid-1;
-                    }
-                }
-                first_cond[ii] = good_length[ii]-(posl_vh-perv_vh-1);
-            }
-        }
+    forr(length, 1, max_length) {
+        //clog << "--------------------------length=" << length << endl;
+        //clog << "--------------------------length=" << length << endl;
+        //clog << "--------------------------length=" << length << endl;
         ll ALL = 1;
         ll FIRST_COND_NOT_MET = 1;
         ll SECOND_COND_NOT_MET = 1;
         ll BOTH_CONDs_NOT_MET = 1;
         fo(ii, 0, k) {
-            ALL *= good_length[ii];
-            FIRST_COND_NOT_MET *= first_cond[ii];
-            SECOND_COND_NOT_MET *= second_cond[ii];
-            BOTH_CONDs_NOT_MET *= both[ii];
+            ALL *= answ[ii][length].less_or_eq_any;
+            //clog << "all*=" << answ[ii][length].less_or_eq_any << endl;
+            FIRST_COND_NOT_MET *= answ[ii][length-2].less_or_eq_any;
+            //clog << "first*=" << answ[ii][length-2].less_or_eq_any << endl;
+            SECOND_COND_NOT_MET *= answ[ii][length].less_or_eq_less;
+            //clog << "second*=" << answ[ii][length].less_or_eq_less << endl;
+            BOTH_CONDs_NOT_MET *= answ[ii][length].less_less_or_eq;
+            //clog << "both*=" << answ[ii][length].less_less_or_eq << endl;
         }
-        ll cnt_of_length = ALL - FIRST_COND_NOT_MET - SECOND_COND_NOT_MET + BOTH_CONDs_NOT_MET;
-        clog << "length = " << x << ": count = " << cnt_of_length << endl;
-        myans += (cnt_of_length)*x;
+        //clog << "ALL: " << ALL << endl;
+        //clog << "FIRST_COND_NOT_MET: " << FIRST_COND_NOT_MET << endl;
+        //clog << "SECOND_COND_NOT_MET: " << SECOND_COND_NOT_MET << endl;
+        //clog << "BOTH_CONDs_NOT_MET: " << BOTH_CONDs_NOT_MET << endl;
+        myans += length*(ALL - FIRST_COND_NOT_MET - SECOND_COND_NOT_MET + BOTH_CONDs_NOT_MET);
     }
-    cout << myans%(MOD7) << endl;
+    cout << myans%MOD7 << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
@@ -306,7 +253,7 @@ int32_t main (int32_t argc, char* argv[]) {
         cin.tie(nullptr);
         cout.tie(nullptr);
         cerr.tie(nullptr);
-        //clog.tie(nullptr);
+        clog.tie(nullptr);
     }
     ll tt = 1;
 //    cin >> tt;
