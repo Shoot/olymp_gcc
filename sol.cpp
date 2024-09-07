@@ -18,7 +18,7 @@ typedef long double ld;
 //#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math,trapv")
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #endif
-//mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
+mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 //uniform_int_distribution<ll> distrib(1ll, 200000ll);
 constexpr ll MOD7 = 1e9 + 7;
 constexpr ll N = 1e6;
@@ -59,7 +59,8 @@ void add(ll index, ll inc, vector<ll> & tree) {
     }
 }
 void solve() {
-    ll k; cin >> k;
+    ll k=2;
+//    cin >> k;
     ll max_length = 0;
     vector<pair<vector<shit>, vector<shit>>> G (k);
     bool graph_with_no_odd_cycle_exists = false;
@@ -68,7 +69,9 @@ void solve() {
     unordered_set<ll> st_nak_chet;
     unordered_set<ll> st_nak_nech;
     fo(ii, 0, k) {
-        ll n, m; cin >> n >> m;
+        ll n=10, m=15;
+        uniform_int_distribution<ll> distrib(1ll, n);
+//        cin >> n >> m;
         G[ii].first.resize(n);
         G[ii].second.resize(n);
         vector<pair<ll, ll>> a (n+1);
@@ -77,8 +80,15 @@ void solve() {
             a[i].second = maxi_init;
         }
         vector<vector<ll>> sm(n+1);
+        unordered_set<ll> brute;
         fo(i, 0, m) {
-            ll u, v; cin >> u >> v;
+            ll u=1, v=1;
+//            cin >> u >> v;
+            while (brute.contains(u*v)) {
+                u = distrib(rng);
+                v = distrib(rng);
+            }
+            brute.insert(u*v);
             sm[u].push_back(v);
             sm[v].push_back(u);
         }
@@ -163,7 +173,7 @@ void solve() {
         st_nak_nech.merge(st_nak_deriv_nech);
     }
     if (graph_with_no_odd_cycle_exists) {
-        //clog << "ez" << endl;
+        clog << "ez" << endl;
         ll ans = 0;
         for(ll jjjj: st_nak_chet) {
             ans += jjjj*get(jjjj, jjjj, t_nak_chet);
