@@ -214,7 +214,7 @@ void solve() {
     }
     auto stop = chrono::high_resolution_clock::now();
     auto duration = duration_cast<chrono::microseconds>(stop - start);
-    assert(duration.count() < 2.6e5);
+//    assert(duration.count() < 2.6e5);
 //    __int128 OG = 0;
 //    map<__int128, __int128> ls;
 //    for(auto [i, j]: DELETE) {
@@ -228,6 +228,7 @@ void solve() {
 //        clog << "l=" << i << ", count = " << j << endl;
 //    }
     vector<vector<answer>> answ (k);
+    __int128 LOG_OP_COUNTER = 0;
     fo(ii, 0, k) {
         answ[ii].resize(max_length[ii]+1);
         vector<__int128> first_tree (N, 0);
@@ -242,6 +243,7 @@ void solve() {
         __int128 adding_first = 0;
         __int128 adding_second = 0;
         while (curr_ans <= max_length[ii]) {
+            LOG_OP_COUNTER += 1;
             if (curr_ans%2 == 0) {
                 answ[ii][curr_ans].less__any = get(0, N-100, first_tree);
                 answ[ii][curr_ans].less__less_or_eq = get(0, curr_ans, first_tree);
@@ -264,10 +266,11 @@ void solve() {
             curr_ans += 1;
         }
     }
+    assert(LOG_OP_COUNTER < 1e6);
     __int128 myans = 0;
     auto stop2 = chrono::high_resolution_clock::now();
     auto duration2 = duration_cast<chrono::microseconds>(stop2 - start);
-    assert(duration2.count() < 3e5);
+//    assert(duration2.count() < 3e5);
     unordered_set<__int128> relevant_ii;
     fo(ii, 0, k) {
         relevant_ii.insert(ii);
@@ -276,6 +279,7 @@ void solve() {
     __int128 base_FIRST_COND_NOT_MET = 1;
     __int128 base_SECOND_COND_NOT_MET = 1;
     __int128 base_BOTH_CONDs_NOT_MET = 1;
+    __int128 BASIC_OP_COUNTER = 0;
     for(__int128 length=1; length<=absolute_max_length; length+=1) {
 //        clog << "--------------------------length=" << length << endl;
 //        clog << "--------------------------length=" << length << endl;
@@ -285,6 +289,7 @@ void solve() {
         __int128 SECOND_COND_NOT_MET = base_SECOND_COND_NOT_MET;
         __int128 BOTH_CONDs_NOT_MET = base_BOTH_CONDs_NOT_MET;
         for(auto ii: relevant_ii) {
+            BASIC_OP_COUNTER += 1;
             ALL = (ALL*answ[ii][min(length, max_length[ii])].less_or_eq__any)%MOD7;
 //            clog << "all*=" << answ[ii][length].less_or_eq__any << endl;
             FIRST_COND_NOT_MET = (FIRST_COND_NOT_MET*answ[ii][min(length, max_length[ii])].less__any)%MOD7;
@@ -315,6 +320,7 @@ void solve() {
 //        clog << "BOTH_CONDs_NOT_MET: " << BOTH_CONDs_NOT_MET << endl;
         myans = (myans+length*(ALL - FIRST_COND_NOT_MET - SECOND_COND_NOT_MET + BOTH_CONDs_NOT_MET + 10*MOD7))%MOD7;
     }
+    assert(BASIC_OP_COUNTER < 1e7);
 //    OG %= MOD7;
     cout << (ll)myans << endl;
 //    cout << OG << endl;
