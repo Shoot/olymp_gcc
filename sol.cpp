@@ -3,12 +3,12 @@ using namespace std;
 typedef long long ll;
 typedef long double ld;
 #define all(value) value.begin(), value.end()
-#define fo(x, temp_set_for_mex, fi) for(__int128 x = temp_set_for_mex; x < fi; x++)
-#define forr(x, temp_set_for_mex, fi) for(__int128 x = temp_set_for_mex; x <= fi; x++)
-#define rrof(x, temp_set_for_mex, fi) for(__int128 x = temp_set_for_mex; x >= fi; x--)
-#define roff(x, temp_set_for_mex, fi) for(__int128 x = temp_set_for_mex; x >= fi; x--)
-#define of(x, temp_set_for_mex, fi) for(__int128 x = temp_set_for_mex; x > fi; x--)
-#define ro(x, temp_set_for_mex, fi) for(__int128 x = temp_set_for_mex; x > fi; x--)
+#define fo(x, temp_set_for_mex, fi) for(ll x = temp_set_for_mex; x < fi; x++)
+#define forr(x, temp_set_for_mex, fi) for(ll x = temp_set_for_mex; x <= fi; x++)
+#define rrof(x, temp_set_for_mex, fi) for(ll x = temp_set_for_mex; x >= fi; x--)
+#define roff(x, temp_set_for_mex, fi) for(ll x = temp_set_for_mex; x >= fi; x--)
+#define of(x, temp_set_for_mex, fi) for(ll x = temp_set_for_mex; x > fi; x--)
+#define ro(x, temp_set_for_mex, fi) for(ll x = temp_set_for_mex; x > fi; x--)
 #define yes(x) (x ? "YES" : "NO")
 #define endl '\n'
 #ifdef LOCAL
@@ -29,26 +29,26 @@ typedef long double ld;
 //    };
 //}
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-//uniform_int_distribution<ll> distrib(1ll, 200000ll);
+//uniform_int_distribution<__int128> distrib(1ll, 200000ll);
 constexpr __int128 MOD7 = 1e9 + 7;
 constexpr __int128 N = 1e6;
 constexpr __int128 maxi_init = 1e9;
 /*
 void copy_this () {
-    ll n; cin >> n;
-    ll n, k; cin >> n >> k;
-    ll n, q; cin >> n >> q;
-    ll a[n]; fo(i, 0, n) cin >> a[i];
-    vector<ll> a(n); fo(i, 0, n) cin >> a[i];
+    __int128 n; cin >> n;
+    __int128 n, k; cin >> n >> k;
+    __int128 n, q; cin >> n >> q;
+    __int128 a[n]; fo(i, 0, n) cin >> a[i];
+    vector<__int128> a(n); fo(i, 0, n) cin >> a[i];
 }
 */
 struct shit {
-    __int128 chet, nechet;
+    ll chet, nechet;
 };
 struct answer {
     __int128 less_or_eq__any, less__any, less_or_eq__less, less__less_or_eq;
 };
-__int128 __query__ (__int128 index, vector<ll> & tree)  {
+__int128 __query__ (__int128 index, vector<__int128> & tree)  {
     __int128 sum = 0;
     while (index > 0) {
         sum += tree[index];
@@ -57,13 +57,13 @@ __int128 __query__ (__int128 index, vector<ll> & tree)  {
     return sum;
 }
 ll OP_SHIT = 0;
-__int128 get(__int128 left, __int128 right, vector<ll> & tree) {
+__int128 get(__int128 left, __int128 right, vector<__int128> & tree) {
     OP_SHIT += 1;
     assert(OP_SHIT < 1e7);
     return __query__(right+5, tree) - __query__(left+5 - 1, tree);
 }
 
-void add(__int128 index, __int128 inc, vector<ll> & tree) {
+void add(__int128 index, __int128 inc, vector<__int128> & tree) {
     index += 5;
     while (index < tree.size()) {
         OP_SHIT += 1;
@@ -78,8 +78,8 @@ void solve() {
     cin >> k;
     vector<pair<vector<shit>, vector<shit>>> G (k);
     bool graph_with_no_odd_cycle_exists = false;
-    vector<ll> t_nak_nech(N, 0);
-    vector<ll> t_nak_chet(N, 0);
+    vector<__int128> t_nak_nech(N, 0);
+    vector<__int128> t_nak_chet(N, 0);
     unordered_set<ll> st_nak_chet;
     unordered_set<ll> st_nak_nech;
     vector<ll> max_length (k, 0);
@@ -96,14 +96,14 @@ void solve() {
             a[i].first = maxi_init;
             a[i].second = maxi_init;
         }
-        vector<vector<ll>> sm(n+1);
+        vector<vector<__int128>> sm(n+1);
         fo(i, 0, m) {
             ll u=1, v=1;
             cin >> u >> v;
             sm[u].push_back(v);
             sm[v].push_back(u);
         }
-        queue<pair<__int128, __int128>> q;
+        queue<pair<ll, ll>> q;
         q.push(make_pair(1, 0));
         while(!q.empty()) {
             auto tp = q.front();
@@ -133,8 +133,8 @@ void solve() {
     }
     if (graph_with_no_odd_cycle_exists) {
         fo(ii, 0, k) {
-            vector<ll> t_new_chet(N, 0);
-            vector<ll> t_new_nech(N, 0);
+            vector<__int128> t_new_chet(N, 0);
+            vector<__int128> t_new_nech(N, 0);
             unordered_set<ll> st_new_chet;
             unordered_set<ll> st_new_nech;
             forr(i, 1, nn[ii]) {
@@ -154,29 +154,29 @@ void solve() {
                 swap(st_nak_nech, st_new_nech);
                 continue;
             }
-            vector<ll> t_nak_deriv_chet(N, 0);
-            vector<ll> t_nak_deriv_nech(N, 0);
+            vector<__int128> t_nak_deriv_chet(N, 0);
+            vector<__int128> t_nak_deriv_nech(N, 0);
             unordered_set<ll> st_nak_deriv_chet = st_nak_chet;
             unordered_set<ll> st_nak_deriv_nech = st_nak_nech;
             // Из накапл в новый
-            for (__int128 chet_koord: st_nak_chet) {
+            for (ll chet_koord: st_nak_chet) {
                 add(chet_koord,
                     get(chet_koord, chet_koord, t_nak_chet)*get(0, chet_koord, t_new_chet),
                     t_nak_deriv_chet);
             }
-            for (__int128 nech_koord: st_nak_nech) {
+            for (ll nech_koord: st_nak_nech) {
                 add(nech_koord,
                     get(nech_koord, nech_koord, t_nak_nech)*get(0, nech_koord, t_new_nech),
                     t_nak_deriv_nech);
             }
             // Из ноого в накапл
-            for (__int128 chet_koord: st_new_chet) {
+            for (ll chet_koord: st_new_chet) {
                 st_nak_deriv_chet.insert(chet_koord);
                 add(chet_koord,
                     get(chet_koord, chet_koord, t_new_chet)*get(0, chet_koord-1, t_nak_chet),
                     t_nak_deriv_chet);
             }
-            for (__int128 nech_koord: st_new_nech) {
+            for (ll nech_koord: st_new_nech) {
                 st_nak_deriv_nech.insert(nech_koord);
                 add(nech_koord,
                     get(nech_koord, nech_koord, t_new_nech)*get(0, nech_koord-1, t_nak_nech),
@@ -217,8 +217,8 @@ void solve() {
     __int128 LOG_OP_COUNTER = 0;
     fo(ii, 0, k) {
         answ[ii].resize(max_length[ii]+1);
-        vector<ll> first_tree (N, 0);
-        vector<ll> second_tree (N, 0);
+        vector<__int128> first_tree (N, 0);
+        vector<__int128> second_tree (N, 0);
         sort(all(G[ii].first), [](shit a, shit b) {
             return a.chet < b.chet;
         });
