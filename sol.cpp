@@ -19,17 +19,17 @@ typedef long double ld;
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #endif
 //mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-//uniform_int_distribution<__int128> distrib(1ll, 200000ll);
-constexpr __int128 MOD7 = 1e9 + 7;
-constexpr __int128 N = 2e5+40;
-constexpr __int128 maxi_init = 1e9;
+//uniform_int_distribution<ll> distrib(1ll, 200000ll);
+constexpr ll MOD7 = 1e9 + 7;
+constexpr ll N = 2e5+40;
+constexpr ll maxi_init = 1e9;
 /*
 void copy_this () {
-    __int128 n; cin >> n;
-    __int128 n, k; cin >> n >> k;
-    __int128 n, q; cin >> n >> q;
-    __int128 a[n]; fo(i, 0, n) cin >> a[i];
-    vector<__int128> a(n); fo(i, 0, n) cin >> a[i];
+    ll n; cin >> n;
+    ll n, k; cin >> n >> k;
+    ll n, q; cin >> n >> q;
+    ll a[n]; fo(i, 0, n) cin >> a[i];
+    vector<ll> a(n); fo(i, 0, n) cin >> a[i];
 }
 */
 struct shit {
@@ -41,8 +41,8 @@ struct answer {
 
 ll OP_SHIT = 0;
 
-__int128 __query__ (ll index, vector<__int128> & tree)  {
-    __int128 sum = 0;
+ll __query__ (ll index, vector<ll> & tree)  {
+    ll sum = 0;
     while (index > 0) {
         OP_SHIT += 1;
         assert(OP_SHIT < 5e7);
@@ -63,7 +63,7 @@ ll __queryll__ (ll index, vector<ll> & tree)  {
     return sum;
 }
 
-__int128 get(ll left, ll right, vector<__int128> & tree) {
+ll get(ll left, ll right, vector<ll> & tree) {
     return __query__(right+5, tree) - __query__(left+5 - 1, tree);
 }
 
@@ -72,7 +72,7 @@ ll getll(ll left, ll right, vector<ll> & tree) {
 }
 
 
-void add(ll index, __int128 inc, vector<__int128> & tree) {
+void add(ll index, ll inc, vector<ll> & tree) {
     index += 5;
     while (index < tree.size()) {
         OP_SHIT += 1;
@@ -148,13 +148,13 @@ void solve() {
         absolute_max_length = max(absolute_max_length, max_length[ii]);
     }
     if (graph_with_no_odd_cycle_exists) {
-        vector<__int128> t_nak_nech(N, 0);
-        vector<__int128> t_nak_chet(N, 0);
+        vector<ll> t_nak_nech(N, 0);
+        vector<ll> t_nak_chet(N, 0);
         unordered_set<ll> st_nak_chet;
         unordered_set<ll> st_nak_nech;
         fo(ii, 0, k) {
-            vector<__int128> t_new_chet(N, 0);
-            vector<__int128> t_new_nech(N, 0);
+            vector<ll> t_new_chet(N, 0);
+            vector<ll> t_new_nech(N, 0);
             unordered_set<ll> st_new_chet;
             unordered_set<ll> st_new_nech;
             forr(i, 1, nn[ii]) {
@@ -174,8 +174,8 @@ void solve() {
                 swap(st_nak_nech, st_new_nech);
                 continue;
             }
-            vector<__int128> t_nak_deriv_chet(N, 0);
-            vector<__int128> t_nak_deriv_nech(N, 0);
+            vector<ll> t_nak_deriv_chet(N, 0);
+            vector<ll> t_nak_deriv_nech(N, 0);
             unordered_set<ll> st_nak_deriv_chet = st_nak_chet;
             unordered_set<ll> st_nak_deriv_nech = st_nak_nech;
             // Из накапл в новый
@@ -208,7 +208,7 @@ void solve() {
             st_nak_nech.merge(st_nak_deriv_nech);
         }
         clog << "ez" << endl;
-        __int128 ans = 0;
+        ll ans = 0;
         for(ll jjjj: st_nak_chet) {
             ans = (ans+(jjjj*get(jjjj, jjjj, t_nak_chet))%MOD7)%MOD7;
         }
@@ -260,24 +260,24 @@ void solve() {
             curr_ans += 1;
         }
     }
-    __int128 myans = 0;
+    ll myans = 0;
     unordered_set<ll> relevant_ii;
     fo(ii, 0, k) {
         relevant_ii.insert(ii);
     }
-    __int128 base_ALL = 1;
-    __int128 base_FIRST_COND_NOT_MET = 1;
-    __int128 base_SECOND_COND_NOT_MET = 1;
-    __int128 base_BOTH_CONDs_NOT_MET = 1;
-    __int128 BASIC_OP_COUNTER = 0;
+    ll base_ALL = 1;
+    ll base_FIRST_COND_NOT_MET = 1;
+    ll base_SECOND_COND_NOT_MET = 1;
+    ll base_BOTH_CONDs_NOT_MET = 1;
+    ll BASIC_OP_COUNTER = 0;
     for(ll length=1; length<=absolute_max_length; length+=1) {
 //        clog << "--------------------------length=" << length << endl;
 //        clog << "--------------------------length=" << length << endl;
 //        clog << "--------------------------length=" << length << endl;
-        __int128 ALL = base_ALL;
-        __int128 FIRST_COND_NOT_MET = base_FIRST_COND_NOT_MET;
-        __int128 SECOND_COND_NOT_MET = base_SECOND_COND_NOT_MET;
-        __int128 BOTH_CONDs_NOT_MET = base_BOTH_CONDs_NOT_MET;
+        ll ALL = base_ALL;
+        ll FIRST_COND_NOT_MET = base_FIRST_COND_NOT_MET;
+        ll SECOND_COND_NOT_MET = base_SECOND_COND_NOT_MET;
+        ll BOTH_CONDs_NOT_MET = base_BOTH_CONDs_NOT_MET;
         for(auto ii: relevant_ii) {
             BASIC_OP_COUNTER += 1;
             ALL = (ALL*answ[ii][min(length, max_length[ii])].less_or_eq__any)%MOD7;
@@ -327,7 +327,7 @@ int32_t main (int32_t argc, char* argv[]) {
         cerr.tie(nullptr);
         clog.tie(nullptr);
     }
-    __int128 tt = 1;
+    ll tt = 1;
 //    cin >> tt;
     while (tt--) solve();
     return 0;
