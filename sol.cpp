@@ -126,14 +126,13 @@ void solve() {
         vector<ll> t_nak_chet(N, 0);
         unordered_set<ll> st_nak_chet;
         unordered_set<ll> st_nak_nech;
+        vector<ll> t_new_chet(N);
+        vector<ll> t_new_nech(N);
+        vector<ll> t_nak_deriv_chet(N);
+        vector<ll> t_nak_deriv_nech(N);
         fo(ii, 0, k) {
-            auto stop = chrono::high_resolution_clock::now();
-            auto duration_all = duration_cast<chrono::microseconds>(stop - start);
-            if (duration_all.count() > 9.2e5) {
-                assert(false);
-            }
-            vector<ll> t_new_chet(N, 0);
-            vector<ll> t_new_nech(N, 0);
+            fill(all(t_new_chet), 0);
+            fill(all(t_new_nech), 0);
             unordered_set<ll> st_new_chet;
             unordered_set<ll> st_new_nech;
             forr(i, 1, nn[ii]) {
@@ -153,8 +152,8 @@ void solve() {
                 swap(st_nak_nech, st_new_nech);
                 continue;
             }
-            vector<ll> t_nak_deriv_chet(N, 0);
-            vector<ll> t_nak_deriv_nech(N, 0);
+            fill(all(t_nak_deriv_chet), 0);
+            fill(all(t_nak_deriv_nech), 0);
             unordered_set<ll> st_nak_deriv_chet = st_nak_chet;
             unordered_set<ll> st_nak_deriv_nech = st_nak_nech;
             // Из накапл в новый
