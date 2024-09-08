@@ -53,31 +53,29 @@ void add(ll index, ll inc, vector<ll> & tree) {
 }
 
 void solve() {
-    ll n; cin >> n;
-    vector<ll> a(n);
-    unordered_map<ll, bool> mp;
-    fo(i, 0, n) {
-        cin >> a[i];
-        mp[a[i]] = true;
+    ll k, n; cin >> k >> n;
+    vector<ll> rads (k);
+    fo(i, 0, k) {
+        cin >> rads[i];
     }
-    sort(all(a));
-    bool good = false;
+    ll tot = 0;
     fo(i, 0, n) {
-        fo(j, i+1, n) {
-            if ((a[i]+a[j])%2 == 0 && mp[(a[i]+a[j])/2]) {
-                cout << "Yes" << endl;
-                cout << a[i] << " " << a[j] << endl;
-                cout << (a[i]+a[j])/2 << endl;
-                good = true;
-                break;
+        ll x, y; cin >> x >> y;
+        ll l=0, r=k-1;
+        ll good = 0;
+        while (l <= r) {
+            ll mid = (l+r) >> 1;
+            if (x*x+y*y <= rads[mid]*rads[mid]) {
+                l = mid+1;
+                good = mid+1;
+            } else {
+                r = mid-1;
             }
         }
-        if (good) break;
+        cout << x << " " << y << ": " << good << endl;
+        tot += good;
     }
-    if (!good) {
-        cout << "No" << endl;
-        cout << a[n-1] << " " << a[0] << endl;
-    }
+    cout << tot << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
