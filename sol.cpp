@@ -3,12 +3,12 @@ using namespace std;
 typedef long long ll;
 typedef long double ld;
 #define all(value) value.begin(), value.end()
-#define fo(x, temp_set_for_mex, fi) for(__int128 x = temp_set_for_mex; x < fi; x++)
-#define forr(x, temp_set_for_mex, fi) for(__int128 x = temp_set_for_mex; x <= fi; x++)
-#define rrof(x, temp_set_for_mex, fi) for(__int128 x = temp_set_for_mex; x >= fi; x--)
-#define roff(x, temp_set_for_mex, fi) for(__int128 x = temp_set_for_mex; x >= fi; x--)
-#define of(x, temp_set_for_mex, fi) for(__int128 x = temp_set_for_mex; x > fi; x--)
-#define ro(x, temp_set_for_mex, fi) for(__int128 x = temp_set_for_mex; x > fi; x--)
+#define fo(x, temp_set_for_mex, fi) for(ll x = temp_set_for_mex; x < fi; x++)
+#define forr(x, temp_set_for_mex, fi) for(ll x = temp_set_for_mex; x <= fi; x++)
+#define rrof(x, temp_set_for_mex, fi) for(ll x = temp_set_for_mex; x >= fi; x--)
+#define roff(x, temp_set_for_mex, fi) for(ll x = temp_set_for_mex; x >= fi; x--)
+#define of(x, temp_set_for_mex, fi) for(ll x = temp_set_for_mex; x > fi; x--)
+#define ro(x, temp_set_for_mex, fi) for(ll x = temp_set_for_mex; x > fi; x--)
 #define yes(x) (x ? "YES" : "NO")
 #define endl '\n'
 #ifdef LOCAL
@@ -18,38 +18,28 @@ typedef long double ld;
 //#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math,trapv")
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #endif
-namespace std {
-    template <>
-    struct hash<__int128> {
-        std::size_t operator()(__int128 value) const {
-            uint64_t high = static_cast<uint64_t>(value >> 64);
-            uint64_t low = static_cast<uint64_t>(value);
-            return std::hash<uint64_t>()(high) ^ (std::hash<uint64_t>()(low) << 1);
-        }
-    };
-}
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-//uniform_int_distribution<__int128> distrib(1ll, 200000ll);
+//uniform_int_distribution<ll> distrib(1ll, 200000ll);
 constexpr __int128 MOD7 = 1e9 + 7;
-constexpr __int128 N = 1e6;
-constexpr __int128 maxi_init = 1e9;
+constexpr ll N = 1e6;
+constexpr ll maxi_init = 1e9;
 /*
 void copy_this () {
-    __int128 n; cin >> n;
-    __int128 n, k; cin >> n >> k;
-    __int128 n, q; cin >> n >> q;
-    __int128 a[n]; fo(i, 0, n) cin >> a[i];
-    vector<__int128> a(n); fo(i, 0, n) cin >> a[i];
+    ll n; cin >> n;
+    ll n, k; cin >> n >> k;
+    ll n, q; cin >> n >> q;
+    ll a[n]; fo(i, 0, n) cin >> a[i];
+    vector<ll> a(n); fo(i, 0, n) cin >> a[i];
 }
 */
 struct shit {
-    __int128 chet, nechet;
+    ll chet, nechet;
 };
 struct answer {
-    __int128 less_or_eq__any, less__any, less_or_eq__less, less__less_or_eq;
+    ll less_or_eq__any, less__any, less_or_eq__less, less__less_or_eq;
 };
-__int128 __query__ (__int128 index, vector<__int128> & tree)  {
-    __int128 sum = 0;
+ll __query__ (ll index, vector<ll> & tree)  {
+    ll sum = 0;
     while (index > 0) {
         sum += tree[index];
         index -= index & -index;
@@ -57,11 +47,11 @@ __int128 __query__ (__int128 index, vector<__int128> & tree)  {
     return sum;
 }
 
-__int128 get(__int128 left, __int128 right, vector<__int128> & tree) {
+ll get(ll left, ll right, vector<ll> & tree) {
     return __query__(right+5, tree) - __query__(left+5 - 1, tree);
 }
 
-void add(__int128 index, __int128 inc, vector<__int128> & tree) {
+void add(ll index, ll inc, vector<ll> & tree) {
     index += 5;
     while (index < tree.size()) {
         tree[index] += inc;
@@ -72,40 +62,37 @@ void solve() {
     auto start = chrono::high_resolution_clock::now();
     ll k=2;
     cin >> k;
-//    vector<pair<__int128, __int128>> DELETE;
     vector<pair<vector<shit>, vector<shit>>> G (k);
     bool graph_with_no_odd_cycle_exists = false;
-    vector<__int128> t_nak_nech(N, 0);
-    vector<__int128> t_nak_chet(N, 0);
-    unordered_set<__int128> st_nak_chet;
-    unordered_set<__int128> st_nak_nech;
-    vector<__int128> max_length (k, 0);
-    __int128 absolute_max_length = 0;
+    vector<ll> t_nak_nech(N, 0);
+    vector<ll> t_nak_chet(N, 0);
+    unordered_set<ll> st_nak_chet;
+    unordered_set<ll> st_nak_nech;
+    vector<ll> max_length (k, 0);
+    ll absolute_max_length = 0;
+    ll N_SUMMA = 0;
     fo(ii, 0, k) {
+        auto stop_temp = chrono::high_resolution_clock::now();
+        auto duration = duration_cast<chrono::microseconds>(stop_temp - start);
+//        assert(duration.count() < 8e5);
         ll n=10, m=15;
-//        uniform_int_distribution<__int128> distrib(1ll, n);
         cin >> n >> m;
+        N_SUMMA += n;
         G[ii].first.resize(n);
         G[ii].second.resize(n);
-        vector<pair<__int128, __int128>> a (n+1);
+        vector<pair<ll, ll>> a (n+1);
         forr(i, 0, n) {
             a[i].first = maxi_init;
             a[i].second = maxi_init;
         }
-        vector<vector<__int128>> sm(n+1);
-//        unordered_set<__int128> brute;
+        vector<vector<ll>> sm(n+1);
         fo(i, 0, m) {
             ll u=1, v=1;
             cin >> u >> v;
-//            while (brute.contains(u*v)) {
-//                u = distrib(rng);
-//                v = distrib(rng);
-//            }
-//            brute.insert(u*v);
             sm[u].push_back(v);
             sm[v].push_back(u);
         }
-        queue<pair<__int128, __int128>> q;
+        queue<pair<ll, ll>> q;
         q.push(make_pair(1, 0));
         while(!q.empty()) {
             auto tp = q.front();
@@ -117,19 +104,18 @@ void solve() {
             } else {
                 continue;
             }
-            for (__int128 nxt: sm[tp.first]) {
+            for (ll nxt: sm[tp.first]) {
                 q.push(make_pair(nxt, tp.second+1));
             }
         }
-        vector<__int128> t_new_chet(N, 0);
-        vector<__int128> t_new_nech(N, 0);
-        unordered_set<__int128> st_new_chet;
-        unordered_set<__int128> st_new_nech;
+        vector<ll> t_new_chet(N, 0);
+        vector<ll> t_new_nech(N, 0);
+        unordered_set<ll> st_new_chet;
+        unordered_set<ll> st_new_nech;
         forr(i, 1, n) {
             G[ii].first[i-1] = shit(a[i].first, a[i].second);
             G[ii].second[i-1] = shit(a[i].first, a[i].second);
             max_length[ii] = max({max_length[ii], a[i].first, a[i].second});
-//            clog << a[i].first << " " << a[i].second << endl;
             if (a[i].first == maxi_init || a[i].second == maxi_init) {
                 graph_with_no_odd_cycle_exists = true;
             }
@@ -144,20 +130,6 @@ void solve() {
             max_length[ii] += 1;
         }
         absolute_max_length = max(absolute_max_length, max_length[ii]);
-//        clog << endl;
-//        if (DELETE.empty()) {
-//            forr(i, 1, n) {
-//                DELETE.push_back(a[i]);
-//            }
-//        } else {
-//            vector<pair<__int128, __int128>> DELETE2;
-//            for(auto [i, j]: DELETE) {
-//                forr(iii, 1, n) {
-//                    DELETE2.push_back(make_pair(max(i, a[iii].first), max(j, a[iii].second)));
-//                }
-//            }
-//            DELETE = DELETE2;
-//        }
         if (ii == 0) {
             swap(t_nak_chet, t_new_chet);
             swap(t_nak_nech, t_new_nech);
@@ -165,31 +137,31 @@ void solve() {
             swap(st_nak_nech, st_new_nech);
             continue;
         }
-        vector<__int128> t_nak_deriv_chet(N, 0);
-        vector<__int128> t_nak_deriv_nech(N, 0);
-        unordered_set<__int128> st_nak_deriv_chet;
-        unordered_set<__int128> st_nak_deriv_nech;
+        vector<ll> t_nak_deriv_chet(N, 0);
+        vector<ll> t_nak_deriv_nech(N, 0);
+        unordered_set<ll> st_nak_deriv_chet;
+        unordered_set<ll> st_nak_deriv_nech;
         // Из накапл в новый
-        for (__int128 chet_koord: st_nak_chet) {
+        for (ll chet_koord: st_nak_chet) {
             st_nak_deriv_chet.insert(chet_koord);
             add(chet_koord,
                 get(chet_koord, chet_koord, t_nak_chet)*get(0, chet_koord, t_new_chet),
                 t_nak_deriv_chet);
         }
-        for (__int128 nech_koord: st_nak_nech) {
+        for (ll nech_koord: st_nak_nech) {
             st_nak_deriv_nech.insert(nech_koord);
             add(nech_koord,
                 get(nech_koord, nech_koord, t_nak_nech)*get(0, nech_koord, t_new_nech),
                 t_nak_deriv_nech);
         }
         // Из ноого в накапл
-        for (__int128 chet_koord: st_new_chet) {
+        for (ll chet_koord: st_new_chet) {
             st_nak_deriv_chet.insert(chet_koord);
             add(chet_koord,
                 get(chet_koord, chet_koord, t_new_chet)*get(0, chet_koord-1, t_nak_chet),
                 t_nak_deriv_chet);
         }
-        for (__int128 nech_koord: st_new_nech) {
+        for (ll nech_koord: st_new_nech) {
             st_nak_deriv_nech.insert(nech_koord);
             add(nech_koord,
                 get(nech_koord, nech_koord, t_new_nech)*get(0, nech_koord-1, t_nak_nech),
@@ -203,22 +175,19 @@ void solve() {
     if (graph_with_no_odd_cycle_exists) {
         clog << "ez" << endl;
         __int128 ans = 0;
-        for(__int128 jjjj: st_nak_chet) {
-            ans = (ans+jjjj*get(jjjj, jjjj, t_nak_chet))%MOD7;
+        for(ll jjjj: st_nak_chet) {
+            ans = (ans+(jjjj*get(jjjj, jjjj, t_nak_chet))%MOD7)%MOD7;
         }
-        for(__int128 jjjj: st_nak_nech) {
-            ans = (ans+jjjj*get(jjjj, jjjj, t_nak_nech))%MOD7;
+        for(ll jjjj: st_nak_nech) {
+            ans = (ans+(jjjj*get(jjjj, jjjj, t_nak_nech))%MOD7)%MOD7;
         }
         cout << (ll)ans << endl;
         return;
     }
-    auto stop = chrono::high_resolution_clock::now();
-    auto duration = duration_cast<chrono::microseconds>(stop - start);
-//    assert(duration.count() < 2.6e5);
-//    __int128 OG = 0;
-//    map<__int128, __int128> ls;
+//    ll OG = 0;
+//    map<ll, ll> ls;
 //    for(auto [i, j]: DELETE) {
-//        __int128 l = min(i, j);
+//        ll l = min(i, j);
 //        if (l != maxi_init) {
 //            ls[l] += 1;
 //            OG += l;
@@ -228,22 +197,20 @@ void solve() {
 //        clog << "l=" << i << ", count = " << j << endl;
 //    }
     vector<vector<answer>> answ (k);
-    __int128 LOG_OP_COUNTER = 0;
     fo(ii, 0, k) {
         answ[ii].resize(max_length[ii]+1);
-        vector<__int128> first_tree (N, 0);
-        vector<__int128> second_tree (N, 0);
+        vector<ll> first_tree (N, 0);
+        vector<ll> second_tree (N, 0);
         sort(all(G[ii].first), [](shit a, shit b) {
             return a.chet < b.chet;
         });
         sort(all(G[ii].second), [](shit a, shit b) {
             return a.nechet < b.nechet;
         });
-        __int128 curr_ans=0;
-        __int128 adding_first = 0;
-        __int128 adding_second = 0;
+        ll curr_ans=0;
+        ll adding_first = 0;
+        ll adding_second = 0;
         while (curr_ans <= max_length[ii]) {
-            LOG_OP_COUNTER += 1;
             if (curr_ans%2 == 0) {
                 answ[ii][curr_ans].less__any = get(0, N-100, first_tree);
                 answ[ii][curr_ans].less__less_or_eq = get(0, curr_ans, first_tree);
@@ -266,30 +233,24 @@ void solve() {
             curr_ans += 1;
         }
     }
-    assert(LOG_OP_COUNTER < 1e6);
-    __int128 myans = 0;
-    auto stop2 = chrono::high_resolution_clock::now();
-    auto duration2 = duration_cast<chrono::microseconds>(stop2 - start);
-//    assert(duration2.count() < 3e5);
-    unordered_set<__int128> relevant_ii;
+    ll myans = 0;
+    unordered_set<ll> relevant_ii;
     fo(ii, 0, k) {
         relevant_ii.insert(ii);
     }
-    __int128 base_ALL = 1;
-    __int128 base_FIRST_COND_NOT_MET = 1;
-    __int128 base_SECOND_COND_NOT_MET = 1;
-    __int128 base_BOTH_CONDs_NOT_MET = 1;
-    __int128 BASIC_OP_COUNTER = 0;
-    for(__int128 length=1; length<=absolute_max_length; length+=1) {
+    ll base_ALL = 1;
+    ll base_FIRST_COND_NOT_MET = 1;
+    ll base_SECOND_COND_NOT_MET = 1;
+    ll base_BOTH_CONDs_NOT_MET = 1;
+    for(ll length=1; length<=absolute_max_length; length+=1) {
 //        clog << "--------------------------length=" << length << endl;
 //        clog << "--------------------------length=" << length << endl;
 //        clog << "--------------------------length=" << length << endl;
-        __int128 ALL = base_ALL;
-        __int128 FIRST_COND_NOT_MET = base_FIRST_COND_NOT_MET;
-        __int128 SECOND_COND_NOT_MET = base_SECOND_COND_NOT_MET;
-        __int128 BOTH_CONDs_NOT_MET = base_BOTH_CONDs_NOT_MET;
+        ll ALL = base_ALL;
+        ll FIRST_COND_NOT_MET = base_FIRST_COND_NOT_MET;
+        ll SECOND_COND_NOT_MET = base_SECOND_COND_NOT_MET;
+        ll BOTH_CONDs_NOT_MET = base_BOTH_CONDs_NOT_MET;
         for(auto ii: relevant_ii) {
-            BASIC_OP_COUNTER += 1;
             ALL = (ALL*answ[ii][min(length, max_length[ii])].less_or_eq__any)%MOD7;
 //            clog << "all*=" << answ[ii][length].less_or_eq__any << endl;
             FIRST_COND_NOT_MET = (FIRST_COND_NOT_MET*answ[ii][min(length, max_length[ii])].less__any)%MOD7;
@@ -320,9 +281,8 @@ void solve() {
 //        clog << "BOTH_CONDs_NOT_MET: " << BOTH_CONDs_NOT_MET << endl;
         myans = (myans+length*(ALL - FIRST_COND_NOT_MET - SECOND_COND_NOT_MET + BOTH_CONDs_NOT_MET + 10*MOD7))%MOD7;
     }
-    assert(BASIC_OP_COUNTER < 1e7);
 //    OG %= MOD7;
-    cout << (ll)myans << endl;
+    cout << myans << endl;
 //    cout << OG << endl;
 //    assert(myans == OG);
 }
@@ -341,7 +301,7 @@ int32_t main (int32_t argc, char* argv[]) {
         cerr.tie(nullptr);
         clog.tie(nullptr);
     }
-    __int128 tt = 1;
+    ll tt = 1;
 //    cin >> tt;
     while (tt--) solve();
     return 0;
