@@ -69,9 +69,9 @@ void add(__int128 index, __int128 inc, vector<__int128> & tree) {
     }
 }
 void solve() {
+    auto start = chrono::high_resolution_clock::now();
     ll k=2;
     cin >> k;
-    __int128 max_length = 0;
 //    vector<pair<__int128, __int128>> DELETE;
     vector<pair<vector<shit>, vector<shit>>> G (k);
     bool graph_with_no_odd_cycle_exists = false;
@@ -79,6 +79,8 @@ void solve() {
     vector<__int128> t_nak_chet(N, 0);
     unordered_set<__int128> st_nak_chet;
     unordered_set<__int128> st_nak_nech;
+    vector<__int128> max_length (k, 0);
+    __int128 absolute_max_length = 0;
     fo(ii, 0, k) {
         ll n=10, m=15;
 //        uniform_int_distribution<__int128> distrib(1ll, n);
@@ -126,7 +128,7 @@ void solve() {
         forr(i, 1, n) {
             G[ii].first[i-1] = shit(a[i].first, a[i].second);
             G[ii].second[i-1] = shit(a[i].first, a[i].second);
-            max_length = max({max_length, a[i].first, a[i].second});
+            max_length[ii] = max({max_length[ii], a[i].first, a[i].second});
 //            clog << a[i].first << " " << a[i].second << endl;
             if (a[i].first == maxi_init || a[i].second == maxi_init) {
                 graph_with_no_odd_cycle_exists = true;
@@ -139,7 +141,9 @@ void solve() {
                 st_new_nech.insert(a[i].second);
                 add(a[i].second, 1, t_new_nech);
             }
+            max_length[ii] += 1;
         }
+        absolute_max_length = max(absolute_max_length, max_length[ii]);
 //        clog << endl;
 //        if (DELETE.empty()) {
 //            forr(i, 1, n) {
@@ -208,7 +212,9 @@ void solve() {
         cout << (ll)ans << endl;
         return;
     }
-    assert(k*max_length < 9e5);
+    auto stop = chrono::high_resolution_clock::now();
+    auto duration = duration_cast<chrono::microseconds>(stop - start);
+    assert(duration.count() < 2.6e5);
 //    __int128 OG = 0;
 //    map<__int128, __int128> ls;
 //    for(auto [i, j]: DELETE) {
@@ -221,8 +227,9 @@ void solve() {
 //    for(auto [i, j] : ls) {
 //        clog << "l=" << i << ", count = " << j << endl;
 //    }
-    vector<vector<answer>> answ (k, vector<answer> (max_length+1));
+    vector<vector<answer>> answ (k);
     fo(ii, 0, k) {
+        answ[ii].resize(max_length[ii]+1);
         vector<__int128> first_tree (N, 0);
         vector<__int128> second_tree (N, 0);
         sort(all(G[ii].first), [](shit a, shit b) {
@@ -234,7 +241,7 @@ void solve() {
         __int128 curr_ans=0;
         __int128 adding_first = 0;
         __int128 adding_second = 0;
-        while (curr_ans <= max_length) {
+        while (curr_ans <= max_length[ii]) {
             if (curr_ans%2 == 0) {
                 answ[ii][curr_ans].less__any = get(0, N-100, first_tree);
                 answ[ii][curr_ans].less__less_or_eq = get(0, curr_ans, first_tree);
@@ -258,23 +265,49 @@ void solve() {
         }
     }
     __int128 myans = 0;
-    for(__int128 length=1; length<=max_length; length+=1) {
+    auto stop2 = chrono::high_resolution_clock::now();
+    auto duration2 = duration_cast<chrono::microseconds>(stop2 - start);
+    assert(duration2.count() < 3e5);
+    unordered_set<__int128> relevant_ii;
+    fo(ii, 0, k) {
+        relevant_ii.insert(ii);
+    }
+    __int128 base_ALL = 1;
+    __int128 base_FIRST_COND_NOT_MET = 1;
+    __int128 base_SECOND_COND_NOT_MET = 1;
+    __int128 base_BOTH_CONDs_NOT_MET = 1;
+    for(__int128 length=1; length<=absolute_max_length; length+=1) {
 //        clog << "--------------------------length=" << length << endl;
 //        clog << "--------------------------length=" << length << endl;
 //        clog << "--------------------------length=" << length << endl;
-        __int128 ALL = 1;
-        __int128 FIRST_COND_NOT_MET = 1;
-        __int128 SECOND_COND_NOT_MET = 1;
-        __int128 BOTH_CONDs_NOT_MET = 1;
-        fo(ii, 0, k) {
-            ALL = (ALL*answ[ii][length].less_or_eq__any)%MOD7;
+        __int128 ALL = base_ALL;
+        __int128 FIRST_COND_NOT_MET = base_FIRST_COND_NOT_MET;
+        __int128 SECOND_COND_NOT_MET = base_SECOND_COND_NOT_MET;
+        __int128 BOTH_CONDs_NOT_MET = base_BOTH_CONDs_NOT_MET;
+        for(auto ii: relevant_ii) {
+            ALL = (ALL*answ[ii][min(length, max_length[ii])].less_or_eq__any)%MOD7;
 //            clog << "all*=" << answ[ii][length].less_or_eq__any << endl;
-            FIRST_COND_NOT_MET = (FIRST_COND_NOT_MET*answ[ii][length].less__any)%MOD7;
+            FIRST_COND_NOT_MET = (FIRST_COND_NOT_MET*answ[ii][min(length, max_length[ii])].less__any)%MOD7;
 //            clog << "first*=" << answ[ii][length].less__any << endl;
-            SECOND_COND_NOT_MET = (SECOND_COND_NOT_MET*answ[ii][length].less_or_eq__less)%MOD7;
+            SECOND_COND_NOT_MET = (SECOND_COND_NOT_MET*answ[ii][min(length, max_length[ii])].less_or_eq__less)%MOD7;
 //            clog << "second*=" << answ[ii][length].less_or_eq__less << endl;
-            BOTH_CONDs_NOT_MET = (BOTH_CONDs_NOT_MET*answ[ii][length].less__less_or_eq)%MOD7;
+            BOTH_CONDs_NOT_MET = (BOTH_CONDs_NOT_MET*answ[ii][min(length, max_length[ii])].less__less_or_eq)%MOD7;
 //            clog << "both*=" << answ[ii][length].less__less_or_eq << endl;
+        }
+        if (length % 100 == 0) {
+            vector<ll> erases;
+            for(auto ii: relevant_ii) {
+                if (length > max_length[ii]) {
+                    erases.push_back(ii);
+                }
+            }
+            for (auto erasee: erases) {
+                relevant_ii.erase(erasee);
+                base_ALL = (base_ALL*answ[erasee][max_length[erasee]].less_or_eq__any)%MOD7;
+                base_FIRST_COND_NOT_MET = (base_FIRST_COND_NOT_MET*answ[erasee][max_length[erasee]].less__any)%MOD7;
+                base_SECOND_COND_NOT_MET = (base_SECOND_COND_NOT_MET*answ[erasee][max_length[erasee]].less_or_eq__less)%MOD7;
+                base_BOTH_CONDs_NOT_MET = (base_BOTH_CONDs_NOT_MET*answ[erasee][max_length[erasee]].less__less_or_eq)%MOD7;
+            }
         }
 //        clog << "ALL: " << ALL << endl;
 //        clog << "FIRST_COND_NOT_MET: " << FIRST_COND_NOT_MET << endl;
