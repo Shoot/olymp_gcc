@@ -36,7 +36,7 @@ struct shit {
     ll chet, nechet;
 };
 struct answer {
-    __int128 less_or_eq__any, less__any, less_or_eq__less, less__less_or_eq;
+    ll less_or_eq__any, less__any, less_or_eq__less, less__less_or_eq;
 };
 
 ll OP_SHIT = 0;
@@ -52,9 +52,25 @@ __int128 __query__ (ll index, vector<__int128> & tree)  {
     return sum;
 }
 
+ll __queryll__ (ll index, vector<ll> & tree)  {
+    ll sum = 0;
+    while (index > 0) {
+        OP_SHIT += 1;
+        assert(OP_SHIT < 1e7);
+        sum += tree[index];
+        index -= index & -index;
+    }
+    return sum;
+}
+
 __int128 get(ll left, ll right, vector<__int128> & tree) {
     return __query__(right+5, tree) - __query__(left+5 - 1, tree);
 }
+
+ll getll(ll left, ll right, vector<ll> & tree) {
+    return __queryll__(right+5, tree) - __queryll__(left+5 - 1, tree);
+}
+
 
 void add(ll index, __int128 inc, vector<__int128> & tree) {
     index += 5;
@@ -65,6 +81,17 @@ void add(ll index, __int128 inc, vector<__int128> & tree) {
         index += index & -index;
     }
 }
+
+void addll(ll index, ll inc, vector<ll> & tree) {
+    index += 5;
+    while (index < tree.size()) {
+        OP_SHIT += 1;
+        assert(OP_SHIT < 1e7);
+        tree[index] += inc;
+        index += index & -index;
+    }
+}
+
 void solve() {
     auto start = chrono::high_resolution_clock::now();
     ll k=2;
@@ -193,12 +220,10 @@ void solve() {
     }
     vector<vector<answer>> answ (k);
     fo(ii, 0, k) {
-//        auto stop = chrono::high_resolution_clock::now();
-//        auto duration = duration_cast<chrono::microseconds>(stop - start);
-//        assert(duration.count() < 2e5);
+        auto start_graph = chrono::high_resolution_clock::now();
         answ[ii].resize(max_length[ii]+1);
-        vector<__int128> first_tree (N, 0);
-        vector<__int128> second_tree (N, 0);
+        vector<ll> first_tree (N, 0);
+        vector<ll> second_tree (N, 0);
         sort(all(G[ii].first), [](shit a, shit b) {
             return a.chet < b.chet;
         });
@@ -206,30 +231,33 @@ void solve() {
             return a.nechet < b.nechet;
         });
         ll curr_ans=0;
-        __int128 adding_first = 0;
-        __int128 adding_second = 0;
+        ll adding_first = 0;
+        ll adding_second = 0;
         while (curr_ans <= max_length[ii]) {
             if (curr_ans%2 == 0) {
-                answ[ii][curr_ans].less__any = get(0, N-100, first_tree);
-                answ[ii][curr_ans].less__less_or_eq = get(0, curr_ans, first_tree);
+                answ[ii][curr_ans].less__any = getll(0, N-100, first_tree);
+                answ[ii][curr_ans].less__less_or_eq = getll(0, curr_ans, first_tree);
                 while (adding_first < G[ii].first.size() && G[ii].first[adding_first].chet <= curr_ans) {
-                    add(G[ii].first[adding_first].nechet, 1, first_tree);
+                    addll(G[ii].first[adding_first].nechet, 1, first_tree);
                     adding_first += 1;
                 }
-                answ[ii][curr_ans].less_or_eq__any = get(0, N-100, first_tree);
-                answ[ii][curr_ans].less_or_eq__less = get(0, curr_ans-1, first_tree);
+                answ[ii][curr_ans].less_or_eq__any = getll(0, N-100, first_tree);
+                answ[ii][curr_ans].less_or_eq__less = getll(0, curr_ans-1, first_tree);
             } else {
-                answ[ii][curr_ans].less__any = get(0, N-100, second_tree);
-                answ[ii][curr_ans].less__less_or_eq = get(0, curr_ans, second_tree);
+                answ[ii][curr_ans].less__any = getll(0, N-100, second_tree);
+                answ[ii][curr_ans].less__less_or_eq = getll(0, curr_ans, second_tree);
                 while (adding_second < G[ii].second.size() && G[ii].second[adding_second].nechet <= curr_ans) {
-                    add(G[ii].second[adding_second].chet, 1, second_tree);
+                    addll(G[ii].second[adding_second].chet, 1, second_tree);
                     adding_second += 1;
                 }
-                answ[ii][curr_ans].less_or_eq__any = get(0, N-100, second_tree);
-                answ[ii][curr_ans].less_or_eq__less = get(0, curr_ans-1, second_tree);
+                answ[ii][curr_ans].less_or_eq__any = getll(0, N-100, second_tree);
+                answ[ii][curr_ans].less_or_eq__less = getll(0, curr_ans-1, second_tree);
             }
             curr_ans += 1;
         }
+//        auto stop_graph = chrono::high_resolution_clock::now();
+//        auto duration = duration_cast<chrono::microseconds>(stop_graph - start_graph);
+//        assert(duration.count() < 0.5e5);
     }
     __int128 myans = 0;
     unordered_set<ll> relevant_ii;
@@ -260,7 +288,7 @@ void solve() {
             BOTH_CONDs_NOT_MET = (BOTH_CONDs_NOT_MET*answ[ii][min(length, max_length[ii])].less__less_or_eq)%MOD7;
 //            clog << "both*=" << answ[ii][length].less__less_or_eq << endl;
         }
-        if (length % 100 == 0) {
+        if (length < 5 || length < 100 && length % 5 == 0 || length % 100 == 0) {
             vector<ll> erases;
             for(auto ii: relevant_ii) {
                 if (length > max_length[ii]) {
