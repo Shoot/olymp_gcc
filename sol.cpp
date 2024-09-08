@@ -20,7 +20,7 @@ typedef long double ld;
 #endif
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 //uniform_int_distribution<ll> distrib(1ll, 200000ll);
-constexpr ll MOD7 = 1e9 + 7;
+constexpr __int128 MOD7 = 1e9 + 7;
 constexpr ll N = 1e6;
 constexpr ll maxi_init = 1e9;
 /*
@@ -60,9 +60,9 @@ void add(ll index, ll inc, vector<ll> & tree) {
 }
 void solve() {
     ll k=2;
-//    cin >> k;
+    cin >> k;
     ll max_length = 0;
-    vector<pair<ll, ll>> DELETE;
+//    vector<pair<ll, ll>> DELETE;
     vector<pair<vector<shit>, vector<shit>>> G (k);
     bool graph_with_no_odd_cycle_exists = false;
     vector<ll> t_nak_nech(N, 0);
@@ -72,7 +72,7 @@ void solve() {
     fo(ii, 0, k) {
         ll n=10, m=15;
         uniform_int_distribution<ll> distrib(1ll, n);
-//        cin >> n >> m;
+        cin >> n >> m;
         G[ii].first.resize(n);
         G[ii].second.resize(n);
         vector<pair<ll, ll>> a (n+1);
@@ -81,15 +81,15 @@ void solve() {
             a[i].second = maxi_init;
         }
         vector<vector<ll>> sm(n+1);
-        unordered_set<ll> brute;
+//        unordered_set<ll> brute;
         fo(i, 0, m) {
             ll u=1, v=1;
-//            cin >> u >> v;
-            while (brute.contains(u*v)) {
-                u = distrib(rng);
-                v = distrib(rng);
-            }
-            brute.insert(u*v);
+            cin >> u >> v;
+//            while (brute.contains(u*v)) {
+//                u = distrib(rng);
+//                v = distrib(rng);
+//            }
+//            brute.insert(u*v);
             sm[u].push_back(v);
             sm[v].push_back(u);
         }
@@ -131,19 +131,19 @@ void solve() {
             }
         }
 //        clog << endl;
-        if (DELETE.empty()) {
-            forr(i, 1, n) {
-                DELETE.push_back(a[i]);
-            }
-        } else {
-            vector<pair<ll, ll>> DELETE2;
-            for(auto [i, j]: DELETE) {
-                forr(iii, 1, n) {
-                    DELETE2.push_back(make_pair(max(i, a[iii].first), max(j, a[iii].second)));
-                }
-            }
-            DELETE = DELETE2;
-        }
+//        if (DELETE.empty()) {
+//            forr(i, 1, n) {
+//                DELETE.push_back(a[i]);
+//            }
+//        } else {
+//            vector<pair<ll, ll>> DELETE2;
+//            for(auto [i, j]: DELETE) {
+//                forr(iii, 1, n) {
+//                    DELETE2.push_back(make_pair(max(i, a[iii].first), max(j, a[iii].second)));
+//                }
+//            }
+//            DELETE = DELETE2;
+//        }
         if (ii == 0) {
             swap(t_nak_chet, t_new_chet);
             swap(t_nak_nech, t_new_nech);
@@ -188,28 +188,28 @@ void solve() {
     }
     if (graph_with_no_odd_cycle_exists) {
         clog << "ez" << endl;
-        ll ans = 0;
+        __int128 ans = 0;
         for(ll jjjj: st_nak_chet) {
-            ans += jjjj*get(jjjj, jjjj, t_nak_chet);
+            ans = (ans+jjjj*get(jjjj, jjjj, t_nak_chet))%MOD7;
         }
         for(ll jjjj: st_nak_nech) {
-            ans += jjjj*get(jjjj, jjjj, t_nak_nech);
+            ans = (ans+jjjj*get(jjjj, jjjj, t_nak_nech))%MOD7;
         }
-        cout << ans%MOD7 << endl;
+        cout << (ll)ans << endl;
         return;
     }
-    ll OG = 0;
-    map<ll, ll> ls;
-    for(auto [i, j]: DELETE) {
-        ll l = min(i, j);
-        if (l != maxi_init) {
-            ls[l] += 1;
-            OG += l;
-        }
-    }
-    for(auto [i, j] : ls) {
-        clog << "l=" << i << ", count = " << j << endl;
-    }
+//    ll OG = 0;
+//    map<ll, ll> ls;
+//    for(auto [i, j]: DELETE) {
+//        ll l = min(i, j);
+//        if (l != maxi_init) {
+//            ls[l] += 1;
+//            OG += l;
+//        }
+//    }
+//    for(auto [i, j] : ls) {
+//        clog << "l=" << i << ", count = " << j << endl;
+//    }
     vector<vector<answer>> answ (k, vector<answer> (max_length+1));
     fo(ii, 0, k) {
         vector<ll> first_tree (N, 0);
@@ -246,36 +246,35 @@ void solve() {
             curr_ans += 1;
         }
     }
-    ll myans = 0;
-    forr(length, 1, max_length) {
-        clog << "--------------------------length=" << length << endl;
-        clog << "--------------------------length=" << length << endl;
-        clog << "--------------------------length=" << length << endl;
-        ll ALL = 1;
-        ll FIRST_COND_NOT_MET = 1;
-        ll SECOND_COND_NOT_MET = 1;
-        ll BOTH_CONDs_NOT_MET = 1;
+    __int128 myans = 0;
+    for(__int128 length=1; length<=max_length; length+=1) {
+//        clog << "--------------------------length=" << length << endl;
+//        clog << "--------------------------length=" << length << endl;
+//        clog << "--------------------------length=" << length << endl;
+        __int128 ALL = 1;
+        __int128 FIRST_COND_NOT_MET = 1;
+        __int128 SECOND_COND_NOT_MET = 1;
+        __int128 BOTH_CONDs_NOT_MET = 1;
         fo(ii, 0, k) {
             ALL *= answ[ii][length].less_or_eq__any;
-            clog << "all*=" << answ[ii][length].less_or_eq__any << endl;
+//            clog << "all*=" << answ[ii][length].less_or_eq__any << endl;
             FIRST_COND_NOT_MET *= answ[ii][length].less__any;
-            clog << "first*=" << answ[ii][length].less__any << endl;
+//            clog << "first*=" << answ[ii][length].less__any << endl;
             SECOND_COND_NOT_MET *= answ[ii][length].less_or_eq__less;
-            clog << "second*=" << answ[ii][length].less_or_eq__less << endl;
+//            clog << "second*=" << answ[ii][length].less_or_eq__less << endl;
             BOTH_CONDs_NOT_MET *= answ[ii][length].less__less_or_eq;
-            clog << "both*=" << answ[ii][length].less__less_or_eq << endl;
+//            clog << "both*=" << answ[ii][length].less__less_or_eq << endl;
         }
-        clog << "ALL: " << ALL << endl;
-        clog << "FIRST_COND_NOT_MET: " << FIRST_COND_NOT_MET << endl;
-        clog << "SECOND_COND_NOT_MET: " << SECOND_COND_NOT_MET << endl;
-        clog << "BOTH_CONDs_NOT_MET: " << BOTH_CONDs_NOT_MET << endl;
-        myans += length*(ALL - FIRST_COND_NOT_MET - SECOND_COND_NOT_MET + BOTH_CONDs_NOT_MET);
+//        clog << "ALL: " << ALL << endl;
+//        clog << "FIRST_COND_NOT_MET: " << FIRST_COND_NOT_MET << endl;
+//        clog << "SECOND_COND_NOT_MET: " << SECOND_COND_NOT_MET << endl;
+//        clog << "BOTH_CONDs_NOT_MET: " << BOTH_CONDs_NOT_MET << endl;
+        myans = (myans+length*(ALL - FIRST_COND_NOT_MET - SECOND_COND_NOT_MET + BOTH_CONDs_NOT_MET))%MOD7;
     }
-    myans %= MOD7;
-    OG %= MOD7;
-    cout << myans << endl;
-    cout << OG << endl;
-    assert(myans == OG);
+//    OG %= MOD7;
+    cout << (ll)myans << endl;
+//    cout << OG << endl;
+//    assert(myans == OG);
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
@@ -292,7 +291,7 @@ int32_t main (int32_t argc, char* argv[]) {
         cerr.tie(nullptr);
         clog.tie(nullptr);
     }
-    ll tt = 1000;
+    ll tt = 1;
 //    cin >> tt;
     while (tt--) solve();
     return 0;
