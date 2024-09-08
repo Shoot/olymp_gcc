@@ -45,7 +45,7 @@ __int128 __query__ (ll index, vector<__int128> & tree)  {
     __int128 sum = 0;
     while (index > 0) {
         OP_SHIT += 1;
-//        assert(OP_SHIT < 1e7);
+        assert(OP_SHIT < 5e7);
         sum += tree[index];
         index -= index & -index;
     }
@@ -56,7 +56,7 @@ ll __queryll__ (ll index, vector<ll> & tree)  {
     ll sum = 0;
     while (index > 0) {
         OP_SHIT += 1;
-//        assert(OP_SHIT < 1e7);
+        assert(OP_SHIT < 5e7);
         sum += tree[index];
         index -= index & -index;
     }
@@ -76,7 +76,7 @@ void add(ll index, __int128 inc, vector<__int128> & tree) {
     index += 5;
     while (index < tree.size()) {
         OP_SHIT += 1;
-//        assert(OP_SHIT < 1e7);
+        assert(OP_SHIT < 5e7);
         tree[index] += inc;
         index += index & -index;
     }
@@ -86,7 +86,7 @@ void addll(ll index, ll inc, vector<ll> & tree) {
     index += 5;
     while (index < tree.size()) {
         OP_SHIT += 1;
-//        assert(OP_SHIT < 1e7);
+        assert(OP_SHIT < 5e7);
         tree[index] += inc;
         index += index & -index;
     }
@@ -219,19 +219,15 @@ void solve() {
         return;
     }
     vector<vector<answer>> answ (k);
-    ld time_that_memory_allocations_consume = 0;
     fo(ii, 0, k) {
+        auto stop = chrono::high_resolution_clock::now();
+        auto duration_all = duration_cast<chrono::microseconds>(stop - start);
+        if (duration_all.count() > 2e5) {
+            assert(false);
+        }
         answ[ii].resize(max_length[ii]+1);
-        auto start_mem = chrono::high_resolution_clock::now();
         vector<ll> first_tree (max_length[ii]+20, 0);
         vector<ll> second_tree (max_length[ii]+20, 0);
-        auto stop_mem = chrono::high_resolution_clock::now();
-        auto duration = duration_cast<chrono::microseconds>(stop_mem - start_mem);
-        time_that_memory_allocations_consume += duration.count();
-        auto duration_all = duration_cast<chrono::microseconds>(stop_mem - start);
-        if (duration_all.count() > 2e5) {
-            assert(time_that_memory_allocations_consume*2 < duration_all.count());
-        }
         sort(all(G[ii].first), [](shit a, shit b) {
             return a.chet < b.chet;
         });
@@ -243,22 +239,22 @@ void solve() {
         ll adding_second = 0;
         while (curr_ans <= max_length[ii]) {
             if (curr_ans%2 == 0) {
-                answ[ii][curr_ans].less__any = getll(0, max_length[ii]+10, first_tree);
+                answ[ii][curr_ans].less__any = getll(0, max_length[ii]+2, first_tree);
                 answ[ii][curr_ans].less__less_or_eq = getll(0, curr_ans, first_tree);
                 while (adding_first < G[ii].first.size() && G[ii].first[adding_first].chet <= curr_ans) {
                     addll(G[ii].first[adding_first].nechet, 1, first_tree);
                     adding_first += 1;
                 }
-                answ[ii][curr_ans].less_or_eq__any = getll(0, max_length[ii]+10, first_tree);
+                answ[ii][curr_ans].less_or_eq__any = getll(0, max_length[ii]+2, first_tree);
                 answ[ii][curr_ans].less_or_eq__less = getll(0, curr_ans-1, first_tree);
             } else {
-                answ[ii][curr_ans].less__any = getll(0, max_length[ii]+10, second_tree);
+                answ[ii][curr_ans].less__any = getll(0, max_length[ii]+2, second_tree);
                 answ[ii][curr_ans].less__less_or_eq = getll(0, curr_ans, second_tree);
                 while (adding_second < G[ii].second.size() && G[ii].second[adding_second].nechet <= curr_ans) {
                     addll(G[ii].second[adding_second].chet, 1, second_tree);
                     adding_second += 1;
                 }
-                answ[ii][curr_ans].less_or_eq__any = getll(0, max_length[ii]+10, second_tree);
+                answ[ii][curr_ans].less_or_eq__any = getll(0, max_length[ii]+2, second_tree);
                 answ[ii][curr_ans].less_or_eq__less = getll(0, curr_ans-1, second_tree);
             }
             curr_ans += 1;
