@@ -21,7 +21,7 @@ typedef long double ld;
 //mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 //uniform_int_distribution<__int128> distrib(1ll, 200000ll);
 constexpr __int128 MOD7 = 1e9 + 7;
-constexpr __int128 N = 1e6;
+constexpr __int128 N = 2e5+40;
 constexpr __int128 maxi_init = 1e9;
 /*
 void copy_this () {
@@ -181,25 +181,25 @@ void solve() {
             // Из накапл в новый
             for (ll chet_koord: st_nak_chet) {
                 add(chet_koord,
-                    get(chet_koord, chet_koord, t_nak_chet)*get(0, chet_koord, t_new_chet),
+                    (get(chet_koord, chet_koord, t_nak_chet)*get(0, chet_koord, t_new_chet))%MOD7,
                     t_nak_deriv_chet);
             }
             for (ll nech_koord: st_nak_nech) {
                 add(nech_koord,
-                    get(nech_koord, nech_koord, t_nak_nech)*get(0, nech_koord, t_new_nech),
+                    (get(nech_koord, nech_koord, t_nak_nech)*get(0, nech_koord, t_new_nech))%MOD7,
                     t_nak_deriv_nech);
             }
             // Из ноого в накапл
             for (ll chet_koord: st_new_chet) {
                 st_nak_deriv_chet.insert(chet_koord);
                 add(chet_koord,
-                    get(chet_koord, chet_koord, t_new_chet)*get(0, chet_koord-1, t_nak_chet),
+                    (get(chet_koord, chet_koord, t_new_chet)*get(0, chet_koord-1, t_nak_chet))%MOD7,
                     t_nak_deriv_chet);
             }
             for (ll nech_koord: st_new_nech) {
                 st_nak_deriv_nech.insert(nech_koord);
                 add(nech_koord,
-                    get(nech_koord, nech_koord, t_new_nech)*get(0, nech_koord-1, t_nak_nech),
+                    (get(nech_koord, nech_koord, t_new_nech)*get(0, nech_koord-1, t_nak_nech))%MOD7,
                     t_nak_deriv_nech);
             }
             swap(t_nak_deriv_chet, t_nak_chet);
@@ -210,21 +210,21 @@ void solve() {
         clog << "ez" << endl;
         __int128 ans = 0;
         for(ll jjjj: st_nak_chet) {
-            ans = (ans+jjjj*get(jjjj, jjjj, t_nak_chet))%MOD7;
+            ans = (ans+(jjjj*get(jjjj, jjjj, t_nak_chet))%MOD7)%MOD7;
         }
         for(ll jjjj: st_nak_nech) {
-            ans = (ans+jjjj*get(jjjj, jjjj, t_nak_nech))%MOD7;
+            ans = (ans+(jjjj*get(jjjj, jjjj, t_nak_nech))%MOD7)%MOD7;
         }
         cout << (ll)ans << endl;
         return;
     }
     vector<vector<answer>> answ (k);
     fo(ii, 0, k) {
-        auto stop = chrono::high_resolution_clock::now();
-        auto duration_all = duration_cast<chrono::microseconds>(stop - start);
-        if (duration_all.count() > 2e5) {
-            assert(false);
-        }
+//        auto stop = chrono::high_resolution_clock::now();
+//        auto duration_all = duration_cast<chrono::microseconds>(stop - start);
+//        if (duration_all.count() > 2e5) {
+//            assert(false);
+//        }
         answ[ii].resize(max_length[ii]+1);
         vector<ll> first_tree (max_length[ii]+20, 0);
         vector<ll> second_tree (max_length[ii]+20, 0);
