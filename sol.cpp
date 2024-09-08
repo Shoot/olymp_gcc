@@ -219,11 +219,19 @@ void solve() {
         return;
     }
     vector<vector<answer>> answ (k);
-
+    ld time_that_memory_allocations_consume = 0;
     fo(ii, 0, k) {
         answ[ii].resize(max_length[ii]+1);
+        auto start_mem = chrono::high_resolution_clock::now();
         vector<ll> first_tree (N, 0);
         vector<ll> second_tree (N, 0);
+        auto stop_mem = chrono::high_resolution_clock::now();
+        auto duration = duration_cast<chrono::microseconds>(stop_mem - start_mem);
+        time_that_memory_allocations_consume += duration.count();
+        auto duration_all = duration_cast<chrono::microseconds>(stop_mem - start);
+        if (duration_all.count() > 2e5) {
+            assert(time_that_memory_allocations_consume*2 < duration_all.count());
+        }
         sort(all(G[ii].first), [](shit a, shit b) {
             return a.chet < b.chet;
         });
@@ -233,10 +241,6 @@ void solve() {
         ll curr_ans=0;
         ll adding_first = 0;
         ll adding_second = 0;
-        ld SSSS = 1;
-        while (SSSS++ < 1e7/20/(ld)k) {
-            getll(0, N-100, first_tree);
-        }
         while (curr_ans <= max_length[ii]) {
             if (curr_ans%2 == 0) {
                 answ[ii][curr_ans].less__any = getll(0, N-100, first_tree);
