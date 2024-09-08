@@ -20,9 +20,8 @@ typedef long double ld;
 #endif
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 //uniform_int_distribution<ll> distrib(1ll, 200000ll);
-constexpr __int128 MOD7 = 1e9 + 7;
+constexpr ll MOD7 = 1e9 + 7;
 constexpr ll N = 1e6;
-constexpr ll maxi_init = 1e9;
 /*
 void copy_this () {
     ll n; cin >> n;
@@ -32,12 +31,6 @@ void copy_this () {
     vector<ll> a(n); fo(i, 0, n) cin >> a[i];
 }
 */
-struct shit {
-    ll chet, nechet;
-};
-struct answer {
-    ll less_or_eq__any, less__any, less_or_eq__less, less__less_or_eq;
-};
 ll __query__ (ll index, vector<ll> & tree)  {
     ll sum = 0;
     while (index > 0) {
@@ -58,233 +51,33 @@ void add(ll index, ll inc, vector<ll> & tree) {
         index += index & -index;
     }
 }
+
 void solve() {
-    auto start = chrono::high_resolution_clock::now();
-    ll k=2;
-    cin >> k;
-    vector<pair<vector<shit>, vector<shit>>> G (k);
-    bool graph_with_no_odd_cycle_exists = false;
-    vector<ll> t_nak_nech(N, 0);
-    vector<ll> t_nak_chet(N, 0);
-    unordered_set<ll> st_nak_chet;
-    unordered_set<ll> st_nak_nech;
-    vector<ll> max_length (k, 0);
-    ll absolute_max_length = 0;
-    ll N_SUMMA = 0;
-    fo(ii, 0, k) {
-        auto stop_temp = chrono::high_resolution_clock::now();
-        auto duration = duration_cast<chrono::microseconds>(stop_temp - start);
-//        assert(duration.count() < 8e5);
-        ll n=10, m=15;
-        cin >> n >> m;
-        N_SUMMA += n;
-        G[ii].first.resize(n);
-        G[ii].second.resize(n);
-        vector<pair<ll, ll>> a (n+1);
-        forr(i, 0, n) {
-            a[i].first = maxi_init;
-            a[i].second = maxi_init;
-        }
-        vector<vector<ll>> sm(n+1);
-        fo(i, 0, m) {
-            ll u=1, v=1;
-            cin >> u >> v;
-            sm[u].push_back(v);
-            sm[v].push_back(u);
-        }
-        queue<pair<ll, ll>> q;
-        q.push(make_pair(1, 0));
-        while(!q.empty()) {
-            auto tp = q.front();
-            q.pop();
-            if (tp.second % 2 == 0 && a[tp.first].first == maxi_init) {
-                a[tp.first].first = tp.second;
-            } else if (tp.second % 2 == 1 && a[tp.first].second == maxi_init) {
-                a[tp.first].second = tp.second;
-            } else {
-                continue;
-            }
-            for (ll nxt: sm[tp.first]) {
-                q.push(make_pair(nxt, tp.second+1));
-            }
-        }
-        vector<ll> t_new_chet(N, 0);
-        vector<ll> t_new_nech(N, 0);
-        unordered_set<ll> st_new_chet;
-        unordered_set<ll> st_new_nech;
-        forr(i, 1, n) {
-            G[ii].first[i-1] = shit(a[i].first, a[i].second);
-            G[ii].second[i-1] = shit(a[i].first, a[i].second);
-            max_length[ii] = max({max_length[ii], a[i].first, a[i].second});
-            if (a[i].first == maxi_init || a[i].second == maxi_init) {
-                graph_with_no_odd_cycle_exists = true;
-            }
-            if (a[i].first != maxi_init) {
-                st_new_chet.insert(a[i].first);
-                add(a[i].first, 1, t_new_chet);
-            }
-            if (a[i].second != maxi_init) {
-                st_new_nech.insert(a[i].second);
-                add(a[i].second, 1, t_new_nech);
-            }
-            max_length[ii] += 1;
-        }
-        absolute_max_length = max(absolute_max_length, max_length[ii]);
-        if (ii == 0) {
-            swap(t_nak_chet, t_new_chet);
-            swap(t_nak_nech, t_new_nech);
-            swap(st_nak_chet, st_new_chet);
-            swap(st_nak_nech, st_new_nech);
-            continue;
-        }
-        vector<ll> t_nak_deriv_chet(N, 0);
-        vector<ll> t_nak_deriv_nech(N, 0);
-        unordered_set<ll> st_nak_deriv_chet;
-        unordered_set<ll> st_nak_deriv_nech;
-        // Из накапл в новый
-        for (ll chet_koord: st_nak_chet) {
-            st_nak_deriv_chet.insert(chet_koord);
-            add(chet_koord,
-                get(chet_koord, chet_koord, t_nak_chet)*get(0, chet_koord, t_new_chet),
-                t_nak_deriv_chet);
-        }
-        for (ll nech_koord: st_nak_nech) {
-            st_nak_deriv_nech.insert(nech_koord);
-            add(nech_koord,
-                get(nech_koord, nech_koord, t_nak_nech)*get(0, nech_koord, t_new_nech),
-                t_nak_deriv_nech);
-        }
-        // Из ноого в накапл
-        for (ll chet_koord: st_new_chet) {
-            st_nak_deriv_chet.insert(chet_koord);
-            add(chet_koord,
-                get(chet_koord, chet_koord, t_new_chet)*get(0, chet_koord-1, t_nak_chet),
-                t_nak_deriv_chet);
-        }
-        for (ll nech_koord: st_new_nech) {
-            st_nak_deriv_nech.insert(nech_koord);
-            add(nech_koord,
-                get(nech_koord, nech_koord, t_new_nech)*get(0, nech_koord-1, t_nak_nech),
-                t_nak_deriv_nech);
-        }
-        swap(t_nak_deriv_chet, t_nak_chet);
-        swap(t_nak_deriv_nech, t_nak_nech);
-        st_nak_chet.merge(st_nak_deriv_chet);
-        st_nak_nech.merge(st_nak_deriv_nech);
+    ll n; cin >> n;
+    vector<ll> a(n);
+    unordered_map<ll, bool> mp;
+    fo(i, 0, n) {
+        cin >> a[i];
+        mp[a[i]] = true;
     }
-    if (graph_with_no_odd_cycle_exists) {
-        clog << "ez" << endl;
-        __int128 ans = 0;
-        for(ll jjjj: st_nak_chet) {
-            ans = (ans+(jjjj*get(jjjj, jjjj, t_nak_chet))%MOD7)%MOD7;
-        }
-        for(ll jjjj: st_nak_nech) {
-            ans = (ans+(jjjj*get(jjjj, jjjj, t_nak_nech))%MOD7)%MOD7;
-        }
-        cout << (ll)ans << endl;
-        return;
-    }
-//    ll OG = 0;
-//    map<ll, ll> ls;
-//    for(auto [i, j]: DELETE) {
-//        ll l = min(i, j);
-//        if (l != maxi_init) {
-//            ls[l] += 1;
-//            OG += l;
-//        }
-//    }
-//    for(auto [i, j] : ls) {
-//        clog << "l=" << i << ", count = " << j << endl;
-//    }
-    vector<vector<answer>> answ (k);
-    fo(ii, 0, k) {
-        answ[ii].resize(max_length[ii]+1);
-        vector<ll> first_tree (N, 0);
-        vector<ll> second_tree (N, 0);
-        sort(all(G[ii].first), [](shit a, shit b) {
-            return a.chet < b.chet;
-        });
-        sort(all(G[ii].second), [](shit a, shit b) {
-            return a.nechet < b.nechet;
-        });
-        ll curr_ans=0;
-        ll adding_first = 0;
-        ll adding_second = 0;
-        while (curr_ans <= max_length[ii]) {
-            if (curr_ans%2 == 0) {
-                answ[ii][curr_ans].less__any = get(0, N-100, first_tree);
-                answ[ii][curr_ans].less__less_or_eq = get(0, curr_ans, first_tree);
-                while (adding_first < G[ii].first.size() && G[ii].first[adding_first].chet <= curr_ans) {
-                    add(G[ii].first[adding_first].nechet, 1, first_tree);
-                    adding_first += 1;
-                }
-                answ[ii][curr_ans].less_or_eq__any = get(0, N-100, first_tree);
-                answ[ii][curr_ans].less_or_eq__less = get(0, curr_ans-1, first_tree);
-            } else {
-                answ[ii][curr_ans].less__any = get(0, N-100, second_tree);
-                answ[ii][curr_ans].less__less_or_eq = get(0, curr_ans, second_tree);
-                while (adding_second < G[ii].second.size() && G[ii].second[adding_second].nechet <= curr_ans) {
-                    add(G[ii].second[adding_second].chet, 1, second_tree);
-                    adding_second += 1;
-                }
-                answ[ii][curr_ans].less_or_eq__any = get(0, N-100, second_tree);
-                answ[ii][curr_ans].less_or_eq__less = get(0, curr_ans-1, second_tree);
-            }
-            curr_ans += 1;
-        }
-    }
-    ll myans = 0;
-    unordered_set<ll> relevant_ii;
-    fo(ii, 0, k) {
-        relevant_ii.insert(ii);
-    }
-    ll base_ALL = 1;
-    ll base_FIRST_COND_NOT_MET = 1;
-    ll base_SECOND_COND_NOT_MET = 1;
-    ll base_BOTH_CONDs_NOT_MET = 1;
-    for(ll length=1; length<=absolute_max_length; length+=1) {
-//        clog << "--------------------------length=" << length << endl;
-//        clog << "--------------------------length=" << length << endl;
-//        clog << "--------------------------length=" << length << endl;
-        ll ALL = base_ALL;
-        ll FIRST_COND_NOT_MET = base_FIRST_COND_NOT_MET;
-        ll SECOND_COND_NOT_MET = base_SECOND_COND_NOT_MET;
-        ll BOTH_CONDs_NOT_MET = base_BOTH_CONDs_NOT_MET;
-        for(auto ii: relevant_ii) {
-            ALL = (ALL*answ[ii][min(length, max_length[ii])].less_or_eq__any)%MOD7;
-//            clog << "all*=" << answ[ii][length].less_or_eq__any << endl;
-            FIRST_COND_NOT_MET = (FIRST_COND_NOT_MET*answ[ii][min(length, max_length[ii])].less__any)%MOD7;
-//            clog << "first*=" << answ[ii][length].less__any << endl;
-            SECOND_COND_NOT_MET = (SECOND_COND_NOT_MET*answ[ii][min(length, max_length[ii])].less_or_eq__less)%MOD7;
-//            clog << "second*=" << answ[ii][length].less_or_eq__less << endl;
-            BOTH_CONDs_NOT_MET = (BOTH_CONDs_NOT_MET*answ[ii][min(length, max_length[ii])].less__less_or_eq)%MOD7;
-//            clog << "both*=" << answ[ii][length].less__less_or_eq << endl;
-        }
-        if (length % 100 == 0) {
-            vector<ll> erases;
-            for(auto ii: relevant_ii) {
-                if (length > max_length[ii]) {
-                    erases.push_back(ii);
-                }
-            }
-            for (auto erasee: erases) {
-                relevant_ii.erase(erasee);
-                base_ALL = (base_ALL*answ[erasee][max_length[erasee]].less_or_eq__any)%MOD7;
-                base_FIRST_COND_NOT_MET = (base_FIRST_COND_NOT_MET*answ[erasee][max_length[erasee]].less__any)%MOD7;
-                base_SECOND_COND_NOT_MET = (base_SECOND_COND_NOT_MET*answ[erasee][max_length[erasee]].less_or_eq__less)%MOD7;
-                base_BOTH_CONDs_NOT_MET = (base_BOTH_CONDs_NOT_MET*answ[erasee][max_length[erasee]].less__less_or_eq)%MOD7;
+    sort(all(a));
+    bool good = false;
+    fo(i, 0, n) {
+        fo(j, i+1, n) {
+            if ((a[i]+a[j])%2 == 0 && mp[(a[i]+a[j])/2]) {
+                cout << "Yes" << endl;
+                cout << a[i] << " " << a[j] << endl;
+                cout << (a[i]+a[j])/2 << endl;
+                good = true;
+                break;
             }
         }
-//        clog << "ALL: " << ALL << endl;
-//        clog << "FIRST_COND_NOT_MET: " << FIRST_COND_NOT_MET << endl;
-//        clog << "SECOND_COND_NOT_MET: " << SECOND_COND_NOT_MET << endl;
-//        clog << "BOTH_CONDs_NOT_MET: " << BOTH_CONDs_NOT_MET << endl;
-        myans = (myans+length*(ALL - FIRST_COND_NOT_MET - SECOND_COND_NOT_MET + BOTH_CONDs_NOT_MET + 10*MOD7))%MOD7;
+        if (good) break;
     }
-//    OG %= MOD7;
-    cout << myans << endl;
-//    cout << OG << endl;
-//    assert(myans == OG);
+    if (!good) {
+        cout << "No" << endl;
+        cout << a[n-1] << " " << a[0] << endl;
+    }
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
