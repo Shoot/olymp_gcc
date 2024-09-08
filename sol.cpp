@@ -71,10 +71,6 @@ void solve() {
     cin >> k;
     vector<pair<vector<shit>, vector<shit>>> G (k);
     bool graph_with_no_odd_cycle_exists = false;
-    vector<__int128> t_nak_nech(N, 0);
-    vector<__int128> t_nak_chet(N, 0);
-    unordered_set<ll> st_nak_chet;
-    unordered_set<ll> st_nak_nech;
     vector<ll> max_length (k, 0);
     ll absolute_max_length = 0;
     vector<ll> nn(k);
@@ -108,7 +104,7 @@ void solve() {
             } else {
                 continue;
             }
-            for (__int128 nxt: sm[tp.first]) {
+            for (ll nxt: sm[tp.first]) {
                 q.push(make_pair(nxt, tp.second+1));
             }
         }
@@ -125,6 +121,10 @@ void solve() {
         absolute_max_length = max(absolute_max_length, max_length[ii]);
     }
     if (graph_with_no_odd_cycle_exists) {
+        vector<__int128> t_nak_nech(N, 0);
+        vector<__int128> t_nak_chet(N, 0);
+        unordered_set<ll> st_nak_chet;
+        unordered_set<ll> st_nak_nech;
         fo(ii, 0, k) {
             vector<__int128> t_new_chet(N, 0);
             vector<__int128> t_new_nech(N, 0);
