@@ -18,17 +18,7 @@ typedef long double ld;
 //#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math,trapv")
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #endif
-//namespace std {
-//    template <>
-//    struct hash<__int128> {
-//        std::size_t operator()(__int128 value) const {
-//            uint64_t high = static_cast<uint64_t>(value >> 64);
-//            uint64_t low = static_cast<uint64_t>(value);
-//            return std::hash<uint64_t>()(high) ^ (std::hash<uint64_t>()(low) << 1);
-//        }
-//    };
-//}
-mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
+//mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 //uniform_int_distribution<__int128> distrib(1ll, 200000ll);
 constexpr __int128 MOD7 = 1e9 + 7;
 constexpr __int128 N = 1e6;
@@ -48,22 +38,25 @@ struct shit {
 struct answer {
     __int128 less_or_eq__any, less__any, less_or_eq__less, less__less_or_eq;
 };
-__int128 __query__ (__int128 index, vector<__int128> & tree)  {
+
+ll OP_SHIT = 0;
+
+__int128 __query__ (ll index, vector<__int128> & tree)  {
     __int128 sum = 0;
     while (index > 0) {
+        OP_SHIT += 1;
+        assert(OP_SHIT < 1e7);
         sum += tree[index];
         index -= index & -index;
     }
     return sum;
 }
-ll OP_SHIT = 0;
-__int128 get(__int128 left, __int128 right, vector<__int128> & tree) {
-    OP_SHIT += 1;
-    assert(OP_SHIT < 1e7);
+
+__int128 get(ll left, ll right, vector<__int128> & tree) {
     return __query__(right+5, tree) - __query__(left+5 - 1, tree);
 }
 
-void add(__int128 index, __int128 inc, vector<__int128> & tree) {
+void add(ll index, __int128 inc, vector<__int128> & tree) {
     index += 5;
     while (index < tree.size()) {
         OP_SHIT += 1;
@@ -96,7 +89,7 @@ void solve() {
             a[i].first = maxi_init;
             a[i].second = maxi_init;
         }
-        vector<vector<__int128>> sm(n+1);
+        vector<vector<ll>> sm(n+1);
         fo(i, 0, m) {
             ll u=1, v=1;
             cin >> u >> v;
@@ -189,33 +182,20 @@ void solve() {
         }
         clog << "ez" << endl;
         __int128 ans = 0;
-        for(__int128 jjjj: st_nak_chet) {
+        for(ll jjjj: st_nak_chet) {
             ans = (ans+jjjj*get(jjjj, jjjj, t_nak_chet))%MOD7;
         }
-        for(__int128 jjjj: st_nak_nech) {
+        for(ll jjjj: st_nak_nech) {
             ans = (ans+jjjj*get(jjjj, jjjj, t_nak_nech))%MOD7;
         }
         cout << (ll)ans << endl;
         return;
     }
-    auto stop = chrono::high_resolution_clock::now();
-    auto duration = duration_cast<chrono::microseconds>(stop - start);
-//    assert(duration.count() < 2.6e5);
-//    __int128 OG = 0;
-//    map<__int128, __int128> ls;
-//    for(auto [i, j]: DELETE) {
-//        __int128 l = min(i, j);
-//        if (l != maxi_init) {
-//            ls[l] += 1;
-//            OG += l;
-//        }
-//    }
-//    for(auto [i, j] : ls) {
-//        clog << "l=" << i << ", count = " << j << endl;
-//    }
     vector<vector<answer>> answ (k);
-    __int128 LOG_OP_COUNTER = 0;
     fo(ii, 0, k) {
+//        auto stop = chrono::high_resolution_clock::now();
+//        auto duration = duration_cast<chrono::microseconds>(stop - start);
+//        assert(duration.count() < 2e5);
         answ[ii].resize(max_length[ii]+1);
         vector<__int128> first_tree (N, 0);
         vector<__int128> second_tree (N, 0);
@@ -225,11 +205,10 @@ void solve() {
         sort(all(G[ii].second), [](shit a, shit b) {
             return a.nechet < b.nechet;
         });
-        __int128 curr_ans=0;
+        ll curr_ans=0;
         __int128 adding_first = 0;
         __int128 adding_second = 0;
         while (curr_ans <= max_length[ii]) {
-            LOG_OP_COUNTER += 1;
             if (curr_ans%2 == 0) {
                 answ[ii][curr_ans].less__any = get(0, N-100, first_tree);
                 answ[ii][curr_ans].less__less_or_eq = get(0, curr_ans, first_tree);
@@ -252,11 +231,7 @@ void solve() {
             curr_ans += 1;
         }
     }
-//    assert(LOG_OP_COUNTER < 1e6);
     __int128 myans = 0;
-    auto stop2 = chrono::high_resolution_clock::now();
-    auto duration2 = duration_cast<chrono::microseconds>(stop2 - start);
-//    assert(duration2.count() < 3e5);
     unordered_set<ll> relevant_ii;
     fo(ii, 0, k) {
         relevant_ii.insert(ii);
@@ -306,11 +281,7 @@ void solve() {
 //        clog << "BOTH_CONDs_NOT_MET: " << BOTH_CONDs_NOT_MET << endl;
         myans = (myans+length*(ALL - FIRST_COND_NOT_MET - SECOND_COND_NOT_MET + BOTH_CONDs_NOT_MET + 10*MOD7))%MOD7;
     }
-//    assert(BASIC_OP_COUNTER < 1e7);
-//    OG %= MOD7;
     cout << (ll)myans << endl;
-//    cout << OG << endl;
-//    assert(myans == OG);
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
