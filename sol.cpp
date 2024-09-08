@@ -52,37 +52,11 @@ ll __query__ (ll index, vector<ll> & tree)  {
     return sum;
 }
 
-ll __queryll__ (ll index, vector<ll> & tree)  {
-    ll sum = 0;
-    while (index > 0) {
-        OP_SHIT += 1;
-        assert(OP_SHIT < 5e7);
-        sum += tree[index];
-        index -= index & -index;
-    }
-    return sum;
-}
-
 ll get(ll left, ll right, vector<ll> & tree) {
     return __query__(right+5, tree) - __query__(left+5 - 1, tree);
 }
 
-ll getll(ll left, ll right, vector<ll> & tree) {
-    return __queryll__(right+5, tree) - __queryll__(left+5 - 1, tree);
-}
-
-
 void add(ll index, ll inc, vector<ll> & tree) {
-    index += 5;
-    while (index < tree.size()) {
-        OP_SHIT += 1;
-        assert(OP_SHIT < 5e7);
-        tree[index] += inc;
-        index += index & -index;
-    }
-}
-
-void addll(ll index, ll inc, vector<ll> & tree) {
     index += 5;
     while (index < tree.size()) {
         OP_SHIT += 1;
@@ -153,6 +127,11 @@ void solve() {
         unordered_set<ll> st_nak_chet;
         unordered_set<ll> st_nak_nech;
         fo(ii, 0, k) {
+            auto stop = chrono::high_resolution_clock::now();
+            auto duration_all = duration_cast<chrono::microseconds>(stop - start);
+            if (duration_all.count() > 9.2e5) {
+                assert(false);
+            }
             vector<ll> t_new_chet(N, 0);
             vector<ll> t_new_nech(N, 0);
             unordered_set<ll> st_new_chet;
@@ -239,23 +218,23 @@ void solve() {
         ll adding_second = 0;
         while (curr_ans <= max_length[ii]) {
             if (curr_ans%2 == 0) {
-                answ[ii][curr_ans].less__any = getll(0, max_length[ii]+2, first_tree);
-                answ[ii][curr_ans].less__less_or_eq = getll(0, curr_ans, first_tree);
+                answ[ii][curr_ans].less__any = get(0, max_length[ii]+2, first_tree);
+                answ[ii][curr_ans].less__less_or_eq = get(0, curr_ans, first_tree);
                 while (adding_first < G[ii].first.size() && G[ii].first[adding_first].chet <= curr_ans) {
-                    addll(G[ii].first[adding_first].nechet, 1, first_tree);
+                    add(G[ii].first[adding_first].nechet, 1, first_tree);
                     adding_first += 1;
                 }
-                answ[ii][curr_ans].less_or_eq__any = getll(0, max_length[ii]+2, first_tree);
-                answ[ii][curr_ans].less_or_eq__less = getll(0, curr_ans-1, first_tree);
+                answ[ii][curr_ans].less_or_eq__any = get(0, max_length[ii]+2, first_tree);
+                answ[ii][curr_ans].less_or_eq__less = get(0, curr_ans-1, first_tree);
             } else {
-                answ[ii][curr_ans].less__any = getll(0, max_length[ii]+2, second_tree);
-                answ[ii][curr_ans].less__less_or_eq = getll(0, curr_ans, second_tree);
+                answ[ii][curr_ans].less__any = get(0, max_length[ii]+2, second_tree);
+                answ[ii][curr_ans].less__less_or_eq = get(0, curr_ans, second_tree);
                 while (adding_second < G[ii].second.size() && G[ii].second[adding_second].nechet <= curr_ans) {
-                    addll(G[ii].second[adding_second].chet, 1, second_tree);
+                    add(G[ii].second[adding_second].chet, 1, second_tree);
                     adding_second += 1;
                 }
-                answ[ii][curr_ans].less_or_eq__any = getll(0, max_length[ii]+2, second_tree);
-                answ[ii][curr_ans].less_or_eq__less = getll(0, curr_ans-1, second_tree);
+                answ[ii][curr_ans].less_or_eq__any = get(0, max_length[ii]+2, second_tree);
+                answ[ii][curr_ans].less_or_eq__less = get(0, curr_ans-1, second_tree);
             }
             curr_ans += 1;
         }
