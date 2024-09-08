@@ -208,6 +208,7 @@ void solve() {
         cout << (ll)ans << endl;
         return;
     }
+    assert(k*max_length < 9e5);
 //    __int128 OG = 0;
 //    map<__int128, __int128> ls;
 //    for(auto [i, j]: DELETE) {
