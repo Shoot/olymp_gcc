@@ -62,6 +62,7 @@ void solve() {
     ll k=2;
 //    cin >> k;
     ll max_length = 0;
+    vector<pair<ll, ll>> DELETE;
     vector<pair<vector<shit>, vector<shit>>> G (k);
     bool graph_with_no_odd_cycle_exists = false;
     vector<ll> t_nak_nech(N, 0);
@@ -116,7 +117,7 @@ void solve() {
             G[ii].first[i-1] = shit(a[i].first, a[i].second);
             G[ii].second[i-1] = shit(a[i].first, a[i].second);
             max_length = max({max_length, a[i].first, a[i].second});
-            //clog << a[i].first << " " << a[i].second << endl;
+//            clog << a[i].first << " " << a[i].second << endl;
             if (a[i].first == maxi_init || a[i].second == maxi_init) {
                 graph_with_no_odd_cycle_exists = true;
             }
@@ -129,7 +130,20 @@ void solve() {
                 add(a[i].second, 1, t_new_nech);
             }
         }
-        //clog << endl;
+//        clog << endl;
+        if (DELETE.empty()) {
+            forr(i, 1, n) {
+                DELETE.push_back(a[i]);
+            }
+        } else {
+            vector<pair<ll, ll>> DELETE2;
+            for(auto [i, j]: DELETE) {
+                forr(iii, 1, n) {
+                    DELETE2.push_back(make_pair(max(i, a[iii].first), max(j, a[iii].second)));
+                }
+            }
+            DELETE = DELETE2;
+        }
         if (ii == 0) {
             swap(t_nak_chet, t_new_chet);
             swap(t_nak_nech, t_new_nech);
@@ -183,6 +197,18 @@ void solve() {
         }
         cout << ans%MOD7 << endl;
         return;
+    }
+    ll OG = 0;
+    map<ll, ll> ls;
+    for(auto [i, j]: DELETE) {
+        ll l = min(i, j);
+        if (l != maxi_init) {
+            ls[l] += 1;
+            OG += l;
+        }
+    }
+    for(auto [i, j] : ls) {
+        clog << "l=" << i << ", count = " << j << endl;
     }
     vector<vector<answer>> answ (k, vector<answer> (max_length+1));
     fo(ii, 0, k) {
@@ -245,7 +271,11 @@ void solve() {
         clog << "BOTH_CONDs_NOT_MET: " << BOTH_CONDs_NOT_MET << endl;
         myans += length*(ALL - FIRST_COND_NOT_MET - SECOND_COND_NOT_MET + BOTH_CONDs_NOT_MET);
     }
-    cout << myans%MOD7 << endl;
+    myans %= MOD7;
+    OG %= MOD7;
+    cout << myans << endl;
+    cout << OG << endl;
+    assert(myans == OG);
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
@@ -262,7 +292,7 @@ int32_t main (int32_t argc, char* argv[]) {
         cerr.tie(nullptr);
         clog.tie(nullptr);
     }
-    ll tt = 1;
+    ll tt = 1000;
 //    cin >> tt;
     while (tt--) solve();
     return 0;
