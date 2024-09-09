@@ -122,76 +122,76 @@ void solve() {
         absolute_max_length = max(absolute_max_length, max_length[ii]);
     }
     if (graph_with_no_odd_cycle_exists) {
-        vector<ll> t_nak_nech(N, 0);
-        vector<ll> t_nak_chet(N, 0);
-        unordered_set<ll> st_nak_chet;
-        unordered_set<ll> st_nak_nech;
-        vector<ll> t_new_chet(N);
-        vector<ll> t_new_nech(N);
-        vector<ll> t_nak_deriv_chet(N);
-        vector<ll> t_nak_deriv_nech(N);
+        map<ll, ll> nak_nech;
+        map<ll, ll> nak_chet;
+        map<ll, ll> nak_deriv_chet;
+        map<ll, ll> nak_deriv_nech;
         fo(ii, 0, k) {
-            fill(all(t_new_chet), 0);
-            fill(all(t_new_nech), 0);
-            unordered_set<ll> st_new_chet;
-            unordered_set<ll> st_new_nech;
+            map<ll, ll> new_chet;
+            map<ll, ll> new_nech;
             forr(i, 1, nn[ii]) {
                 if (G[ii].first[i-1].chet != maxi_init) {
-                    st_new_chet.insert(G[ii].first[i-1].chet);
-                    add(G[ii].first[i-1].chet, 1, t_new_chet);
+                    new_chet[G[ii].first[i-1].chet] += 1;
                 }
                 if (G[ii].first[i-1].nechet != maxi_init) {
-                    st_new_nech.insert(G[ii].first[i-1].nechet);
-                    add(G[ii].first[i-1].nechet, 1, t_new_nech);
+                    new_nech[G[ii].first[i-1].nechet] += 1;
                 }
             }
             if (ii == 0) {
-                swap(t_nak_chet, t_new_chet);
-                swap(t_nak_nech, t_new_nech);
-                swap(st_nak_chet, st_new_chet);
-                swap(st_nak_nech, st_new_nech);
+                swap(new_chet, nak_chet);
+                swap(new_nech, nak_nech);
                 continue;
             }
-            fill(all(t_nak_deriv_chet), 0);
-            fill(all(t_nak_deriv_nech), 0);
-            unordered_set<ll> st_nak_deriv_chet = st_nak_chet;
-            unordered_set<ll> st_nak_deriv_nech = st_nak_nech;
+            nak_deriv_chet.clear();
+            nak_deriv_nech.clear();
             // Из накапл в новый
-            for (ll chet_koord: st_nak_chet) {
-                add(chet_koord,
-                    (get(chet_koord, chet_koord, t_nak_chet)*get(0, chet_koord, t_new_chet))%MOD7,
-                    t_nak_deriv_chet);
+            auto p_new_chet = new_chet.begin();
+            ll curr = 0;
+            for(auto [kl, zn]: nak_chet) {
+                while (p_new_chet != new_chet.end() && p_new_chet->first <= kl) {
+                    curr += p_new_chet->second;
+                    p_new_chet++;
+                }
+                nak_deriv_chet[kl] = (zn*curr)%MOD7;
             }
-            for (ll nech_koord: st_nak_nech) {
-                add(nech_koord,
-                    (get(nech_koord, nech_koord, t_nak_nech)*get(0, nech_koord, t_new_nech))%MOD7,
-                    t_nak_deriv_nech);
+            auto p_new_nech = new_nech.begin();
+            curr = 0;
+            for(auto [kl, zn]: nak_nech) {
+                while (p_new_nech != new_nech.end() && p_new_nech->first <= kl) {
+                    curr += p_new_nech->second;
+                    p_new_nech++;
+                }
+                nak_deriv_nech[kl] = (zn*curr)%MOD7;
             }
             // Из ноого в накапл
-            for (ll chet_koord: st_new_chet) {
-                st_nak_deriv_chet.insert(chet_koord);
-                add(chet_koord,
-                    (get(chet_koord, chet_koord, t_new_chet)*get(0, chet_koord-1, t_nak_chet))%MOD7,
-                    t_nak_deriv_chet);
+            auto p_nak_chet = nak_chet.begin();
+            curr = 0;
+            for(auto [kl, zn]: new_chet) {
+                while (p_nak_chet != nak_chet.end() && p_nak_chet->first < kl) {
+                    curr += p_nak_chet->second;
+                    p_nak_chet++;
+                }
+                nak_deriv_chet[kl] = (nak_deriv_chet[kl]+(zn*curr)%MOD7)%MOD7;
             }
-            for (ll nech_koord: st_new_nech) {
-                st_nak_deriv_nech.insert(nech_koord);
-                add(nech_koord,
-                    (get(nech_koord, nech_koord, t_new_nech)*get(0, nech_koord-1, t_nak_nech))%MOD7,
-                    t_nak_deriv_nech);
+            auto p_nak_nech = nak_nech.begin();
+            curr = 0;
+            for(auto [kl, zn]: new_nech) {
+                while (p_nak_nech != nak_nech.end() && p_nak_nech->first < kl) {
+                    curr += p_nak_nech->second;
+                    p_nak_nech++;
+                }
+                nak_deriv_nech[kl] = (nak_deriv_nech[kl]+(zn*curr)%MOD7)%MOD7;
             }
-            swap(t_nak_deriv_chet, t_nak_chet);
-            swap(t_nak_deriv_nech, t_nak_nech);
-            st_nak_chet.merge(st_nak_deriv_chet);
-            st_nak_nech.merge(st_nak_deriv_nech);
+            swap(nak_deriv_chet, nak_chet);
+            swap(nak_deriv_nech, nak_nech);
         }
         clog << "ez" << endl;
         ll ans = 0;
-        for(ll jjjj: st_nak_chet) {
-            ans = (ans+(jjjj*get(jjjj, jjjj, t_nak_chet))%MOD7)%MOD7;
+        for(auto [iii, jjj]: nak_chet) {
+            ans = (ans+(iii*jjj)%MOD7)%MOD7;
         }
-        for(ll jjjj: st_nak_nech) {
-            ans = (ans+(jjjj*get(jjjj, jjjj, t_nak_nech))%MOD7)%MOD7;
+        for(auto [iii, jjj]: nak_nech) {
+            ans = (ans+(iii*jjj)%MOD7)%MOD7;
         }
         cout << (ll)ans << endl;
         return;
