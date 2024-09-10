@@ -18,11 +18,11 @@ typedef long double ld;
 //#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math,trapv")
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #endif
-//mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-//uniform_int_distribution<ll> distrib(1ll, 200000ll);
+mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
+uniform_int_distribution<ll> distrib(1ll, 4ll);
 //constexpr ll MOD = 1e9 + 7;
-constexpr __int128 MOD = 957363431467152001;
-/*
+constexpr __int128 MOD = 85664078284794307;
+/*\
 void copy_this () {
     ll n; cin >> n;
     ll n, k; cin >> n >> k;
@@ -53,15 +53,62 @@ __int128 powm(__int128 a, __int128 b){
 __int128 mul(__int128 a, __int128 b){
     return ((a*b)%MOD);
 }
+ll n;
+string s;
+ll brute() {
+    ll OG = 0;
+    vector<ll> basic (10010, 0);
+    ll pos = 5003;
+    fo(i, 0, n) {
+        if (s[i] == '+') {
+            basic[pos] += 1;
+        } else if (s[i] == '-') {
+            basic[pos] -= 1;
+        } else if (s[i] == '<') {
+            pos -= 1;
+        } else {
+            pos += 1;
+        }
+    }
+    fo(i, 0, n) {
+        vector<ll> otr(10010, 0);
+        ll posotr = 5003;
+        fo(j, i, n) {
+            if (s[j] == '+') {
+                otr[posotr] += 1;
+            } else if (s[j] == '-') {
+                otr[posotr] -= 1;
+            } else if (s[j] == '<') {
+                posotr -= 1;
+            } else {
+                posotr += 1;
+            }
+            OG += otr == basic;
+        }
+    }
+    return OG;
+}
 
 void solve() {
-    ll n;
-    cin >> n;
-    string s;
-    cin >> s;
-    const ll zero_pos = 500000;
+    s = "";
+    n = 5000;
+//    cin >> n;
+//    cin >> s;
+    fo(i, 0, n) {
+        ll r = distrib(rng);
+        if (r == 1) {
+            s += '+';
+        } else if (r == 2) {
+            s += '-';
+        } else if (r == 3) {
+            s += '>';
+        } else {
+            s += '<';
+        }
+    }
+    const ll zero_pos = 500001;
     ll looking_r_pos = zero_pos;
-    __int128 base = 1500000;
+    __int128 base = 1e6+1238;
     __int128 looking_r_hash = 0;
     fo(i, 0, n) {
         if (s[i] == '>') {
@@ -75,16 +122,17 @@ void solve() {
         }
     }
     unordered_map<__int128, ll> kol_r_by_value;
+    __int128 overall_hash = looking_r_hash;
     __int128 hash_of_suffix_starting_at_i = 0;
     ll curr_r_pos = looking_r_pos;
     ll tot = 0;
     kol_r_by_value[0] = 1; // добавляем длину r = 0
     roff(i, n-1, 0) {
-        clog << "-----" << endl;
-        clog << "длина l = " << i << endl;
+//        clog << "-----" << endl;
+//        clog << "длина l = " << i << endl;
         // отменяем для looking_r_hash
         if (i+1 < n) {
-            clog << "добавляем длину r = " << n-i-1 << endl;
+//            clog << "добавляем длину r = " << n-i-1 << endl;
             if (s[i+1] == '>') {
                 curr_r_pos -= 1;
             } else if (s[i+1] == '<') {
@@ -105,13 +153,20 @@ void solve() {
         } else {
             looking_r_hash = (looking_r_hash - mul(1, powm(base, looking_r_pos)) + MOD)%MOD;
         }
-        clog << "looking for hash = " << (ll)looking_r_hash << endl;
-        if (kol_r_by_value.contains(looking_r_hash)) {
-            clog << "+= " << kol_r_by_value[looking_r_hash] << endl;
+//        clog << "looking for hash = " << (ll)looking_r_hash << endl;
+//        if (i-1 < 0 || s[i-1] != '>' && s[i-1] != '<') {
+            // если последнее в l - это сдвиг то не считаем
+        if (kol_r_by_value.contains(looking_r_hash) && ((looking_r_pos == zero_pos) || (overall_hash == 0))) {
+//            clog << "l resulting pos" << looking_r_pos << endl;
+//            clog << "+= " << kol_r_by_value[looking_r_hash] << endl;
             tot += kol_r_by_value[looking_r_hash];
         }
+
     }
+    ll br = brute();
+    cout << "OG: " << br << endl;
     cout << tot << endl;
+    assert(tot == br);
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
@@ -128,7 +183,7 @@ int32_t main (int32_t argc, char* argv[]) {
         cerr.tie(nullptr);
         clog.tie(nullptr);
     }
-    ll tt = 1;
+    ll tt = 1000;
 //    cin >> tt;
     while (tt--) solve();
     return 0;
