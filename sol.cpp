@@ -57,8 +57,8 @@ ll n;
 string s;
 ll brute() {
     ll OG = 0;
-    vector<ll> basic (10010, 0);
-    ll pos = 5003;
+    vector<ll> basic (20, 0);
+    ll pos = 9;
     fo(i, 0, n) {
         if (s[i] == '+') {
             basic[pos] += 1;
@@ -71,8 +71,8 @@ ll brute() {
         }
     }
     fo(i, 0, n) {
-        vector<ll> otr(10010, 0);
-        ll posotr = 5003;
+        vector<ll> otr(20, 0);
+        ll posotr = 9;
         fo(j, i, n) {
             if (s[j] == '+') {
                 otr[posotr] += 1;
@@ -91,21 +91,22 @@ ll brute() {
 
 void solve() {
     s = "";
-    n = 5000;
-//    cin >> n;
-//    cin >> s;
-    fo(i, 0, n) {
-        ll r = distrib(rng);
-        if (r == 1) {
-            s += '+';
-        } else if (r == 2) {
-            s += '-';
-        } else if (r == 3) {
-            s += '>';
-        } else {
-            s += '<';
-        }
-    }
+    n = 4;
+    cin >> n;
+    cin >> s;
+//    fo(i, 0, n) {
+//        ll r = distrib(rng);
+//        if (r == 1) {
+//            s += '+';
+//        } else if (r == 2) {
+//            s += '-';
+//        } else if (r == 3) {
+//            s += '>';
+//        } else {
+//            s += '<';
+//        }
+//    }
+//    clog << "s:" << s << endl;
     const ll zero_pos = 500001;
     ll looking_r_pos = zero_pos;
     __int128 base = 1e6+1238;
@@ -128,8 +129,8 @@ void solve() {
     ll tot = 0;
     kol_r_by_value[0] = 1; // добавляем длину r = 0
     roff(i, n-1, 0) {
-//        clog << "-----" << endl;
-//        clog << "длина l = " << i << endl;
+        clog << "-----" << endl;
+        clog << "длина l = " << i << endl;
         // отменяем для looking_r_hash
         if (i+1 < n) {
 //            clog << "добавляем длину r = " << n-i-1 << endl;
@@ -153,20 +154,21 @@ void solve() {
         } else {
             looking_r_hash = (looking_r_hash - mul(1, powm(base, looking_r_pos)) + MOD)%MOD;
         }
-//        clog << "looking for hash = " << (ll)looking_r_hash << endl;
+        clog << "looking for hash = " << (ll)looking_r_hash << endl;
 //        if (i-1 < 0 || s[i-1] != '>' && s[i-1] != '<') {
             // если последнее в l - это сдвиг то не считаем
-        if (kol_r_by_value.contains(looking_r_hash) && ((looking_r_pos == zero_pos) || (overall_hash == 0))) {
-//            clog << "l resulting pos" << looking_r_pos << endl;
-//            clog << "+= " << kol_r_by_value[looking_r_hash] << endl;
+//        if (kol_r_by_value.contains(looking_r_hash) && ((looking_r_pos == zero_pos) || (overall_hash == 0))) {
+        if (kol_r_by_value.contains(looking_r_hash)) {
+            clog << "l resulting pos" << looking_r_pos << endl;
+            clog << "+= " << kol_r_by_value[looking_r_hash] << endl;
             tot += kol_r_by_value[looking_r_hash];
         }
 
     }
-    ll br = brute();
-    cout << "OG: " << br << endl;
+//    ll br = brute();
+//    cout << "OG: " << br << endl;
     cout << tot << endl;
-    assert(tot == br);
+//    assert(tot == br);
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
@@ -183,7 +185,7 @@ int32_t main (int32_t argc, char* argv[]) {
         cerr.tie(nullptr);
         clog.tie(nullptr);
     }
-    ll tt = 1000;
+    ll tt = 1;
 //    cin >> tt;
     while (tt--) solve();
     return 0;
