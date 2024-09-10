@@ -92,83 +92,67 @@ ll brute() {
 void solve() {
     s = "";
     n = 4;
-    cin >> n;
-    cin >> s;
-//    fo(i, 0, n) {
-//        ll r = distrib(rng);
-//        if (r == 1) {
-//            s += '+';
-//        } else if (r == 2) {
-//            s += '-';
-//        } else if (r == 3) {
-//            s += '>';
-//        } else {
-//            s += '<';
-//        }
-//    }
-//    clog << "s:" << s << endl;
+//    cin >> n;
+//    cin >> s;
+    fo(i, 0, n) {
+        ll r = distrib(rng);
+        if (r == 1) {
+            s += '+';
+        } else if (r == 2) {
+            s += '-';
+        } else if (r == 3) {
+            s += '>';
+        } else {
+            s += '<';
+        }
+    }
+    clog << "s:" << s << endl;
     const ll zero_pos = 500001;
-    ll looking_r_pos = zero_pos;
+    ll temp_pos_for_calculating_desired_hash = zero_pos;
     __int128 base = 1e6+1238;
-    __int128 looking_r_hash = 0;
+    __int128 desired_hash = 0;
     fo(i, 0, n) {
         if (s[i] == '>') {
-            looking_r_pos += 1;
+            temp_pos_for_calculating_desired_hash += 1;
         } else if (s[i] == '<') {
-            looking_r_pos -= 1;
+            temp_pos_for_calculating_desired_hash -= 1;
         } else if (s[i] == '+') {
-            looking_r_hash = (looking_r_hash - mul(1, powm(base, looking_r_pos)) + MOD)%MOD;
+            desired_hash = (desired_hash + mul(1, powm(base, temp_pos_for_calculating_desired_hash)) + MOD)%MOD;
         } else {
-            looking_r_hash = (looking_r_hash + mul(1, powm(base, looking_r_pos)))%MOD;
+            desired_hash = (desired_hash - mul(1, powm(base, temp_pos_for_calculating_desired_hash)))%MOD;
         }
     }
-    unordered_map<__int128, ll> kol_r_by_value;
-    __int128 overall_hash = looking_r_hash;
-    __int128 hash_of_suffix_starting_at_i = 0;
-    ll curr_r_pos = looking_r_pos;
+    if (desired_hash == 0) return;
+    ll current_pos = zero_pos;
+    __int128 current_hash = 0;
+    unordered_map<__int128, ll> mp;
     ll tot = 0;
-    kol_r_by_value[0] = 1; // добавляем длину r = 0
-    roff(i, n-1, 0) {
-        clog << "-----" << endl;
-        clog << "длина l = " << i << endl;
-        // отменяем для looking_r_hash
-        if (i+1 < n) {
-//            clog << "добавляем длину r = " << n-i-1 << endl;
-            if (s[i+1] == '>') {
-                curr_r_pos -= 1;
-            } else if (s[i+1] == '<') {
-                curr_r_pos += 1;
-            } else if (s[i+1] == '+') {
-                hash_of_suffix_starting_at_i = (hash_of_suffix_starting_at_i + mul(1, powm(base, curr_r_pos)))%MOD;
-            } else {
-                hash_of_suffix_starting_at_i = (hash_of_suffix_starting_at_i - mul(1, powm(base, curr_r_pos)) + MOD)%MOD;
-            }
-            kol_r_by_value[hash_of_suffix_starting_at_i] += 1;
-        }
+    mp[0] += 1;
+    fo(i, 0, n) {
+        clog << "----" << endl;
         if (s[i] == '>') {
-            looking_r_pos -= 1;
+            current_pos += 1;
         } else if (s[i] == '<') {
-            looking_r_pos += 1;
+            current_pos -= 1;
         } else if (s[i] == '+') {
-            looking_r_hash = (looking_r_hash + mul(1, powm(base, looking_r_pos)))%MOD;
+            current_hash = (current_hash + mul(1, powm(base, current_pos)))%MOD;
         } else {
-            looking_r_hash = (looking_r_hash - mul(1, powm(base, looking_r_pos)) + MOD)%MOD;
+            current_hash = (current_hash - mul(1, powm(base, current_pos)) + 10*MOD)%MOD;
         }
-        clog << "looking for hash = " << (ll)looking_r_hash << endl;
-//        if (i-1 < 0 || s[i-1] != '>' && s[i-1] != '<') {
-            // если последнее в l - это сдвиг то не считаем
-//        if (kol_r_by_value.contains(looking_r_hash) && ((looking_r_pos == zero_pos) || (overall_hash == 0))) {
-        if (kol_r_by_value.contains(looking_r_hash)) {
-            clog << "l resulting pos" << looking_r_pos << endl;
-            clog << "+= " << kol_r_by_value[looking_r_hash] << endl;
-            tot += kol_r_by_value[looking_r_hash];
+        __int128 looking_for = (current_hash-desired_hash+10*MOD)%MOD;
+        clog << "looking for " << (ll)looking_for << endl;
+        ll x = mp[looking_for];
+        clog << "+= " << x << endl;
+        tot += x;
+        if (current_pos == zero_pos) {
+            clog << "adding " << (ll)current_hash << " to mp" << endl;
+            mp[current_hash] += 1;
         }
-
     }
-//    ll br = brute();
-//    cout << "OG: " << br << endl;
-    cout << tot << endl;
-//    assert(tot == br);
+    clog << "my: " << tot << endl;
+    ll br = brute();
+    clog << "og: " << br << endl;
+    assert(br == tot);
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
@@ -185,7 +169,7 @@ int32_t main (int32_t argc, char* argv[]) {
         cerr.tie(nullptr);
         clog.tie(nullptr);
     }
-    ll tt = 1;
+    ll tt = 1e5;
 //    cin >> tt;
     while (tt--) solve();
     return 0;
