@@ -53,12 +53,18 @@ __int128 powm(__int128 a, __int128 b){
 __int128 mul(__int128 a, __int128 b){
     return ((a*b)%MOD);
 }
+__int128 sum(__int128 a, __int128 b){
+    return ((a+b)%MOD);
+}
+__int128 sub(__int128 a, __int128 b){
+    return ((a-b+10*MOD)%MOD);
+}
 ll n;
 string s;
 ll brute() {
     ll OG = 0;
-    vector<ll> basic (20, 0);
-    ll pos = 9;
+    vector<ll> basic (100, 0);
+    ll pos = 50;
     fo(i, 0, n) {
         if (s[i] == '+') {
             basic[pos] += 1;
@@ -71,8 +77,8 @@ ll brute() {
         }
     }
     fo(i, 0, n) {
-        vector<ll> otr(20, 0);
-        ll posotr = 9;
+        vector<ll> otr(100, 0);
+        ll posotr = 50;
         fo(j, i, n) {
             if (s[j] == '+') {
                 otr[posotr] += 1;
@@ -88,10 +94,13 @@ ll brute() {
     }
     return OG;
 }
-
+struct shit {
+    __int128 hash=0;
+    ll pos=0;
+};
 void solve() {
     s = "";
-    n = 4;
+    n = 45;
 //    cin >> n;
 //    cin >> s;
     fo(i, 0, n) {
@@ -106,10 +115,10 @@ void solve() {
             s += '<';
         }
     }
-    clog << "s:" << s << endl;
     const ll zero_pos = 500001;
     ll temp_pos_for_calculating_desired_hash = zero_pos;
     __int128 base = 1e6+1238;
+    __int128 revbase = powm(base, MOD-2);
     __int128 desired_hash = 0;
     fo(i, 0, n) {
         if (s[i] == '>') {
@@ -117,38 +126,35 @@ void solve() {
         } else if (s[i] == '<') {
             temp_pos_for_calculating_desired_hash -= 1;
         } else if (s[i] == '+') {
-            desired_hash = (desired_hash + mul(1, powm(base, temp_pos_for_calculating_desired_hash)) + MOD)%MOD;
+            desired_hash = sum(desired_hash, powm(base, temp_pos_for_calculating_desired_hash));
         } else {
-            desired_hash = (desired_hash - mul(1, powm(base, temp_pos_for_calculating_desired_hash)))%MOD;
+            desired_hash = sub(desired_hash, powm(base, temp_pos_for_calculating_desired_hash));
         }
     }
-    if (desired_hash == 0) return;
     ll current_pos = zero_pos;
     __int128 current_hash = 0;
-    unordered_map<__int128, ll> mp;
     ll tot = 0;
-    mp[0] += 1;
+    vector<shit> temp;
+    temp.push_back(shit{0, zero_pos});
     fo(i, 0, n) {
-        clog << "----" << endl;
         if (s[i] == '>') {
             current_pos += 1;
         } else if (s[i] == '<') {
             current_pos -= 1;
         } else if (s[i] == '+') {
-            current_hash = (current_hash + mul(1, powm(base, current_pos)))%MOD;
+            current_hash = sum(current_hash, powm(base, current_pos));
         } else {
-            current_hash = (current_hash - mul(1, powm(base, current_pos)) + 10*MOD)%MOD;
+            current_hash = sub(current_hash, powm(base, current_pos));
         }
-        __int128 looking_for = (current_hash-desired_hash+10*MOD)%MOD;
-        clog << "looking for " << (ll)looking_for << endl;
-        ll x = mp[looking_for];
-        clog << "+= " << x << endl;
-        tot += x;
-        if (current_pos == zero_pos) {
-            clog << "adding " << (ll)current_hash << " to mp" << endl;
-            mp[current_hash] += 1;
+        for (auto previous: temp) {
+            if (mul(sub(current_hash, previous.hash), powm(previous.pos-zero_pos>0?revbase:base, abs(previous.pos-zero_pos))) == desired_hash)
+            {
+                tot += 1;
+            }
         }
+        temp.push_back(shit{current_hash, current_pos});
     }
+//    cout << tot << endl;
     clog << "my: " << tot << endl;
     ll br = brute();
     clog << "og: " << br << endl;
@@ -169,7 +175,7 @@ int32_t main (int32_t argc, char* argv[]) {
         cerr.tie(nullptr);
         clog.tie(nullptr);
     }
-    ll tt = 1e5;
+    ll tt = 1e8;
 //    cin >> tt;
     while (tt--) solve();
     return 0;
