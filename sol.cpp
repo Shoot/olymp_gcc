@@ -59,44 +59,57 @@ void solve() {
     cin >> n;
     string s;
     cin >> s;
-    __int128 pos = 250001;
-    __int128 base = 250001;
-    __int128 revbase = powm(base, MOD-2);
-    __int128 looking_r = 0;
-    __int128 right_to_left = 0;
+    const ll zero_pos = 500000;
+    ll looking_r_pos = zero_pos;
+    __int128 base = 1500000;
+    __int128 looking_r_hash = 0;
     fo(i, 0, n) {
         if (s[i] == '>') {
-            pos += 1;
+            looking_r_pos += 1;
         } else if (s[i] == '<') {
-            pos -= 1;
+            looking_r_pos -= 1;
         } else if (s[i] == '+') {
-            looking_r = (looking_r + mul(1, powm(base, pos)))%MOD;
-//            right_to_left = (right_to_left + mul(1, powm(base, pos)))%MOD;
+            looking_r_hash = (looking_r_hash - mul(1, powm(base, looking_r_pos)) + MOD)%MOD;
         } else {
-            looking_r = (looking_r - mul(1, powm(base, pos)))%MOD;
-//            right_to_left = (right_to_left - mul(1, powm(base, pos)))%MOD;
+            looking_r_hash = (looking_r_hash + mul(1, powm(base, looking_r_pos)))%MOD;
         }
     }
     unordered_map<__int128, ll> kol_r_by_value;
-    __int128 curr_r = 0;
+    __int128 hash_of_suffix_starting_at_i = 0;
+    ll curr_r_pos = looking_r_pos;
     ll tot = 0;
+    kol_r_by_value[0] = 1; // добавляем длину r = 0
     roff(i, n-1, 0) {
-        // отменяем для looking_r
-        if (s[i] == '>') {
-            pos -= 1;
-            curr_r = mul(curr_r, base);
-        } else if (s[i] == '<') {
-            pos += 1;
-            curr_r = mul(curr_r, revbase);
-        } else if (s[i] == '+') {
-            looking_r = (looking_r - mul(1, powm(base, pos)))%MOD;
-            curr_r = (curr_r + mul(1, powm(base, 250001)))%MOD;
-        } else {
-            looking_r = (looking_r + mul(1, powm(base, pos)))%MOD;
-            curr_r = (curr_r - mul(1, powm(base, 250001)))%MOD;
+        clog << "-----" << endl;
+        clog << "длина l = " << i << endl;
+        // отменяем для looking_r_hash
+        if (i+1 < n) {
+            clog << "добавляем длину r = " << n-i-1 << endl;
+            if (s[i+1] == '>') {
+                curr_r_pos -= 1;
+            } else if (s[i+1] == '<') {
+                curr_r_pos += 1;
+            } else if (s[i+1] == '+') {
+                hash_of_suffix_starting_at_i = (hash_of_suffix_starting_at_i + mul(1, powm(base, curr_r_pos)))%MOD;
+            } else {
+                hash_of_suffix_starting_at_i = (hash_of_suffix_starting_at_i - mul(1, powm(base, curr_r_pos)) + MOD)%MOD;
+            }
+            kol_r_by_value[hash_of_suffix_starting_at_i] += 1;
         }
-        kol_r_by_value[curr_r] += 1;
-        if (kol_r_by_value.contains(looking_r)) tot += kol_r_by_value[looking_r];
+        if (s[i] == '>') {
+            looking_r_pos -= 1;
+        } else if (s[i] == '<') {
+            looking_r_pos += 1;
+        } else if (s[i] == '+') {
+            looking_r_hash = (looking_r_hash + mul(1, powm(base, looking_r_pos)))%MOD;
+        } else {
+            looking_r_hash = (looking_r_hash - mul(1, powm(base, looking_r_pos)) + MOD)%MOD;
+        }
+        clog << "looking for hash = " << (ll)looking_r_hash << endl;
+        if (kol_r_by_value.contains(looking_r_hash)) {
+            clog << "+= " << kol_r_by_value[looking_r_hash] << endl;
+            tot += kol_r_by_value[looking_r_hash];
+        }
     }
     cout << tot << endl;
 }
