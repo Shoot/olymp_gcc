@@ -46,9 +46,16 @@ string my_move;
 string new_move;
 vector<vector<ll>> field (8, vector<ll> (8, 0));
 bool nash_hod = false;
+bool isCellPossible (ll i, ll j) {
+    return i < 8 && i >= 0 && j < 8 && j >= 0;
+}
 void process () {
     if (new_move == "O-O-O") {
-        //assert(!nash_hod);
+        assert(!nash_hod);
+        assert(isCellPossible('8'-'1', 'c'-'a'));
+        assert(isCellPossible('8'-'1', 'e'-'a'));
+        assert(isCellPossible('8'-'1', 'd'-'a'));
+        assert(isCellPossible('8'-'1', 'a'-'a'));
         field['8'-'1']['c'-'a'] = field['8'-'1']['e'-'a'];
         field['8'-'1']['e'-'a'] = 0;
         field['8'-'1']['d'-'a'] = field['8'-'1']['a'-'a'];
@@ -56,7 +63,11 @@ void process () {
         return;
     }
     if (new_move == "O-O") {
-        //assert(!nash_hod);
+        assert(isCellPossible('8'-'1', 'g'-'a'));
+        assert(isCellPossible('8'-'1', 'e'-'a'));
+        assert(isCellPossible('8'-'1', 'f'-'a'));
+        assert(isCellPossible('8'-'1', 'h'-'a'));
+        assert(!nash_hod);
         field['8'-'1']['g'-'a'] = field['8'-'1']['e'-'a'];
         field['8'-'1']['e'-'a'] = 0;
         field['8'-'1']['f'-'a'] = field['8'-'1']['h'-'a'];
@@ -65,11 +76,13 @@ void process () {
     }
     ll n = new_move.size();
     if (n == 6 && new_move[n-1] == 'Q' && nash_hod) {
-        ll origin_j = new_move[1]-'a';
-        ll origin_i = new_move[2]-'1';
+        ll origin_j = new_move[0]-'a';
+        ll origin_i = new_move[1]-'1';
+        assert(isCellPossible(origin_i, origin_j));
         field[origin_i][origin_j] = 0;
-        ll destination_j = new_move[4]-'a';
-        ll destination_i = new_move[5]-'1';
+        ll destination_j = new_move[3]-'a';
+        ll destination_i = new_move[4]-'1';
+        assert(isCellPossible(destination_i, destination_j));
         field[destination_i][destination_j] = WHITE_QUEEN;
         return;
     }
@@ -78,41 +91,53 @@ void process () {
         ll origin_i = new_move[1]-'1';
         ll destination_j = new_move[3]-'a';
         ll destination_i = new_move[4]-'1';
-        field[destination_i][destination_j] = field[origin_i][origin_j];
-        field[origin_i][origin_j] = 0;
-        return;
-    } else if (n == 6) { // ход фигурой
-        ll origin_j = new_move[1]-'a';
-        ll origin_i = new_move[2]-'1';
-        ll destination_j = new_move[4]-'a';
-        ll destination_i = new_move[5]-'1';
+        assert(isCellPossible(origin_i, origin_j));
+        assert(isCellPossible(destination_i, destination_j));
+        if (new_move[2] == 'x') {
+            assert(field[destination_i][destination_j] < 20 || nash_hod);
+        }
         field[destination_i][destination_j] = field[origin_i][origin_j];
         field[origin_i][origin_j] = 0;
         return;
     }
-    //assert(false);
+    if (n == 6) { // ход фигурой
+        assert(new_move[n-1] != 'B' && new_move[n-1] != 'Q' && new_move[n-1] != 'R' && new_move[n-1] != 'N');
+        ll origin_j = new_move[1]-'a';
+        ll origin_i = new_move[2]-'1';
+        ll destination_j = new_move[4]-'a';
+        ll destination_i = new_move[5]-'1';
+        assert(isCellPossible(origin_i, origin_j));
+        assert(isCellPossible(destination_i, destination_j));
+        if (new_move[2] == 'x') {
+            assert(field[destination_i][destination_j] < 20 || nash_hod);
+        }
+        field[destination_i][destination_j] = field[origin_i][origin_j];
+        field[origin_i][origin_j] = 0;
+        return;
+    }
+    assert(false);
 }
 struct Move {
     ll origin_i, origin_j, destination_i, destination_j;
     ll priority;
 };
-bool isCellPossible (ll i, ll j) {
-    return i < 8 && i >= 0 && j < 8 && j >= 0;
-}
+
 bool isOurKingUnderAttack (vector<vector<ll>> & deriv_field) {
     ll myKingI = -1;
     ll myKingJ = -1;
     fo(i, 0, 8) {
         fo(j, 0, 8) {
+            assert(isCellPossible(i, j));
             if (deriv_field[i][j] == WHITE_KING) {
                 myKingI = i;
                 myKingJ = j;
             }
         }
     }
-    //assert(myKingI != -1 && myKingJ != -1);
+    assert(myKingI != -1 && myKingJ != -1);
     fo(i, 0, 8) {
         fo(j, 0, 8) {
+            assert(isCellPossible(i, j));
             if (deriv_field[i][j] == BLACK_PAWN) {
                 if (i-1 == myKingI && abs(j-myKingJ) <= 1) {
                     return true;
@@ -176,6 +201,7 @@ bool isOurKingUnderAttack (vector<vector<ll>> & deriv_field) {
                     temp_j -= 1;
                 }
             }
+            assert(isCellPossible(i, j));
             if (deriv_field[i][j] == BLACK_BISHOP || deriv_field[i][j] == BLACK_QUEEN) {
                 ll temp_i = i+1;
                 ll temp_j = j+1;
@@ -251,6 +277,7 @@ void calc () {
     vector<Move> moves;
     fo(i, 0, 8) {
         fo(j, 0, 8) {
+            assert(isCellPossible(i, j));
             if (field[i][j] == WHITE_KING) {
                 forr(ii, i-1, i+1) {
                     forr (jj, j-1, j+1) {
@@ -259,11 +286,11 @@ void calc () {
                     }
                 }
             }
-            if (field[i][j] == WHITE_PAWN && i == 1) {
-                if (field[i+2][j] == 0) {
-                    moves.push_back(Move{i, j, i+2, j, 10+i}); // проводим пешки
-                }
-            }
+//            if (field[i][j] == WHITE_PAWN && i == 1) {
+//                if (field[i+2][j] == 0) {
+//                    moves.push_back(Move{i, j, i+2, j, 10+i}); // проводим пешки
+//                }
+//            }
             if (field[i][j] == WHITE_PAWN) {
                 if (isCellPossible(i+1, j) && field[i+1][j] == 0) {
                     moves.push_back(Move{i, j, i+1, j, 9+i}); // проводим пешки
@@ -275,46 +302,47 @@ void calc () {
                     moves.push_back(Move{i, j, i+1, j-1, 15+i}); // проводим пешки
                 }
             }
-            if (field[i][j] == WHITE_KNIGHT) {
-                if (isCellPossible(i+2, j+1) && field[i+2][j+1] > 20) {
-                    moves.push_back(Move{i, j, i+2, j+1, 15});
-                }
-                if (isCellPossible(i+1, j+2) && field[i+1][j+2] > 20) {
-                    moves.push_back(Move{i, j, i+1, j+2, 15});
-                }
-                if (isCellPossible(i-1, j-2) && field[i-1][j-2] > 20) {
-                    moves.push_back(Move{i, j, i-1, j-2, 15});
-                }
-                if (isCellPossible(i-1, j+2) && field[i-1][j+2] > 20) {
-                    moves.push_back(Move{i, j, i-1, j+2, 15});
-                }
-                if (isCellPossible(i-2, j+1) && field[i-2][j+1] > 20) {
-                    moves.push_back(Move{i, j, i-2, j+1, 15});
-                }
-                if (isCellPossible(i+2, j-1) && field[i+2][j-1] > 20) {
-                    moves.push_back(Move{i, j, i+2, j-1, 15});
-                }
-                if (isCellPossible(i+1, j-2) && field[i+1][j-2] > 20) {
-                    moves.push_back(Move{i, j, i+1, j-2, 15});
-                }
-                if (isCellPossible(i-2, j-1) && field[i-2][j-1] > 20) {
-                    moves.push_back(Move{i, j, i-2, j-1, 15});
-                }
-            }
+//            if (field[i][j] == WHITE_KNIGHT) {
+//                if (isCellPossible(i+2, j+1) && field[i+2][j+1] > 20) {
+//                    moves.push_back(Move{i, j, i+2, j+1, 15});
+//                }
+//                if (isCellPossible(i+1, j+2) && field[i+1][j+2] > 20) {
+//                    moves.push_back(Move{i, j, i+1, j+2, 15});
+//                }
+//                if (isCellPossible(i-1, j-2) && field[i-1][j-2] > 20) {
+//                    moves.push_back(Move{i, j, i-1, j-2, 15});
+//                }
+//                if (isCellPossible(i-1, j+2) && field[i-1][j+2] > 20) {
+//                    moves.push_back(Move{i, j, i-1, j+2, 15});
+//                }
+//                if (isCellPossible(i-2, j+1) && field[i-2][j+1] > 20) {
+//                    moves.push_back(Move{i, j, i-2, j+1, 15});
+//                }
+//                if (isCellPossible(i+2, j-1) && field[i+2][j-1] > 20) {
+//                    moves.push_back(Move{i, j, i+2, j-1, 15});
+//                }
+//                if (isCellPossible(i+1, j-2) && field[i+1][j-2] > 20) {
+//                    moves.push_back(Move{i, j, i+1, j-2, 15});
+//                }
+//                if (isCellPossible(i-2, j-1) && field[i-2][j-1] > 20) {
+//                    moves.push_back(Move{i, j, i-2, j-1, 15});
+//                }
+//            }
         }
     }
     sort(all(moves), [] (Move a, Move b) {
         return a.priority > b.priority;
     });
     for (Move hod: moves) {
-        //assert(isCellPossible(hod.origin_i, hod.origin_j));
-        //assert(isCellPossible(hod.destination_i, hod.destination_j));
+        assert(isCellPossible(hod.origin_i, hod.origin_j));
+        assert(hod.origin_i != hod.destination_i || hod.origin_j != hod.destination_j);
+        assert(isCellPossible(hod.destination_i, hod.destination_j));
         if (isMovePossible(hod)) {
             char first_ch = (char)('a'+hod.origin_j);
             char third_ch = (char)('a'+hod.destination_j);
             char second_ch = (char)('1'+hod.origin_i);
             char fourth_ch = (char)('1'+hod.destination_i);
-            //assert(field[hod.origin_i][hod.origin_j] != 0);
+            assert(field[hod.origin_i][hod.origin_j] != 0);
             if (field[hod.origin_i][hod.origin_j] == WHITE_KING) my_move += 'K';
             if (field[hod.origin_i][hod.origin_j] == WHITE_QUEEN) my_move += 'Q';
             if (field[hod.origin_i][hod.origin_j] == WHITE_ROOK) my_move += 'R';
@@ -368,7 +396,6 @@ void solve() {
         my_move = "";
         calc();
 //        if (my_move.empty()) cout << "FUK" << endl;
-        if (nr_hoda == 10) cout << "FUK";
 //        assert(!my_move.empty());
         cout << my_move << endl;
         cout.flush();
@@ -379,7 +406,7 @@ void solve() {
             break;
         }
         cin >> new_move;
-        //assert(!new_move.empty());
+        assert(!new_move.empty());
         process();
     }
 }
