@@ -43,41 +43,54 @@ void copy_this () {
 }
 */
 string my_move;
-string his_move;
+string new_move;
 vector<vector<ll>> field (8, vector<ll> (8, 0));
+bool nash_hod = false;
 void process () {
-    if (his_move == "O-O-O") {
+    if (new_move == "O-O-O") {
+        //assert(!nash_hod);
         field['8'-'1']['c'-'a'] = field['8'-'1']['e'-'a'];
         field['8'-'1']['e'-'a'] = 0;
         field['8'-'1']['d'-'a'] = field['8'-'1']['a'-'a'];
         field['8'-'1']['a'-'a'] = 0;
         return;
     }
-    if (his_move == "O-O") {
+    if (new_move == "O-O") {
+        //assert(!nash_hod);
         field['8'-'1']['g'-'a'] = field['8'-'1']['e'-'a'];
         field['8'-'1']['e'-'a'] = 0;
         field['8'-'1']['f'-'a'] = field['8'-'1']['h'-'a'];
         field['8'-'1']['h'-'a'] = 0;
         return;
     }
-    ll n = his_move.size();
-    if (n == 5) { // ход пешкой без превращения
-        ll origin_j = his_move[0]-'a';
-        ll origin_i = his_move[1]-'1';
-        ll destination_j = his_move[3]-'a';
-        ll destination_i = his_move[4]-'1';
-        field[destination_i][destination_j] = field[origin_i][origin_j];
+    ll n = new_move.size();
+    if (n == 6 && new_move[n-1] == 'Q' && nash_hod) {
+        ll origin_j = new_move[1]-'a';
+        ll origin_i = new_move[2]-'1';
         field[origin_i][origin_j] = 0;
-    } else if (n == 6) { // ход фигурой
-        ll origin_j = his_move[1]-'a';
-        ll origin_i = his_move[2]-'1';
-        ll destination_j = his_move[4]-'a';
-        ll destination_i = his_move[5]-'1';
-        field[destination_i][destination_j] = field[origin_i][origin_j];
-        field[origin_i][origin_j] = 0;
-    } else {
-        assert(false);
+        ll destination_j = new_move[4]-'a';
+        ll destination_i = new_move[5]-'1';
+        field[destination_i][destination_j] = WHITE_QUEEN;
+        return;
     }
+    if (n == 5) { // ход пешкой без превращения
+        ll origin_j = new_move[0]-'a';
+        ll origin_i = new_move[1]-'1';
+        ll destination_j = new_move[3]-'a';
+        ll destination_i = new_move[4]-'1';
+        field[destination_i][destination_j] = field[origin_i][origin_j];
+        field[origin_i][origin_j] = 0;
+        return;
+    } else if (n == 6) { // ход фигурой
+        ll origin_j = new_move[1]-'a';
+        ll origin_i = new_move[2]-'1';
+        ll destination_j = new_move[4]-'a';
+        ll destination_i = new_move[5]-'1';
+        field[destination_i][destination_j] = field[origin_i][origin_j];
+        field[origin_i][origin_j] = 0;
+        return;
+    }
+    //assert(false);
 }
 struct Move {
     ll origin_i, origin_j, destination_i, destination_j;
@@ -97,7 +110,7 @@ bool isOurKingUnderAttack (vector<vector<ll>> & deriv_field) {
             }
         }
     }
-    assert(myKingI != -1 && myKingJ != -1);
+    //assert(myKingI != -1 && myKingJ != -1);
     fo(i, 0, 8) {
         fo(j, 0, 8) {
             if (deriv_field[i][j] == BLACK_PAWN) {
@@ -115,7 +128,7 @@ bool isOurKingUnderAttack (vector<vector<ll>> & deriv_field) {
                 if (i-2 == myKingI && j-1 == myKingJ) return true;
                 if (i+1 == myKingI && j+2 == myKingJ) return true;
                 if (i+2 == myKingI && j+1 == myKingJ) return true;
-                
+
                 if (i+2 == myKingI && j-1 == myKingJ) return true;
                 if (i+1 == myKingI && j-2 == myKingJ) return true;
                 if (i-1 == myKingI && j+2 == myKingJ) return true;
@@ -215,19 +228,20 @@ bool isOurKingUnderAttack (vector<vector<ll>> & deriv_field) {
             }
         }
     }
+    return false;
 }
 bool isMovePossible (Move move) {
     auto copy = field;
     copy[move.destination_i][move.destination_j] = copy[move.origin_i][move.origin_j];
     copy[move.origin_i][move.origin_j] = 0;
-    return isOurKingUnderAttack(copy);
+    return !isOurKingUnderAttack(copy);
 }
 void calc () {
     // ПРИОРИТЕТЫ СРЕДИ ДОСТУПНЫХ ХОДОВ
     // 0. проводим пешки
     // 1. кушаем фигуры (в приоритете минимальной фигурой и так что нас не собьют одним ходом и мы не даем шах)
     // 2. нападаем на фигуры так что нас не собьют одним ходом и мы не даем шах
-    //// !!! Не даем пат
+    //// !!! Не ставим пат
     //// если у соперника ноль фигур {
     ////      (у нас должно быть два ферзя)
     ////      ограничиваем вражеского короля одним ферзем (допустим всегда возможно) и даем шах параллельно линии ограничения другим ферзем
@@ -237,9 +251,90 @@ void calc () {
     vector<Move> moves;
     fo(i, 0, 8) {
         fo(j, 0, 8) {
-            if (field[i][j] == WHITE_ROOK) {
-                
+            if (field[i][j] == WHITE_KING) {
+                forr(ii, i-1, i+1) {
+                    forr (jj, j-1, j+1) {
+                        if (ii == i && jj == j) continue;
+                        if (isCellPossible(ii, jj)) moves.push_back(Move{i, j, ii, jj, 0});
+                    }
+                }
             }
+            if (field[i][j] == WHITE_PAWN && i == 1) {
+                if (field[i+2][j] == 0) {
+                    moves.push_back(Move{i, j, i+2, j, 10+i}); // проводим пешки
+                }
+            }
+            if (field[i][j] == WHITE_PAWN) {
+                if (isCellPossible(i+1, j) && field[i+1][j] == 0) {
+                    moves.push_back(Move{i, j, i+1, j, 9+i}); // проводим пешки
+                }
+                if (isCellPossible(i+1, j+1) && field[i+1][j+1] > 20) {
+                    moves.push_back(Move{i, j, i+1, j+1, 15+i}); // проводим пешки
+                }
+                if (isCellPossible(i+1, j-1) && field[i+1][j-1] > 20) {
+                    moves.push_back(Move{i, j, i+1, j-1, 15+i}); // проводим пешки
+                }
+            }
+            if (field[i][j] == WHITE_KNIGHT) {
+                if (isCellPossible(i+2, j+1) && field[i+2][j+1] > 20) {
+                    moves.push_back(Move{i, j, i+2, j+1, 15});
+                }
+                if (isCellPossible(i+1, j+2) && field[i+1][j+2] > 20) {
+                    moves.push_back(Move{i, j, i+1, j+2, 15});
+                }
+                if (isCellPossible(i-1, j-2) && field[i-1][j-2] > 20) {
+                    moves.push_back(Move{i, j, i-1, j-2, 15});
+                }
+                if (isCellPossible(i-1, j+2) && field[i-1][j+2] > 20) {
+                    moves.push_back(Move{i, j, i-1, j+2, 15});
+                }
+                if (isCellPossible(i-2, j+1) && field[i-2][j+1] > 20) {
+                    moves.push_back(Move{i, j, i-2, j+1, 15});
+                }
+                if (isCellPossible(i+2, j-1) && field[i+2][j-1] > 20) {
+                    moves.push_back(Move{i, j, i+2, j-1, 15});
+                }
+                if (isCellPossible(i+1, j-2) && field[i+1][j-2] > 20) {
+                    moves.push_back(Move{i, j, i+1, j-2, 15});
+                }
+                if (isCellPossible(i-2, j-1) && field[i-2][j-1] > 20) {
+                    moves.push_back(Move{i, j, i-2, j-1, 15});
+                }
+            }
+        }
+    }
+    sort(all(moves), [] (Move a, Move b) {
+        return a.priority > b.priority;
+    });
+    for (Move hod: moves) {
+        //assert(isCellPossible(hod.origin_i, hod.origin_j));
+        //assert(isCellPossible(hod.destination_i, hod.destination_j));
+        if (isMovePossible(hod)) {
+            char first_ch = (char)('a'+hod.origin_j);
+            char third_ch = (char)('a'+hod.destination_j);
+            char second_ch = (char)('1'+hod.origin_i);
+            char fourth_ch = (char)('1'+hod.destination_i);
+            //assert(field[hod.origin_i][hod.origin_j] != 0);
+            if (field[hod.origin_i][hod.origin_j] == WHITE_KING) my_move += 'K';
+            if (field[hod.origin_i][hod.origin_j] == WHITE_QUEEN) my_move += 'Q';
+            if (field[hod.origin_i][hod.origin_j] == WHITE_ROOK) my_move += 'R';
+            if (field[hod.origin_i][hod.origin_j] == WHITE_KNIGHT) my_move += 'N';
+            if (field[hod.origin_i][hod.origin_j] == WHITE_BISHOP) my_move += 'B';
+            if (field[hod.destination_i][hod.destination_j] != 0) {
+                my_move += first_ch;
+                my_move += second_ch;
+                my_move += 'x';
+                my_move += third_ch;
+                my_move += fourth_ch;
+            } else {
+                my_move += first_ch;
+                my_move += second_ch;
+                my_move += '-';
+                my_move += third_ch;
+                my_move += fourth_ch;
+            }
+            if (hod.destination_i == 7 && field[hod.origin_i][hod.origin_j] == WHITE_PAWN) my_move += "Q";
+            break;
         }
     }
 }
@@ -262,8 +357,9 @@ void solve() {
     field[1][6] = WHITE_PAWN;   field[6][6] = BLACK_PAWN;
     field[1][7] = WHITE_PAWN;   field[6][7] = BLACK_PAWN;
 
-
+    ll nr_hoda = 0;
     while (true) {
+        nr_hoda += 1;
         string before_move_status;
         cin >> before_move_status;
         if (before_move_status != "playing") {
@@ -271,16 +367,19 @@ void solve() {
         }
         my_move = "";
         calc();
-        assert(!my_move.empty());
+//        if (my_move.empty()) cout << "FUK" << endl;
+        if (nr_hoda == 10) cout << "FUK";
+//        assert(!my_move.empty());
         cout << my_move << endl;
         cout.flush();
+        new_move = my_move; nash_hod = true; process(); nash_hod = false;
         string after_move_status;
         cin >> after_move_status;
         if (after_move_status != "playing") {
             break;
         }
-        cin >> his_move;
-        assert(!his_move.empty());
+        cin >> new_move;
+        //assert(!new_move.empty());
         process();
     }
 }
