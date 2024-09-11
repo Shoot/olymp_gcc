@@ -18,8 +18,8 @@ typedef long double ld;
 //#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math,trapv")
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #endif
-//mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-//uniform_int_distribution<ll> distrib(1ll, 4ll);
+mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
+uniform_int_distribution<ll> distrib(1ll, 4ll);
 //constexpr ll MOD = 1e9 + 7;
 constexpr __int128 MOD = 85664078284794307;
 /*\
@@ -31,20 +31,20 @@ void copy_this () {
     vector<ll> a(n); fo(i, 0, n) cin >> a[i];
 }
 */
-//namespace std {
-//    template <>
-//    struct hash<__int128> {
-//        std::size_t operator()(__int128 value) const {
-//            uint64_t high = static_cast<uint64_t>(value >> 64);
-//            uint64_t low = static_cast<uint64_t>(value);
-//            return std::hash<uint64_t>()(high) ^ (std::hash<uint64_t>()(low) << 1);
-//        }
-//    };
-//}
+namespace std {
+    template <>
+    struct hash<__int128> {
+        std::size_t operator()(__int128 value) const {
+            uint64_t high = static_cast<uint64_t>(value >> 64);
+            uint64_t low = static_cast<uint64_t>(value);
+            return std::hash<uint64_t>()(high) ^ (std::hash<uint64_t>()(low) << 1);
+        }
+    };
+}
 __int128 powm(__int128 a, __int128 b){
     if (b < 0) {
-        a = powm(a, MOD-2);
         b = -b;
+        a = powm(a, MOD-2);
     }
     __int128 d = 1;
     while(b){
@@ -98,78 +98,43 @@ ll brute() {
     }
     return OG;
 }
-struct shit {
-    __int128 hash=0;
-    ll pos=0;
-};
 void solve() {
-//    s = "";
-//    n = 1e3;
+    s = "";
+    n = 45;
     cin >> n;
     cin >> s;
     const ll zero_pos = 500001;
-    ll looking_r_pos = zero_pos;
-    ll prefix_pos = zero_pos;
-    ll overall_temp_pos = zero_pos;
+    ll temp_pos_for_calculating_desired_hash = zero_pos;
     __int128 base = 1e6+1238;
-    __int128 revbase = powm(base, MOD-2);
-    unordered_map<__int128, ll> kol_r_by_value;
-    __int128 overall_hash = 0;
-    __int128 prefix_hash_rev = 0;
-    __int128 suffix_hash = 0;
+    __int128 desired_hash = 0;
     fo(i, 0, n) {
         if (s[i] == '>') {
-            overall_temp_pos += 1;
+            temp_pos_for_calculating_desired_hash += 1;
         } else if (s[i] == '<') {
-            overall_temp_pos -= 1;
+            temp_pos_for_calculating_desired_hash -= 1;
         } else if (s[i] == '+') {
-            overall_hash = sum(overall_hash, powm(base, overall_temp_pos));
+            desired_hash = sum(desired_hash, powm(base, temp_pos_for_calculating_desired_hash));
         } else {
-            overall_hash = sub(overall_hash, powm(base, overall_temp_pos));
+            desired_hash = sub(desired_hash, powm(base, temp_pos_for_calculating_desired_hash));
         }
     }
-    kol_r_by_value[0] = 1; // добавляем длину r = 0
+    __int128 current_hash = 0;
+    ll curr_pos = zero_pos;
     ll tot = 0;
-    roff(i, n-1, 0) {
-        clog << "-----" << endl;
-        clog << "длина l = " << i << endl;
-        if (i+1 < n) {
-            clog << "добавляем длину r = " << n-i-1 << endl;
-            if (s[i+1] == '>') {
-                suffix_hash = mul(suffix_hash, base);
-            } else if (s[i+1] == '<') {
-                suffix_hash = mul(suffix_hash, revbase);
-            } else if (s[i+1] == '+') {
-                suffix_hash = sum(suffix_hash, powm(base, zero_pos));
-            } else {
-                suffix_hash = sub(suffix_hash, powm(base, zero_pos));
-            }
-            kol_r_by_value[suffix_hash] += 1;
-            clog << (ll)suffix_hash << "+= 1" << endl;
-        }
+    map<__int128, ll> mp;
+    mp[desired_hash] = 1;
+    fo(i, 0, n) {
         if (s[i] == '>') {
-            prefix_pos += 1;
+            curr_pos += 1;
         } else if (s[i] == '<') {
-            prefix_pos -= 1;
+            curr_pos -= 1;
         } else if (s[i] == '+') {
-            prefix_hash_rev = sub(prefix_hash_rev, powm(base, prefix_pos));
+            current_hash = sum(current_hash, powm(base, curr_pos));
         } else {
-            prefix_hash_rev = sum(prefix_hash_rev, powm(base, prefix_pos));
+            current_hash = sub(current_hash, powm(base, curr_pos));
         }
-        clog << (ll)prefix_hash_rev << " - (looking)" << endl;
-//        clog << "looking for hash = " << (ll)suffix_hash << endl;
-//        if (i-1 < 0 || s[i-1] != '>' && s[i-1] != '<') {
-        // если последнее в l - это сдвиг то не считаем
-        if (kol_r_by_value.contains(prefix_hash_rev)) {
-//            clog << "l resulting pos" << looking_r_pos << endl;
-//            clog << "+= " << kol_r_by_value[suffix_hash] << endl;
-            tot += kol_r_by_value[prefix_hash_rev];
-            clog << "+= " << kol_r_by_value[prefix_hash_rev] << endl;
-            if (overall_hash != 0) {
-                kol_r_by_value[prefix_hash_rev] = 0;
-            }
-        }
-
+        tot += mp[current_hash];
+        mp[sum(current_hash, mul(desired_hash, powm(base, curr_pos-zero_pos)))] += 1;
     }
     cout << tot << endl;
 }
