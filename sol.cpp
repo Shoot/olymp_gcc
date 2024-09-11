@@ -31,8 +31,8 @@ typedef long double ld;
 //#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math,trapv")
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #endif
-mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-uniform_int_distribution<ll> distrib(1ll, 4ll);
+//mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
+//uniform_int_distribution<ll> distrib(1ll, 4ll);
 /*\
 void copy_this () {
     ll n; cin >> n;
@@ -46,6 +46,20 @@ string my_move;
 string his_move;
 vector<vector<ll>> field (8, vector<ll> (8, 0));
 void process () {
+    if (his_move == "O-O-O") {
+        field['8'-'1']['c'-'a'] = field['8'-'1']['e'-'a'];
+        field['8'-'1']['e'-'a'] = 0;
+        field['8'-'1']['d'-'a'] = field['8'-'1']['a'-'a'];
+        field['8'-'1']['a'-'a'] = 0;
+        return;
+    }
+    if (his_move == "O-O") {
+        field['8'-'1']['g'-'a'] = field['8'-'1']['e'-'a'];
+        field['8'-'1']['e'-'a'] = 0;
+        field['8'-'1']['f'-'a'] = field['8'-'1']['h'-'a'];
+        field['8'-'1']['h'-'a'] = 0;
+        return;
+    }
     ll n = his_move.size();
     if (n == 5) { // ход пешкой без превращения
         ll origin_j = his_move[0]-'a';
@@ -65,6 +79,149 @@ void process () {
         assert(false);
     }
 }
+struct Move {
+    ll origin_i, origin_j, destination_i, destination_j;
+    ll priority;
+};
+bool isCellPossible (ll i, ll j) {
+    return i < 8 && i >= 0 && j < 8 && j >= 0;
+}
+bool isOurKingUnderAttack (vector<vector<ll>> & deriv_field) {
+    ll myKingI = -1;
+    ll myKingJ = -1;
+    fo(i, 0, 8) {
+        fo(j, 0, 8) {
+            if (deriv_field[i][j] == WHITE_KING) {
+                myKingI = i;
+                myKingJ = j;
+            }
+        }
+    }
+    assert(myKingI != -1 && myKingJ != -1);
+    fo(i, 0, 8) {
+        fo(j, 0, 8) {
+            if (deriv_field[i][j] == BLACK_PAWN) {
+                if (i-1 == myKingI && abs(j-myKingJ) <= 1) {
+                    return true;
+                }
+            }
+            if (deriv_field[i][j] == BLACK_KING) {
+                if (abs(i-myKingI) <= 1 && abs(j-myKingJ) <= 1) {
+                    return true;
+                }
+            }
+            if (deriv_field[i][j] == BLACK_KNIGHT) {
+                if (i-1 == myKingI && j-2 == myKingJ) return true;
+                if (i-2 == myKingI && j-1 == myKingJ) return true;
+                if (i+1 == myKingI && j+2 == myKingJ) return true;
+                if (i+2 == myKingI && j+1 == myKingJ) return true;
+                
+                if (i+2 == myKingI && j-1 == myKingJ) return true;
+                if (i+1 == myKingI && j-2 == myKingJ) return true;
+                if (i-1 == myKingI && j+2 == myKingJ) return true;
+                if (i-2 == myKingI && j+1 == myKingJ) return true;
+            }
+            if (deriv_field[i][j] == BLACK_ROOK || deriv_field[i][j] == BLACK_QUEEN) {
+                ll temp_i = i+1;
+                while (isCellPossible(temp_i, j)) {
+                    if (deriv_field[temp_i][j] != 0) {
+                        if (deriv_field[temp_i][j] == WHITE_KING) {
+                            return true;
+                        }
+                        break;
+                    }
+                    temp_i += 1;
+                }
+                temp_i = i-1;
+                while (isCellPossible(temp_i, j)) {
+                    if (deriv_field[temp_i][j] != 0) {
+                        if (deriv_field[temp_i][j] == WHITE_KING) {
+                            return true;
+                        }
+                        break;
+                    }
+                    temp_i -= 1;
+                }
+                ll temp_j = j+1;
+                while (isCellPossible(i, temp_j)) {
+                    if (deriv_field[i][temp_j] != 0) {
+                        if (deriv_field[i][temp_j] == WHITE_KING) {
+                            return true;
+                        }
+                        break;
+                    }
+                    temp_j += 1;
+                }
+                temp_j = j-1;
+                while (isCellPossible(i, temp_j)) {
+                    if (deriv_field[i][temp_j] != 0) {
+                        if (deriv_field[i][temp_j] == WHITE_KING) {
+                            return true;
+                        }
+                        break;
+                    }
+                    temp_j -= 1;
+                }
+            }
+            if (deriv_field[i][j] == BLACK_BISHOP || deriv_field[i][j] == BLACK_QUEEN) {
+                ll temp_i = i+1;
+                ll temp_j = j+1;
+                while (isCellPossible(temp_i, temp_j)) {
+                    if (deriv_field[temp_i][temp_j] != 0) {
+                        if (deriv_field[temp_i][temp_j] == WHITE_KING) {
+                            return true;
+                        }
+                        break;
+                    }
+                    temp_i += 1;
+                    temp_j += 1;
+                }
+                temp_i = i-1;
+                temp_j = j-1;
+                while (isCellPossible(temp_i, temp_j)) {
+                    if (deriv_field[temp_i][temp_j] != 0) {
+                        if (deriv_field[temp_i][temp_j] == WHITE_KING) {
+                            return true;
+                        }
+                        break;
+                    }
+                    temp_i -= 1;
+                    temp_j -= 1;
+                }
+                temp_i = i+1;
+                temp_j = j-1;
+                while (isCellPossible(temp_i, temp_j)) {
+                    if (deriv_field[temp_i][temp_j] != 0) {
+                        if (deriv_field[temp_i][temp_j] == WHITE_KING) {
+                            return true;
+                        }
+                        break;
+                    }
+                    temp_i += 1;
+                    temp_j -= 1;
+                }
+                temp_i = i-1;
+                temp_j = j+1;
+                while (isCellPossible(temp_i, temp_j)) {
+                    if (deriv_field[temp_i][temp_j] != 0) {
+                        if (deriv_field[temp_i][temp_j] == WHITE_KING) {
+                            return true;
+                        }
+                        break;
+                    }
+                    temp_i -= 1;
+                    temp_j += 1;
+                }
+            }
+        }
+    }
+}
+bool isMovePossible (Move move) {
+    auto copy = field;
+    copy[move.destination_i][move.destination_j] = copy[move.origin_i][move.origin_j];
+    copy[move.origin_i][move.origin_j] = 0;
+    return isOurKingUnderAttack(copy);
+}
 void calc () {
     // ПРИОРИТЕТЫ СРЕДИ ДОСТУПНЫХ ХОДОВ
     // 0. проводим пешки
@@ -77,7 +234,14 @@ void calc () {
     ////
     ////
     //// }
-
+    vector<Move> moves;
+    fo(i, 0, 8) {
+        fo(j, 0, 8) {
+            if (field[i][j] == WHITE_ROOK) {
+                
+            }
+        }
+    }
 }
 void solve() {
     field[0][0] = WHITE_ROOK;   field[7][0] = BLACK_ROOK;
