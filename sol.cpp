@@ -33,6 +33,7 @@ typedef long double ld;
 #endif
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 uniform_int_distribution<ll> distrib2(1ll, 2ll);
+set<vector<vector<ll>>> st;
 /*\
 void copy_this () {
     ll n; cin >> n;
@@ -239,6 +240,31 @@ void godo (Move move1) {
         my_move += fourth_ch;
     }
     if (move1.destination_i == 7 && field[move1.origin_i][move1.origin_j] == WHITE_PAWN) my_move += "Q"; // !! проводим только Q
+}
+void godo_black (Move move1) {
+    char first_ch = (char)('a'+move1.origin_j);
+    char third_ch = (char)('a'+move1.destination_j);
+    char second_ch = (char)('1'+move1.origin_i);
+    char fourth_ch = (char)('1'+move1.destination_i);
+    assert(field[move1.origin_i][move1.origin_j] != 0);
+    if (field[move1.origin_i][move1.origin_j] == BLACK_KING) new_move += 'K';
+    if (field[move1.origin_i][move1.origin_j] == BLACK_QUEEN) new_move += 'Q';
+    if (field[move1.origin_i][move1.origin_j] == BLACK_ROOK) new_move += 'R';
+    if (field[move1.origin_i][move1.origin_j] == BLACK_KNIGHT) new_move += 'N';
+    if (field[move1.origin_i][move1.origin_j] == BLACK_BISHOP) new_move += 'B';
+    if (field[move1.destination_i][move1.destination_j] != 0) {
+        new_move += first_ch;
+        new_move += second_ch;
+        new_move += 'x';
+        new_move += third_ch;
+        new_move += fourth_ch;
+    } else {
+        new_move += first_ch;
+        new_move += second_ch;
+        new_move += '-';
+        new_move += third_ch;
+        new_move += fourth_ch;
+    }
 }
 void process () {
     if (new_move == "O-O-O") {
@@ -578,7 +604,7 @@ bool MAT_CHERNYM (vector<vector<ll>> f) {
     forr(i, BlackKingI-1, BlackKingI+1) {
         forr(j, BlackKingJ-1, BlackKingJ+1) {
             if (i == BlackKingI && j == BlackKingJ) continue;
-            if (isCellPossible(i, j) && f[i][j] == 0 && isBlackKingAliveAfterMove(f, Move{BlackKingI, BlackKingJ, i, j, -666})) {
+            if (isCellPossible(i, j) && f[i][j] < 20 && isBlackKingAliveAfterMove(f, Move{BlackKingI, BlackKingJ, i, j, -666})) {
                 return false;
             }
         }
@@ -782,24 +808,24 @@ void calc () {
                     forr (jj, j-1, j+1) {
                         if (!isCellPossible(ii, jj)) continue;
                         if (ii == i && jj == j || field[ii][jj] < 20 && field[ii][jj] != 0) continue;
-                        if (isCellPossible(ii, jj)) moves.push_back(Move{i, j, ii, jj, -500}); // ходим королем только от шаха
+                        if (isCellPossible(ii, jj)) moves.push_back(Move{i, j, ii, jj, -2000}); // ходим королем только от шаха
                     }
                 }
             }
             if (field[i][j] == WHITE_PAWN && i == 1) {
                 if (field[i+2][j] == 0 && field[i+1][j] == 0) {
-                    moves.push_back(Move{i, j, i+2, j, i+2}); // проводим пешки
+                    moves.push_back(Move{i, j, i+2, j, i+2+(j != 3 && j != 4 && j != 5)}); // проводим пешки
                 }
             }
             if (field[i][j] == WHITE_PAWN) {
                 if (isCellPossible(i+1, j) && field[i+1][j] == 0) {
-                    moves.push_back(Move{i, j, i+1, j, i+1}); // проводим пешки
+                    moves.push_back(Move{i, j, i+1, j, i+1+(j != 3 && j != 4 && j != 5)}); // проводим пешки
                 }
                 if (isCellPossible(i+1, j+1) && field[i+1][j+1] > 20) {
-                    moves.push_back(Move{i, j, i+1, j+1, 20-(i+1)}); // проводим пешки
+                    moves.push_back(Move{i, j, i+1, j+1, 20-(i+1)+(j != 3 && j != 4 && j != 5)}); // проводим пешки
                 }
                 if (isCellPossible(i+1, j-1) && field[i+1][j-1] > 20) {
-                    moves.push_back(Move{i, j, i+1, j-1, 20-(i+1)}); // проводим пешки
+                    moves.push_back(Move{i, j, i+1, j-1, 20-(i+1)+(j != 3 && j != 4 && j != 5)}); // проводим пешки
                 }
             }
             if (field[i][j] == WHITE_KNIGHT) {
@@ -925,6 +951,7 @@ void calc () {
                 ll temp_j = j+1;
                 while (isCellPossible(temp_i, temp_j) && field[temp_i][temp_j] == 0) {
                     if (ferz_napadaet(temp_i, temp_j)) moves.push_back(Move{i, j, temp_i, temp_j, -100});
+                    moves.push_back(Move{i, j, temp_i, temp_j, -1000});
                     temp_i -= 1;
                     temp_j += 1;
                 }
@@ -932,6 +959,7 @@ void calc () {
                 temp_j = j-1;
                 while (isCellPossible(temp_i, temp_j) && field[temp_i][temp_j] == 0) {
                     if (ferz_napadaet(temp_i, temp_j)) moves.push_back(Move{i, j, temp_i, temp_j, -100});
+                    moves.push_back(Move{i, j, temp_i, temp_j, -1000});
                     temp_i -= 1;
                     temp_j -= 1;
                 }
@@ -939,6 +967,7 @@ void calc () {
                 temp_j = j+1;
                 while (isCellPossible(temp_i, temp_j) && field[temp_i][temp_j] == 0) {
                     if (ferz_napadaet(temp_i, temp_j)) moves.push_back(Move{i, j, temp_i, temp_j, -100});
+                    moves.push_back(Move{i, j, temp_i, temp_j, -1000});
                     temp_i += 1;
                     temp_j += 1;
                 }
@@ -946,6 +975,7 @@ void calc () {
                 temp_j = j-1;
                 while (isCellPossible(temp_i, temp_j) && field[temp_i][temp_j] == 0) {
                     if (ferz_napadaet(temp_i, temp_j)) moves.push_back(Move{i, j, temp_i, temp_j, -100});
+                    moves.push_back(Move{i, j, temp_i, temp_j, -1000});
                     temp_i += 1;
                     temp_j -= 1;
                 }
@@ -954,21 +984,25 @@ void calc () {
                 temp_j = j+1;
                 while (isCellPossible(i, temp_j) && field[i][temp_j] == 0) {
                     if (ferz_napadaet(i, temp_j)) moves.push_back(Move{i, j, i, temp_j, -100});
+                    moves.push_back(Move{i, j, i, temp_j, -1000});
                     temp_j += 1;
                 }
                 temp_j = j-1;
                 while (isCellPossible(i, temp_j) && field[i][temp_j] == 0) {
                     if (ferz_napadaet(i, temp_j)) moves.push_back(Move{i, j, i, temp_j, -100});
+                    moves.push_back(Move{i, j, i, temp_j, -1000});
                     temp_j -= 1;
                 }
                 temp_i = i+1;
                 while (isCellPossible(temp_i, j) && field[temp_i][j] == 0) {
                     if (ferz_napadaet(temp_i, j)) moves.push_back(Move{i, j, temp_i, j, -100});
+                    moves.push_back(Move{i, j, temp_i, j, -1000});
                     temp_i += 1;
                 }
                 temp_i = i-1;
                 while (isCellPossible(temp_i, j) && field[temp_i][j] == 0) {
                     if (ferz_napadaet(temp_i, j)) moves.push_back(Move{i, j, temp_i, j, -100});
+                    moves.push_back(Move{i, j, temp_i, j, -1000});
                     temp_i -= 1;
                 }
             }
@@ -984,11 +1018,158 @@ void calc () {
         assert(isCellPossible(hod.destination_i, hod.destination_j));
         if (isStalementAfterMove(hod)) continue;
         if (isOurMovePossible(hod)) {
+            auto test = field;
+            test[hod.destination_i][hod.destination_j] = test[hod.origin_i][hod.origin_j];
+            test[hod.origin_i][hod.origin_j] = 0;
+            if (st.contains(test)) continue;
             godo(hod);
+            st.insert(test);
             return;
         }
     }
     assert(false);
+}
+void calc_black () {
+    vector<Move> moves;
+    fo(i, 0, 8) {
+        fo(j, 0, 8) {
+            if (field[i][j] == BLACK_KING) {
+                forr(ii, i-1, i+1) {
+                    forr (jj, j-1, j+1) {
+                        if (!isCellPossible(ii, jj)) continue;
+                        if (ii == i && jj == j || field[ii][jj] > 20) continue;
+                        if (isCellPossible(ii, jj)) moves.push_back(Move{i, j, ii, jj, -500}); // ходим королем только от шаха
+                    }
+                }
+            }
+            if (field[i][j] == BLACK_PAWN && i == 6) {
+                if (field[i-2][j] == 0 && field[i-1][j] == 0) {
+                    moves.push_back(Move{i, j, i-2, j, i+2}); // проводим пешки
+                }
+            }
+            if (field[i][j] == BLACK_PAWN) {
+                if (isCellPossible(i-1, j) && field[i-1][j] == 0) {
+                    moves.push_back(Move{i, j, i-1, j, i+1}); // проводим пешки
+                }
+                if (isCellPossible(i-1, j+1) && field[i-1][j+1] < 20 && field[i-1][j+1] != 0) {
+                    moves.push_back(Move{i, j, i-1, j+1, 20-(i+1)}); // проводим пешки
+                }
+                if (isCellPossible(i-1, j-1) && field[i-1][j-1] < 20 && field[i-1][j-1] != 0) {
+                    moves.push_back(Move{i, j, i-1, j-1, 20-(i+1)}); // проводим пешки
+                }
+            }
+            if (field[i][j] == BLACK_KNIGHT) {
+                if (isCellPossible(i+2, j+1)) {
+                    moves.push_back(Move{i, j, i+2, j+1, 20-(i+2)});
+                }
+                if (isCellPossible(i+1, j+2)) {
+                    moves.push_back(Move{i, j, i+1, j+2, 20-(i+1)});
+                }
+                if (isCellPossible(i-1, j-2)) {
+                    moves.push_back(Move{i, j, i-1, j-2, 20-(i-1)});
+                }
+                if (isCellPossible(i-1, j+2)) {
+                    moves.push_back(Move{i, j, i-1, j+2, 20-(i-1)});
+                }
+                if (isCellPossible(i-2, j+1)) {
+                    moves.push_back(Move{i, j, i-2, j+1, 20-(i-2)});
+                }
+                if (isCellPossible(i+2, j-1)) {
+                    moves.push_back(Move{i, j, i+2, j-1, 20-(i+2)});
+                }
+                if (isCellPossible(i+1, j-2)) {
+                    moves.push_back(Move{i, j, i+1, j-2, 20-(i+1)});
+                }
+                if (isCellPossible(i-2, j-1)) {
+                    moves.push_back(Move{i, j, i-2, j-1, 20-(i-2)});
+                }
+            }
+            if (field[i][j] == BLACK_BISHOP || field[i][j] == BLACK_QUEEN) {
+                ll temp_i = i-1;
+                ll temp_j = j+1;
+                while (isCellPossible(temp_i, temp_j)) {
+                    moves.push_back(Move{i, j, temp_i, temp_j, 20-(temp_i)-(field[i][j] == BLACK_QUEEN)});
+                    if (field[temp_i][temp_j] != 0) {
+                        break;
+                    }
+                    temp_i -= 1;
+                    temp_j += 1;
+                }
+                temp_i = i-1;
+                temp_j = j-1;
+                while (isCellPossible(temp_i, temp_j)) {
+                    moves.push_back(Move{i, j, temp_i, temp_j, 20-(temp_i)-(field[i][j] == BLACK_QUEEN)});
+                    if (field[temp_i][temp_j] != 0) {
+                        break;
+                    }
+                    temp_i -= 1;
+                    temp_j -= 1;
+                }
+                temp_i = i+1;
+                temp_j = j+1;
+                while (isCellPossible(temp_i, temp_j)) {
+                    moves.push_back(Move{i, j, temp_i, temp_j, 20-(temp_i)-(field[i][j] == BLACK_QUEEN)});
+                    if (field[temp_i][temp_j] != 0) {
+                        break;
+                    }
+                    temp_i += 1;
+                    temp_j += 1;
+                }
+                temp_i = i+1;
+                temp_j = j-1;
+                while (isCellPossible(temp_i, temp_j)) {
+                    moves.push_back(Move{i, j, temp_i, temp_j, 20-(temp_i)-(field[i][j] == BLACK_QUEEN)});
+                    if (field[temp_i][temp_j] != 0) {
+                        break;
+                    }
+                    temp_i += 1;
+                    temp_j -= 1;
+                }
+            }
+            if (field[i][j] == BLACK_ROOK || field[i][j] == BLACK_QUEEN) {
+                ll temp_j = j+1;
+                while (isCellPossible(i, temp_j)) {
+                    moves.push_back(Move{i, j, i, temp_j, 20-(i)-(field[i][j] == BLACK_QUEEN)});
+                    if (field[i][temp_j] != 0) {
+                        break;
+                    }
+                    temp_j += 1;
+                }
+                temp_j = j-1;
+                while (isCellPossible(i, temp_j)) {
+                    moves.push_back(Move{i, j, i, temp_j, 20-(i)-(field[i][j] == BLACK_QUEEN)});
+                    if (field[i][temp_j] != 0) {
+                        break;
+                    }
+                    temp_j -= 1;
+                }
+                ll temp_i = i+1;
+                while (isCellPossible(temp_i, j)) {
+                    moves.push_back(Move{i, j, temp_i, j, 20-(temp_i)-(field[i][j] == BLACK_QUEEN)});
+                    if (field[temp_i][j] != 0) {
+                        break;
+                    }
+                    temp_i += 1;
+                }
+                temp_i = i-1;
+                while (isCellPossible(temp_i, j)) {
+                    moves.push_back(Move{i, j, temp_i, j, 20-(temp_i)-(field[i][j] == BLACK_QUEEN)});
+                    if (field[temp_i][j] != 0) {
+                        break;
+                    }
+                    temp_i -= 1;
+                }
+            }
+        }
+    }
+    shuffle(all(moves), rng);
+    for (Move m: moves) {
+        if (field[m.destination_i][m.destination_j] > 20 || !isBlackKingAliveAfterMove(field, m)) {
+            continue;
+        }
+        godo_black(m);
+        break;
+    }
 }
 void do_brute () {
     vector<pair<ll, Move>> first_moves;
@@ -1124,7 +1305,7 @@ void solve() {
         }
         assert(hisKingI != -1);
         assert(hisKingJ != -1);
-        string before_move_status;
+        string before_move_status = "playing";
         cin >> before_move_status;
         if (before_move_status != "playing") {
             break;
@@ -1134,25 +1315,34 @@ void solve() {
         ll his_material = 0;
         fo(i, 0, 8) fo(j, 0, 8) if (field[i][j] > 20 && field[i][j] != BLACK_KING) his_material += 1;
         ll my_pawns_number = 0; fo(i, 0, 8) fo(j, 0, 8) if (field[i][j] == WHITE_PAWN) my_pawns_number += 1;
-        if (his_material > 0 || my_queens_number < 3 || my_pawns_number > 0) {
-            calc();
-        }
-        else {
-            assert(false);
-            do_brute();
+        calc();
+//        if (his_material > 0 || my_queens_number < 3 || my_pawns_number > 0) {
+//            calc();
+//        }
+//        else {
+//            assert(false);
+//            do_brute();
 //            assert(hisKingI > 2);
-        }
+//        }
         assert(!my_move.empty());
+//        cout << "me: ";
         cout << my_move << endl;
         cout.flush();
         new_move = my_move; nash_hod = true; process(); nash_hod = false;
-        string after_move_status;
+//        if (MAT_CHERNYM(field)) {
+//            cout << "MAT!!" << endl;
+//            return;
+//        }
+        string after_move_status = "playing";
         cin >> after_move_status;
         if (after_move_status != "playing") {
             break;
         }
+        new_move = "";
+//        calc_black();
         cin >> new_move;
         assert(!new_move.empty());
+//        cout << "him: " << new_move << endl;
         process();
     }
 }
