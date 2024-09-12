@@ -649,7 +649,7 @@ void calc () {
     //// (И ТАК СОЙДЕТ)
     //// }
     vector<Move> moves;
-    roff(i, 7, 0) {
+    fo(i, 0, 8) {
         fo(j, 0, 8) {
             if (field[i][j] == WHITE_KING) {
                 forr(ii, i-1, i+1) {
@@ -827,7 +827,6 @@ void do_brute () {
         }
         auto black_moves2 = getBlackKingMoves(field1);
         if (black_moves2.empty()) {
-            move1isGood = false;
             continue;
         }
         for (auto move2: black_moves2) {
@@ -835,13 +834,6 @@ void do_brute () {
             auto field2 = field1;
             field2[move2.destination_i][move2.destination_j] = field2[move2.origin_i][move2.origin_j];
             field2[move2.origin_i][move2.origin_j] = 0;
-            fo (i, 0, 8) {
-                fo(j, 0, 8) {
-                    if (field2[i][j] == BLACK_KING) {
-                        move1BlackKingCoords = min(move1BlackKingCoords, i+j);
-                    }
-                }
-            }
             for (auto move3: getWhiteQueenMoves(field2)) { // white move
                 bool move3isGood = true;
                 auto field3 = field2;
@@ -850,7 +842,6 @@ void do_brute () {
                 if (MAT_CHERNYM(field3)) continue;
                 auto black_moves4 = getBlackKingMoves(field3);
                 if (black_moves4.empty()) {
-                    move3isGood = false;
                     continue;
                 }
                 for (auto move4: black_moves4) {
@@ -858,33 +849,20 @@ void do_brute () {
                     auto field4 = field3;
                     field4[move4.destination_i][move4.destination_j] = field4[move4.origin_i][move4.origin_j];
                     field4[move4.origin_i][move4.origin_j] = 0;
+                    fo(i, 0, 8) {
+                        fo(j, 0, 8) {
+                            if (field2[i][j] == BLACK_KING) {
+                                move1BlackKingCoords = min(move1BlackKingCoords, i+j);
+                            }
+                        }
+                    }
                     for (auto move5: getWhiteQueenMoves(field4)) { // white move
-                        bool move5isGood = true;
                         auto field5 = field4;
                         field5[move5.destination_i][move5.destination_j] = field5[move5.origin_i][move5.origin_j];
                         field5[move5.origin_i][move5.origin_j] = 0;
-                        if (MAT_CHERNYM(field5)) continue;
-                        auto black_moves6 = getBlackKingMoves(field5);
-                        if (black_moves6.empty()) {
-                            move5isGood = false;
-                            continue;
+                        if (MAT_CHERNYM(field5)) {
+                            move4isGood = true;
                         }
-                        for (auto move6: black_moves6) {
-                            bool move6isGood = false;
-                            auto field6 = field5;
-                            field6[move6.destination_i][move6.destination_j] = field6[move6.origin_i][move6.origin_j];
-                            field6[move6.origin_i][move6.origin_j] = 0;
-                            for (auto move7: getWhiteQueenMoves(field6)) { // white move
-                                auto field7 = field6;
-                                field7[move7.destination_i][move7.destination_j] = field7[move7.origin_i][move7.origin_j];
-                                field7[move7.origin_i][move7.origin_j] = 0;
-                                if (MAT_CHERNYM(field7)) {
-                                    move6isGood = true;
-                                }
-                            }
-                            if (!move6isGood) move5isGood = false;
-                        }
-                        if (move5isGood) move4isGood = true;
                     }
                     if (!move4isGood) move3isGood = false;
                 }
@@ -898,8 +876,7 @@ void do_brute () {
             godo(move1);
             return;
         }
-        assert(move1BlackKingCoords < 1000);
-        first_moves.push_back(make_pair(move1BlackKingCoords, move1));
+        if (move1BlackKingCoords < 1000) first_moves.push_back(make_pair(move1BlackKingCoords, move1));
     }
     // случай когда не нашли мат
     sort(all(first_moves), [] (pair<ll, Move> a, pair<ll, Move> b) {
@@ -953,9 +930,10 @@ void solve() {
         }
         my_move = "";
         ll my_queens_number = 0; fo(i, 0, 8) fo(j, 0, 8) if (field[i][j] == WHITE_QUEEN) my_queens_number += 1;
+        ll my_pawns_number = 0; fo(i, 0, 8) fo(j, 0, 8) if (field[i][j] == WHITE_PAWN) my_pawns_number += 1;
         ll his_material = 0;
         fo(i, 0, 8) fo(j, 0, 8) if (field[i][j] > 20 && field[i][j] != BLACK_KING) his_material += 1;
-        if (his_material > 0 || my_queens_number < 3) {
+        if (his_material > 0 || my_queens_number < 3 || my_pawns_number > 0) {
             calc();
         }
         else {
