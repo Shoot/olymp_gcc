@@ -250,6 +250,8 @@ bool isOurKingUnderAttack (vector<vector<ll>> & deriv_field) {
 }
 bool isHisMoveImpossible (vector<vector<ll>> deriv_field, Move move) {
     auto goddamn_copy = deriv_field;
+    assert(isCellPossible(move.destination_i, move.destination_j));
+    assert(isCellPossible(move.origin_i, move.origin_j));
     goddamn_copy[move.destination_i][move.destination_j] = goddamn_copy[move.origin_i][move.origin_j];
     goddamn_copy[move.origin_i][move.origin_j] = 0;
     ll hisKingI = -1;
@@ -387,12 +389,16 @@ bool isHisMoveImpossible (vector<vector<ll>> deriv_field, Move move) {
 }
 bool isMovePossible (Move move) {
     auto copy = field;
+    assert(isCellPossible(move.destination_i, move.destination_j));
+    assert(isCellPossible(move.origin_i, move.origin_j));
     copy[move.destination_i][move.destination_j] = copy[move.origin_i][move.origin_j];
     copy[move.origin_i][move.origin_j] = 0;
     return !isOurKingUnderAttack(copy);
 }
 bool isStalementAfterMove (Move move) {
     auto copy = field;
+    assert(isCellPossible(move.destination_i, move.destination_j));
+    assert(isCellPossible(move.origin_i, move.origin_j));
     copy[move.destination_i][move.destination_j] = copy[move.origin_i][move.origin_j];
     copy[move.origin_i][move.origin_j] = 0;
 
@@ -436,6 +442,7 @@ void calc () {
             if (field[i][j] == WHITE_KING) {
                 forr(ii, i-1, i+1) {
                     forr (jj, j-1, j+1) {
+                        if (!isCellPossible(ii, jj)) continue;
                         if (ii == i && jj == j || field[ii][jj] < 20 && field[ii][jj] != 0) continue;
                         if (isCellPossible(ii, jj)) moves.push_back(Move{i, j, ii, jj, -1}); // ходим королем только от шаха
                     }
@@ -584,6 +591,7 @@ void calc_yooo () {
             if (field[i][j] == WHITE_KING) {
                 forr(ii, i-1, i+1) {
                     forr (jj, j-1, j+1) {
+                        if (!isCellPossible(ii, jj)) continue;
                         if (ii == i && jj == j || field[ii][jj] < 20 && field[ii][jj] != 0) continue;
                         if (isCellPossible(ii, jj)) moves.push_back(Move{i, j, ii, jj, -1}); // ходим королем только от шаха
                     }
