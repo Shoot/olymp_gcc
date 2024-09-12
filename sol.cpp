@@ -27,7 +27,7 @@ typedef long double ld;
 #ifdef LOCAL
 #include <algo/debug.h>
 #else
-#define debug(...) 603
+#define debug(...) 930
 //#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math,trapv")
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #endif
