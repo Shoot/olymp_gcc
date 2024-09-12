@@ -1,6 +1,4 @@
 #include <bits/stdc++.h>
-
-#include <utility>
 using namespace std;
 typedef long long ll;
 typedef long double ld;
@@ -29,11 +27,11 @@ typedef long double ld;
 #ifdef LOCAL
 #include <algo/debug.h>
 #else
-#define debug(...) 68
+#define debug(...) 67
 //#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math,trapv")
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #endif
-//mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
+mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 //uniform_int_distribution<ll> distrib(1ll, 4ll);
 /*\
 void copy_this () {
@@ -263,142 +261,6 @@ bool isOurKingUnderAttack (vector<vector<ll>> & deriv_field) {
                 while (isCellPossible(temp_i, temp_j)) {
                     if (deriv_field[temp_i][temp_j] != 0) {
                         if (deriv_field[temp_i][temp_j] == WHITE_KING) {
-                            return true;
-                        }
-                        break;
-                    }
-                    temp_i -= 1;
-                    temp_j += 1;
-                }
-            }
-        }
-    }
-    return false;
-}
-bool isHisMoveImpossible (vector<vector<ll>> goddamn_copy, Move move) {
-    assert(isCellPossible(move.destination_i, move.destination_j));
-    assert(isCellPossible(move.origin_i, move.origin_j));
-    goddamn_copy[move.destination_i][move.destination_j] = goddamn_copy[move.origin_i][move.origin_j];
-    goddamn_copy[move.origin_i][move.origin_j] = 0;
-    ll hisKingI = -1;
-    ll hisKingJ = -1;
-    fo(i, 0, 8) {
-        fo(j, 0, 8) {
-            assert(isCellPossible(i, j));
-            if (goddamn_copy[i][j] == BLACK_KING) {
-                hisKingI = i;
-                hisKingJ = j;
-            }
-        }
-    }
-    assert(hisKingI != -1 && hisKingJ != -1);
-    fo(i, 0, 8) {
-        fo(j, 0, 8) {
-            if (goddamn_copy[i][j] == WHITE_PAWN) {
-                if (i+1 == hisKingI && abs(j-hisKingJ) == 1) {
-                    return true;
-                }
-            }
-            if (goddamn_copy[i][j] == WHITE_KING) {
-                if (abs(i-hisKingI) <= 1 && abs(j-hisKingJ) <= 1) {
-                    return true;
-                }
-            }
-            if (goddamn_copy[i][j] == WHITE_KNIGHT) {
-                if (i-1 == hisKingI && j-2 == hisKingJ) return true;
-                if (i-2 == hisKingI && j-1 == hisKingJ) return true;
-                if (i+1 == hisKingI && j+2 == hisKingJ) return true;
-                if (i+2 == hisKingI && j+1 == hisKingJ) return true;
-
-                if (i+2 == hisKingI && j-1 == hisKingJ) return true;
-                if (i+1 == hisKingI && j-2 == hisKingJ) return true;
-                if (i-1 == hisKingI && j+2 == hisKingJ) return true;
-                if (i-2 == hisKingI && j+1 == hisKingJ) return true;
-            }
-            if (goddamn_copy[i][j] == WHITE_ROOK || goddamn_copy[i][j] == WHITE_QUEEN) {
-                ll temp_i = i+1;
-                while (isCellPossible(temp_i, j)) {
-                    if (goddamn_copy[temp_i][j] != 0) {
-                        if (goddamn_copy[temp_i][j] == BLACK_KING) {
-                            return true;
-                        }
-                        break;
-                    }
-                    temp_i += 1;
-                }
-                temp_i = i-1;
-                while (isCellPossible(temp_i, j)) {
-                    if (goddamn_copy[temp_i][j] != 0) {
-                        if (goddamn_copy[temp_i][j] == BLACK_KING) {
-                            return true;
-                        }
-                        break;
-                    }
-                    temp_i -= 1;
-                }
-                ll temp_j = j+1;
-                while (isCellPossible(i, temp_j)) {
-                    if (goddamn_copy[i][temp_j] != 0) {
-                        if (goddamn_copy[i][temp_j] == BLACK_KING) {
-                            return true;
-                        }
-                        break;
-                    }
-                    temp_j += 1;
-                }
-                temp_j = j-1;
-                while (isCellPossible(i, temp_j)) {
-                    if (goddamn_copy[i][temp_j] != 0) {
-                        if (goddamn_copy[i][temp_j] == BLACK_KING) {
-                            return true;
-                        }
-                        break;
-                    }
-                    temp_j -= 1;
-                }
-            }
-            if (goddamn_copy[i][j] == WHITE_BISHOP || goddamn_copy[i][j] == WHITE_QUEEN) {
-                ll temp_i = i+1;
-                ll temp_j = j+1;
-                while (isCellPossible(temp_i, temp_j)) {
-                    if (goddamn_copy[temp_i][temp_j] != 0) {
-                        if (goddamn_copy[temp_i][temp_j] == BLACK_KING) {
-                            return true;
-                        }
-                        break;
-                    }
-                    temp_i += 1;
-                    temp_j += 1;
-                }
-                temp_i = i-1;
-                temp_j = j-1;
-                while (isCellPossible(temp_i, temp_j)) {
-                    if (goddamn_copy[temp_i][temp_j] != 0) {
-                        if (goddamn_copy[temp_i][temp_j] == BLACK_KING) {
-                            return true;
-                        }
-                        break;
-                    }
-                    temp_i -= 1;
-                    temp_j -= 1;
-                }
-                temp_i = i+1;
-                temp_j = j-1;
-                while (isCellPossible(temp_i, temp_j)) {
-                    if (goddamn_copy[temp_i][temp_j] != 0) {
-                        if (goddamn_copy[temp_i][temp_j] == BLACK_KING) {
-                            return true;
-                        }
-                        break;
-                    }
-                    temp_i += 1;
-                    temp_j -= 1;
-                }
-                temp_i = i-1;
-                temp_j = j+1;
-                while (isCellPossible(temp_i, temp_j)) {
-                    if (goddamn_copy[temp_i][temp_j] != 0) {
-                        if (goddamn_copy[temp_i][temp_j] == BLACK_KING) {
                             return true;
                         }
                         break;
@@ -689,7 +551,7 @@ vector<Move> getWhiteQueenMoves (vector<vector<ll>> & f) {
     vector<Move> moves;
     fo(i, 0, 8) {
         fo(j, 0, 8) {
-            if (f[i][j] == WHITE_QUEEN) {
+            if (f[i][j] == WHITE_QUEEN || f[i][j] == WHITE_BISHOP) {
                 ll temp_i = i+1;
                 ll temp_j = j+1;
                 while (isCellPossible(temp_i, temp_j) && f[temp_i][temp_j] == 0) {
@@ -722,6 +584,31 @@ vector<Move> getWhiteQueenMoves (vector<vector<ll>> & f) {
                     temp_j -= 1;
                 }
             }
+            if (f[i][j] == WHITE_QUEEN || f[i][j] == WHITE_ROOK) {
+                ll temp_i = i+1;
+                while (isCellPossible(temp_i, j) && f[temp_i][j] == 0) {
+                    moves.push_back(Move{i, j, temp_i, j, -666});
+                    temp_i += 1;
+                }
+
+                temp_i = i-1;
+                while (isCellPossible(temp_i, j) && f[temp_i][j] == 0) {
+                    moves.push_back(Move{i, j, temp_i, j, -666});
+                    temp_i -= 1;
+                }
+
+                ll temp_j = j-1;
+                while (isCellPossible(i, temp_j) && f[i][temp_j] == 0) {
+                    moves.push_back(Move{i, j, i, temp_j, -666});
+                    temp_j -= 1;
+                }
+
+                temp_j = j+1;
+                while (isCellPossible(i, temp_j) && f[i][temp_j] == 0) {
+                    moves.push_back(Move{i, j, i, temp_j, -666});
+                    temp_j += 1;
+                }
+            }
         }
     }
     return moves;
@@ -742,7 +629,7 @@ vector<Move> getBlackKingMoves (vector<vector<ll>> & f) {
     forr(i, BlackKingI-1, BlackKingI+1) {
         forr(j, BlackKingJ-1, BlackKingJ+1) {
             if (i == BlackKingI && j == BlackKingJ) continue;
-            if (isCellPossible(i, j) && f[i][j] == 0 && isBlackKingAliveAfterMove(f, Move{BlackKingI, BlackKingJ, i, j, -666})) {
+            if (isCellPossible(i, j) && f[i][j] < 20 && isBlackKingAliveAfterMove(f, Move{BlackKingI, BlackKingJ, i, j, -666})) {
                 moves.push_back(Move{BlackKingI, BlackKingJ, i, j, -666});
             }
         }
@@ -909,6 +796,7 @@ void calc () {
             }
         }
     }
+    shuffle(all(moves), rng);
     sort(all(moves), [] (Move a, Move b) {
         return a.priority > b.priority;
     });
