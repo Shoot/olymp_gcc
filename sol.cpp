@@ -248,11 +248,175 @@ bool isOurKingUnderAttack (vector<vector<ll>> & deriv_field) {
     }
     return false;
 }
+bool isHisMoveImpossible (vector<vector<ll>> deriv_field, Move move) {
+    auto goddamn_copy = deriv_field;
+    goddamn_copy[move.destination_i][move.destination_j] = goddamn_copy[move.origin_i][move.origin_j];
+    goddamn_copy[move.origin_i][move.origin_j] = 0;
+    ll hisKingI = -1;
+    ll hisKingJ = -1;
+    fo(i, 0, 8) {
+        fo(j, 0, 8) {
+            assert(isCellPossible(i, j));
+            if (goddamn_copy[i][j] == BLACK_KING) {
+                hisKingI = i;
+                hisKingJ = j;
+            }
+        }
+    }
+    assert(hisKingI != -1 && hisKingJ != -1);
+    fo(i, 0, 8) {
+        fo(j, 0, 8) {
+            assert(isCellPossible(i, j));
+            if (goddamn_copy[i][j] == WHITE_PAWN) {
+                if (i-1 == hisKingI && abs(j-hisKingJ) <= 1) {
+                    return true;
+                }
+            }
+            if (goddamn_copy[i][j] == WHITE_KING) {
+                if (abs(i-hisKingI) <= 1 && abs(j-hisKingJ) <= 1) {
+                    return true;
+                }
+            }
+            if (goddamn_copy[i][j] == WHITE_KNIGHT) {
+                if (i-1 == hisKingI && j-2 == hisKingJ) return true;
+                if (i-2 == hisKingI && j-1 == hisKingJ) return true;
+                if (i+1 == hisKingI && j+2 == hisKingJ) return true;
+                if (i+2 == hisKingI && j+1 == hisKingJ) return true;
+
+                if (i+2 == hisKingI && j-1 == hisKingJ) return true;
+                if (i+1 == hisKingI && j-2 == hisKingJ) return true;
+                if (i-1 == hisKingI && j+2 == hisKingJ) return true;
+                if (i-2 == hisKingI && j+1 == hisKingJ) return true;
+            }
+            if (goddamn_copy[i][j] == WHITE_ROOK || goddamn_copy[i][j] == WHITE_QUEEN) {
+                ll temp_i = i+1;
+                while (isCellPossible(temp_i, j)) {
+                    if (goddamn_copy[temp_i][j] != 0) {
+                        if (goddamn_copy[temp_i][j] == BLACK_KING) {
+                            return true;
+                        }
+                        break;
+                    }
+                    temp_i += 1;
+                }
+                temp_i = i-1;
+                while (isCellPossible(temp_i, j)) {
+                    if (goddamn_copy[temp_i][j] != 0) {
+                        if (goddamn_copy[temp_i][j] == BLACK_KING) {
+                            return true;
+                        }
+                        break;
+                    }
+                    temp_i -= 1;
+                }
+                ll temp_j = j+1;
+                while (isCellPossible(i, temp_j)) {
+                    if (goddamn_copy[i][temp_j] != 0) {
+                        if (goddamn_copy[i][temp_j] == BLACK_KING) {
+                            return true;
+                        }
+                        break;
+                    }
+                    temp_j += 1;
+                }
+                temp_j = j-1;
+                while (isCellPossible(i, temp_j)) {
+                    if (goddamn_copy[i][temp_j] != 0) {
+                        if (goddamn_copy[i][temp_j] == BLACK_KING) {
+                            return true;
+                        }
+                        break;
+                    }
+                    temp_j -= 1;
+                }
+            }
+            assert(isCellPossible(i, j));
+            if (goddamn_copy[i][j] == WHITE_BISHOP || goddamn_copy[i][j] == WHITE_QUEEN) {
+                ll temp_i = i+1;
+                ll temp_j = j+1;
+                while (isCellPossible(temp_i, temp_j)) {
+                    if (goddamn_copy[temp_i][temp_j] != 0) {
+                        if (goddamn_copy[temp_i][temp_j] == BLACK_KING) {
+                            return true;
+                        }
+                        break;
+                    }
+                    temp_i += 1;
+                    temp_j += 1;
+                }
+                temp_i = i-1;
+                temp_j = j-1;
+                while (isCellPossible(temp_i, temp_j)) {
+                    if (goddamn_copy[temp_i][temp_j] != 0) {
+                        if (goddamn_copy[temp_i][temp_j] == BLACK_KING) {
+                            return true;
+                        }
+                        break;
+                    }
+                    temp_i -= 1;
+                    temp_j -= 1;
+                }
+                temp_i = i+1;
+                temp_j = j-1;
+                while (isCellPossible(temp_i, temp_j)) {
+                    if (goddamn_copy[temp_i][temp_j] != 0) {
+                        if (goddamn_copy[temp_i][temp_j] == BLACK_KING) {
+                            return true;
+                        }
+                        break;
+                    }
+                    temp_i += 1;
+                    temp_j -= 1;
+                }
+                temp_i = i-1;
+                temp_j = j+1;
+                while (isCellPossible(temp_i, temp_j)) {
+                    if (goddamn_copy[temp_i][temp_j] != 0) {
+                        if (goddamn_copy[temp_i][temp_j] == BLACK_KING) {
+                            return true;
+                        }
+                        break;
+                    }
+                    temp_i -= 1;
+                    temp_j += 1;
+                }
+            }
+        }
+    }
+    return false;
+}
 bool isMovePossible (Move move) {
     auto copy = field;
     copy[move.destination_i][move.destination_j] = copy[move.origin_i][move.origin_j];
     copy[move.origin_i][move.origin_j] = 0;
     return !isOurKingUnderAttack(copy);
+}
+bool isStalementAfterMove (Move move) {
+    auto copy = field;
+    copy[move.destination_i][move.destination_j] = copy[move.origin_i][move.origin_j];
+    copy[move.origin_i][move.origin_j] = 0;
+
+    ll hisKingI = -1;
+    ll hisKingJ = -1;
+    fo(i, 0, 8) {
+        fo(j, 0, 8) {
+            if (copy[i][j] == BLACK_KING) {
+                hisKingI = i;
+                hisKingJ = j;
+                break;
+            }
+        }
+    }
+    assert(hisKingI != -1);
+    assert(hisKingJ != -1);
+    forr(ii, hisKingI-1, hisKingI+1) {
+        forr(jj, hisKingJ-1, hisKingJ+1) {
+            if (!isCellPossible(ii, jj)) continue;
+            if (ii == hisKingI && jj == hisKingJ) continue;
+            if (!isHisMoveImpossible(copy, Move{hisKingI, hisKingJ, ii, jj, -666})) return false;
+        }
+    }
+    return true;
 }
 void calc () {
     // ПРИОРИТЕТЫ СРЕДИ ДОСТУПНЫХ ХОДОВ
@@ -264,12 +428,11 @@ void calc () {
     ////      (у нас должно быть два ферзя)
     ////      ограничиваем вражеского короля одним ферзем (допустим всегда возможно) и даем шах параллельно линии ограничения другим ферзем
     ////
-    ////
+    //// (И ТАК СОЙДЕТ)
     //// }
     vector<Move> moves;
     fo(i, 0, 8) {
         fo(j, 0, 8) {
-            assert(isCellPossible(i, j));
             if (field[i][j] == WHITE_KING) {
                 forr(ii, i-1, i+1) {
                     forr (jj, j-1, j+1) {
@@ -371,7 +534,7 @@ void calc () {
         assert(isCellPossible(hod.origin_i, hod.origin_j));
         assert(hod.origin_i != hod.destination_i || hod.origin_j != hod.destination_j);
         assert(isCellPossible(hod.destination_i, hod.destination_j));
-        if (isMovePossible(hod)) {
+        if (isMovePossible(hod) && !isStalementAfterMove(hod)) {
             char first_ch = (char)('a'+hod.origin_j);
             char third_ch = (char)('a'+hod.destination_j);
             char second_ch = (char)('1'+hod.origin_i);
@@ -399,6 +562,85 @@ void calc () {
             break;
         }
     }
+}
+void calc_yooo () {
+    // шахи королю (горизонтальные приоритет)
+    vector<Move> moves;
+    ll hisKingI = -1;
+    ll hisKingJ = -1;
+    fo(i, 0, 8) {
+        fo(j, 0, 8) {
+            if (field[i][j] == BLACK_KING) {
+                hisKingI = i;
+                hisKingJ = j;
+                break;
+            }
+        }
+    }
+    assert(hisKingI != -1);
+    assert(hisKingJ != -1);
+    fo(i, 0, 8) {
+        fo(j, 0, 8) {
+            if (field[i][j] == WHITE_ROOK || field[i][j] == WHITE_QUEEN) {
+                ll temp_i = i+1;
+                while (isCellPossible(temp_i, j)) {
+                    if (hisKingI == temp_i) {
+                        moves.push_back(Move{i, j, temp_i, j, 20});
+                    }
+                    if (field[temp_i][j] != 0) {
+                        break;
+                    }
+                    temp_i += 1;
+                }
+                temp_i = i-1;
+                while (isCellPossible(temp_i, j)) {
+                    if (hisKingI == temp_i) {
+                        moves.push_back(Move{i, j, temp_i, j, 20});
+                    }
+                    if (field[temp_i][j] != 0) {
+                        break;
+                    }
+                    temp_i -= 1;
+                }
+            }
+        }
+    }
+    sort(all(moves), [] (Move a, Move b) {
+        return a.priority > b.priority;
+    });
+    for (Move hod: moves) {
+        assert(isCellPossible(hod.origin_i, hod.origin_j));
+        assert(hod.origin_i != hod.destination_i || hod.origin_j != hod.destination_j);
+        assert(isCellPossible(hod.destination_i, hod.destination_j));
+        if (isMovePossible(hod) && !isStalementAfterMove(hod)) {
+            char first_ch = (char)('a'+hod.origin_j);
+            char third_ch = (char)('a'+hod.destination_j);
+            char second_ch = (char)('1'+hod.origin_i);
+            char fourth_ch = (char)('1'+hod.destination_i);
+            assert(field[hod.origin_i][hod.origin_j] != 0);
+            if (field[hod.origin_i][hod.origin_j] == WHITE_KING) my_move += 'K';
+            if (field[hod.origin_i][hod.origin_j] == WHITE_QUEEN) my_move += 'Q';
+            if (field[hod.origin_i][hod.origin_j] == WHITE_ROOK) my_move += 'R';
+            if (field[hod.origin_i][hod.origin_j] == WHITE_KNIGHT) my_move += 'N';
+            if (field[hod.origin_i][hod.origin_j] == WHITE_BISHOP) my_move += 'B';
+            if (field[hod.destination_i][hod.destination_j] != 0) {
+                my_move += first_ch;
+                my_move += second_ch;
+                my_move += 'x';
+                my_move += third_ch;
+                my_move += fourth_ch;
+            } else {
+                my_move += first_ch;
+                my_move += second_ch;
+                my_move += '-';
+                my_move += third_ch;
+                my_move += fourth_ch;
+            }
+            if (hod.destination_i == 7 && field[hod.origin_i][hod.origin_j] == WHITE_PAWN) my_move += "Q"; // !! проводим только Q
+            return;
+        }
+    }
+    assert(false);
 }
 void solve() {
     field[0][0] = WHITE_ROOK;   field[7][0] = BLACK_ROOK;
