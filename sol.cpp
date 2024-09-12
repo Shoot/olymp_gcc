@@ -249,8 +249,7 @@ bool isOurKingUnderAttack (vector<vector<ll>> & deriv_field) {
     }
     return false;
 }
-bool isHisMoveImpossible (vector<vector<ll>> deriv_field, Move move) {
-    auto goddamn_copy = std::move(deriv_field);
+bool isHisMoveImpossible (vector<vector<ll>> goddamn_copy, Move move) {
     assert(isCellPossible(move.destination_i, move.destination_j));
     assert(isCellPossible(move.origin_i, move.origin_j));
     goddamn_copy[move.destination_i][move.destination_j] = goddamn_copy[move.origin_i][move.origin_j];
@@ -269,9 +268,8 @@ bool isHisMoveImpossible (vector<vector<ll>> deriv_field, Move move) {
     assert(hisKingI != -1 && hisKingJ != -1);
     fo(i, 0, 8) {
         fo(j, 0, 8) {
-            assert(isCellPossible(i, j));
             if (goddamn_copy[i][j] == WHITE_PAWN) {
-                if (i+1 == hisKingI && abs(j-hisKingJ) <= 1) {
+                if (i+1 == hisKingI && abs(j-hisKingJ) == 1) {
                     return true;
                 }
             }
@@ -695,7 +693,7 @@ void calc () {
     //// (И ТАК СОЙДЕТ)
     //// }
     vector<Move> moves;
-    fo(i, 0, 8) {
+    roff(i, 7, 0) {
         fo(j, 0, 8) {
             if (field[i][j] == WHITE_KING) {
                 forr(ii, i-1, i+1) {
@@ -912,12 +910,30 @@ void do_brute () {
                     field4[move4.destination_i][move4.destination_j] = field4[move4.origin_i][move4.origin_j];
                     field4[move4.origin_i][move4.origin_j] = 0;
                     for (auto move5: getWhiteQueenMoves(field4)) { // white move
+                        bool move5isGood = true;
                         auto field5 = field4;
                         field5[move5.destination_i][move5.destination_j] = field5[move5.origin_i][move5.origin_j];
                         field5[move5.origin_i][move5.origin_j] = 0;
-                        if (MAT_CHERNYM(field5)) {
-                            move4isGood = true;
+                        auto black_moves6 = getBlackKingMoves(field5);
+                        if (black_moves6.empty()) {
+                            move5isGood = false;
                         }
+                        for (auto move6: black_moves6) {
+                            bool move6isGood = false;
+                            auto field6 = field5;
+                            field6[move6.destination_i][move6.destination_j] = field6[move6.origin_i][move6.origin_j];
+                            field6[move6.origin_i][move6.origin_j] = 0;
+                            for (auto move7: getWhiteQueenMoves(field6)) { // white move
+                                auto field7 = field6;
+                                field7[move7.destination_i][move7.destination_j] = field7[move7.origin_i][move7.origin_j];
+                                field7[move7.origin_i][move7.origin_j] = 0;
+                                if (MAT_CHERNYM(field7)) {
+                                    move6isGood = true;
+                                }
+                            }
+                            if (!move6isGood) move5isGood = false;
+                        }
+                        if (move5isGood) move4isGood = true;
                     }
                     if (!move4isGood) move3isGood = false;
                 }
@@ -962,33 +978,37 @@ void do_brute () {
     sort(all(first_moves), [] (pair<ll, Move> a, pair<ll, Move> b) {
         return a.first > b.first;
     });
-    auto move1 = first_moves[0].second;
-    char first_ch = (char)('a'+move1.origin_j);
-    char third_ch = (char)('a'+move1.destination_j);
-    char second_ch = (char)('1'+move1.origin_i);
-    char fourth_ch = (char)('1'+move1.destination_i);
-    assert(field[move1.origin_i][move1.origin_j] != 0);
-    if (field[move1.origin_i][move1.origin_j] == WHITE_KING) my_move += 'K';
-    if (field[move1.origin_i][move1.origin_j] == WHITE_QUEEN) my_move += 'Q';
-    if (field[move1.origin_i][move1.origin_j] == WHITE_ROOK) my_move += 'R';
-    if (field[move1.origin_i][move1.origin_j] == WHITE_KNIGHT) my_move += 'N';
-    if (field[move1.origin_i][move1.origin_j] == WHITE_BISHOP) my_move += 'B';
-    if (field[move1.destination_i][move1.destination_j] != 0) {
-        my_move += first_ch;
-        my_move += second_ch;
-        my_move += 'x';
-        my_move += third_ch;
-        my_move += fourth_ch;
-    } else {
-        my_move += first_ch;
-        my_move += second_ch;
-        my_move += '-';
-        my_move += third_ch;
-        my_move += fourth_ch;
-    }
-    if (move1.destination_i == 7 && field[move1.origin_i][move1.origin_j] == WHITE_PAWN) my_move += "Q"; // !! проводим только Q
-
+    for(auto move1s: first_moves) {
+        auto move1 = move1s.second;
+        if (isStalementAfterMove(move1)) continue;
+        char first_ch = (char)('a'+move1.origin_j);
+        char third_ch = (char)('a'+move1.destination_j);
+        char second_ch = (char)('1'+move1.origin_i);
+        char fourth_ch = (char)('1'+move1.destination_i);
+        assert(field[move1.origin_i][move1.origin_j] != 0);
+        if (field[move1.origin_i][move1.origin_j] == WHITE_KING) my_move += 'K';
+        if (field[move1.origin_i][move1.origin_j] == WHITE_QUEEN) my_move += 'Q';
+        if (field[move1.origin_i][move1.origin_j] == WHITE_ROOK) my_move += 'R';
+        if (field[move1.origin_i][move1.origin_j] == WHITE_KNIGHT) my_move += 'N';
+        if (field[move1.origin_i][move1.origin_j] == WHITE_BISHOP) my_move += 'B';
+        if (field[move1.destination_i][move1.destination_j] != 0) {
+            my_move += first_ch;
+            my_move += second_ch;
+            my_move += 'x';
+            my_move += third_ch;
+            my_move += fourth_ch;
+        } else {
+            my_move += first_ch;
+            my_move += second_ch;
+            my_move += '-';
+            my_move += third_ch;
+            my_move += fourth_ch;
+        }
+        if (move1.destination_i == 7 && field[move1.origin_i][move1.origin_j] == WHITE_PAWN) my_move += "Q"; // !! проводим только Q
+        return;
 //    calc();
+    }
+
 
 }
 void solve() {
@@ -1036,8 +1056,9 @@ void solve() {
             calc();
         }
         else {
-//            assert(hisKingI > 2);
             do_brute();
+//            assert(false);
+//            assert(hisKingI > 2);
         }
         assert(!my_move.empty());
         cout << my_move << endl;
