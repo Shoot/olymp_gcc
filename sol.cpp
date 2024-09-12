@@ -882,7 +882,7 @@ void do_brute () {
     for (auto move1: getWhiteQueenMoves(field)) { // white move
         assert(isMovePossible(move1));
         bool move1isGood = true;
-        ll move1wins = 0;
+        ll move1BlackKingCoords = 99999;
         auto field1 = field;
         field1[move1.destination_i][move1.destination_j] = field1[move1.origin_i][move1.origin_j];
         field1[move1.origin_i][move1.origin_j] = 0;
@@ -895,6 +895,13 @@ void do_brute () {
             auto field2 = field1;
             field2[move2.destination_i][move2.destination_j] = field2[move2.origin_i][move2.origin_j];
             field2[move2.origin_i][move2.origin_j] = 0;
+            fo (i, 0, 8) {
+                fo(j, 0, 8) {
+                    if (field2[i][j] == BLACK_KING) {
+                        move1BlackKingCoords = min(move1BlackKingCoords, i+j);
+                    }
+                }
+            }
             for (auto move3: getWhiteQueenMoves(field2)) { // white move
                 bool move3isGood = true;
                 auto field3 = field2;
@@ -941,8 +948,6 @@ void do_brute () {
             }
             if (!move2isGood) {
                 move1isGood = false;
-            } else {
-                move1wins += 1;
             }
         }
         if (move1isGood) {
@@ -972,7 +977,7 @@ void do_brute () {
             if (move1.destination_i == 7 && field[move1.origin_i][move1.origin_j] == WHITE_PAWN) my_move += "Q"; // !! проводим только Q
             return;
         }
-        first_moves.push_back(make_pair(move1wins, move1));
+        first_moves.push_back(make_pair(move1BlackKingCoords, move1));
     }
     // случай когда не нашли мат
     sort(all(first_moves), [] (pair<ll, Move> a, pair<ll, Move> b) {
