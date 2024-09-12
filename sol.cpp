@@ -940,6 +940,7 @@ void do_brute () {
         auto black_moves2 = getBlackKingMoves(field1);
         if (black_moves2.empty()) {
             move1isGood = false;
+            continue;
         }
         for (auto move2: black_moves2) {
             bool move2isGood = false;
@@ -962,6 +963,7 @@ void do_brute () {
                 auto black_moves4 = getBlackKingMoves(field3);
                 if (black_moves4.empty()) {
                     move3isGood = false;
+                    continue;
                 }
                 for (auto move4: black_moves4) {
                     bool move4isGood = false;
@@ -977,6 +979,7 @@ void do_brute () {
                         auto black_moves6 = getBlackKingMoves(field5);
                         if (black_moves6.empty()) {
                             move5isGood = false;
+                            continue;
                         }
                         for (auto move6: black_moves6) {
                             bool move6isGood = false;
