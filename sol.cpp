@@ -436,7 +436,7 @@ void calc () {
             if (field[i][j] == WHITE_KING) {
                 forr(ii, i-1, i+1) {
                     forr (jj, j-1, j+1) {
-                        if (ii == i && jj == j) continue;
+                        if (ii == i && jj == j || field[ii][jj] < 20 && field[ii][jj] != 0) continue;
                         if (isCellPossible(ii, jj)) moves.push_back(Move{i, j, ii, jj, -1}); // ходим королем только от шаха
                     }
                 }
@@ -581,23 +581,51 @@ void calc_yooo () {
     assert(hisKingJ != -1);
     fo(i, 0, 8) {
         fo(j, 0, 8) {
+            if (field[i][j] == WHITE_KING) {
+                forr(ii, i-1, i+1) {
+                    forr (jj, j-1, j+1) {
+                        if (ii == i && jj == j || field[ii][jj] < 20 && field[ii][jj] != 0) continue;
+                        if (isCellPossible(ii, jj)) moves.push_back(Move{i, j, ii, jj, -1}); // ходим королем только от шаха
+                    }
+                }
+            }
             if (field[i][j] == WHITE_ROOK || field[i][j] == WHITE_QUEEN) {
+                ll temp_j = j+1;
+                while (isCellPossible(i, temp_j)) {
+                    if (field[i][temp_j] != 0) {
+                        if (field[i][temp_j] > 20) {
+                            moves.push_back(Move{i, j, i, temp_j, 20-(i)-(field[i][j] == WHITE_QUEEN)});
+                        }
+                        break;
+                    }
+                    temp_j += 1;
+                }
+                temp_j = j-1;
+                while (isCellPossible(i, temp_j)) {
+                    if (field[i][temp_j] != 0) {
+                        if (field[i][temp_j] > 20) {
+                            moves.push_back(Move{i, j, i, temp_j, 20-(i)-(field[i][j] == WHITE_QUEEN)});
+                        }
+                        break;
+                    }
+                    temp_j -= 1;
+                }
                 ll temp_i = i+1;
                 while (isCellPossible(temp_i, j)) {
-                    if (hisKingI == temp_i) {
-                        moves.push_back(Move{i, j, temp_i, j, 20});
-                    }
                     if (field[temp_i][j] != 0) {
+                        if (field[temp_i][j] > 20) {
+                            moves.push_back(Move{i, j, temp_i, j, 20-(temp_i)-(field[i][j] == WHITE_QUEEN)});
+                        }
                         break;
                     }
                     temp_i += 1;
                 }
                 temp_i = i-1;
                 while (isCellPossible(temp_i, j)) {
-                    if (hisKingI == temp_i) {
-                        moves.push_back(Move{i, j, temp_i, j, 20});
-                    }
                     if (field[temp_i][j] != 0) {
+                        if (field[temp_i][j] > 20) {
+                            moves.push_back(Move{i, j, temp_i, j, 20-(temp_i)-(field[i][j] == WHITE_QUEEN)});
+                        }
                         break;
                     }
                     temp_i -= 1;
@@ -668,8 +696,13 @@ void solve() {
             break;
         }
         my_move = "";
-        if (his_material>0) calc();
-        else calc_yooo();
+        ll our_queens = 0; fo(i, 0, 8) fo(j, 0, 8) if (field[i][j] == WHITE_QUEEN) our_queens += 1;
+        if (his_material > 0 || our_queens < 3) {
+            calc();
+        }
+        else {
+            calc_yooo();
+        }
         assert(!my_move.empty());
         cout << my_move << endl;
         cout.flush();
