@@ -51,6 +51,36 @@ bool nash_hod = false;
 bool isCellPossible (ll i, ll j) {
     return i < 8 && i >= 0 && j < 8 && j >= 0;
 }
+struct Move {
+    ll origin_i, origin_j, destination_i, destination_j;
+    ll priority;
+};
+void godo (Move move1) {
+    char first_ch = (char)('a'+move1.origin_j);
+    char third_ch = (char)('a'+move1.destination_j);
+    char second_ch = (char)('1'+move1.origin_i);
+    char fourth_ch = (char)('1'+move1.destination_i);
+    assert(field[move1.origin_i][move1.origin_j] != 0);
+    if (field[move1.origin_i][move1.origin_j] == WHITE_KING) my_move += 'K';
+    if (field[move1.origin_i][move1.origin_j] == WHITE_QUEEN) my_move += 'Q';
+    if (field[move1.origin_i][move1.origin_j] == WHITE_ROOK) my_move += 'R';
+    if (field[move1.origin_i][move1.origin_j] == WHITE_KNIGHT) my_move += 'N';
+    if (field[move1.origin_i][move1.origin_j] == WHITE_BISHOP) my_move += 'B';
+    if (field[move1.destination_i][move1.destination_j] != 0) {
+        my_move += first_ch;
+        my_move += second_ch;
+        my_move += 'x';
+        my_move += third_ch;
+        my_move += fourth_ch;
+    } else {
+        my_move += first_ch;
+        my_move += second_ch;
+        my_move += '-';
+        my_move += third_ch;
+        my_move += fourth_ch;
+    }
+    if (move1.destination_i == 7 && field[move1.origin_i][move1.origin_j] == WHITE_PAWN) my_move += "Q"; // !! проводим только Q
+}
 void process () {
     if (new_move == "O-O-O") {
         assert(!nash_hod); // !! мы не рокируемся
@@ -111,10 +141,6 @@ void process () {
     }
     assert(false);
 }
-struct Move {
-    ll origin_i, origin_j, destination_i, destination_j;
-    ll priority;
-};
 bool isOurKingUnderAttack (vector<vector<ll>> & deriv_field) {
     ll myKingI = -1;
     ll myKingJ = -1;
@@ -331,7 +357,6 @@ bool isHisMoveImpossible (vector<vector<ll>> goddamn_copy, Move move) {
                     temp_j -= 1;
                 }
             }
-            assert(isCellPossible(i, j));
             if (goddamn_copy[i][j] == WHITE_BISHOP || goddamn_copy[i][j] == WHITE_QUEEN) {
                 ll temp_i = i+1;
                 ll temp_j = j+1;
@@ -386,7 +411,7 @@ bool isHisMoveImpossible (vector<vector<ll>> goddamn_copy, Move move) {
     }
     return false;
 }
-bool isMovePossible (Move move) {
+bool isOurMovePossible (Move move) {
     auto copy = field;
     assert(isCellPossible(move.destination_i, move.destination_j));
     assert(isCellPossible(move.origin_i, move.origin_j));
@@ -394,73 +419,63 @@ bool isMovePossible (Move move) {
     copy[move.origin_i][move.origin_j] = 0;
     return !isOurKingUnderAttack(copy);
 }
-bool isBlackMovePossible (vector<vector<ll>> f, Move move) {
-    auto temp_f = std::move(f);
+bool isBlackKingAliveAfterMove (vector<vector<ll>> temp_f, Move move) {
     temp_f[move.destination_i][move.destination_j] = temp_f[move.origin_i][move.origin_j];
     temp_f[move.origin_i][move.origin_j] = 0;
+    ll hisKingI = -1;
+    ll hisKingJ = -1;
     fo(i, 0, 8) {
         fo(j, 0, 8) {
-            if (temp_f[i][j] == WHITE_QUEEN) {
+            assert(isCellPossible(i, j));
+            if (temp_f[i][j] == BLACK_KING) {
+                hisKingI = i;
+                hisKingJ = j;
+            }
+        }
+    }
+    assert(hisKingI != -1 && hisKingJ != -1);
+    fo(i, 0, 8) {
+        fo(j, 0, 8) {
+            if (temp_f[i][j] == WHITE_KING) {
+                if (abs(i-hisKingI) <= 1 && abs(j-hisKingJ) <= 1) {
+                    return false;
+                }
+            }
+            if (temp_f[i][j] == WHITE_KNIGHT) {
+                if (i-1 == hisKingI && j-2 == hisKingJ) return false;
+                if (i-2 == hisKingI && j-1 == hisKingJ) return false;
+                if (i+1 == hisKingI && j+2 == hisKingJ) return false;
+                if (i+2 == hisKingI && j+1 == hisKingJ) return false;
+
+                if (i+2 == hisKingI && j-1 == hisKingJ) return false;
+                if (i+1 == hisKingI && j-2 == hisKingJ) return false;
+                if (i-1 == hisKingI && j+2 == hisKingJ) return false;
+                if (i-2 == hisKingI && j+1 == hisKingJ) return false;
+            }
+            if (temp_f[i][j] == WHITE_PAWN) {
+                if (i+1 == hisKingI && abs(hisKingJ-j) == 1) {
+                    return false;
+                }
+            }
+            if (temp_f[i][j] == WHITE_ROOK || temp_f[i][j] == WHITE_QUEEN) {
                 ll temp_i = i+1;
+                while (isCellPossible(temp_i, j)) {
+                    if (temp_f[temp_i][j] != 0) {
+                        if (temp_f[temp_i][j] == BLACK_KING) return false;
+                        break;
+                    }
+                    temp_i += 1;
+                }
+                temp_i = i-1;
+                while (isCellPossible(temp_i, j)) {
+                    if (temp_f[temp_i][j] != 0) {
+                        if (temp_f[temp_i][j] == BLACK_KING) return false;
+                        break;
+                    }
+                    temp_i -= 1;
+                }
+
                 ll temp_j = j+1;
-                while (isCellPossible(temp_i, temp_j)) {
-                    if (temp_f[temp_i][temp_j] != 0) {
-                        if (temp_f[temp_i][temp_j] == BLACK_KING) return false;
-                        break;
-                    }
-                    temp_i += 1;
-                    temp_j += 1;
-                }
-                temp_i = i-1;
-                temp_j = j-1;
-                while (isCellPossible(temp_i, temp_j)) {
-                    if (temp_f[temp_i][temp_j] != 0) {
-                        if (temp_f[temp_i][temp_j] == BLACK_KING) return false;
-                        break;
-                    }
-                    temp_i -= 1;
-                    temp_j -= 1;
-                }
-                temp_i = i+1;
-                temp_j = j-1;
-                while (isCellPossible(temp_i, temp_j)) {
-                    if (temp_f[temp_i][temp_j] != 0) {
-                        if (temp_f[temp_i][temp_j] == BLACK_KING) return false;
-                        break;
-                    }
-                    temp_i += 1;
-                    temp_j -= 1;
-                }
-                temp_i = i-1;
-                temp_j = j+1;
-                while (isCellPossible(temp_i, temp_j)) {
-                    if (temp_f[temp_i][temp_j] != 0) {
-                        if (temp_f[temp_i][temp_j] == BLACK_KING) return false;
-                        break;
-                    }
-                    temp_i -= 1;
-                    temp_j += 1;
-                }
-
-
-                temp_i = i+1;
-                while (isCellPossible(temp_i, j)) {
-                    if (temp_f[temp_i][j] != 0) {
-                        if (temp_f[temp_i][j] == BLACK_KING) return false;
-                        break;
-                    }
-                    temp_i += 1;
-                }
-                temp_i = i-1;
-                while (isCellPossible(temp_i, j)) {
-                    if (temp_f[temp_i][j] != 0) {
-                        if (temp_f[temp_i][j] == BLACK_KING) return false;
-                        break;
-                    }
-                    temp_i -= 1;
-                }
-
-                temp_j = j+1;
                 while (isCellPossible(i, temp_j)) {
                     if (temp_f[i][temp_j] != 0) {
                         if (temp_f[i][temp_j] == BLACK_KING) return false;
@@ -476,6 +491,48 @@ bool isBlackMovePossible (vector<vector<ll>> f, Move move) {
                         break;
                     }
                     temp_j -= 1;
+                }
+            }
+            if (temp_f[i][j] == WHITE_BISHOP || temp_f[i][j] == WHITE_QUEEN) {
+                ll temp_i = i + 1;
+                ll temp_j = j + 1;
+                while (isCellPossible(temp_i, temp_j)) {
+                    if (temp_f[temp_i][temp_j] != 0) {
+                        if (temp_f[temp_i][temp_j] == BLACK_KING) return false;
+                        break;
+                    }
+                    temp_i += 1;
+                    temp_j += 1;
+                }
+                temp_i = i - 1;
+                temp_j = j - 1;
+                while (isCellPossible(temp_i, temp_j)) {
+                    if (temp_f[temp_i][temp_j] != 0) {
+                        if (temp_f[temp_i][temp_j] == BLACK_KING) return false;
+                        break;
+                    }
+                    temp_i -= 1;
+                    temp_j -= 1;
+                }
+                temp_i = i + 1;
+                temp_j = j - 1;
+                while (isCellPossible(temp_i, temp_j)) {
+                    if (temp_f[temp_i][temp_j] != 0) {
+                        if (temp_f[temp_i][temp_j] == BLACK_KING) return false;
+                        break;
+                    }
+                    temp_i += 1;
+                    temp_j -= 1;
+                }
+                temp_i = i - 1;
+                temp_j = j + 1;
+                while (isCellPossible(temp_i, temp_j)) {
+                    if (temp_f[temp_i][temp_j] != 0) {
+                        if (temp_f[temp_i][temp_j] == BLACK_KING) return false;
+                        break;
+                    }
+                    temp_i -= 1;
+                    temp_j += 1;
                 }
             }
         }
@@ -498,7 +555,7 @@ bool MAT_CHERNYM (vector<vector<ll>> f) {
     forr(i, BlackKingI-1, BlackKingI+1) {
         forr(j, BlackKingJ-1, BlackKingJ+1) {
             if (i == BlackKingI && j == BlackKingJ) continue;
-            if (isCellPossible(i, j) && f[i][j] == 0 && isBlackMovePossible(f, Move{BlackKingI, BlackKingJ, i, j, -666})) {
+            if (isCellPossible(i, j) && f[i][j] == 0 && isBlackKingAliveAfterMove(f, Move{BlackKingI, BlackKingJ, i, j, -666})) {
                 return false;
             }
         }
@@ -591,9 +648,20 @@ bool isStalementAfterMove (Move move) {
     auto copy = field;
     assert(isCellPossible(move.destination_i, move.destination_j));
     assert(isCellPossible(move.origin_i, move.origin_j));
-    copy[move.destination_i][move.destination_j] = copy[move.origin_i][move.origin_j];
-    copy[move.origin_i][move.origin_j] = 0;
-
+    if (copy[move.origin_i][move.origin_j] == WHITE_PAWN && move.origin_i == 6) {
+        copy[move.origin_i][move.origin_j] = 0;
+        copy[move.destination_i][move.destination_j] = WHITE_QUEEN;
+    } else {
+        copy[move.destination_i][move.destination_j] = copy[move.origin_i][move.origin_j];
+        copy[move.origin_i][move.origin_j] = 0;
+    }
+    fo(i, 0, 8) {
+        fo(j, 0, 8) {
+            if (copy[i][j] == BLACK_PAWN && isCellPossible(i-1, j) && copy[i-1][j] == 0 && isBlackKingAliveAfterMove(copy, Move{i, j, i-1, j, -666})) {
+                return false;
+            }
+        }
+    }
     ll hisKingI = -1;
     ll hisKingJ = -1;
     fo(i, 0, 8) {
@@ -611,7 +679,8 @@ bool isStalementAfterMove (Move move) {
         forr(jj, hisKingJ-1, hisKingJ+1) {
             if (!isCellPossible(ii, jj)) continue;
             if (ii == hisKingI && jj == hisKingJ) continue;
-            if (!isHisMoveImpossible(copy, Move{hisKingI, hisKingJ, ii, jj, -666})) return false;
+            if (copy[ii][jj] != 0) continue;
+            if (isBlackKingAliveAfterMove(copy, Move{hisKingI, hisKingJ, ii, jj, -666})) return false;
         }
     }
     return true;
@@ -673,7 +742,7 @@ vector<Move> getBlackKingMoves (vector<vector<ll>> & f) {
     forr(i, BlackKingI-1, BlackKingI+1) {
         forr(j, BlackKingJ-1, BlackKingJ+1) {
             if (i == BlackKingI && j == BlackKingJ) continue;
-            if (isCellPossible(i, j) && f[i][j] == 0 && isBlackMovePossible(f, Move{BlackKingI, BlackKingJ, i, j, -666})) {
+            if (isCellPossible(i, j) && f[i][j] == 0 && isBlackKingAliveAfterMove(f, Move{BlackKingI, BlackKingJ, i, j, -666})) {
                 moves.push_back(Move{BlackKingI, BlackKingJ, i, j, -666});
             }
         }
@@ -847,31 +916,9 @@ void calc () {
         assert(isCellPossible(hod.origin_i, hod.origin_j));
         assert(hod.origin_i != hod.destination_i || hod.origin_j != hod.destination_j);
         assert(isCellPossible(hod.destination_i, hod.destination_j));
-        if (isMovePossible(hod) && !isStalementAfterMove(hod)) {
-            char first_ch = (char)('a'+hod.origin_j);
-            char third_ch = (char)('a'+hod.destination_j);
-            char second_ch = (char)('1'+hod.origin_i);
-            char fourth_ch = (char)('1'+hod.destination_i);
-            assert(field[hod.origin_i][hod.origin_j] != 0);
-            if (field[hod.origin_i][hod.origin_j] == WHITE_KING) my_move += 'K';
-            if (field[hod.origin_i][hod.origin_j] == WHITE_QUEEN) my_move += 'Q';
-            if (field[hod.origin_i][hod.origin_j] == WHITE_ROOK) my_move += 'R';
-            if (field[hod.origin_i][hod.origin_j] == WHITE_KNIGHT) my_move += 'N';
-            if (field[hod.origin_i][hod.origin_j] == WHITE_BISHOP) my_move += 'B';
-            if (field[hod.destination_i][hod.destination_j] != 0) {
-                my_move += first_ch;
-                my_move += second_ch;
-                my_move += 'x';
-                my_move += third_ch;
-                my_move += fourth_ch;
-            } else {
-                my_move += first_ch;
-                my_move += second_ch;
-                my_move += '-';
-                my_move += third_ch;
-                my_move += fourth_ch;
-            }
-            if (hod.destination_i == 7 && field[hod.origin_i][hod.origin_j] == WHITE_PAWN) my_move += "Q"; // !! проводим только Q
+        if (isStalementAfterMove(hod)) continue;
+        if (isOurMovePossible(hod)) {
+            godo(hod);
             return;
         }
     }
@@ -880,12 +927,16 @@ void calc () {
 void do_brute () {
     vector<pair<ll, Move>> first_moves;
     for (auto move1: getWhiteQueenMoves(field)) { // white move
-        assert(isMovePossible(move1));
+        assert(isOurMovePossible(move1));
         bool move1isGood = true;
         ll move1BlackKingCoords = 99999;
         auto field1 = field;
         field1[move1.destination_i][move1.destination_j] = field1[move1.origin_i][move1.origin_j];
         field1[move1.origin_i][move1.origin_j] = 0;
+        if (MAT_CHERNYM(field1)) {
+            godo(move1);
+            return;
+        }
         auto black_moves2 = getBlackKingMoves(field1);
         if (black_moves2.empty()) {
             move1isGood = false;
@@ -907,6 +958,7 @@ void do_brute () {
                 auto field3 = field2;
                 field3[move3.destination_i][move3.destination_j] = field3[move3.origin_i][move3.origin_j];
                 field3[move3.origin_i][move3.origin_j] = 0;
+                if (MAT_CHERNYM(field3)) continue;
                 auto black_moves4 = getBlackKingMoves(field3);
                 if (black_moves4.empty()) {
                     move3isGood = false;
@@ -921,6 +973,7 @@ void do_brute () {
                         auto field5 = field4;
                         field5[move5.destination_i][move5.destination_j] = field5[move5.origin_i][move5.origin_j];
                         field5[move5.origin_i][move5.origin_j] = 0;
+                        if (MAT_CHERNYM(field5)) continue;
                         auto black_moves6 = getBlackKingMoves(field5);
                         if (black_moves6.empty()) {
                             move5isGood = false;
@@ -951,32 +1004,10 @@ void do_brute () {
             }
         }
         if (move1isGood) {
-            char first_ch = (char)('a'+move1.origin_j);
-            char third_ch = (char)('a'+move1.destination_j);
-            char second_ch = (char)('1'+move1.origin_i);
-            char fourth_ch = (char)('1'+move1.destination_i);
-            assert(field[move1.origin_i][move1.origin_j] != 0);
-            if (field[move1.origin_i][move1.origin_j] == WHITE_KING) my_move += 'K';
-            if (field[move1.origin_i][move1.origin_j] == WHITE_QUEEN) my_move += 'Q';
-            if (field[move1.origin_i][move1.origin_j] == WHITE_ROOK) my_move += 'R';
-            if (field[move1.origin_i][move1.origin_j] == WHITE_KNIGHT) my_move += 'N';
-            if (field[move1.origin_i][move1.origin_j] == WHITE_BISHOP) my_move += 'B';
-            if (field[move1.destination_i][move1.destination_j] != 0) {
-                my_move += first_ch;
-                my_move += second_ch;
-                my_move += 'x';
-                my_move += third_ch;
-                my_move += fourth_ch;
-            } else {
-                my_move += first_ch;
-                my_move += second_ch;
-                my_move += '-';
-                my_move += third_ch;
-                my_move += fourth_ch;
-            }
-            if (move1.destination_i == 7 && field[move1.origin_i][move1.origin_j] == WHITE_PAWN) my_move += "Q"; // !! проводим только Q
+            godo(move1);
             return;
         }
+        assert(move1BlackKingCoords < 1000);
         first_moves.push_back(make_pair(move1BlackKingCoords, move1));
     }
     // случай когда не нашли мат
@@ -986,35 +1017,11 @@ void do_brute () {
     for(auto move1s: first_moves) {
         auto move1 = move1s.second;
         if (isStalementAfterMove(move1)) continue;
-        char first_ch = (char)('a'+move1.origin_j);
-        char third_ch = (char)('a'+move1.destination_j);
-        char second_ch = (char)('1'+move1.origin_i);
-        char fourth_ch = (char)('1'+move1.destination_i);
-        assert(field[move1.origin_i][move1.origin_j] != 0);
-        if (field[move1.origin_i][move1.origin_j] == WHITE_KING) my_move += 'K';
-        if (field[move1.origin_i][move1.origin_j] == WHITE_QUEEN) my_move += 'Q';
-        if (field[move1.origin_i][move1.origin_j] == WHITE_ROOK) my_move += 'R';
-        if (field[move1.origin_i][move1.origin_j] == WHITE_KNIGHT) my_move += 'N';
-        if (field[move1.origin_i][move1.origin_j] == WHITE_BISHOP) my_move += 'B';
-        if (field[move1.destination_i][move1.destination_j] != 0) {
-            my_move += first_ch;
-            my_move += second_ch;
-            my_move += 'x';
-            my_move += third_ch;
-            my_move += fourth_ch;
-        } else {
-            my_move += first_ch;
-            my_move += second_ch;
-            my_move += '-';
-            my_move += third_ch;
-            my_move += fourth_ch;
-        }
-        if (move1.destination_i == 7 && field[move1.origin_i][move1.origin_j] == WHITE_PAWN) my_move += "Q"; // !! проводим только Q
+        godo(move1);
         return;
 //    calc();
     }
-
-
+    assert(false);
 }
 void solve() {
     field[0][0] = WHITE_ROOK;   field[7][0] = BLACK_ROOK;
@@ -1062,7 +1069,6 @@ void solve() {
         }
         else {
             do_brute();
-//            assert(false);
 //            assert(hisKingI > 2);
         }
         assert(!my_move.empty());
