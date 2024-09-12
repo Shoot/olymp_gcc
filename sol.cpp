@@ -272,7 +272,7 @@ bool isHisMoveImpossible (vector<vector<ll>> deriv_field, Move move) {
         fo(j, 0, 8) {
             assert(isCellPossible(i, j));
             if (goddamn_copy[i][j] == WHITE_PAWN) {
-                if (i-1 == hisKingI && abs(j-hisKingJ) <= 1) {
+                if (i+1 == hisKingI && abs(j-hisKingJ) <= 1) {
                     return true;
                 }
             }
@@ -621,7 +621,7 @@ void calc_linear () {
                 ll temp_i = i+1;
                 while (isCellPossible(temp_i, j)) {
                     if (field[temp_i][j] == 0 && temp_i == hisKingI) {
-                        moves.push_back(Move{i, j, temp_i, j, (i != my_last_move_i || j != my_last_move_j)});
+                        moves.push_back(Move{i, j, temp_i, j, i+(temp_i != my_last_move_i || j != my_last_move_j)});
                     }
                     if (field[temp_i][j] != 0) {
                         break;
@@ -631,7 +631,7 @@ void calc_linear () {
                 temp_i = i-1;
                 while (isCellPossible(temp_i, j)) {
                     if (field[temp_i][j] == 0 && temp_i == hisKingI) {
-                        moves.push_back(Move{i, j, temp_i, j, (i != my_last_move_i || j != my_last_move_j)});
+                        moves.push_back(Move{i, j, temp_i, j, i+(temp_i != my_last_move_i || j != my_last_move_j)});
                     }
                     if (field[temp_i][j] != 0) {
                         break;
@@ -644,7 +644,7 @@ void calc_linear () {
                 ll temp_j = j+1;
                 while (isCellPossible(temp_i, temp_j)) {
                     if (field[temp_i][temp_j] == 0 && temp_i == hisKingI) {
-                        moves.push_back(Move{i, j, temp_i, temp_j, i-temp_i});
+                        moves.push_back(Move{i, j, temp_i, temp_j, i+(temp_i != my_last_move_i || temp_j != my_last_move_j)});
                     }
                     if (field[temp_i][temp_j] != 0) {
                         break;
@@ -656,12 +656,168 @@ void calc_linear () {
                 temp_j = j-1;
                 while (isCellPossible(temp_i, temp_j)) {
                     if (field[temp_i][temp_j] == 0 && temp_i == hisKingI) {
-                        moves.push_back(Move{i, j, temp_i, temp_j, i-temp_i});
+                        moves.push_back(Move{i, j, temp_i, temp_j, i+(temp_i != my_last_move_i || temp_j != my_last_move_j)});
                     }
                     if (field[temp_i][temp_j] != 0) {
                         break;
                     }
                     temp_i -= 1;
+                    temp_j -= 1;
+                }
+                temp_i = i+1;
+                temp_j = j+1;
+                while (isCellPossible(temp_i, temp_j)) {
+                    if (field[temp_i][temp_j] == 0 && temp_i == hisKingI) {
+                        moves.push_back(Move{i, j, temp_i, temp_j, i+(temp_i != my_last_move_i || temp_j != my_last_move_j)});
+                    }
+                    if (field[temp_i][temp_j] != 0) {
+                        break;
+                    }
+                    temp_i += 1;
+                    temp_j += 1;
+                }
+                temp_i = i+1;
+                temp_j = j-1;
+                while (isCellPossible(temp_i, temp_j)) {
+                    if (field[temp_i][temp_j] == 0 && temp_i == hisKingI) {
+                        moves.push_back(Move{i, j, temp_i, temp_j, i+(temp_i != my_last_move_i || temp_j != my_last_move_j)});
+                    }
+                    if (field[temp_i][temp_j] != 0) {
+                        break;
+                    }
+                    temp_i += 1;
+                    temp_j -= 1;
+                }
+            }
+        }
+    }
+    sort(all(moves), [] (Move a, Move b) {
+        return a.priority > b.priority;
+    });
+    for (Move hod: moves) {
+        assert(isCellPossible(hod.origin_i, hod.origin_j));
+        assert(hod.origin_i != hod.destination_i || hod.origin_j != hod.destination_j);
+        assert(isCellPossible(hod.destination_i, hod.destination_j));
+        if (isMovePossible(hod) && !isStalementAfterMove(hod)) {
+            my_last_move_i = hod.destination_i;
+            my_last_move_j = hod.destination_j;
+            char first_ch = (char)('a'+hod.origin_j);
+            char third_ch = (char)('a'+hod.destination_j);
+            char second_ch = (char)('1'+hod.origin_i);
+            char fourth_ch = (char)('1'+hod.destination_i);
+            assert(field[hod.origin_i][hod.origin_j] != 0);
+            if (field[hod.origin_i][hod.origin_j] == WHITE_KING) my_move += 'K';
+            if (field[hod.origin_i][hod.origin_j] == WHITE_QUEEN) my_move += 'Q';
+            if (field[hod.origin_i][hod.origin_j] == WHITE_ROOK) my_move += 'R';
+            if (field[hod.origin_i][hod.origin_j] == WHITE_KNIGHT) my_move += 'N';
+            if (field[hod.origin_i][hod.origin_j] == WHITE_BISHOP) my_move += 'B';
+            if (field[hod.destination_i][hod.destination_j] != 0) {
+                my_move += first_ch;
+                my_move += second_ch;
+                my_move += 'x';
+                my_move += third_ch;
+                my_move += fourth_ch;
+            } else {
+                my_move += first_ch;
+                my_move += second_ch;
+                my_move += '-';
+                my_move += third_ch;
+                my_move += fourth_ch;
+            }
+            if (hod.destination_i == 7 && field[hod.origin_i][hod.origin_j] == WHITE_PAWN) my_move += "Q"; // !! проводим только Q
+            return;
+        }
+    }
+    assert(false);
+}
+void calc_linear_minus_1 () {
+    // шахи королю (горизонтальные приоритет)
+    vector<Move> moves;
+    ll hisKingI = -1;
+    ll hisKingJ = -1;
+    fo(i, 0, 8) {
+        fo(j, 0, 8) {
+            if (field[i][j] == BLACK_KING) {
+                hisKingI = i;
+                hisKingJ = j;
+                break;
+            }
+        }
+    }
+    hisKingI -= 1;
+    assert(hisKingI != -1);
+    assert(hisKingJ != -1);
+    fo(i, 0, 8) {
+        fo(j, 0, 8) {
+            if (field[i][j] == WHITE_ROOK || field[i][j] == WHITE_QUEEN) {
+                ll temp_i = i+1;
+                while (isCellPossible(temp_i, j)) {
+                    if (field[temp_i][j] == 0 && temp_i == hisKingI) {
+                        moves.push_back(Move{i, j, temp_i, j, (temp_i != my_last_move_i || j != my_last_move_j)});
+                    }
+                    if (field[temp_i][j] != 0) {
+                        break;
+                    }
+                    temp_i += 1;
+                }
+                temp_i = i-1;
+                while (isCellPossible(temp_i, j)) {
+                    if (field[temp_i][j] == 0 && temp_i == hisKingI) {
+                        moves.push_back(Move{i, j, temp_i, j, (temp_i != my_last_move_i || j != my_last_move_j)});
+                    }
+                    if (field[temp_i][j] != 0) {
+                        break;
+                    }
+                    temp_i -= 1;
+                }
+            }
+            if (field[i][j] == WHITE_QUEEN) {
+                ll temp_i = i-1;
+                ll temp_j = j+1;
+                while (isCellPossible(temp_i, temp_j)) {
+                    if (field[temp_i][temp_j] == 0 && temp_i == hisKingI) {
+                        moves.push_back(Move{i, j, temp_i, temp_j, (temp_i != my_last_move_i || temp_j != my_last_move_j)});
+                    }
+                    if (field[temp_i][temp_j] != 0) {
+                        break;
+                    }
+                    temp_i -= 1;
+                    temp_j += 1;
+                }
+                temp_i = i-1;
+                temp_j = j-1;
+                while (isCellPossible(temp_i, temp_j)) {
+                    if (field[temp_i][temp_j] == 0 && temp_i == hisKingI) {
+                        moves.push_back(Move{i, j, temp_i, temp_j, (temp_i != my_last_move_i || temp_j != my_last_move_j)});
+                    }
+                    if (field[temp_i][temp_j] != 0) {
+                        break;
+                    }
+                    temp_i -= 1;
+                    temp_j -= 1;
+                }
+                temp_i = i+1;
+                temp_j = j+1;
+                while (isCellPossible(temp_i, temp_j)) {
+                    if (field[temp_i][temp_j] == 0 && temp_i == hisKingI) {
+                        moves.push_back(Move{i, j, temp_i, temp_j, (temp_i != my_last_move_i || temp_j != my_last_move_j)});
+                    }
+                    if (field[temp_i][temp_j] != 0) {
+                        break;
+                    }
+                    temp_i += 1;
+                    temp_j += 1;
+                }
+                temp_i = i+1;
+                temp_j = j-1;
+                while (isCellPossible(temp_i, temp_j)) {
+                    if (field[temp_i][temp_j] == 0 && temp_i == hisKingI) {
+                        moves.push_back(Move{i, j, temp_i, temp_j, (temp_i != my_last_move_i || temp_j != my_last_move_j)});
+                    }
+                    if (field[temp_i][temp_j] != 0) {
+                        break;
+                    }
+                    temp_i += 1;
                     temp_j -= 1;
                 }
             }
@@ -733,13 +889,13 @@ void calc_remove () {
                     moves.push_back(Move{i, j, i-2, j-1, 20-(i-2)});
                 }
             }
-            if (field[i][j] == WHITE_ROOK || field[i][j] == WHITE_QUEEN) {
+            if (field[i][j] == WHITE_ROOK) {
                 ll temp_i = i-1;
                 while (isCellPossible(temp_i, j)) {
+                    if (field[temp_i][j] == 0) {
+                        moves.push_back(Move{i, j, temp_i, j, i-temp_i});
+                    }
                     if (field[temp_i][j] != 0) {
-                        if (field[temp_i][j] > 20) {
-                            moves.push_back(Move{i, j, temp_i, j, 20-(temp_i)-(field[i][j] == WHITE_QUEEN)});
-                        }
                         break;
                     }
                     temp_i -= 1;
@@ -829,6 +985,7 @@ void solve() {
     field[1][6] = WHITE_PAWN;   field[6][6] = BLACK_PAWN;
     field[1][7] = WHITE_PAWN;   field[6][7] = BLACK_PAWN;
     ll his_material = 11111;
+    ll shitshit = 0;
     while (true) {
         ll hisKingI = -1;
         ll hisKingJ = -1;
@@ -855,11 +1012,17 @@ void solve() {
             calc();
         }
         else {
+            assert(hisKingI > 2);
             ll max_i_white = 0; fo(i, 0, 8) fo(j, 0, 8) if (field[i][j] != 0 && field[i][j] < 20) max_i_white = i;
-            if (max_i_white >= hisKingI) {
+            if (max_i_white > hisKingI) {
                 calc_remove();
             } else {
-                calc_linear();
+                if (shitshit < 1) {
+                    shitshit += 1;
+                    calc_linear_minus_1();
+                } else {
+                    calc_linear();
+                }
             }
         }
         assert(!my_move.empty());
