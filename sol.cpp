@@ -82,6 +82,7 @@ void solve() {
         obed -= 1;
         queries_by_comp[comp_number_by_v[obed]].push_back(obed);
     }
+    ll tot = 0;
     fo(i, 0, n) {
         if (done[i]) continue;
         vector<ll> component;
@@ -130,21 +131,64 @@ void solve() {
         }
         clog << endl;
         vector<vector<ll>> palki (starts.size());
+        vector<ll> number_of_palka_by_v (n, -1);
         fo(ii, 0, starts.size()) {
             ll start = starts[ii];
             while (!is_cycle[start]) {
                 palki[ii].push_back(start);
+                number_of_palka_by_v[start] = ii;
                 start = outcoming[start];
             }
         }
-        for (auto palka: palki) {
+        vector<vector<ll>> queries_by_number_of_palka (starts.size());
+        vector<ll> cycle_queries;
+        for (ll v: queries_by_comp[i]) {
+            if (number_of_palka_by_v[v] == -1) break;
+            queries_by_number_of_palka[number_of_palka_by_v[v]].push_back(v);
+        }
+        for (ll v: queries_by_comp[i]) {
+            if (number_of_palka_by_v[v] == -1) cycle_queries.push_back(v);
+        }
+        fo(iii, 0, starts.size()) {
+            auto palka = palki[iii];
+            vector<ll> order_in_palka_by_v (n);
             clog << "    palka: ";
-            for (ll v: palka) {
+            fo(iiii, 0, palka.size()) {
+                order_in_palka_by_v[palka[iiii]] = iiii;
+                clog << palka[iiii] << " ";
+            }
+            clog << endl;
+            clog << "        queries of that palka: ";
+            for (ll v: queries_by_number_of_palka[iii]) {
                 clog << v << " ";
             }
             clog << endl;
+            ll last_query_order_in_palka = 0;
+            for (ll v: queries_by_number_of_palka[iii]) {
+                clog << "для v = " << v << ": ";
+                ll order = order_in_palka_by_v[v];
+                if (order <= last_query_order_in_palka) {
+                    clog << endl;
+                    continue;
+                }
+                tot += (order-last_query_order_in_palka)*(last_query_order_in_palka+1);
+                clog << "contribution1 = " << (order-last_query_order_in_palka)*(last_query_order_in_palka+1);
+                ll diff_minus_1 = order-last_query_order_in_palka-1;
+                if (diff_minus_1 > 0) {
+                    tot += diff_minus_1*(diff_minus_1+1)/2;
+                    clog << ", contribution2 = " << diff_minus_1*(diff_minus_1+1)/2;
+                }
+                last_query_order_in_palka = order;
+                clog << endl;
+            }
         }
+        clog << "cycle queries: ";
+        for (ll v: cycle_queries) {
+            clog << v << " ";
+        }
+        clog << endl;
     }
+    cout << tot << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
