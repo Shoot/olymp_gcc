@@ -42,31 +42,36 @@ ll powm(ll a, ll b){
     return d;
 }
 void solve() {
-    ll n, m;
-    cin >> n >> m;
-    ll f[n+10][m+10];
-    ll a[n+10][m+10];
-    forr(i, 1, n) {
-        forr(j, 1, m) {
-            cin >> a[i][j];
-        }
+    ll n;
+    cin >> n;
+    vector<vector<ll>> incoming(n);
+    vector<bool> done(n, false);
+    fo(i, 0, n) {
+        ll x;
+        cin >> x;
+        x -= 1;
+        incoming[x].push_back(i);
     }
-    fo(i, 0, n+10) {
-        fo(j, 0, m+10) {
-            f[i][j] = 0;
+    fo(i, 0, n) {
+        if (done[i]) continue;
+        vector<ll> component;
+        queue<ll> q;
+        q.push(i);
+        while (!q.empty()) {
+            ll top = q.front();
+            q.pop();
+            if (done[top]) continue;
+            done[top] = true;
+            component.push_back(top);
+            for (auto v: adj[top]) {
+                q.push(v);
+            }
         }
-    }
-    roff(i, n, 1) {
-        forr(j, 1, m) {
-            f[i][j] = max({
-                f[i+1][j-1]+a[i][j], // взаимо исключающие (по диагонали влево вниз)!!
-                f[i+1][j], // снизу
-                f[i][j-1] // слева
-                // КВАДРАТИК 2x2
-            });
+        for (ll v: component) {
+            cout << v << ' ';
         }
+        cout << endl;
     }
-    cout << f[1][m] << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
