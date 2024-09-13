@@ -54,6 +54,34 @@ void solve() {
         incoming[x].push_back(i);
         outcoming[i] = x;
     }
+    vector<bool> done_temp_classification(n, false);
+    vector<ll> comp_number_by_v (n);
+    fo(i, 0, n) {
+        if (done_temp_classification[i]) continue;
+        queue<ll> q;
+        q.push(i);
+        while (!q.empty()) {
+            ll top = q.front();
+            q.pop();
+            if (done_temp_classification[top]) continue;
+            done_temp_classification[top] = true;
+            comp_number_by_v[top] = i;
+            if (outcoming[top] != -1) {
+                q.push(outcoming[top]);
+            }
+            for (auto v: incoming[top]) {
+                q.push(v);
+            }
+        }
+    }
+    vector<vector<ll>> queries_by_comp (n);
+    ll queries; cin >> queries;
+    fo(i, 0, queries) {
+        ll obed;
+        cin >> obed;
+        obed -= 1;
+        queries_by_comp[comp_number_by_v[obed]].push_back(obed);
+    }
     fo(i, 0, n) {
         if (done[i]) continue;
         vector<ll> component;
@@ -94,6 +122,11 @@ void solve() {
         clog << "component " << i << " cycle is ";
         for(ll v: cycle) {
             clog << v << ' ';
+        }
+        clog << endl;
+        clog << "queries: ";
+        for (ll v: queries_by_comp[i]) {
+            clog << v << " ";
         }
         clog << endl;
         vector<vector<ll>> palki (starts.size());
