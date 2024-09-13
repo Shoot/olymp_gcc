@@ -45,32 +45,72 @@ void solve() {
     ll n;
     cin >> n;
     vector<vector<ll>> incoming(n);
+    vector<ll> outcoming(n, -1);
     vector<bool> done(n, false);
     fo(i, 0, n) {
         ll x;
         cin >> x;
         x -= 1;
         incoming[x].push_back(i);
+        outcoming[i] = x;
     }
     fo(i, 0, n) {
         if (done[i]) continue;
         vector<ll> component;
         queue<ll> q;
         q.push(i);
+        vector<ll> starts;
         while (!q.empty()) {
             ll top = q.front();
             q.pop();
             if (done[top]) continue;
             done[top] = true;
             component.push_back(top);
-            for (auto v: adj[top]) {
+            if (outcoming[top] != -1) {
+                q.push(outcoming[top]);
+            }
+            for (auto v: incoming[top]) {
                 q.push(v);
             }
+            if (incoming[top].empty()) {
+                starts.push_back(top);
+            }
         }
-        for (ll v: component) {
-            cout << v << ' ';
+        assert(!starts.empty());
+        ll curr_v = starts[0];
+        vector<bool> done_temp(n, false);
+        while (!done_temp[curr_v]) {
+            done_temp[curr_v] = true;
+            curr_v = outcoming[curr_v];
         }
-        cout << endl;
+        ll cycle_zamk = curr_v;
+        vector<bool> is_cycle(n, false);
+        vector<ll> cycle;
+        while (!is_cycle[cycle_zamk]) {
+            cycle.push_back(cycle_zamk);
+            is_cycle[cycle_zamk] = true;
+            cycle_zamk = outcoming[cycle_zamk];
+        }
+        clog << "component " << i << " cycle is ";
+        for(ll v: cycle) {
+            clog << v << ' ';
+        }
+        clog << endl;
+        vector<vector<ll>> palki (starts.size());
+        fo(ii, 0, starts.size()) {
+            ll start = starts[ii];
+            while (!is_cycle[start]) {
+                palki[ii].push_back(start);
+                start = outcoming[start];
+            }
+        }
+        for (auto palka: palki) {
+            clog << "    palka: ";
+            for (ll v: palka) {
+                clog << v << " ";
+            }
+            clog << endl;
+        }
     }
 }
 int32_t main (int32_t argc, char* argv[]) {
