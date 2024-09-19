@@ -52,58 +52,50 @@ ll sum(ll a, ll b) {
     return (a+b)%MOD;
 }
 ll n, m, k;
-bool impossible(ll i, ll j) {
-    if (i >= n || i < 0 || j >= m || j < 0) {
-        return true;
-    }
-    return false;
-}
+struct shit {
+    ll t, enemy_number, hp;
+};
 void solve()
 {
-    cin >> n >> m >> k;
-    vector<vector<bool>> r(n, vector<bool> (m));
-    fo(i, 0, n) {
-        fo(j, 0, m) {
-            r[i][j] = j%2;
-        }
+    cin >> n;
+    vector<ll> a(n+1);
+    vector<ll> b(n+1);
+    forr(i, 1, n) {
+        cin >> a[i];
     }
-    ll todo = k-m;
-    fo(i, 0, n-1) {
-        if (i%2 == 1) continue;
-        if (todo < 0) break;
-        fo(j, 0, m) {
-            r[i][j] = !r[i+1][j];
-        }
-        todo -= m;
+    forr(i, 1, n) {
+        cin >> b[i];
     }
-    clog << "TODO=" << todo << endl;
-    while (todo < 0) {
-        cout << todo << endl;
-        roff(i, n-1, 0) {
-            bool stop = false;
-            roff(j, m-1, 0) {
-                if      (
-                        (impossible(i-1, j) || r[i-1][j] != r[i][j]) &&
-                        (impossible(i+1, j) || r[i+1][j] != r[i][j]) &&
-                        (impossible(i, j-1) || r[i][j-1] != r[i][j]) &&
-                        (impossible(i, j+1) || r[i][j+1] != r[i][j])
-                        ) {
-                    r[i][j] = !r[i][j];
-                    cout << i << " " << j << endl;
-                    stop = true;
-                    break;
+    vector<ll> pra(n+1, 0);
+    vector<ll> prb(n+1, 0);
+    forr(i, 1, n) {
+        pra[i] = gcd(pra[i-1], a[i]);
+        prb[i] = gcd(prb[i-1], b[i]);
+    }
+    ll maxi = pra[n]+prb[n];
+    forr(l, 1, n) {
+        if (pra[l] != pra[l-1] || prb[l] != prb[l-1]) {
+            clog << "l = " << l << endl;
+            forr(r, l, n) {
+                ll gcda = 0;
+                ll gcdb = 0;
+                forr(i, 1, l-1) {
+                    gcda = gcd(gcda, a[i]);
+                    gcdb = gcd(gcdb, b[i]);
                 }
+                forr(i, l, r) {
+                    gcda = gcd(gcda, b[i]);
+                    gcdb = gcd(gcdb, a[i]);
+                }
+                forr(i, l+1, n) {
+                    gcda = gcd(gcda, a[i]);
+                    gcdb = gcd(gcdb, b[i]);
+                }
+                maxi = max(maxi, gcda+gcdb);
             }
-            if (stop) break;
         }
-        todo += 1;
     }
-    fo(i, 0, n) {
-        fo(j, 0, m) {
-            cout << r[i][j];
-        }
-        cout << endl;
-    }
+    cout << maxi << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
@@ -121,7 +113,7 @@ int32_t main (int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-//    cin >> tt;
+    cin >> tt;
     while (tt--) solve();
     return 0;
 }
