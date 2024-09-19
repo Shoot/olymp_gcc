@@ -1,15 +1,18 @@
 #include <bits/stdc++.h>
 using namespace std;
 typedef long long ll;
+typedef pair<ll, ll> pll;
 typedef long double ld;
 #define all(value) value.begin(), value.end()
-#define fo(x, temp_set_for_mex, fi) for(ll x = temp_set_for_mex; x < fi; x++)
-#define forr(x, temp_set_for_mex, fi) for(ll x = temp_set_for_mex; x <= fi; x++)
-#define rrof(x, temp_set_for_mex, fi) for(ll x = temp_set_for_mex; x >= fi; x--)
-#define roff(x, temp_set_for_mex, fi) for(ll x = temp_set_for_mex; x >= fi; x--)
-#define of(x, temp_set_for_mex, fi) for(ll x = temp_set_for_mex; x > fi; x--)
-#define ro(x, temp_set_for_mex, fi) for(ll x = temp_set_for_mex; x > fi; x--)
-#define yes(x) (x ? "YES" : "NO")
+#define all(value) value.begin(), value.end()
+#define fo(XX, X, fi) for(ll XX = X; XX < fi; XX++)
+#define forr(XX, X, fi) for(ll XX = X; XX <= fi; XX++)
+#define rrof(XX, X, fi) for(ll XX = X; XX >= fi; XX--)
+#define roff(XX, X, fi) for(ll XX = X; XX >= fi; XX--)
+#define of(XX, X, fi) for(ll XX = X; XX > fi; XX--)
+#define ro(XX, X, fi) for(ll XX = X; XX > fi; XX--)
+#define yes(XX) (XX ? "YES" : "NO")
+#define endll endl
 #define endl '\n'
 #ifdef LOCAL
 #include <algo/debug.h>
@@ -22,6 +25,7 @@ mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 uniform_int_distribution<ll> distrib(1ll, 4ll);
 //constexpr ll MOD = 1e9 + 7;
 constexpr ll MOD = 1e9+7;
+const int N = 1e5+10;
 /*\
 void copy_this () {
     ll n; cin >> n;
@@ -41,154 +45,65 @@ ll powm(ll a, ll b){
     }
     return d;
 }
-void solve() {
-    ll n;
-    cin >> n;
-    vector<vector<ll>> incoming(n);
-    vector<ll> outcoming(n, -1);
-    vector<bool> done(n, false);
-    fo(i, 0, n) {
-        ll x;
-        cin >> x;
-        x -= 1;
-        incoming[x].push_back(i);
-        outcoming[i] = x;
+ll mul(ll a, ll b) {
+    return (a*b)%MOD;
+}
+ll sum(ll a, ll b) {
+    return (a+b)%MOD;
+}
+ll n, m, k;
+bool impossible(ll i, ll j) {
+    if (i >= n || i < 0 || j >= m || j < 0) {
+        return true;
     }
-    vector<bool> done_temp_classification(n, false);
-    vector<ll> comp_number_by_v (n);
+    return false;
+}
+void solve()
+{
+    cin >> n >> m >> k;
+    vector<vector<bool>> r(n, vector<bool> (m));
     fo(i, 0, n) {
-        if (done_temp_classification[i]) continue;
-        queue<ll> q;
-        q.push(i);
-        while (!q.empty()) {
-            ll top = q.front();
-            q.pop();
-            if (done_temp_classification[top]) continue;
-            done_temp_classification[top] = true;
-            comp_number_by_v[top] = i;
-            if (outcoming[top] != -1) {
-                q.push(outcoming[top]);
-            }
-            for (auto v: incoming[top]) {
-                q.push(v);
-            }
+        fo(j, 0, m) {
+            r[i][j] = j%2;
         }
     }
-    vector<vector<ll>> queries_by_comp (n);
-    ll queries; cin >> queries;
-    fo(i, 0, queries) {
-        ll obed;
-        cin >> obed;
-        obed -= 1;
-        queries_by_comp[comp_number_by_v[obed]].push_back(obed);
+    ll todo = k-m;
+    fo(i, 0, n-1) {
+        if (i%2 == 1) continue;
+        if (todo < 0) break;
+        fo(j, 0, m) {
+            r[i][j] = !r[i+1][j];
+        }
+        todo -= m;
     }
-    ll tot = 0;
-    fo(i, 0, n) {
-        if (done[i]) continue;
-        vector<ll> component;
-        queue<ll> q;
-        q.push(i);
-        vector<ll> starts;
-        while (!q.empty()) {
-            ll top = q.front();
-            q.pop();
-            if (done[top]) continue;
-            done[top] = true;
-            component.push_back(top);
-            if (outcoming[top] != -1) {
-                q.push(outcoming[top]);
-            }
-            for (auto v: incoming[top]) {
-                q.push(v);
-            }
-            if (incoming[top].empty()) {
-                starts.push_back(top);
-            }
-        }
-        assert(!starts.empty());
-        ll curr_v = starts[0];
-        vector<bool> done_temp(n, false);
-        while (!done_temp[curr_v]) {
-            done_temp[curr_v] = true;
-            curr_v = outcoming[curr_v];
-        }
-        ll cycle_zamk = curr_v;
-        vector<bool> is_cycle(n, false);
-        vector<ll> cycle;
-        while (!is_cycle[cycle_zamk]) {
-            cycle.push_back(cycle_zamk);
-            is_cycle[cycle_zamk] = true;
-            cycle_zamk = outcoming[cycle_zamk];
-        }
-        clog << "component " << i << " cycle is ";
-        for(ll v: cycle) {
-            clog << v << ' ';
-        }
-        clog << endl;
-        clog << "queries: ";
-        for (ll v: queries_by_comp[i]) {
-            clog << v << " ";
-        }
-        clog << endl;
-        vector<vector<ll>> palki (starts.size());
-        vector<ll> number_of_palka_by_v (n, -1);
-        fo(ii, 0, starts.size()) {
-            ll start = starts[ii];
-            while (!is_cycle[start]) {
-                palki[ii].push_back(start);
-                number_of_palka_by_v[start] = ii;
-                start = outcoming[start];
-            }
-        }
-        vector<vector<ll>> queries_by_number_of_palka (starts.size());
-        vector<ll> cycle_queries;
-        for (ll v: queries_by_comp[i]) {
-            if (number_of_palka_by_v[v] == -1) break;
-            queries_by_number_of_palka[number_of_palka_by_v[v]].push_back(v);
-        }
-        for (ll v: queries_by_comp[i]) {
-            if (number_of_palka_by_v[v] == -1) cycle_queries.push_back(v);
-        }
-        fo(iii, 0, starts.size()) {
-            auto palka = palki[iii];
-            vector<ll> order_in_palka_by_v (n);
-            clog << "    palka: ";
-            fo(iiii, 0, palka.size()) {
-                order_in_palka_by_v[palka[iiii]] = iiii;
-                clog << palka[iiii] << " ";
-            }
-            clog << endl;
-            clog << "        queries of that palka: ";
-            for (ll v: queries_by_number_of_palka[iii]) {
-                clog << v << " ";
-            }
-            clog << endl;
-            ll last_query_order_in_palka = 0;
-            for (ll v: queries_by_number_of_palka[iii]) {
-                clog << "для v = " << v << ": ";
-                ll order = order_in_palka_by_v[v];
-                if (order <= last_query_order_in_palka) {
-                    clog << endl;
-                    continue;
+    clog << "TODO=" << todo << endl;
+    while (todo < 0) {
+        cout << todo << endl;
+        roff(i, n-1, 0) {
+            bool stop = false;
+            roff(j, m-1, 0) {
+                if      (
+                        (impossible(i-1, j) || r[i-1][j] != r[i][j]) &&
+                        (impossible(i+1, j) || r[i+1][j] != r[i][j]) &&
+                        (impossible(i, j-1) || r[i][j-1] != r[i][j]) &&
+                        (impossible(i, j+1) || r[i][j+1] != r[i][j])
+                        ) {
+                    r[i][j] = !r[i][j];
+                    cout << i << " " << j << endl;
+                    stop = true;
+                    break;
                 }
-                tot += (order-last_query_order_in_palka)*(last_query_order_in_palka+1);
-                clog << "contribution1 = " << (order-last_query_order_in_palka)*(last_query_order_in_palka+1);
-                ll diff_minus_1 = order-last_query_order_in_palka-1;
-                if (diff_minus_1 > 0) {
-                    tot += diff_minus_1*(diff_minus_1+1)/2;
-                    clog << ", contribution2 = " << diff_minus_1*(diff_minus_1+1)/2;
-                }
-                last_query_order_in_palka = order;
-                clog << endl;
             }
+            if (stop) break;
         }
-        clog << "cycle queries: ";
-        for (ll v: cycle_queries) {
-            clog << v << " ";
-        }
-        clog << endl;
+        todo += 1;
     }
-    cout << tot << endl;
+    fo(i, 0, n) {
+        fo(j, 0, m) {
+            cout << r[i][j];
+        }
+        cout << endl;
+    }
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
