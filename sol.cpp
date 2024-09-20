@@ -22,19 +22,8 @@ typedef long double ld;
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #endif
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-uniform_int_distribution<ll> distrib(1ll, 4ll);
-//constexpr ll MOD = 1e9 + 7;
+uniform_int_distribution<ll> distrib(1ll, 5ll);
 constexpr ll MOD = 1e9+7;
-const int N = 1e5+10;
-/*\
-void copy_this () {
-    ll n; cin >> n;
-    ll n, k; cin >> n >> k;
-    ll n, q; cin >> n >> q;
-    ll a[n]; fo(i, 0, n) cin >> a[i];
-    vector<ll> a(n); fo(i, 0, n) cin >> a[i];
-}
-*/
 ll powm(ll a, ll b){
     assert(b >= 0);
     ll d = 1;
@@ -51,51 +40,70 @@ ll mul(ll a, ll b) {
 ll sum(ll a, ll b) {
     return (a+b)%MOD;
 }
-ll n, m, k;
-struct shit {
-    ll t, enemy_number, hp;
-};
+/*
+void copy_this () {
+    ll n; cin >> n;
+    ll n, k; cin >> n >> k;
+    ll n, q; cin >> n >> q;
+    ll a[n]; fo(i, 0, n) cin >> a[i];
+    vector<ll> a(n); fo(i, 0, n) cin >> a[i];
+}
+*/
+
+ll n;
+bool isOk(vector<ll> & input) {
+    if (n == 1) {
+        return true;
+    }
+    ll i = 1;
+    while (i < n) {
+        if ((i+1 < n) && (input[i+1] >= input[i])) return false;
+        if ((input[i-1] >= input[i])) return false;
+        i += 2;
+    }
+    return true;
+}
 void solve()
 {
+    n = distrib(rng);
     cin >> n;
-    vector<ll> a(n+1);
-    vector<ll> b(n+1);
-    forr(i, 1, n) {
-        cin >> a[i];
+    vector<ll> a (n);
+    for(auto &x: a) {
+//        x = distrib(rng);
+//        clog << x << endl;
+        cin >> x;
     }
-    forr(i, 1, n) {
-        cin >> b[i];
-    }
-    vector<ll> pra(n+1, 0);
-    vector<ll> prb(n+1, 0);
-    forr(i, 1, n) {
-        pra[i] = gcd(pra[i-1], a[i]);
-        prb[i] = gcd(prb[i-1], b[i]);
-    }
-    ll maxi = pra[n]+prb[n];
-    forr(l, 1, n) {
-        if (pra[l] != pra[l-1] || prb[l] != prb[l-1]) {
-            clog << "l = " << l << endl;
-            forr(r, l, n) {
-                ll gcda = 0;
-                ll gcdb = 0;
-                forr(i, 1, l-1) {
-                    gcda = gcd(gcda, a[i]);
-                    gcdb = gcd(gcdb, b[i]);
-                }
-                forr(i, l, r) {
-                    gcda = gcd(gcda, b[i]);
-                    gcdb = gcd(gcdb, a[i]);
-                }
-                forr(i, l+1, n) {
-                    gcda = gcd(gcda, a[i]);
-                    gcdb = gcd(gcdb, b[i]);
-                }
-                maxi = max(maxi, gcda+gcdb);
-            }
+    sort(a.begin(),a.end());
+    bool OGok = false;
+    do {
+        if (isOk(a)) {
+            OGok = true;
         }
     }
-    cout << maxi << endl;
+    while (next_permutation(all(a)));
+    sort(a.begin(),a.end());
+    vector<ll>rs;
+    ll itl=0,itr=(n+1)/2;
+    ll cur_move=0;
+    ll moves=0;
+    while(moves<n)
+    {
+        rs.push_back((cur_move==0?a[itl]:a[itr]));
+        if(cur_move==0)itl++;
+        else itr++;
+        cur_move=!cur_move;
+        moves++;
+    }
+    bool ok=true;
+    for(ll i=1;i<n;i++)ok&=rs[i-1]!=rs[i];
+    assert(OGok == ok);
+    if(!ok)
+    {
+        cout<<-1<<endl;
+        return;
+    }
+    for(auto &x:rs)cout<<x<<" ";
+    cout<<endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
@@ -113,7 +121,10 @@ int32_t main (int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-    cin >> tt;
-    while (tt--) solve();
+//    cin >> tt;
+    while (tt--) {
+        clog << "TEST #" << tt << endl;
+        solve();
+    }
     return 0;
 }
