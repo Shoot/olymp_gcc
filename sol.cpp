@@ -40,6 +40,50 @@ ll mul(ll a, ll b) {
 ll sum(ll a, ll b) {
     return (a+b)%MOD;
 }
+ll sub(ll a, ll b) {
+    return (a-b+100*MOD)%MOD;
+}
+ll fj0dsq983gf8(ll index, vector<ll> & tree)  {
+    index += 1;
+    ll sum = 0;
+    while (index > 0) {
+        sum += tree[index-1];
+        index -= index & -index;
+    }
+    return sum;
+} // zero-indexed!!!
+ll get_sum_ft(ll left, ll right, vector<ll> & tree) {
+    ll n = (ll)tree.size();
+    assert(left <= right);
+    if (right >= n) {
+        clog << "FENWICK ALERT: R >= tree.size() (IT'S ZERO INDEXED !!!)" << endl;
+        right = n-1;
+    }
+    ll ans = fj0dsq983gf8(right, tree);
+    if (left-1 >= 0) {
+        ans -= fj0dsq983gf8(left - 1, tree);
+    }
+    return ans;
+} // zero-indexed!!!
+void inc_ft(ll index, ll inc, vector<ll> & tree) {
+    ll n = (ll)tree.size();
+    assert(index >= 0);
+    assert(index < n);
+    index += 1;
+    while (index < n) {
+        tree[index] += inc;
+        index += index & -index;
+    }
+} // zero-indexed!!!
+void build_ft(vector<ll> & a, vector<ll> & tree) {
+    ll n = (ll)tree.size();
+    assert(tree.size() == a.size());
+    for (int i = 0; i < n; i++) {
+        tree[i] += a[i];
+        int r = i | (i + 1);
+        if (r < n) tree[r] += tree[i];
+    }
+} // zero-indexed!!!
 /*
 void copy_this () {
     ll n; cin >> n;
@@ -50,60 +94,16 @@ void copy_this () {
 }
 */
 
-ll n;
-bool isOk(vector<ll> & input) {
-    if (n == 1) {
-        return true;
-    }
-    ll i = 1;
-    while (i < n) {
-        if ((i+1 < n) && (input[i+1] >= input[i])) return false;
-        if ((input[i-1] >= input[i])) return false;
-        i += 2;
-    }
-    return true;
-}
 void solve()
 {
-    n = distrib(rng);
-    cin >> n;
-    vector<ll> a (n);
-    for(auto &x: a) {
-//        x = distrib(rng);
-//        clog << x << endl;
-        cin >> x;
+    ll n, q; cin >> n >> q;
+    vector<ll> a(n); fo(i, 0, n) cin >> a[i];
+    vector<ll> tr(n, 0); build_ft(a, tr);
+    while (q--) {
+        ll l, r;
+        cin >> l >> r;
+        cout << get_sum_ft(l, r, tr) << endl;
     }
-    sort(a.begin(),a.end());
-    bool OGok = false;
-    do {
-        if (isOk(a)) {
-            OGok = true;
-        }
-    }
-    while (next_permutation(all(a)));
-    sort(a.begin(),a.end());
-    vector<ll>rs;
-    ll itl=0,itr=(n+1)/2;
-    ll cur_move=0;
-    ll moves=0;
-    while(moves<n)
-    {
-        rs.push_back((cur_move==0?a[itl]:a[itr]));
-        if(cur_move==0)itl++;
-        else itr++;
-        cur_move=!cur_move;
-        moves++;
-    }
-    bool ok=true;
-    for(ll i=1;i<n;i++)ok&=rs[i-1]!=rs[i];
-    assert(OGok == ok);
-    if(!ok)
-    {
-        cout<<-1<<endl;
-        return;
-    }
-    for(auto &x:rs)cout<<x<<" ";
-    cout<<endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
@@ -121,9 +121,8 @@ int32_t main (int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-//    cin >> tt;
+    cin >> tt;
     while (tt--) {
-        clog << "TEST #" << tt << endl;
         solve();
     }
     return 0;
