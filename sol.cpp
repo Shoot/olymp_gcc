@@ -54,6 +54,7 @@ ll fj0dsq983gf8(ll index, vector<ll> & tree)  {
 } // zero-indexed!!!
 ll get_sum_ft(ll left, ll right, vector<ll> & tree) {
     ll n = (ll)tree.size();
+    if (!(left <= right)) return 0;
     assert(left <= right);
     if (right >= n) {
         clog << "FENWICK ALERT: R >= tree.size() (IT'S ZERO INDEXED !!!)" << endl;
@@ -97,12 +98,23 @@ void copy_this () {
 void solve()
 {
     ll n, q; cin >> n >> q;
-    vector<ll> a(n); fo(i, 0, n) cin >> a[i];
-    vector<ll> tr(n, 0); build_ft(a, tr);
+    ll su = 0;
+    vector<ll> a(n); fo(i, 0, n) {
+        cin >> a[i];
+        su += a[i];
+    }
+    a.insert(a.begin(), all(a));
+    vector<ll> tr(2*n, 0); build_ft(a, tr);
+    auto query = [&](ll prefix) -> ll {
+        ll ans = prefix / n * get_sum_ft(0, n-1, tr);
+        ll start = prefix / n;
+        ans += get_sum_ft(0, start + prefix%n - 1, tr)-get_sum_ft(0, start-1, tr);
+        return ans;
+    };
     while (q--) {
         ll l, r;
         cin >> l >> r;
-        cout << get_sum_ft(l, r, tr) << endl;
+        cout << query(r)-query(l-1) << endl;
     }
 }
 int32_t main (int32_t argc, char* argv[]) {
