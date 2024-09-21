@@ -94,19 +94,6 @@ void copy_this () {
     vector<ll> a(n); fo(i, 0, n) cin >> a[i];
 }
 */
-bool ask(const string& s) {
-    cout << "? "+s << endl;
-    cout.flush();
-    ll ans; cin >> ans;
-    if (ans == -1) {
-        exit(0);
-    }
-    return bool(ans);
-}
-void answer(const string& s) {
-    cout << "! "+s << endl;
-    cout.flush();
-}
 void solve()
 {
     ll a, b, c;
