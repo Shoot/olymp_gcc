@@ -96,13 +96,11 @@ void copy_this () {
 */
 void solve()
 {
-    ll a, b, c;
-    cin >> a >> b >> c;
-    if (b == 0) {
-        cout << "IMPOSSIBLE" << endl;
-        return;
-    }
-    cout << c*(a/b+bool(a%b)) << endl;
+    ld tot, a, b;
+    cin >> tot >> a >> b;
+    ld shita = tot/(a+b)*a;
+    ld shitb = tot/(a+b)*b;
+    cout << int(shita) << " " << int(shitb) << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
