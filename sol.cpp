@@ -96,11 +96,30 @@ void copy_this () {
 */
 void solve()
 {
-    ld tot, a, b;
-    cin >> tot >> a >> b;
-    ld shita = tot/(a+b)*a;
-    ld shitb = tot/(a+b)*b;
-    cout << int(shita) << " " << int(shitb) << endl;
+    string s;
+    cin >> s;
+    s = '.'+s;
+    ll n = s.size();
+    ll x = 0;
+    fo(i, 1, n) {
+        if (s[i] != s[i-1]) {
+            x+=1;
+        }
+    }
+    ll minus = 0;
+    fo(i, 1, n-1) {
+        if (s[i] != s[i-1] && s[i-1] == s[i+1]) {
+            minus+=1;
+        }
+    }
+    ll kol_moq_2 = 0;
+    fo(i, 2, n) {
+        if (s[i] == s[i-1] && s[i] != s[i-2]) {
+            kol_moq_2 += 1;
+        }
+    }
+    clog << kol_moq_2 << endl;
+    cout << x*(x-1)/2+kol_moq_2-minus << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
