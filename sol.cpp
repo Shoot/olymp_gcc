@@ -94,28 +94,28 @@ void copy_this () {
     vector<ll> a(n); fo(i, 0, n) cin >> a[i];
 }
 */
-
+bool ask(const string& s) {
+    cout << "? "+s << endl;
+    cout.flush();
+    ll ans; cin >> ans;
+    if (ans == -1) {
+        exit(0);
+    }
+    return bool(ans);
+}
+void answer(const string& s) {
+    cout << "! "+s << endl;
+    cout.flush();
+}
 void solve()
 {
-    ll n, q; cin >> n >> q;
-    ll su = 0;
-    vector<ll> a(n); fo(i, 0, n) {
-        cin >> a[i];
-        su += a[i];
+    ll a, b, c;
+    cin >> a >> b >> c;
+    if (b == 0) {
+        cout << "IMPOSSIBLE" << endl;
+        return;
     }
-    a.insert(a.begin(), all(a));
-    vector<ll> tr(2*n, 0); build_ft(a, tr);
-    auto query = [&](ll prefix) -> ll {
-        ll ans = prefix / n * get_sum_ft(0, n-1, tr);
-        ll start = prefix / n;
-        ans += get_sum_ft(0, start + prefix%n - 1, tr)-get_sum_ft(0, start-1, tr);
-        return ans;
-    };
-    while (q--) {
-        ll l, r;
-        cin >> l >> r;
-        cout << query(r)-query(l-1) << endl;
-    }
+    cout << c*(a/b+bool(a%b)) << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
@@ -133,7 +133,7 @@ int32_t main (int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-    cin >> tt;
+//    cin >> tt;
     while (tt--) {
         solve();
     }
