@@ -3,6 +3,9 @@ using namespace std;
 typedef long long ll;
 typedef pair<ll, ll> pll;
 typedef long double ld;
+typedef vector<ll> vll;
+typedef vector<pll> vpll;
+typedef vector<ld> vld;
 #define all(value) value.begin(), value.end()
 #define all(value) value.begin(), value.end()
 #define fo(XX, X, fi) for(ll XX = X; XX < fi; XX++)
@@ -24,6 +27,19 @@ typedef long double ld;
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 uniform_int_distribution<ll> distrib(1ll, 5ll);
 constexpr ll MOD = 1e9+7;
+void in(vector<ll> & a) {
+    for(auto & x: a) cin >> x;
+}
+void in(vector<ll> & a, ll l, ll r) {
+    fo(i, l, r) {
+        cin >> a[i];
+    }
+}
+void inn(vector<ll> & a, ll l, ll rr) {
+    forr(i, l, rr) {
+        cin >> a[i];
+    }
+}
 ll powm(ll a, ll b){
     assert(b >= 0);
     ll d = 1;
@@ -31,6 +47,16 @@ ll powm(ll a, ll b){
         if (b&1) d = (d*a) % MOD;
         b >>= 1;
         a = (a*a) % MOD;
+    }
+    return d;
+}
+ll poww(ll a, ll b){
+    assert(b >= 0);
+    ll d = 1;
+    while(b){
+        if (b&1) d = (d*a);
+        b >>= 1;
+        a = (a*a);
     }
     return d;
 }
@@ -79,9 +105,9 @@ void inc_ft(ll index, ll inc, vector<ll> & tree) {
 void build_ft(vector<ll> & a, vector<ll> & tree) {
     ll n = (ll)tree.size();
     assert(tree.size() == a.size());
-    for (int i = 0; i < n; i++) {
+    for (ll i = 0; i < n; i++) {
         tree[i] += a[i];
-        int r = i | (i + 1);
+        ll r = i | (i + 1);
         if (r < n) tree[r] += tree[i];
     }
 } // zero-indexed!!!
@@ -96,30 +122,20 @@ void copy_this () {
 */
 void solve()
 {
-    string s;
-    cin >> s;
-    s = '.'+s;
-    ll n = s.size();
-    ll x = 0;
-    fo(i, 1, n) {
-        if (s[i] != s[i-1]) {
-            x+=1;
-        }
+    ll n; cin >> n;
+    ll k; cin >> k;
+    vll a (n); in(a);
+    sort(all(a));
+    vll tot(k, 0);
+    ll ans = 0;
+    fo(i, 0, n) {
+        auto shi = min_element(all(tot));
+        clog << "was: " << *shi << endl;
+        *shi += a[i];
+        clog << "now: " << *shi << endl;
+        ans += *shi;
     }
-    ll minus = 0;
-    fo(i, 1, n-1) {
-        if (s[i] != s[i-1] && s[i-1] == s[i+1]) {
-            minus+=1;
-        }
-    }
-    ll kol_moq_2 = 0;
-    fo(i, 2, n) {
-        if (s[i] == s[i-1] && s[i] != s[i-2]) {
-            kol_moq_2 += 1;
-        }
-    }
-    clog << kol_moq_2 << endl;
-    cout << x*(x-1)/2+kol_moq_2-minus << endl;
+    cout << ans << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
