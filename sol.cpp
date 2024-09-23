@@ -120,22 +120,58 @@ void copy_this () {
     vector<ll> a(n); fo(i, 0, n) cin >> a[i];
 }
 */
-void solve()
-{
-    ll n; cin >> n;
-    ll k; cin >> k;
-    vll a (n); in(a);
-    sort(all(a));
-    vll tot(k, 0);
-    ll ans = 0;
+void solve() {
+    ll n, m, c;
+    cin >> n >> m >> c;
+
+    vector<vector<ll>> A(n, vector<ll>(m));
+    vector<ll> summa_na_stroke(n, 0);
     fo(i, 0, n) {
-        auto shi = min_element(all(tot));
-        clog << "was: " << *shi << endl;
-        *shi += a[i];
-        clog << "now: " << *shi << endl;
-        ans += *shi;
+        fo(j, 0, m) {
+            cin >> A[i][j];
+            summa_na_stroke[i] += A[i][j];
+        }
     }
-    cout << ans << endl;
+    vector<vector<ll>> summa_na_stolb_po_maske_strok (m, vector<ll> (1 << n, 0));
+    fo(stolb, 0, m) {
+        ll tot = 0;
+        fo(i, 0, n) {
+            tot += A[i][stolb];
+        }
+        fo(mask_strok, 0, 1 << n) {
+            summa_na_stolb_po_maske_strok[stolb][mask_strok] = tot;
+            fo(stroka, 0, n) {
+                if (mask_strok & (1 << stroka)) {
+                    summa_na_stolb_po_maske_strok[stolb][mask_strok] -= A[stroka][stolb];
+                }
+            }
+        }
+    }
+    
+    ll maxi = -1e9;
+    ll total_sum = 0;
+    for (const auto& row : A) {
+        total_sum += accumulate(all(row), 0ll);
+    }
+    fo(mask_row, 0, 1 << n) {
+        ll tot = total_sum;
+        fo(i, 0, n) {
+            if ((1 << i) & mask_row) {
+                tot -= summa_na_stroke[i];
+                tot -= c;
+            }
+        }
+        clog << mask_row << ": " << tot << endl;
+        fo(i, 0, m) {
+            if (summa_na_stolb_po_maske_strok[i][mask_row] < -c) {
+                tot -= c;
+                tot -= summa_na_stolb_po_maske_strok[i][mask_row];
+            }
+        }
+        maxi = max(maxi, tot);
+    }
+
+    cout << maxi << endl;
 }
 int32_t main (int32_t argc, char* argv[]) {
     bool use_fast_io = true;
