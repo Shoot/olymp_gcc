@@ -25,7 +25,7 @@ typedef vector<ld> vld;
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #endif
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-uniform_int_distribution<ll> distrib(1ll, 5ll);
+uniform_int_distribution<ll> distrib(2ll, 10ll);
 constexpr ll MOD = 1e9+7;
 void in(vector<ll> & a) {
     for(auto & x: a) cin >> x;
@@ -122,37 +122,55 @@ void copy_this () {
 */
 
 void solve() {
-    ll n, m;
-    cin >> n >> m;
-    ll kazhd_summa = m/n+bool(m%n);
-    vector<ll> ugl(n+1, 0);
-    ll ostalos_summa = kazhd_summa*n;
-    ll ostalos_dam = m;
-    if (ostalos_summa != ostalos_dam) {
-        ugl[0] = 1;
-        ugl[n] = 1;
-        ostalos_summa -= 2;
-        ostalos_dam -= 1;
-    }
-    vector<pll> ans(n);
-    fo(i, 0, n) {
-        if (ostalos_summa != ostalos_dam && kazhd_summa - ugl[i] != 0 && i != n-1) {
-            ugl[i+1] = 1;
-            ostalos_summa -= 2;
-            ostalos_dam -= 1;
+    ll a=distrib(rng); ll l=a+distrib(rng); ll r=l+distrib(rng);
+    cin >> a >> l >> r;
+    forr(i, 1 , l-1) if (gcd(a, i) == 1) clog << i << ' ';
+    clog << endl;
+    forr(i, l , r) if (gcd(a, i) == 1) clog << i << ' ';
+    clog << endl;
+    clog << a << ", " << l << " to " << r << endl;
+    vector<ll> divs;
+    ll aaaa = a;
+    forr(div, 2, sqrt(a)) {
+        if (a%div == 0) {
+            divs.push_back(div);
+            while (a%div == 0) {
+                a/=div;
+            }
         }
-        ans[i].first   = kazhd_summa - ugl[i]-ugl[i+1];
-        ans[i].second = ugl[i+1];
-        ostalos_dam   -= kazhd_summa - ugl[i]-ugl[i+1];
-        ostalos_summa -= kazhd_summa - ugl[i]-ugl[i+1];
     }
-    if (ostalos_summa != 0 || ostalos_dam != 0) {
-        cout << "NO" << endl;
-        return;
+    if (a != 1) divs.push_back(a);
+    a = aaaa;
+    ll less_than_r = r;
+    ll less_than_r_additional = 0;
+//    while (less_than_r%a != 0) {
+//        if (gcd(a, less_than_r) == 1) less_than_r_additional += 1;
+//        less_than_r -= 1;
+//    }
+    fo(i, 0, divs.size()) {
+        less_than_r *= divs[i]-1;
     }
-    fo(i, 0, n) {
-        cout << ans[i].first << " " << ans[i].second << endl;
+    fo(i, 0, divs.size()) {
+        less_than_r /= divs[i];
     }
+    ll less_than_l = l-1;
+    ll less_than_l_additional = 0;
+//    while (less_than_l%a != 0) {
+//        if (gcd(a, less_than_l) == 1) less_than_l_additional += 1;
+//        less_than_l -= 1;
+//    }
+    fo(i, 0, divs.size()) {
+        less_than_l *= divs[i]-1;
+    }
+    fo(i, 0, divs.size()) {
+        less_than_l /= divs[i];
+    }
+    clog << "less_than_r: " << less_than_r << endl;
+    clog << "less_than_r_additional: " << less_than_r_additional << endl;
+    clog << "less_than_l: " << less_than_l << endl;
+    clog << "less_than_l_additional: " << less_than_l_additional << endl;
+    ll myans = less_than_r+less_than_r_additional-less_than_l-less_than_l_additional;
+    cout << myans << endl;
 }
 
 int32_t main (int32_t argc, char* argv[]) {
