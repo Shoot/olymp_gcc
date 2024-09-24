@@ -148,23 +148,15 @@ void solve() {
     linear_sieve(1e7);
     ll n;
     cin >> n;
-    vector<ll> prime_divs;
-    vector<ll> stepeni;
-    while (n != 1) {
-        ll n_ = n;
-        prime_divs.push_back(lp[n]);
-        ll st = 0;
-        while (n_ % lp[n] == 0) {
-            n_ /= lp[n];
-            st += 1;
-        }
-        stepeni.push_back(st);
-        n = n_;
-    }
     ll phi = 1;
-    fo(i, 0, stepeni.size()) {
-        phi *= (prime_divs[i]-1)*(poww(prime_divs[i], stepeni[i]-1));
-        cout << prime_divs[i] << ", " << stepeni[i] << endl;
+    while (n != 1) {
+        ll shit = lp[n];
+        while (n % (shit*lp[n]) == 0) {
+            shit *= lp[n];
+        }
+        phi *= (lp[n]-1)*(shit/lp[n]);
+        n /= shit;
+        cout << n << endl;
     }
     cout << "phi=" << phi << endl;
 }
