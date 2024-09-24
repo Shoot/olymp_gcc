@@ -120,41 +120,34 @@ void copy_this () {
     vector<ll> a(n); fo(i, 0, n) cin >> a[i];
 }
 */
-void linear_sieve(ll limit);
+
 void solve() {
-    linear_sieve(1e3);
-}
-void linear_sieve(ll limit) {
-    vector<ll> pr;
-    vector<ll> lp(limit+1, 0);
-    vector<ll> kolvo_raz_delitsa(limit+1, 0);
-    forr(i, 2, limit) {
-        if (lp[i] == 0) {
-            pr.push_back(i);
-            lp[i] = i;
-            kolvo_raz_delitsa[i] = 1;
-        }
-        ll j = 0;
-        while (j < pr.size() && pr[j] <= lp[i] && pr[j]*i < lp.size()) {
-            lp[pr[j]*i] = pr[j];
-            if (lp[pr[j]*i] == lp[i]) {
-                kolvo_raz_delitsa[pr[j]*i] = kolvo_raz_delitsa[i] + 1;
-            } else {
-                kolvo_raz_delitsa[pr[j]*i] = 1;
+    ll a, l, r;
+    cin >> a >> l >> r;
+    vector<ll> divs;
+    fo(div, 2, sqrt(a)+1) {
+        if (a%div == 0) {
+            divs.push_back(div);
+            while (a%div == 0) {
+                a/=div;
             }
-            j += 1;
         }
     }
-//    fo(i, 2, 1000) {
-//        ll kol = 0;
-//        ll tr = lp[i];
-//        ll i_ = i;
-//        while (i_ % tr == 0) {
-//            kol += 1;
-//            i_/=tr;
-//        }
-//        if (kol != kolvo_raz_delitsa[i]) exit(1);
-//    }
+    if (a != 0) divs.push_back(a);
+    ll divisors_cnt = divs.size();
+    ll ans = r-l+1;
+    fo(mask, 1, 1 << divisors_cnt) {
+        ll curr = 1;
+        fo(i, 0, divisors_cnt) {
+            if (mask & (1 << i)) {
+                curr *= divs[i];
+            }
+        }
+        ll contrib = (r/curr-(l-1)/curr);
+        clog << curr << ": " << contrib << endl;
+        ans += powm(-1, __builtin_popcount(mask))*contrib;
+    }
+    cout << ans << endl;
 }
 
 int32_t main (int32_t argc, char* argv[]) {
