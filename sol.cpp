@@ -120,45 +120,39 @@ void copy_this () {
     vector<ll> a(n); fo(i, 0, n) cin >> a[i];
 }
 */
-vector<ll> lp(1e7+1, 0);
-vector<ll> kolvo_raz_delitsa(1e7+1, 0);
-void linear_sieve(ll limit) {
-    assert(limit <= 1e7);
-    vector<ll> pr;
-    forr(i, 2, limit) {
-        if (lp[i] == 0) {
-            pr.push_back(i);
-            lp[i] = i;
-            kolvo_raz_delitsa[i] = 1;
-        }
-        ll j = 0;
-        while (j < pr.size() && pr[j] <= lp[i] && pr[j]*i < lp.size()) {
-            lp[pr[j]*i] = pr[j];
-            if (lp[pr[j]*i] == lp[i]) {
-                kolvo_raz_delitsa[pr[j]*i] = kolvo_raz_delitsa[i] + 1;
-            } else {
-                kolvo_raz_delitsa[pr[j]*i] = 1;
-            }
-            j += 1;
-        }
-    }
-}
 
 void solve() {
-    linear_sieve(1e7);
-    ll n;
-    cin >> n;
-    ll phi = 1;
-    while (n != 1) {
-        ll shit = lp[n];
-        while (n % (shit*lp[n]) == 0) {
-            shit *= lp[n];
-        }
-        phi *= (lp[n]-1)*(shit/lp[n]);
-        n /= shit;
-        cout << n << endl;
+    ll n, m;
+    cin >> n >> m;
+    ll kazhd_summa = m/n+bool(m%n);
+    vector<ll> ugl(n+1, 0);
+    ll ostalos_summa = kazhd_summa*n;
+    ll ostalos_dam = m;
+    if (ostalos_summa != ostalos_dam) {
+        ugl[0] = 1;
+        ugl[n] = 1;
+        ostalos_summa -= 2;
+        ostalos_dam -= 1;
     }
-    cout << "phi=" << phi << endl;
+    vector<pll> ans(n);
+    fo(i, 0, n) {
+        if (ostalos_summa != ostalos_dam && kazhd_summa - ugl[i] != 0 && i != n-1) {
+            ugl[i+1] = 1;
+            ostalos_summa -= 2;
+            ostalos_dam -= 1;
+        }
+        ans[i].first   = kazhd_summa - ugl[i]-ugl[i+1];
+        ans[i].second = ugl[i+1];
+        ostalos_dam   -= kazhd_summa - ugl[i]-ugl[i+1];
+        ostalos_summa -= kazhd_summa - ugl[i]-ugl[i+1];
+    }
+    if (ostalos_summa != 0 || ostalos_dam != 0) {
+        cout << "NO" << endl;
+        return;
+    }
+    fo(i, 0, n) {
+        cout << ans[i].first << " " << ans[i].second << endl;
+    }
 }
 
 int32_t main (int32_t argc, char* argv[]) {
