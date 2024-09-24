@@ -120,34 +120,53 @@ void copy_this () {
     vector<ll> a(n); fo(i, 0, n) cin >> a[i];
 }
 */
+vector<ll> lp(1e7+1, 0);
+vector<ll> kolvo_raz_delitsa(1e7+1, 0);
+void linear_sieve(ll limit) {
+    assert(limit <= 1e7);
+    vector<ll> pr;
+    forr(i, 2, limit) {
+        if (lp[i] == 0) {
+            pr.push_back(i);
+            lp[i] = i;
+            kolvo_raz_delitsa[i] = 1;
+        }
+        ll j = 0;
+        while (j < pr.size() && pr[j] <= lp[i] && pr[j]*i < lp.size()) {
+            lp[pr[j]*i] = pr[j];
+            if (lp[pr[j]*i] == lp[i]) {
+                kolvo_raz_delitsa[pr[j]*i] = kolvo_raz_delitsa[i] + 1;
+            } else {
+                kolvo_raz_delitsa[pr[j]*i] = 1;
+            }
+            j += 1;
+        }
+    }
+}
 
 void solve() {
-    ll a, l, r;
-    cin >> a >> l >> r;
-    vector<ll> divs;
-    fo(div, 2, sqrt(a)+1) {
-        if (a%div == 0) {
-            divs.push_back(div);
-            while (a%div == 0) {
-                a/=div;
-            }
+    linear_sieve(1e7);
+    ll n;
+    cin >> n;
+    vector<ll> prime_divs;
+    vector<ll> stepeni;
+    while (n != 1) {
+        ll n_ = n;
+        prime_divs.push_back(lp[n]);
+        ll st = 0;
+        while (n_ % lp[n] == 0) {
+            n_ /= lp[n];
+            st += 1;
         }
+        stepeni.push_back(st);
+        n = n_;
     }
-    if (a != 0) divs.push_back(a);
-    ll divisors_cnt = divs.size();
-    ll ans = r-l+1;
-    fo(mask, 1, 1 << divisors_cnt) {
-        ll curr = 1;
-        fo(i, 0, divisors_cnt) {
-            if (mask & (1 << i)) {
-                curr *= divs[i];
-            }
-        }
-        ll contrib = (r/curr-(l-1)/curr);
-        clog << curr << ": " << contrib << endl;
-        ans += powm(-1, __builtin_popcount(mask))*contrib;
+    ll phi = 1;
+    fo(i, 0, stepeni.size()) {
+        phi *= (prime_divs[i]-1)*(poww(prime_divs[i], stepeni[i]-1));
+        cout << prime_divs[i] << ", " << stepeni[i] << endl;
     }
-    cout << ans << endl;
+    cout << "phi=" << phi << endl;
 }
 
 int32_t main (int32_t argc, char* argv[]) {
