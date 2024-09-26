@@ -1,25 +1,20 @@
-#include <bits/stdc++.h>
-using namespace std;
-typedef long long ll;
-typedef pair<ll, ll> pll;
-typedef long double ld;
-typedef vector<ll> vll;
-typedef vector<pll> vpll;
-typedef vector<ld> vld;
-typedef queue<ll> qll;
-typedef queue<ld> qld;
-typedef queue<pll> qpll;
-#define all(value) value.begin(), value.end()
-#define all(value) value.begin(), value.end()
 #define fo(XX, X, fi) for(ll XX = X; XX < fi; XX++)
 #define forr(XX, X, fi) for(ll XX = X; XX <= fi; XX++)
-#define rrof(XX, X, fi) for(ll XX = X; XX >= fi; XX--)
 #define roff(XX, X, fi) for(ll XX = X; XX >= fi; XX--)
-#define of(XX, X, fi) for(ll XX = X; XX > fi; XX--)
-#define ro(XX, X, fi) for(ll XX = X; XX > fi; XX--)
-#define yes(XX) (XX ? "YES" : "NO")
-#define endll endl
-#define endl '\n'
+#include <bits/stdc++.h>
+using namespace std;
+using ll = long long;
+using pll = pair<ll, ll>;
+using ld = long double;
+using qll = queue<ll>;
+using vll = vector<ll>;
+using qld = queue<ld>;
+using vld = vector<ld>;
+using qpll = queue<pll>;
+using vpll = vector<pll>;
+ostream& endl(ostream& os) {
+    return os << '\n';
+}
 #ifdef LOCAL
 #include <algo/debug.h>
 #else
@@ -31,7 +26,7 @@ mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 uniform_int_distribution<ll> distrib(2ll, 10ll);
 constexpr ll MOD = 1e9+7;
 void in(vector<ll> & a) {
-    for(auto & x: a) cin >> x;
+    for (auto & x : a) cin >> x;
 }
 void in(vector<ll> & a, ll l, ll r) {
     fo(i, l, r) {
@@ -43,20 +38,30 @@ void inn(vector<ll> & a, ll l, ll rr) {
         cin >> a[i];
     }
 }
-ll powm(ll a, ll b){
+ll powm(ll a, ll b) {
     assert(b >= 0);
     ll d = 1;
-    while(b){
+    while (b) {
         if (b&1) d = (d*a) % MOD;
         b >>= 1;
         a = (a*a) % MOD;
     }
     return d;
 }
-ll poww(ll a, ll b){
+ll powm(ll a, ll b, ll MOD) {
     assert(b >= 0);
     ll d = 1;
-    while(b){
+    while (b) {
+        if (b&1) d = (d*a) % MOD;
+        b >>= 1;
+        a = (a*a) % MOD;
+    }
+    return d;
+}
+ll poww(ll a, ll b) {
+    assert(b >= 0);
+    ll d = 1;
+    while (b) {
         if (b&1) d = (d*a);
         b >>= 1;
         a = (a*a);
@@ -123,11 +128,40 @@ void copy_this () {
     vector<ll> a(n); fo(i, 0, n) cin >> a[i];
 }
 */
+const ll N = 3e5+100;
 void solve() {
-
+    ll n = 101;
+//    cin >> n;
+    ll d = n-1;
+    ll s = 0;
+    while (d % 2 == 0) {
+        d >>= 1;
+        s += 1;
+    }
+    assert(n-1 == d*(1 << s));
+    ll a = 7;
+//    ll a = 558;
+//    ll a = 556;
+    if (powm(a, n-1, n) != 1) {
+        cout << "Not prime (fermat test failed)" << endl;
+        return;
+    }
+    bool good = false;
+    forr(i, 0, s) {
+        cout << powm(a, d*(1 << i), n) << ' ';
+    }
+    cout << endl;
+    if (powm(a, d, n) != n-1) {
+        cout << "Miller test failed" << endl;
+    }
+//    forr(aa, 2, 10000) {
+//        if (powm(aa, d, n) == n-1) {
+//            cout << aa << endl;
+//        }
+//    }
 }
 
-int32_t main (int32_t argc, char* argv[]) {
+int32_t main(int32_t argc, char* argv[]) {
     bool use_fast_io = true;
     for (int32_t i = 1; i < argc; ++i)
         if (string(argv[i]) == "-local-no-fast-io") {

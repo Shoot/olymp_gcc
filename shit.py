@@ -1,26 +1,19 @@
 import re
 
 def replace_defines_in_cpp(file_path):
+    content = ''
     with open(file_path, 'r') as file:
-        content = file.read()
+        for line in file.readlines():
+            if not line.startswith('#define'):
+                content += line
+    content = re.sub(r'\bfo\s*\(\s*(\w+)\s*,\s*(\w+)\s*,\s*(\w+)\s*\)',
+                      r'for (ll \1=\2; \1 < \3; \1+=1)', content)
 
-    # Regex to match #define statements
-    define_pattern = r'^\s*#define\s+(\w+)(\s+)(.*)$'
+    content = re.sub(r'\bforr\s*\(\s*(\w+)\s*,\s*(\w+)\s*,\s*(\w+)\s*\)',
+                      r'for (ll \1=\2; \1 <= \3; \1+=1)', content)
+    content = re.sub(r'\broff\s*\(\s*(\w+)\s*,\s*(\w+)\s*,\s*(\w+)\s*\)',
+                     r'for (ll \1=\2; \1 >= \3; \1-=1)', content)
 
-    # Dictionary to store defined macros
-    defines = {}
-
-    # Find all #define statements
-    for match in re.finditer(define_pattern, content, re.MULTILINE):
-        key = match.group(1)
-        value = match.group(3).strip()
-        defines[key] = value
-
-    # Replace defines in the content
-    for key, value in defines.items():
-        # Handle replacements with quotes
-        quoted_value = re.sub(r'(?<![a-zA-Z_])' + re.escape(key) + r'(?![a-zA-Z_])', value, content)
-        content = quoted_value
 
     # Write the modified content to a new file
     output_file_path = file_path.replace('.cpp', '2.cpp')
@@ -30,4 +23,4 @@ def replace_defines_in_cpp(file_path):
     print(f"Replaced defines written to {output_file_path}")
 
 # Example usage
-replace_defines_in_cpp('sol.cpp')
+replace_defines_in_cpp('good.cpp')

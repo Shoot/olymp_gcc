@@ -1,29 +1,20 @@
 #include <bits/stdc++.h>
 using namespace std;
-typedef long long ll;
-typedef pair<ll, ll> pll;
-typedef long double ld;
-typedef vector<ll> vll;
-typedef vector<pll> vpll;
-typedef vector<ld> vld;
-typedef queue<ll> qll;
-typedef queue<ld> qld;
-typedef queue<pll> qpll;
-#define all(value) value.begin(), value.end()
-#define all(value) value.begin(), value.end()
-#define fo(XX, X, fi) for(ll XX = X; XX < fi; XX++)
-#define forr(XX, X, fi) for(ll XX = X; XX <= fi; XX++)
-#define rrof(XX, X, fi) for(ll XX = X; XX >= fi; XX--)
-#define roff(XX, X, fi) for(ll XX = X; XX >= fi; XX--)
-#define of(XX, X, fi) for(ll XX = X; XX > fi; XX--)
-#define ro(XX, X, fi) for(ll XX = X; XX > fi; XX--)
-#define yes(XX) (XX ? "YES" : "NO")
-#define endll endl
-#define endl '\n'
+using ll = long long;
+using pll = pair<ll, ll>;
+using ld = long double;
+using qll = queue<ll>;
+using vll = vector<ll>;
+using qld = queue<ld>;
+using vld = vector<ld>;
+using qpll = queue<pll>;
+using vpll = vector<pll>;
+ostream& endl(ostream& os) {
+    return os << '\n';
+}
 #ifdef LOCAL
 #include <algo/debug.h>
 #else
-#define debug(...) 68
 //#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math,trapv")
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #endif
@@ -31,32 +22,32 @@ mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 uniform_int_distribution<ll> distrib(2ll, 10ll);
 constexpr ll MOD = 1e9+7;
 void in(vector<ll> & a) {
-    for(auto & x: a) cin >> x;
+    for (auto & x : a) cin >> x;
 }
 void in(vector<ll> & a, ll l, ll r) {
-    fo(i, l, r) {
+    for (ll i=l; i < r; i+=1) {
         cin >> a[i];
     }
 }
 void inn(vector<ll> & a, ll l, ll rr) {
-    forr(i, l, rr) {
+    for (ll i=l; i <= rr; i+=1) {
         cin >> a[i];
     }
 }
-ll powm(ll a, ll b){
+ll powm(ll a, ll b) {
     assert(b >= 0);
     ll d = 1;
-    while(b){
+    while (b) {
         if (b&1) d = (d*a) % MOD;
         b >>= 1;
         a = (a*a) % MOD;
     }
     return d;
 }
-ll poww(ll a, ll b){
+ll poww(ll a, ll b) {
     assert(b >= 0);
     ll d = 1;
-    while(b){
+    while (b) {
         if (b&1) d = (d*a);
         b >>= 1;
         a = (a*a);
@@ -119,15 +110,25 @@ void copy_this () {
     ll n; cin >> n;
     ll n, k; cin >> n >> k;
     ll n, q; cin >> n >> q;
-    ll a[n]; fo(i, 0, n) cin >> a[i];
-    vector<ll> a(n); fo(i, 0, n) cin >> a[i];
+    ll a[n]; for (ll i=0; i < n; i+=1) cin >> a[i];
+    vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
+const ll N = 3e5+100;
+void find_sol(ll a, ll b, ll & x, ll & y) {
+    if (b == 0) {
+        x = 1;
+        y = 0;
+        return;
+    }
+    find_sol(b, a%b, x, y);
+    x -= (a/b)*y;
+    swap(x, y);
+}
 void solve() {
-
 }
 
-int32_t main (int32_t argc, char* argv[]) {
+int32_t main(int32_t argc, char* argv[]) {
     bool use_fast_io = true;
     for (int32_t i = 1; i < argc; ++i)
         if (string(argv[i]) == "-local-no-fast-io") {
