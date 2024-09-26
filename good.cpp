@@ -1,6 +1,3 @@
-#define fo(XX, X, fi) for(ll XX = X; XX < fi; XX++)
-#define forr(XX, X, fi) for(ll XX = X; XX <= fi; XX++)
-#define roff(XX, X, fi) for(ll XX = X; XX >= fi; XX--)
 #include <bits/stdc++.h>
 using namespace std;
 using ll = long long;
@@ -18,7 +15,6 @@ ostream& endl(ostream& os) {
 #ifdef LOCAL
 #include <algo/debug.h>
 #else
-#define debug(...) 68
 //#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math,trapv")
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #endif
@@ -29,12 +25,12 @@ void in(vector<ll> & a) {
     for (auto & x : a) cin >> x;
 }
 void in(vector<ll> & a, ll l, ll r) {
-    fo(i, l, r) {
+    for (ll i=l; i < r; i+=1) {
         cin >> a[i];
     }
 }
 void inn(vector<ll> & a, ll l, ll rr) {
-    forr(i, l, rr) {
+    for (ll i=l; i <= rr; i+=1) {
         cin >> a[i];
     }
 }
@@ -124,41 +120,38 @@ void copy_this () {
     ll n; cin >> n;
     ll n, k; cin >> n >> k;
     ll n, q; cin >> n >> q;
-    ll a[n]; fo(i, 0, n) cin >> a[i];
-    vector<ll> a(n); fo(i, 0, n) cin >> a[i];
+    ll a[n]; for (ll i=0; i < n; i+=1) cin >> a[i];
+    vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
-const ll N = 3e5+100;
+const ll bitset_max = 2e7+100;
 void solve() {
-    ll n = 101;
-//    cin >> n;
-    ll d = n-1;
-    ll s = 0;
-    while (d % 2 == 0) {
-        d >>= 1;
-        s += 1;
+    ll n; cin >> n;
+    ll start = n * n;
+    ll end = n * n + n;
+    bitset<bitset_max> isPrimeMinusStart;
+    bitset<bitset_max> isPrime_sieve;
+    isPrime_sieve.set();
+    isPrimeMinusStart.set();
+    isPrime_sieve[1] = false;
+    if (start == 1) isPrimeMinusStart[1] = false;
+    ll prime_limit = sqrt(n * n + n) + 1;
+    for (ll i=2; i <= prime_limit; i++) {
+        if (isPrime_sieve[i]) {
+            for (ll nxt = i*i; nxt <= prime_limit; nxt += i) {
+                isPrime_sieve[i] = false;
+            }
+            for (ll nxtbig = max(i*i, start+(i-start%i)%i); nxtbig <= end; nxtbig+=i) {
+                isPrimeMinusStart[nxtbig-start] = false;
+            }
+        }
     }
-    assert(n-1 == d*(1 << s));
-    ll a = 7;
-//    ll a = 558;
-//    ll a = 556;
-    if (powm(a, n-1, n) != 1) {
-        cout << "Not prime (fermat test failed)" << endl;
-        return;
+    ll ans = 0;
+    for (ll i=start; i <= end; i+=1) {
+//        if (isPrimeMinusStart[i-start]) cout << i << endl;
+        ans += isPrimeMinusStart[i-start];
     }
-    bool good = false;
-    forr(i, 0, s) {
-        cout << powm(a, d*(1 << i), n) << ' ';
-    }
-    cout << endl;
-    if (powm(a, d, n) != n-1) {
-        cout << "Miller test failed" << endl;
-    }
-//    forr(aa, 2, 10000) {
-//        if (powm(aa, d, n) == n-1) {
-//            cout << aa << endl;
-//        }
-//    }
+    cout << ans << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {

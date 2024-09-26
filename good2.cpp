@@ -44,6 +44,16 @@ ll powm(ll a, ll b) {
     }
     return d;
 }
+ll powm(ll a, ll b, ll MOD) {
+    assert(b >= 0);
+    ll d = 1;
+    while (b) {
+        if (b&1) d = (d*a) % MOD;
+        b >>= 1;
+        a = (a*a) % MOD;
+    }
+    return d;
+}
 ll poww(ll a, ll b) {
     assert(b >= 0);
     ll d = 1;
@@ -114,18 +124,32 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
-const ll N = 3e5+100;
-void find_sol(ll a, ll b, ll & x, ll & y) {
-    if (b == 0) {
-        x = 1;
-        y = 0;
-        return;
-    }
-    find_sol(b, a%b, x, y);
-    x -= (a/b)*y;
-    swap(x, y);
-}
+const ll bitset_max = 2e7+100;
 void solve() {
+    ll n; cin >> n;
+    ll start = n * n;
+    ll end = n * n + n;
+    bitset<bitset_max> isPrimeMinusStart;
+    bitset<bitset_max> isPrime_sieve;
+    isPrime_sieve.set();
+    isPrimeMinusStart.set();
+    ll prime_limit = sqrt(n * n + n) + 1;
+    for (ll i=2; i <= prime_limit; i++) {
+        if (isPrime_sieve[i]) {
+            for (ll nxt = i*i; nxt <= prime_limit; nxt += i) {
+                isPrime_sieve[i] = false;
+            }
+            for (ll nxtbig = max(i*i, start+i-start%i); nxtbig <= end; nxtbig+=i) {
+                isPrimeMinusStart[nxtbig-start] = false;
+            }
+        }
+    }
+    ll ans = 0;
+    for (ll i=start; i <= end; i+=1) {
+        if (isPrimeMinusStart[i-start]) cout << i << endl;
+        ans += isPrimeMinusStart[i-start];
+    }
+    cout << ans << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
