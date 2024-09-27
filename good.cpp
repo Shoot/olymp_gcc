@@ -136,10 +136,14 @@ void solve(ll p) {
 //        }
 //        cout << tot%p << endl;
 //    }
-    vll r(p/2+10);
+    vll r(p/2+1);
+    vll invs(p);
+    invs[1] = 1;
     vll sotki(p/100 + 1);
     sotki[0] += 1;
     r[1] = 1;
+    bitset<10000000> already_done;
+    already_done[1] = true;
 //    vll defsotki(p/100 + 1);
 //    ll szz = invs.size();
 //    invs[1] = 1;
@@ -148,9 +152,16 @@ void solve(ll p) {
     ll covered = 0;
 //    ll totreal = 1;
     // ВЫЧИСЛИТЬ ВСЕ j ДЛЯ ВЫЧИСЛЕНИЯ КОТОРЫХ ИСПОЛЬЗУЕТСЯ i
-    for (ll i = 1; i < p; i += 1) {
+
+//    for (ll i = 1; i < p/2+1; i += 1) {
+    for (ll i = 1; i < p/2+1; i += 1) {
+        cout << i << endl;
+        assert(already_done[i]);
 //        assert(p % i < szz);
-//        ll curr = ((-(p / i) * invs[p % i]) % p + p) % p;
+        if (i > 1) invs[i] = ((-(p / i) * invs[p % i]) % p + p) % p;
+        cout << "my ans = " << r[i] << endl;
+        cout << "right = " << invs[i] << endl;
+        assert(r[i] == invs[i]);
         ll dividend = p - i;
         // p%J=i, find all Js
         for (ll divisor = 1ll; divisor * divisor <= dividend; divisor += 1) {
@@ -159,21 +170,23 @@ void solve(ll p) {
                     covered += 1;
                     ll that_i = divisor;
 //                    covered.insert(that_i);
-//                    cout << p << " % " << that_i << " = r[" << i << endl;
+                    cout << p << " % " << that_i << " -> use " << "r[" << i << "] to calc r[" << that_i << endl;
+                    already_done[that_i] = true;
 //                    assert(p % that_i == i);
                     ll that_curr = ((-(p / that_i) * r[i]) % p + p) % p;
                     sotki[that_i/100] += that_curr;
-                    r[that_i] = that_curr;
+                    if (that_i <= p/2+1) r[that_i] = that_curr;
                 }
                 if (dividend/divisor > i && divisor*divisor != dividend) {
                     covered += 1;
                     ll that_i = dividend/divisor;
 //                    covered.insert(that_i);
-//                    cout << p << " % " << that_i << " = r[" << i << endl;
+                    cout << p << " % " << that_i << " -> use " << "r[" << i << "] to calc r[" << that_i << endl;
+                    already_done[that_i] = true;
 //                    assert(p % that_i == i);
                     ll that_curr = ((-(p / that_i) * r[i]) % p + p) % p;
                     sotki[that_i/100] += that_curr;
-                    r[that_i] = that_curr;
+                    if (that_i <= p/2+1) r[that_i] = that_curr;
                 }
             }
         }
