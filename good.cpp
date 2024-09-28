@@ -126,31 +126,13 @@ void copy_this () {
 }
 */
 
-vector<ll> sum_over_subsets(const vector<ll>& a) {
-    vector<ll> dp = a;
-    for (size_t bit = 1; bit < a.size(); bit <<= 1) {
-        cout << "bit = " << bit << endl;
-        for (size_t mask = 0; mask < a.size(); mask++) {
-            if ((mask & bit) != 0) {
-                dp[mask] += dp[mask ^ bit];
-                cout << "+= " << dp[mask ^ bit] << endl;
-            }
-        }
-    }
-    return dp;
+ll inv(ll i, ll m) {
+    if (i == 1) return 1;
+    return m-((inv(m%i, i)*m)/i);
 }
-
 void solve() {
-    vll a (5);
-    in(a);
-    vll shit (1 << 5);
-    shit[1 << 0] = a[0];
-    shit[1 << 1] = a[1];
-    shit[1 << 2] = a[2];
-    shit[1 << 3] = a[3];
-    shit[1 << 4] = a[4];
-    auto sos = sum_over_subsets(shit);
-    cout << sos[1|2|4] << endl;
+    ll p = 1e9+7;
+    cout << inv(2, p) << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
