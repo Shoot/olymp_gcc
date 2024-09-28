@@ -126,35 +126,31 @@ void copy_this () {
 }
 */
 
-void solve() {
-    ll n; cin >> n;
-    vector<pair<ll, pair<ll, ll>>> index_first_and_last;
-    vll len (n);
-    for(ll i = 0; i < n; i++) {
-        string val;
-        cin >> val;
-        ll sz = val.size();
-        len[i] = sz;
-        bool ok = true;
-        for(ll j = 0; j < sz-1; j++) ok &= val[j] <= val[j+1];
-        if (ok) index_first_and_last.push_back(make_pair(i+1, make_pair(val[0]-'0', val[sz-1]-'0')));
-    }
-    vector<pair<ll, vll>> dp(10);
-    for (auto const& nw : index_first_and_last) {
-        auto new_dp = dp;
-        for (ll origin = 0; origin <= nw.second.first; origin += 1) {
-            auto resulting = dp[origin];
-            resulting.first -= len[nw.first-1];
-            resulting.second.push_back(nw.first);
-            new_dp[nw.second.second] = min(new_dp[nw.second.second], resulting);
+vector<ll> sum_over_subsets(const vector<ll>& a) {
+    vector<ll> dp = a;
+    for (size_t bit = 1; bit < a.size(); bit <<= 1) {
+        cout << "bit = " << bit << endl;
+        for (size_t mask = 0; mask < a.size(); mask++) {
+            if ((mask & bit) != 0) {
+                dp[mask] += dp[mask ^ bit];
+                cout << "+= " << dp[mask ^ bit] << endl;
+            }
         }
-        dp = new_dp;
     }
-    auto ans = *min_element(dp.begin(), dp.end());
-    cout << -ans.first << " " << ans.second.size() << endl;
-    for (ll i = 0; i < ans.second.size(); i++) {
-        cout << ans.second[i] << " \n"[i == ans.second.size() - 1];
-    }
+    return dp;
+}
+
+void solve() {
+    vll a (5);
+    in(a);
+    vll shit (1 << 5);
+    shit[1 << 0] = a[0];
+    shit[1 << 1] = a[1];
+    shit[1 << 2] = a[2];
+    shit[1 << 3] = a[3];
+    shit[1 << 4] = a[4];
+    auto sos = sum_over_subsets(shit);
+    cout << sos[1|2|4] << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
