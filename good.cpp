@@ -1,4 +1,5 @@
 #include <bits/stdc++.h>
+#define forr(XX, X, fi) for(ll XX = X; XX <= fi; XX++)
 using namespace std;
 using ll = long long;
 using pll = pair<ll, ll>;
@@ -126,95 +127,61 @@ void copy_this () {
 */
 
 void solve(ll p) {
+    vector<ll> pr;
+    ll limit = 1e7;
+    vector<ll> lp(limit+1, 0);
+    forr(i, 2, limit) {
+        if (lp[i] == 0) {
+            cout << i << endl;
+            pr.push_back(i);
+            lp[i] = i;
+        }
+        ll j = 0;
+        while (j < pr.size() && pr[j] <= lp[i] && pr[j]*i <= limit) {
+            lp[pr[j]*i] = pr[j];
+            j += 1;
+        }
+    }
 //    ll p; cin >> p;
     clog << "p = " << p << endl;
     auto start = chrono::high_resolution_clock::now();
-//    for (ll i = 1; i <= p-1; i+=100) {
-//        ll tot = 0;
-//        for (ll j = i; j < min(i+100, p); j += 1) {
-//            tot += powm(j, p-2, p);
-//        }
-//        cout << tot%p << endl;
-//    }
     vll r(p/2+1);
-//    vll invs(p);
-//    invs[1] = 1;
     vll sotki(p/100 + 1);
     sotki[0] += 1;
     r[1] = 1;
-//    bitset<10000000> already_done;
-//    already_done[1] = true;
-//    vll defsotki(p/100 + 1);
-//    ll szz = invs.size();
-//    invs[1] = 1;
-//    ll tot = 1;
-//    tot = 0;
-//    ll covered = 0;
-//    ll totreal = 1;
     // ВЫЧИСЛИТЬ ВСЕ j ДЛЯ ВЫЧИСЛЕНИЯ КОТОРЫХ ИСПОЛЬЗУЕТСЯ i
     // ВЫЧИСЛИТЬ ВСЕ j ДЛЯ ВЫЧИСЛЕНИЯ КОТОРЫХ ИСПОЛЬЗУЕТСЯ i
     // ВЫЧИСЛИТЬ ВСЕ j ДЛЯ ВЫЧИСЛЕНИЯ КОТОРЫХ ИСПОЛЬЗУЕТСЯ i
 
 //    for (ll i = 1; i < p/2+1; i += 1) {
     for (ll i = 1; i < p/2+1; i += 1) {
-        cout << i << endl;
-//        assert(already_done[i]);
-//        assert(p % i < szz);
-//        if (i > 1) invs[i] = ((-(p / i) * invs[p % i]) % p + p) % p;
-//        cout << "my ans = " << r[i] << endl;
-//        cout << "right = " << invs[i] << endl;
-//        assert(r[i] == invs[i]);
+//        cout << i << endl;
         ll dividend = p - i;
         // p%J=i, find all Js
-        for (ll divisor = 1ll; divisor * divisor <= dividend; divisor += 1) {
-            if (dividend % divisor == 0) {
-                if (divisor > i) {
-//                    covered += 1;
-                    ll that_i = divisor;
-//                    covered.insert(that_i);
-//                    cout << p << " % " << that_i << " -> use " << "r[" << i << "] to calc r[" << that_i << endl;
-//                    already_done[that_i] = true;
-//                    assert(p % that_i == i);
-                    ll that_curr = ((-(p / that_i) * r[i]) % p + p) % p;
-                    sotki[that_i/100] += that_curr;
-                    if (that_i <= p/2+1) r[that_i] = that_curr;
-                }
-                if (dividend/divisor > i && divisor*divisor != dividend) {
-//                    covered += 1;
-                    ll that_i = dividend/divisor;
-//                    covered.insert(that_i);
-//                    cout << p << " % " << that_i << " -> use " << "r[" << i << "] to calc r[" << that_i << endl;
-//                    already_done[that_i] = true;
-//                    assert(p % that_i == i);
-                    ll that_curr = ((-(p / that_i) * r[i]) % p + p) % p;
-                    sotki[that_i/100] += that_curr;
-                    if (that_i <= p/2+1) r[that_i] = that_curr;
-                }
+        vll divs;
+        ll temp = dividend;
+        while (temp != 1) {
+            divs.push_back(lp[temp]);
+            temp /= lp[temp];
+        }
+        ll divs_sz = divs.size();
+        cout << dividend << ": ";
+        forr(i, 0, divs_sz-1) cout << divs[i] << ' ';
+        cout << endl;
+        for (ll mask = 0; mask < (1 << divs_sz); mask += 1) {
+            ll divisor = 1;
+            forr(i, 0, divs_sz-1) if ((1 << i) & mask) divisor *= divs[i];
+            if (divisor > i) {
+                ll that_i = divisor;
+                ll that_curr = ((-(p / that_i) * r[i]) % p + p) % p;
+                sotki[that_i/100] += that_curr;
+                if (that_i <= p/2+1) r[that_i] = that_curr;
             }
         }
-//        if (i < szz) invs[i] = curr;
-//        assert(invs[i] >= 0);
-//        tot += curr;
-//        totreal += powm(i, p-2, p);
-//        if (i % 100 == 0) {
-//            defsotki.push_back(tot%p);
-//            assert(tot%p == totreal%p);
-//            cout << totreal%p << endl;
-//            tot = 0;
-//            totreal = 0;
-//        }
     }
-//    assert()
-//    defsotki.push_back(tot % p);
-//    cout << covered << endl;
-//    assert(covered == p-2);
     for (ll i=0; i < p/100+1; i++) {
         cout << sotki[i] % p << endl;
-//        cout << sotki[i]%p << " " << defsotki[i] << endl;
-//        assert(sotki[i]%p == defsotki[i]);
     }
-//        assert(tot%p == totreal%p);
-//    if (p % 100 != 0) cout << totreal%p << endl;
     auto stop = chrono::high_resolution_clock::now();
     clog << chrono::duration_cast<chrono::milliseconds> (stop-start) << endl;
 }
