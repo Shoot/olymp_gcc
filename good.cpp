@@ -126,64 +126,35 @@ void copy_this () {
 }
 */
 
-void solve(ll p) {
-    vector<ll> pr;
-    ll limit = 1e7;
-    vector<ll> lp(limit+1, 0);
-    forr(i, 2, limit) {
-        if (lp[i] == 0) {
-            cout << i << endl;
-            pr.push_back(i);
-            lp[i] = i;
-        }
-        ll j = 0;
-        while (j < pr.size() && pr[j] <= lp[i] && pr[j]*i <= limit) {
-            lp[pr[j]*i] = pr[j];
-            j += 1;
-        }
+void solve() {
+    ll n; cin >> n;
+    vector<pair<ll, pair<ll, ll>>> index_first_and_last;
+    vll len (n);
+    for(ll i = 0; i < n; i++) {
+        string val;
+        cin >> val;
+        ll sz = val.size();
+        len[i] = sz;
+        bool ok = true;
+        for(ll j = 0; j < sz-1; j++) ok &= val[j] <= val[j+1];
+        if (ok) index_first_and_last.push_back(make_pair(i+1, make_pair(val[0]-'0', val[sz-1]-'0')));
     }
-//    ll p; cin >> p;
-    clog << "p = " << p << endl;
-    auto start = chrono::high_resolution_clock::now();
-    vll r(p/2+1);
-    vll sotki(p/100 + 1);
-    sotki[0] += 1;
-    r[1] = 1;
-    // ВЫЧИСЛИТЬ ВСЕ j ДЛЯ ВЫЧИСЛЕНИЯ КОТОРЫХ ИСПОЛЬЗУЕТСЯ i
-    // ВЫЧИСЛИТЬ ВСЕ j ДЛЯ ВЫЧИСЛЕНИЯ КОТОРЫХ ИСПОЛЬЗУЕТСЯ i
-    // ВЫЧИСЛИТЬ ВСЕ j ДЛЯ ВЫЧИСЛЕНИЯ КОТОРЫХ ИСПОЛЬЗУЕТСЯ i
-
-//    for (ll i = 1; i < p/2+1; i += 1) {
-    for (ll i = 1; i < p/2+1; i += 1) {
-//        cout << i << endl;
-        ll dividend = p - i;
-        // p%J=i, find all Js
-        vll divs;
-        ll temp = dividend;
-        while (temp != 1) {
-            divs.push_back(lp[temp]);
-            temp /= lp[temp];
+    vector<pair<ll, vll>> dp(10);
+    for (auto const& nw : index_first_and_last) {
+        auto new_dp = dp;
+        for (ll origin = 0; origin <= nw.second.first; origin += 1) {
+            auto resulting = dp[origin];
+            resulting.first -= len[nw.first-1];
+            resulting.second.push_back(nw.first);
+            new_dp[nw.second.second] = min(new_dp[nw.second.second], resulting);
         }
-        ll divs_sz = divs.size();
-        cout << dividend << ": ";
-        forr(i, 0, divs_sz-1) cout << divs[i] << ' ';
-        cout << endl;
-        for (ll mask = 0; mask < (1 << divs_sz); mask += 1) {
-            ll divisor = 1;
-            forr(i, 0, divs_sz-1) if ((1 << i) & mask) divisor *= divs[i];
-            if (divisor > i) {
-                ll that_i = divisor;
-                ll that_curr = ((-(p / that_i) * r[i]) % p + p) % p;
-                sotki[that_i/100] += that_curr;
-                if (that_i <= p/2+1) r[that_i] = that_curr;
-            }
-        }
+        dp = new_dp;
     }
-    for (ll i=0; i < p/100+1; i++) {
-        cout << sotki[i] % p << endl;
+    auto ans = *min_element(dp.begin(), dp.end());
+    cout << -ans.first << " " << ans.second.size() << endl;
+    for (ll i = 0; i < ans.second.size(); i++) {
+        cout << ans.second[i] << " \n"[i == ans.second.size() - 1];
     }
-    auto stop = chrono::high_resolution_clock::now();
-    clog << chrono::duration_cast<chrono::milliseconds> (stop-start) << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
@@ -204,14 +175,7 @@ int32_t main(int32_t argc, char* argv[]) {
     ll tt = 1;
 //    cin >> tt;
     while (tt--) {
-//        for (ll p=2; p <= (ll)1e8; p++) {
-//            bool prime = true;
-//            for (ll j=2; j*j <= p; j++) {
-//                if (p % j == 0) prime=false;
-//            }
-//            if (prime) solve(p);
-//        }
-        ll p; cin >> p; solve(p);
+        solve();
     }
     return 0;
 }
