@@ -130,49 +130,27 @@ ll inv(ll i, ll m) {
     if (i == 1) return 1;
     return m-((inv(m%i, i)*m)/i);
 }
-vector<ll> lp(1e8+1, 0);
-void linear_sieve(ll limit) {
-    vector<ll> pr;
-    for (ll i=2; i <= limit; i+=1) {
-        if (lp[i] == 0) {
-            pr.push_back(i);
-            lp[i] = i;
-        }
-        ll j = 0;
-        ll shit = pr.size();
-        ll shit2 = lp.size();
-        while (j < shit && pr[j] <= lp[i] && pr[j]*i < shit2) {
-            lp[pr[j]*i] = pr[j];
-            j += 1;
-        }
-    }
-}
+//vector<ll> lp(1e8+1, 0);
+//vector<ll> calc(1e8+1, 0);
+//void linear_sieve(ll limit) {
+//    vector<ll> pr;
+//    for (ll i=2; i <= limit; i+=1) {
+//        if (lp[i] == 0) {
+//            pr.push_back(i);
+//            lp[i] = i;
+//        }
+//        ll j = 0;
+//        ll shit = pr.size();
+//        ll shit2 = lp.size();
+//        while (j < shit && pr[j] <= lp[i] && pr[j]*i < shit2) {
+//            lp[pr[j]*i] = pr[j];
+//            j += 1;
+//        }
+//    }
+//}
 
 void solve() {
-    ll r;
-    cin >> r;
-    linear_sieve(1e8);
-    vll sotki((r-1)/100+1);
-    for (ll n=1; n <= r; n+=1) {
-        ll cp = n;
-        ll phi = n;
-        ll last_div = 1;
-        while (cp != 1) {
-//            cout << cp << ": " << lp[cp] << endl;
-//            ll ss; cin >> ss;
-            if (lp[cp] != last_div) {
-                phi *= lp[cp] - 1;
-                phi /= lp[cp];
-                last_div = lp[cp];
-            }
-            cp /= lp[cp];
-        }
-        sotki[(n-1)/100] += phi;
-//        cout << phi << endl;
-    }
-    for (auto const& x : sotki) {
-        cout << x << ' ';
-    }
+    vll
 }
 
 int32_t main(int32_t argc, char* argv[]) {

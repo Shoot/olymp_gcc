@@ -3,7 +3,6 @@ project(olymp_gcc)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(olymp_gcc good2.cpp
-        good2.cpp)
+add_executable(olymp_gcc good.cpp)
 #add_executable(olymp_gcc good.cpp)
 #add_executable(olymp_gcc sol.cpp)

@@ -1,5 +1,4 @@
 #include <bits/stdc++.h>
-#define forr(XX, X, fi) for(ll XX = X; XX <= fi; XX++)
 using namespace std;
 using ll = long long;
 using pll = pair<ll, ll>;
@@ -10,9 +9,16 @@ using qld = queue<ld>;
 using vld = vector<ld>;
 using qpll = queue<pll>;
 using vpll = vector<pll>;
+#define all(value) value.begin(), value.end()
+#define fo(XX, X, fi) for(ll XX = X; XX < fi; XX++)
+#define forr(XX, X, fi) for(ll XX = X; XX <= fi; XX++)
 ostream& endl(ostream& os) {
     return os << '\n';
 }
+#define vv(type,name,n,...) \
+    vector<vector<type>> name(n,vector<type>(__VA_ARGS__))
+#define vvv(type,name,n,m,...) \
+    vector<vector<vector<type>>> name(n,vector<vector<type>>(m,vector<type>(__VA_ARGS__)))
 #ifdef LOCAL
 #include <algo/debug.h>
 #else
@@ -116,6 +122,9 @@ void build_ft(vector<ll> & a, vector<ll> & tree) {
         if (r < n) tree[r] += tree[i];
     }
 } // zero-indexed!!!
+ll inv(ll i, ll m) {
+    if (i == 1) return 1; return m-((inv(m%i, i)*m)/i);
+}
 /*
 void copy_this () {
     ll n; cin >> n;
@@ -125,61 +134,102 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
+struct dsu {
+public:
+    dsu() : _n(0) {}
+    dsu(ll n) : _n(n), parent_or_size(n, -1) {}
 
-ll inv(ll i, ll m) {
-    cout << i << " " << m << endl;
-    if (i == 1) return 1;
-    return m-((inv(m%i, i)*m)/i);
-}
-vector<ll> lp(1e8+1, 0);
-void linear_sieve(ll limit) {
-    vector<ll> pr;
-    forr(i, 2, limit) {
-        if (lp[i] == 0) {
-            pr.push_back(i);
-            lp[i] = i;
-        }
-        ll j = 0;
-        while (j < pr.size() && pr[j] <= lp[i] && pr[j]*i < lp.size()) {
-            lp[pr[j]*i] = pr[j];
-            j += 1;
-        }
+    ll merge(ll a, ll b) {
+        assert(0 <= a && a < _n);
+        assert(0 <= b && b < _n);
+        ll x = leader(a), y = leader(b);
+        if (x == y) return x;
+        if (-parent_or_size[x] < -parent_or_size[y]) swap(x, y);
+        parent_or_size[x] += parent_or_size[y];
+        parent_or_size[y] = x;
+        return x;
     }
-}
 
+    bool same(ll a, ll b) {
+        assert(0 <= a && a < _n);
+        assert(0 <= b && b < _n);
+        return leader(a) == leader(b);
+    }
+
+    ll leader(ll a) {
+        assert(0 <= a && a < _n);
+        if (parent_or_size[a] < 0) return a;
+        return parent_or_size[a] = leader(parent_or_size[a]);
+    }
+
+    ll size(ll a) {
+        assert(0 <= a && a < _n);
+        return -parent_or_size[leader(a)];
+    }
+
+    vector<vector<ll>> groups() {
+        vector<ll> leader_buf(_n), group_size(_n);
+        for (ll i = 0; i < _n; i++) {
+            leader_buf[i] = leader(i);
+            group_size[leader_buf[i]]++;
+        }
+        vector<vector<ll>> result(_n);
+        for (ll i = 0; i < _n; i++) {
+            result[i].reserve(group_size[i]);
+        }
+        for (ll i = 0; i < _n; i++) {
+            result[leader_buf[i]].push_back(i);
+        }
+        result.erase(
+                remove_if(result.begin(), result.end(),
+                               [&](const vector<ll>& v) { return v.empty(); }),
+                result.end());
+        return result;
+    }
+
+private:
+    ll _n;
+    // root node: -1 * component size
+    // otherwise: parent
+    vector<ll> parent_or_size;
+};
 void solve() {
-    ll r;
-    cin >> r;
-    linear_sieve(1e8);
-    vll sotki ((r-1)/100+1);
-    forr(n, 1, r) {
-        ll cp = n;
-        ll phi = n;
-        ll last_div = 1;
-        while (cp != 1) {
-            if (lp[cp] != last_div) {
-                phi /= lp[cp];
-                phi *= lp[cp]-1;
-                last_div = lp[cp];
-            }
-            cp /= lp[cp];
+    ll n; cin >> n;
+    vv(ll, active, 11, n+30);
+    ll q; cin >> q;
+    fo(i, 0, q) {
+        ll base, inc, kol;
+        cin >> base >> inc >> kol;
+        active[inc][base] += 1;
+        active[inc][base+inc*kol] -= 1;
+    }
+    forr(inc, 1, 10) {
+        forr(base, 1, n+15) if (base-inc>=0) {
+            active[inc][base] += active[inc][base-inc];
         }
-        sotki[(n-1)/100] += phi;
-//        cout << phi << endl;
     }
-    for (auto const & x: sotki) {
-        cout << x << ' ';
+    dsu d(n+30);
+    forr(inc, 1, 10) {
+        forr(base, 1, n+15) {
+            if (active[inc][base]) {
+                d.merge(base,base+inc);
+            }
+        }
     }
+//    cout << d.size(1) << endl;
+    ll tot = 0; forr(i, 1, n) tot += d.leader(i)==i;
+    cout << tot << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
     bool use_fast_io = true;
-    for (int32_t i = 1; i < argc; ++i)
+    for (int32_t i = 1; i < argc; ++i) {
         if (string(argv[i]) == "-local-no-fast-io") {
             use_fast_io = false;
 //            cout << "No fastIO" << endl;
             break;
         }
+    }
     if (use_fast_io) {
         ios::sync_with_stdio(false);
         cin.tie(nullptr);
@@ -188,7 +238,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-//    cin >> tt;
+    cin >> tt;
     while (tt--) {
         solve();
     }
