@@ -127,12 +127,49 @@ void copy_this () {
 */
 
 ll inv(ll i, ll m) {
+    cout << i << " " << m << endl;
     if (i == 1) return 1;
     return m-((inv(m%i, i)*m)/i);
 }
+vector<ll> lp(1e8+1, 0);
+void linear_sieve(ll limit) {
+    vector<ll> pr;
+    forr(i, 2, limit) {
+        if (lp[i] == 0) {
+            pr.push_back(i);
+            lp[i] = i;
+        }
+        ll j = 0;
+        while (j < pr.size() && pr[j] <= lp[i] && pr[j]*i < lp.size()) {
+            lp[pr[j]*i] = pr[j];
+            j += 1;
+        }
+    }
+}
+
 void solve() {
-    ll p = 1e9+7;
-    cout << inv(2, p) << endl;
+    ll r;
+    cin >> r;
+    linear_sieve(1e8);
+    vll sotki ((r-1)/100+1);
+    forr(n, 1, r) {
+        ll cp = n;
+        ll phi = n;
+        ll last_div = 1;
+        while (cp != 1) {
+            if (lp[cp] != last_div) {
+                phi /= lp[cp];
+                phi *= lp[cp]-1;
+                last_div = lp[cp];
+            }
+            cp /= lp[cp];
+        }
+        sotki[(n-1)/100] += phi;
+//        cout << phi << endl;
+    }
+    for (auto const & x: sotki) {
+        cout << x << ' ';
+    }
 }
 
 int32_t main(int32_t argc, char* argv[]) {

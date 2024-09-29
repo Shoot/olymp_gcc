@@ -124,32 +124,55 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
-const ll bitset_max = 2e7+100;
-void solve() {
-    ll n; cin >> n;
-    ll start = n * n;
-    ll end = n * n + n;
-    bitset<bitset_max> isPrimeMinusStart;
-    bitset<bitset_max> isPrime_sieve;
-    isPrime_sieve.set();
-    isPrimeMinusStart.set();
-    ll prime_limit = sqrt(n * n + n) + 1;
-    for (ll i=2; i <= prime_limit; i++) {
-        if (isPrime_sieve[i]) {
-            for (ll nxt = i*i; nxt <= prime_limit; nxt += i) {
-                isPrime_sieve[i] = false;
-            }
-            for (ll nxtbig = max(i*i, start+i-start%i); nxtbig <= end; nxtbig+=i) {
-                isPrimeMinusStart[nxtbig-start] = false;
-            }
+
+ll inv(ll i, ll m) {
+    cout << i << " " << m << endl;
+    if (i == 1) return 1;
+    return m-((inv(m%i, i)*m)/i);
+}
+vector<ll> lp(1e8+1, 0);
+void linear_sieve(ll limit) {
+    vector<ll> pr;
+    for (ll i=2; i <= limit; i+=1) {
+        if (lp[i] == 0) {
+            pr.push_back(i);
+            lp[i] = i;
+        }
+        ll j = 0;
+        ll shit = pr.size();
+        ll shit2 = lp.size();
+        while (j < shit && pr[j] <= lp[i] && pr[j]*i < shit2) {
+            lp[pr[j]*i] = pr[j];
+            j += 1;
         }
     }
-    ll ans = 0;
-    for (ll i=start; i <= end; i+=1) {
-        if (isPrimeMinusStart[i-start]) cout << i << endl;
-        ans += isPrimeMinusStart[i-start];
+}
+
+void solve() {
+    ll r;
+    cin >> r;
+    linear_sieve(1e8);
+    vll sotki((r-1)/100+1);
+    for (ll n=1; n <= r; n+=1) {
+        ll cp = n;
+        ll phi = n;
+        ll last_div = 1;
+        while (cp != 1) {
+//            cout << cp << ": " << lp[cp] << endl;
+//            ll ss; cin >> ss;
+            if (lp[cp] != last_div) {
+                phi *= lp[cp] - 1;
+                phi /= lp[cp];
+                last_div = lp[cp];
+            }
+            cp /= lp[cp];
+        }
+        sotki[(n-1)/100] += phi;
+//        cout << phi << endl;
     }
-    cout << ans << endl;
+    for (auto const& x : sotki) {
+        cout << x << ' ';
+    }
 }
 
 int32_t main(int32_t argc, char* argv[]) {
