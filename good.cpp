@@ -141,7 +141,7 @@ ll get_parent(ll x) {
     return (p[x] == x ? x : p[x] = get_parent(p[x]));
 }
 
-void merge(ll x, ll y) {
+void unite(ll x, ll y) {
     x = get_parent(x);
     y = get_parent(y);
     if (x == y) return;
@@ -151,10 +151,12 @@ void merge(ll x, ll y) {
 }
 
 void solve() {
-    fill(all(sz), 0);
-    iota(all(p), 0);
     ll n; cin >> n;
-    vv(ll, active, 11, n+30);
+    forr(i, 1, n+17) {
+        p[i] = i;
+        sz[i] = 0;
+    }
+    vv(ll, active, 11, n+20);
     ll q; cin >> q;
     fo(i, 0, q) {
         ll base, inc, kol;
@@ -170,7 +172,7 @@ void solve() {
     forr(inc, 1, 10) {
         forr(base, 1, n+15) {
             if (active[inc][base]) {
-                merge(base,base+inc);
+                unite(base,base+inc);
             }
         }
     }
