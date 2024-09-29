@@ -134,66 +134,25 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
-struct dsu {
-public:
-    dsu() : _n(0) {}
-    dsu(ll n) : _n(n), parent_or_size(n, -1) {}
+vll p(2e5+20);
+vll sz(2e5+20);
 
-    ll merge(ll a, ll b) {
-        assert(0 <= a && a < _n);
-        assert(0 <= b && b < _n);
-        ll x = leader(a), y = leader(b);
-        if (x == y) return x;
-        if (-parent_or_size[x] < -parent_or_size[y]) swap(x, y);
-        parent_or_size[x] += parent_or_size[y];
-        parent_or_size[y] = x;
-        return x;
-    }
+ll get_parent(ll x) {
+    return (p[x] == x ? x : p[x] = get_parent(p[x]));
+}
 
-    bool same(ll a, ll b) {
-        assert(0 <= a && a < _n);
-        assert(0 <= b && b < _n);
-        return leader(a) == leader(b);
-    }
+void merge(ll x, ll y) {
+    x = get_parent(x);
+    y = get_parent(y);
+    if (x == y) return;
+    if (sz[x] > sz[y]) swap(x, y);
+    p[x] = y;
+    sz[y] += sz[x];
+}
 
-    ll leader(ll a) {
-        assert(0 <= a && a < _n);
-        if (parent_or_size[a] < 0) return a;
-        return parent_or_size[a] = leader(parent_or_size[a]);
-    }
-
-    ll size(ll a) {
-        assert(0 <= a && a < _n);
-        return -parent_or_size[leader(a)];
-    }
-
-    vector<vector<ll>> groups() {
-        vector<ll> leader_buf(_n), group_size(_n);
-        for (ll i = 0; i < _n; i++) {
-            leader_buf[i] = leader(i);
-            group_size[leader_buf[i]]++;
-        }
-        vector<vector<ll>> result(_n);
-        for (ll i = 0; i < _n; i++) {
-            result[i].reserve(group_size[i]);
-        }
-        for (ll i = 0; i < _n; i++) {
-            result[leader_buf[i]].push_back(i);
-        }
-        result.erase(
-                remove_if(result.begin(), result.end(),
-                               [&](const vector<ll>& v) { return v.empty(); }),
-                result.end());
-        return result;
-    }
-
-private:
-    ll _n;
-    // root node: -1 * component size
-    // otherwise: parent
-    vector<ll> parent_or_size;
-};
 void solve() {
+    fill(all(sz), 0);
+    iota(all(p), 0);
     ll n; cin >> n;
     vv(ll, active, 11, n+30);
     ll q; cin >> q;
@@ -205,19 +164,18 @@ void solve() {
     }
     forr(inc, 1, 10) {
         forr(base, 1, n+15) if (base-inc>=0) {
-            active[inc][base] += active[inc][base-inc];
-        }
+                active[inc][base] += active[inc][base-inc];
+            }
     }
-    dsu d(n+30);
     forr(inc, 1, 10) {
         forr(base, 1, n+15) {
             if (active[inc][base]) {
-                d.merge(base,base+inc);
+                merge(base,base+inc);
             }
         }
     }
 //    cout << d.size(1) << endl;
-    ll tot = 0; forr(i, 1, n) tot += d.leader(i)==i;
+    ll tot = 0; forr(i, 1, n) tot += get_parent(i)==i;
     cout << tot << endl;
 }
 
