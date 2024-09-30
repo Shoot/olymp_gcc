@@ -134,51 +134,66 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
-vll p(2e5+20);
-vll sz(2e5+20);
-
-ll get_parent(ll x) {
-    return (p[x] == x ? x : p[x] = get_parent(p[x]));
-}
-
-void unite(ll x, ll y) {
-    x = get_parent(x);
-    y = get_parent(y);
-    if (x == y) return;
-    if (sz[x] > sz[y]) swap(x, y);
-    p[x] = y;
-    sz[y] += sz[x];
-}
 
 void solve() {
     ll n; cin >> n;
-    forr(i, 1, n+17) {
-        p[i] = i;
-        sz[i] = 0;
+    vll a(n); in(a);
+    vll p(n); in(p);
+    ll rev_1e4 = powm(1e4, MOD-2);
+    for (auto & x: p) {
+        x = mul(x, rev_1e4);
     }
-    vv(ll, active, 11, n+20);
-    ll q; cin >> q;
-    fo(i, 0, q) {
-        ll base, inc, kol;
-        cin >> base >> inc >> kol;
-        active[inc][base] += 1;
-        active[inc][base+inc*kol] -= 1;
+    vll notp = p;
+    for (auto & x: notp) {
+        x = sub(1, x);
     }
-    forr(inc, 1, 10) {
-        forr(base, 1, n+15) if (base-inc>=0) {
-                active[inc][base] += active[inc][base-inc];
-            }
-    }
-    forr(inc, 1, 10) {
-        forr(base, 1, n+15) {
-            if (active[inc][base]) {
-                unite(base,base+inc);
+    ll dp[10][10][2][2];
+    fo(i, 0, 10) {
+        fo(j, 0, 10) {
+            for(auto v1: {0, 1}) {
+                for(auto v2: {0, 1}) {
+                    dp[i][j][v1][v2] = 0ll;
+                }
             }
         }
     }
-//    cout << d.size(1) << endl;
-    ll tot = 0; forr(i, 1, n) tot += get_parent(i)==i;
-    cout << tot << endl;
+    fo(i, 0, 10) {
+        fo(j, 0, 10) {
+            dp[i][j][0][0] = 1ll;
+        }
+    }
+    fo(x, 0, n) {
+        ll temp[2][2];
+        fo(i, 0, 10) {
+            fo(j, 0, 10) {
+                for(auto v1: {0, 1}) {
+                    for(auto v2: {0, 1}) {
+                        temp[v1][v2] =
+                                (
+                                dp[i][j][v1][v2]*notp[x] +
+                                dp[i][j][v1 ^ bool(a[x] & (1 << i))][v2 ^ bool(a[x] & (1 << j))]*p[x]
+                                )
+                                % MOD;
+                    }
+                }
+                for(auto v1: {0, 1}) {
+                    for(auto v2: {0, 1}) {
+                        dp[i][j][v1][v2] = temp[v1][v2];
+                    }
+                }
+            }
+        }
+    }
+    ll ans = 0;
+    for(ll i = 0; i < 10; i++){
+        for(ll j = 0; j < 10; j++){
+            ll pw2 = (1ll<<(i+j)) % MOD;
+            ans += (1ll*pw2*dp[i][j][1][1]) % MOD;
+            ans %= MOD;
+            for(ll k : {0,1}) for(ll l : {0,1}) dp[i][j][k][l] = 0;
+        }
+    }
+    cout << ans << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
