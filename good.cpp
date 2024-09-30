@@ -209,7 +209,7 @@ void solve() {
     fo(i, 0, n) {
         a[i] = 1ll << (a[i]-1);
     }
-    build(0, 0, 2*n, a);
+    build(0, 0, n, a);
     fo(i, 0, n-1) {
         ll u, v;
         cin >> u >> v;
@@ -241,10 +241,10 @@ void solve() {
         if (type == 1) {
             ll v, c; cin >> v >> c; v -= 1;
             c = 1ll << (c-1);
-            paint(0, 0, 2*n, tin[v], tout[v], c);
+            paint(0, 0, n, tin[v], tout[v], c);
         } else {
             ll v; cin >> v; v -= 1;
-            cout << __builtin_popcount(get_color(0, 0, 2*n, tin[v], tout[v])) << endl;
+            cout << __builtin_popcount(get_color(0, 0, n, tin[v], tout[v])) << endl;
         }
     }
 }
