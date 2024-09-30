@@ -5,6 +5,7 @@ using pll = pair<ll, ll>;
 using ld = long double;
 using qll = queue<ll>;
 using vll = vector<ll>;
+using vvll = vector<vector<ll>>;
 using qld = queue<ld>;
 using vld = vector<ld>;
 using qpll = queue<pll>;
@@ -134,66 +135,118 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
+const ll N = 8e5;
+bitset<N> seen;
+vll tree(4*N, 0);
+vll add(4*N, -1);
+int tt, tin[N], tout[N], vs[N];
+vv(ll, sm, N, 0);
+void dfsshit(int v, int p) {
+    vs[tt] = v;
+    tin[v] = tt++;
+    cout << v << ": " << tin[v] << endl;
+    fo(i, 0, sm[v].size()) if (sm[v][i] != p) dfsshit(sm[v][i], v);
+    tout[v] = tt;
+    cout << v << ": " << tout[v] << endl;
+}
+void dfs(ll v, vector<ll> & res, const vvll & sm) {
+    res.push_back(v);
+    for (const auto & adj : sm[v]) {
+        if (!seen[adj]) {
+            seen[adj] = true;
+            dfs(adj, res, sm);
+        }
+    }
+    res.push_back(v);
+}
+
+void push(ll v) {
+    if (add[v] == -1) return;
+    tree[v*2+1] = add[v*2+1] = add[v];
+    tree[v*2+2] = add[v*2+2] = add[v];
+    add[v] = -1;
+}
+
+ll get_color(ll v, ll l, ll r, ll tl, ll tr) {
+    if (tl >= tr) return 0ll;
+    if (tl == l && tr == r) return tree[v];
+    push(v);
+    ll mid = (l+r) >> 1;
+    auto getl = get_color(v*2+1, l, mid, tl, min(tr, mid));
+    auto getr = get_color(v*2+2, mid, r, max(mid, tl), tr);
+    return getl | getr;
+}
+
+void paint(ll v, ll l, ll r, ll tl, ll tr, ll c) {
+    if (tl >= tr) return;
+    if (tl == l && tr == r) {
+        tree[v] = c;
+        add[v] = c;
+    } else {
+        push(v);
+        ll mid = (l+r) >> 1;
+        paint(v*2+1, l, mid, tl, min(tr, mid), c);
+        paint(v*2+2, mid, r, max(mid, tl), tr, c);
+        tree[v] = tree[v*2+1] | tree[v*2+2];
+    }
+}
+
+void build(ll v, ll l, ll r, vll & a) {
+    if (l + 1 == r) {
+        tree[v] = a[l];
+    } else {
+        ll mid = (l+r) >> 1;
+        build(v*2+1, l, mid, a);
+        build(v*2+2, mid, r, a);
+        tree[v] = tree[v*2+1] | tree[v*2+2];
+    }
+}
 
 void solve() {
-    ll n; cin >> n;
+    seen.reset();
+    ll n, q; cin >> n >> q;
     vll a(n); in(a);
-    vll p(n); in(p);
-    ll rev_1e4 = powm(1e4, MOD-2);
-    for (auto & x: p) {
-        x = mul(x, rev_1e4);
+    fo(i, 0, n) {
+        a[i] = 1ll << (a[i]-1);
     }
-    vll notp = p;
-    for (auto & x: notp) {
-        x = sub(1, x);
+    build(0, 0, 2*n, a);
+    fo(i, 0, n-1) {
+        ll u, v;
+        cin >> u >> v;
+        u -= 1; v -= 1;
+        sm[u].push_back(v);
+        sm[v].push_back(u);
     }
-    ll dp[10][10][2][2];
-    fo(i, 0, 10) {
-        fo(j, 0, 10) {
-            for(auto v1: {0, 1}) {
-                for(auto v2: {0, 1}) {
-                    dp[i][j][v1][v2] = 0ll;
-                }
-            }
+    tt = 0;
+    dfsshit(0, -1);
+    vll res;
+    seen[0] = true;
+    dfs(0, res, sm);
+    for (auto x: res) clog << x << " ";
+    clog << endl;
+    vll leftpos(n, -1);
+    vll rightpos(n, -1);
+    fo(i, 0, res.size()) {
+        if (leftpos[res[i]] == -1) {
+            leftpos[res[i]] = i;
+        } else {
+            rightpos[res[i]] = i;
         }
     }
-    fo(i, 0, 10) {
-        fo(j, 0, 10) {
-            dp[i][j][0][0] = 1ll;
+    fo(i, 0, n) {
+        clog << leftpos[i] << " " << rightpos[i] << endl;
+    }
+    fo(i, 0, q) {
+        ll type; cin >> type;
+        if (type == 1) {
+            ll v, c; cin >> v >> c; v -= 1;
+            c = 1ll << (c-1);
+            paint(0, 0, 2*n, tin[v], tout[v], c);
+        } else {
+            ll v; cin >> v; v -= 1;
+            cout << __builtin_popcount(get_color(0, 0, 2*n, tin[v], tout[v])) << endl;
         }
     }
-    fo(x, 0, n) {
-        ll temp[2][2];
-        fo(i, 0, 10) {
-            fo(j, 0, 10) {
-                for(auto v1: {0, 1}) {
-                    for(auto v2: {0, 1}) {
-                        temp[v1][v2] =
-                                (
-                                dp[i][j][v1][v2]*notp[x] +
-                                dp[i][j][v1 ^ bool(a[x] & (1 << i))][v2 ^ bool(a[x] & (1 << j))]*p[x]
-                                )
-                                % MOD;
-                    }
-                }
-                for(auto v1: {0, 1}) {
-                    for(auto v2: {0, 1}) {
-                        dp[i][j][v1][v2] = temp[v1][v2];
-                    }
-                }
-            }
-        }
-    }
-    ll ans = 0;
-    for(ll i = 0; i < 10; i++){
-        for(ll j = 0; j < 10; j++){
-            ll pw2 = (1ll<<(i+j)) % MOD;
-            ans += (1ll*pw2*dp[i][j][1][1]) % MOD;
-            ans %= MOD;
-            for(ll k : {0,1}) for(ll l : {0,1}) dp[i][j][k][l] = 0;
-        }
-    }
-    cout << ans << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
@@ -213,7 +266,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-    cin >> tt;
+//    cin >> tt;
     while (tt--) {
         solve();
     }
