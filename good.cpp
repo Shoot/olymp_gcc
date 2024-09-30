@@ -139,16 +139,8 @@ const ll N = 8e5;
 bitset<N> seen;
 vll tree(4*N, 0);
 vll add(4*N, -1);
-int tt, tin[N], tout[N], vs[N];
-vv(ll, sm, N, 0);
-void dfsshit(int v, int p) {
-    vs[tt] = v;
-    tin[v] = tt++;
-    cout << v << ": " << tin[v] << endl;
-    fo(i, 0, sm[v].size()) if (sm[v][i] != p) dfsshit(sm[v][i], v);
-    tout[v] = tt;
-    cout << v << ": " << tout[v] << endl;
-}
+vll res;
+
 void dfs(ll v, vector<ll> & res, const vvll & sm) {
     res.push_back(v);
     for (const auto & adj : sm[v]) {
@@ -193,7 +185,7 @@ void paint(ll v, ll l, ll r, ll tl, ll tr, ll c) {
 
 void build(ll v, ll l, ll r, vll & a) {
     if (l + 1 == r) {
-        tree[v] = a[l];
+        tree[v] = a[res[l]];
     } else {
         ll mid = (l+r) >> 1;
         build(v*2+1, l, mid, a);
@@ -209,7 +201,7 @@ void solve() {
     fo(i, 0, n) {
         a[i] = 1ll << (a[i]-1);
     }
-    build(0, 0, n, a);
+    vv(ll, sm, n, 0);
     fo(i, 0, n-1) {
         ll u, v;
         cin >> u >> v;
@@ -217,11 +209,9 @@ void solve() {
         sm[u].push_back(v);
         sm[v].push_back(u);
     }
-    tt = 0;
-    dfsshit(0, -1);
-    vll res;
     seen[0] = true;
     dfs(0, res, sm);
+    build(0, 0, 2*n, a);
     for (auto x: res) clog << x << " ";
     clog << endl;
     vll leftpos(n, -1);
@@ -241,10 +231,10 @@ void solve() {
         if (type == 1) {
             ll v, c; cin >> v >> c; v -= 1;
             c = 1ll << (c-1);
-            paint(0, 0, n, tin[v], tout[v], c);
+            paint(0, 0, 2*n, leftpos[v], rightpos[v]+1, c);
         } else {
             ll v; cin >> v; v -= 1;
-            cout << __builtin_popcount(get_color(0, 0, n, tin[v], tout[v])) << endl;
+            cout << __builtin_popcount(get_color(0, 0, 2*n, leftpos[v], rightpos[v]+1)) << endl;
         }
     }
 }
