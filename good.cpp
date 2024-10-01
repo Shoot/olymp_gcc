@@ -13,9 +13,10 @@ using vpll = vector<pll>;
 #define all(value) value.begin(), value.end()
 #define fo(XX, X, fi) for(ll XX = X; XX < fi; XX++)
 #define forr(XX, X, fi) for(ll XX = X; XX <= fi; XX++)
-ostream& endl(ostream& os) {
-    return os << '\n';
-}
+#define roff(XX, X, fi) for(ll XX = X; XX >= fi; XX--)
+//ostream& endl(ostream& os) {
+//    return os << '\n';
+//}
 #define vv(type,name,n,...) \
     vector<vector<type>> name(n,vector<type>(__VA_ARGS__))
 #define vvv(type,name,n,m,...) \
@@ -27,7 +28,7 @@ ostream& endl(ostream& os) {
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #endif
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-uniform_int_distribution<ll> distrib(2ll, 10ll);
+uniform_int_distribution<ll> distrib(0ll, LLONG_MAX);
 constexpr ll MOD = 1e9+7;
 void in(vector<ll> & a) {
     for (auto & x : a) cin >> x;
@@ -135,107 +136,78 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
-const ll N = 8e5;
-bitset<N> seen;
-vll tree(4*N, 0);
-vll add(4*N, -1);
-vll res;
-
-void dfs(ll v, vector<ll> & res, const vvll & sm) {
-    res.push_back(v);
-    for (const auto & adj : sm[v]) {
-        if (!seen[adj]) {
-            seen[adj] = true;
-            dfs(adj, res, sm);
-        }
+ld rand01 () {
+    ld shit1 = distrib(rng);
+    ld shit2 = distrib(rng);
+    return min(shit1, shit2)/max(shit1, shit2);
+}
+struct shit {
+    char c;
+    ll r, b;
+};
+ll MAX_T = 1.96e6;
+ld temp = 1e3;
+vector<shit> a;
+ll n;
+ll calc() {
+    ll have_red = 0;
+    ll have_blue = 0;
+    ll tot = n;
+    ll money_red = 0;
+    ll money_blue = 0;
+    fo(i,0,n){
+        ll price_red = max(0ll, a[i].r-have_red);
+        ll can_spend_red = min(money_red, price_red);
+        price_red -= can_spend_red;
+        money_red -= can_spend_red;
+        ll price_blue = max(0ll, a[i].b-have_blue);
+        ll can_spend_blue = min(money_blue, price_blue);
+        price_blue -= can_spend_blue;
+        money_blue -= can_spend_blue;
+        tot += max(price_red, price_blue);
+        money_red += max(0ll, price_blue-price_red);
+        money_blue += max(0ll, price_red-price_blue);
+        if (a[i].c == 'R') have_red += 1;
+        else have_blue += 1;
     }
-    res.push_back(v);
-}
-
-void push(ll v) {
-    if (add[v] == -1) return;
-    tree[v*2+1] = add[v*2+1] = add[v];
-    tree[v*2+2] = add[v*2+2] = add[v];
-    add[v] = -1;
-}
-
-ll get_color(ll v, ll l, ll r, ll tl, ll tr) {
-    if (tl >= tr) return 0ll;
-    if (tl == l && tr == r) return tree[v];
-    push(v);
-    ll mid = (l+r) >> 1;
-    auto getl = get_color(v*2+1, l, mid, tl, min(tr, mid));
-    auto getr = get_color(v*2+2, mid, r, max(mid, tl), tr);
-    return getl | getr;
-}
-
-void paint(ll v, ll l, ll r, ll tl, ll tr, ll c) {
-    if (tl >= tr) return;
-    if (tl == l && tr == r) {
-        tree[v] = c;
-        add[v] = c;
-    } else {
-        push(v);
-        ll mid = (l+r) >> 1;
-        paint(v*2+1, l, mid, tl, min(tr, mid), c);
-        paint(v*2+2, mid, r, max(mid, tl), tr, c);
-        tree[v] = tree[v*2+1] | tree[v*2+2];
-    }
-}
-
-void build(ll v, ll l, ll r, vll & a) {
-    if (l + 1 == r) {
-        tree[v] = a[res[l]];
-    } else {
-        ll mid = (l+r) >> 1;
-        build(v*2+1, l, mid, a);
-        build(v*2+2, mid, r, a);
-        tree[v] = tree[v*2+1] | tree[v*2+2];
-    }
+    return tot;
 }
 
 void solve() {
-    seen.reset();
-    ll n, q; cin >> n >> q;
-    vll a(n); in(a);
-    fo(i, 0, n) {
-        a[i] = 1ll << (a[i]-1);
-    }
-    vv(ll, sm, n, 0);
-    fo(i, 0, n-1) {
-        ll u, v;
-        cin >> u >> v;
-        u -= 1; v -= 1;
-        sm[u].push_back(v);
-        sm[v].push_back(u);
-    }
-    seen[0] = true;
-    dfs(0, res, sm);
-    build(0, 0, 2*n, a);
-    for (auto x: res) clog << x << " ";
-    clog << endl;
-    vll leftpos(n, -1);
-    vll rightpos(n, -1);
-    fo(i, 0, res.size()) {
-        if (leftpos[res[i]] == -1) {
-            leftpos[res[i]] = i;
-        } else {
-            rightpos[res[i]] = i;
+    cin >> n;
+    uniform_int_distribution<ll> distribution(0, n-1);
+    a.resize(n);
+    fo(i,0,n)cin>>a[i].c>>a[i].r>>a[i].b;
+    auto start = chrono::high_resolution_clock::now();
+    ll ans = calc();
+    ll prev_res = ans;
+    while (true) {
+        auto curr_time = chrono::high_resolution_clock::now();
+        if (chrono::duration_cast<chrono::microseconds>(curr_time-start).count() >= MAX_T) {
+            cout << ans << endl;
+            return;
         }
-    }
-    fo(i, 0, n) {
-        clog << leftpos[i] << " " << rightpos[i] << endl;
-    }
-    fo(i, 0, q) {
-        ll type; cin >> type;
-        if (type == 1) {
-            ll v, c; cin >> v >> c; v -= 1;
-            c = 1ll << (c-1);
-            paint(0, 0, 2*n, leftpos[v], rightpos[v]+1, c);
+        auto prev_state = a;
+        swap(a[distribution(rng)], a[distribution(rng)]);
+        swap(a[distribution(rng)], a[distribution(rng)]);
+        ll res = calc();
+        if (res <= prev_res) {
+//            clog << prev_res << " -> " << res;
+            ans = res;
+            prev_res = res;
         } else {
-            ll v; cin >> v; v -= 1;
-            cout << __builtin_popcount(get_color(0, 0, 2*n, leftpos[v], rightpos[v]+1)) << endl;
+//            clog << res << " " << prev_res << endl;
+            ld e_power = (ld)((prev_res-res))/temp;
+            ld move = expl(e_power);
+//            clog << e_power << endl;
+//            clog << move << endl;
+            if (move < rand01()) {
+                a = prev_state; // otkat
+            } else {
+                prev_res = res; // izmenenie
+            }
         }
+        temp *= 0.9999;
     }
 }
 
