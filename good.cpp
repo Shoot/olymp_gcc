@@ -73,6 +73,16 @@ ll poww(ll a, ll b) {
     }
     return d;
 }
+ld poww(ld a, ll b) {
+    assert(b >= 0);
+    ld d = 1;
+    while (b) {
+        if (b&1) d = (d*a);
+        b >>= 1;
+        a = (a*a);
+    }
+    return d;
+}
 ll mul(ll a, ll b) {
     return (a*b)%MOD;
 }
@@ -136,82 +146,44 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
-ld rand01 () {
-    ld shit1 = distrib(rng);
-    ld shit2 = distrib(rng);
-    return min(shit1, shit2)/max(shit1, shit2);
-}
-struct shit {
-    char c;
-    ll r, b;
-};
-ll MAX_T = 1.96e6;
-ld temp = 1e3;
-vector<shit> a;
-ll n;
-ll calc() {
-    ll have_red = 0;
-    ll have_blue = 0;
-    ll tot = n;
-    ll money_red = 0;
-    ll money_blue = 0;
-    fo(i,0,n){
-        ll price_red = max(0ll, a[i].r-have_red);
-        ll can_spend_red = min(money_red, price_red);
-        price_red -= can_spend_red;
-        money_red -= can_spend_red;
-        ll price_blue = max(0ll, a[i].b-have_blue);
-        ll can_spend_blue = min(money_blue, price_blue);
-        price_blue -= can_spend_blue;
-        money_blue -= can_spend_blue;
-        tot += max(price_red, price_blue);
-        money_red += max(0ll, price_blue-price_red);
-        money_blue += max(0ll, price_red-price_blue);
-        if (a[i].c == 'R') have_red += 1;
-        else have_blue += 1;
-    }
-    return tot;
-}
 
 void solve() {
-    cin >> n;
-    uniform_int_distribution<ll> distribution(0, n-1);
-    a.resize(n);
-    fo(i,0,n)cin>>a[i].c>>a[i].r>>a[i].b;
-    auto start = chrono::high_resolution_clock::now();
-    ll ans = calc();
-    ll prev_res = ans;
-    while (true) {
-        auto curr_time = chrono::high_resolution_clock::now();
-        if (chrono::duration_cast<chrono::microseconds>(curr_time-start).count() >= MAX_T) {
-            cout << ans << endl;
-            return;
-        }
-        auto prev_state = a;
-        swap(a[distribution(rng)], a[distribution(rng)]);
-        swap(a[distribution(rng)], a[distribution(rng)]);
-        ll res = calc();
-        if (res <= prev_res) {
-//            clog << prev_res << " -> " << res;
-            ans = res;
-            prev_res = res;
-        } else {
-//            clog << res << " " << prev_res << endl;
-            ld e_power = (ld)((prev_res-res))/temp;
-            ld move = expl(e_power);
-//            clog << e_power << endl;
-//            clog << move << endl;
-            if (move < rand01()) {
-                a = prev_state; // otkat
-            } else {
-                prev_res = res; // izmenenie
-            }
-        }
-        temp *= 0.9999;
+    ll m, n;
+    cin >> m >> n;
+//    ll su = 0;
+//    uniform_int_distribution<ll> distr(1ll, m);
+//    fo(tryy,0,1000000000) {
+//        ll maxi = 0;
+//        fo(i,0,n) {
+//            maxi = max(maxi, distr(rng));
+//        }
+//        su += maxi;
+//    }
+//    cout << ((ld)su)/1000000000;
+
+//    ld one =  ((ld)m+1)/2;
+//    ld cur = one;
+//    fo(i,0,n-1) {
+//        cur += ((ld)m-cur)/2;
+//        cout << cur << endl;
+//    }
+//    cout << cur << endl;
+
+//    forr(maximum, 1, m) {
+//        forr(number_of_maximums, 1, n) {
+//            tot += C(n, number_of_maximums)*powm(((ld)maximum-1)/((ld)maximum), n-number_of_maximums);
+//        }
+//        n*(maximum-1)
+//    }
+    ld ans = (ld)m;
+    forr(i,1,m-1) {
+        ans -= poww((ld)i/(ld)m, n);
     }
+    cout << ans << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
+    cout << setprecision(17);
     bool use_fast_io = true;
     for (int32_t i = 1; i < argc; ++i) {
         if (string(argv[i]) == "-local-no-fast-io") {
