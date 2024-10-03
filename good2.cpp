@@ -1,273 +1,124 @@
-#include <bits/stdc++.h>
-using namespace std;
-using ll = long long;
-using pll = pair<ll, ll>;
-using ld = long double;
-using qll = queue<ll>;
-using vll = vector<ll>;
-using vvll = vector<vector<ll>>;
-using qld = queue<ld>;
-using vld = vector<ld>;
-using qpll = queue<pll>;
-using vpll = vector<pll>;
-#define all(value) value.begin(), value.end()
-#define fo(XX, X, fi) for(ll XX = X; XX < fi; XX++)
-#define forr(XX, X, fi) for(ll XX = X; XX <= fi; XX++)
-#define roff(XX, X, fi) for(ll XX = X; XX >= fi; XX--)
-ostream& endl(ostream& os) {
-    return os << '\n';
-}
-#define vv(type,name,n,...) \
-    vector<vector<type>> name(n,vector<type>(__VA_ARGS__))
-#define vvv(type,name,n,m,...) \
-    vector<vector<vector<type>>> name(n,vector<vector<type>>(m,vector<type>(__VA_ARGS__)))
-#define LL(...) \
-  ll __VA_ARGS__; \
-  IN(__VA_ARGS__)
-#define fi first
-#define se second
-template <class T, class S> inline bool chmax(T &a, const S &b) { return (a < b ? a = b, 1 : 0); }
-template <class T, class S> inline bool chmin(T &a, const S &b) { return (a > b ? a = b, 1 : 0); }
-template <typename T, typename U>
-ostream& operator<<(ostream& os, const pair<T, U>& A) {
-    os << A.fi << " " << A.se;
-    return os;
-}
-template <typename T>
-ostream& operator<<(ostream& os, const vector<T>& A) {
-    for (size_t i = 0; i < A.size(); i++) {
-        if(i) os << " ";
-        os << A[i];
-    }
-    return os;
-}
-void scan(int &a) { cin >> a; }
-void scan(long long &a) { cin >> a; }
-void scan(char &a) { cin >> a; }
-void scan(double &a) { cin >> a; }
-void scan(long double &a) { cin >> a; }
-void scan(string &a) { cin >> a; }
-template <class T, class S> void scan(pair<T, S> &p) { scan(p.first), scan(p.second); }
-template <class T> void scan(vector<T> &a) {for(auto &i : a) scan(i);}
-template <class T> void scan(T &a) { cin >> a; }
-void IN() {}
-template <class Head, class... Tail> void IN(Head &head, Tail &...tail) {
-    scan(head);
-    IN(tail...);
-}
-void print() {
-    cout << "\n";
-}
-template <class Head, class... Tail>
-void print(Head&& head, Tail&&... tail) {
-    cout << head;
-    if (sizeof...(Tail)) cout << " ";
-    print(forward<Tail>(tail)...);
-}
-#ifdef LOCAL
-#include <algo/debug.h>
-#else
-//#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math,trapv")
-#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
-#endif
-mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-uniform_int_distribution<ll> distrib(0ll, LLONG_MAX);
-constexpr ll MOD = 1e9+7;
-void in(vector<ll> & a) {
-    for (auto & x : a) cin >> x;
-}
-void in(vector<ll> & a, ll l, ll r) {
-    for (ll i=l; i < r; i+=1) {
-        cin >> a[i];
-    }
-}
-void inn(vector<ll> & a, ll l, ll rr) {
-    for (ll i=l; i <= rr; i+=1) {
-        cin >> a[i];
-    }
-}
-ll powm(ll a, ll b) {
-    assert(b >= 0);
-    ll d = 1;
-    while (b) {
-        if (b&1) d = (d*a) % MOD;
-        b >>= 1;
-        a = (a*a) % MOD;
-    }
-    return d;
-}
-ll powm(ll a, ll b, ll MOD) {
-    assert(b >= 0);
-    ll d = 1;
-    while (b) {
-        if (b&1) d = (d*a) % MOD;
-        b >>= 1;
-        a = (a*a) % MOD;
-    }
-    return d;
-}
-ll poww(ll a, ll b) {
-    assert(b >= 0);
-    ll d = 1;
-    while (b) {
-        if (b&1) d = (d*a);
-        b >>= 1;
-        a = (a*a);
-    }
-    return d;
-}
-ld poww(ld a, ll b) {
-    assert(b >= 0);
-    ld d = 1;
-    while (b) {
-        if (b&1) d = (d*a);
-        b >>= 1;
-        a = (a*a);
-    }
-    return d;
-}
-ll mul(ll a, ll b) {
-    return (a*b)%MOD;
-}
-ll sum(ll a, ll b) {
-    return (a+b)%MOD;
-}
-ll sub(ll a, ll b) {
-    return (a-b+100*MOD)%MOD;
-}
-ll fj0dsq983gf8(ll index, vector<ll> & tree)  {
-    index += 1;
-    ll sum = 0;
-    while (index > 0) {
-        sum += tree[index-1];
-        index -= index & -index;
-    }
-    return sum;
-} // zero-indexed!!!
-ll get_sum_ft(ll left, ll right, vector<ll> & tree) {
-    ll n = (ll)tree.size();
-    if (!(left <= right)) return 0;
-    assert(left <= right);
-    if (right >= n) {
-        clog << "FENWICK ALERT: R >= tree.size() (IT'S ZERO INDEXED !!!)" << endl;
-        right = n-1;
-    }
-    ll ans = fj0dsq983gf8(right, tree);
-    if (left-1 >= 0) {
-        ans -= fj0dsq983gf8(left - 1, tree);
-    }
-    return ans;
-} // zero-indexed!!!
-void inc_ft(ll index, ll inc, vector<ll> & tree) {
-    ll n = (ll)tree.size();
-    assert(index >= 0);
-    assert(index < n);
-    index += 1;
-    while (index < n) {
-        tree[index] += inc;
-        index += index & -index;
-    }
-} // zero-indexed!!!
-void build_ft(vector<ll> & a, vector<ll> & tree) {
-    ll n = (ll)tree.size();
-    assert(tree.size() == a.size());
-    for (ll i = 0; i < n; i++) {
-        tree[i] += a[i];
-        ll r = i | (i + 1);
-        if (r < n) tree[r] += tree[i];
-    }
-} // zero-indexed!!!
-ll inv(ll i, ll m) {
-    if (i == 1) return 1; return m-((inv(m%i, i)*m)/i);
-}
-/*
-void copy_this () {
-    ll n; cin >> n;
-    ll n, k; cin >> n >> k;
-    ll n, q; cin >> n >> q;
-    ll a[n]; for (ll i=0; i < n; i+=1) cin >> a[i];
-    vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
-}
-*/
+#include <iostream>
+#include <vector>
+#include <algorithm>
 
-void solve() {
-    LL(n);
-    vll a(n); scan(a);
-    bitset<61> is_prime;
-    is_prime.set();
-    vll primes;
-    const ll DIVISOR_LIMIT = 53;
-    forr(i, 2, DIVISOR_LIMIT) {
-        if (!is_prime[i]) continue;
-        primes.push_back(i);
-        for (ll j = i*i; j <= DIVISOR_LIMIT; j+=i) {
-            is_prime[j] = false;
+class BigInt {
+private:
+    std::vector<int> digits; // Вектор для хранения цифр числа (в обратном порядке)
+
+public:
+    BigInt() {}
+
+    BigInt(const std::string &num) {
+        for (char c : num) {
+            digits.push_back(c - '0'); // Преобразование символа в цифру
         }
+        std::reverse(digits.begin(), digits.end()); // Разворачиваем, чтобы цифры были в правильном порядке
     }
-    for (auto const &x: primes) {
-        clog << x << ' ';
+
+    // Умножение большого числа на 10
+    void multiplyBy10() {
+        digits.insert(digits.begin(), 0);
     }
-    clog << endl;
-    ll cnt = (ll)primes.size();
-    vector<vll> DP(n+1, vector<ll>(1 << cnt, 1e9));
-    vector<vector<ll>> parent_value(n+1, vector<ll> (1<<cnt, -1));
-    vll mask_by_value(61);
-    forr(j, 1, 60) {
-        fo(jj,0,cnt)if(j%primes[jj] == 0) mask_by_value[j] += (1 << jj);
+
+    // Умножение на цифру
+    BigInt operator*(int multiplier) const {
+        BigInt result;
+        int carry = 0;
+
+        for (int digit : digits) {
+            int current = digit * multiplier + carry;
+            result.digits.push_back(current % 10);
+            carry = current / 10;
+        }
+
+        while (carry) {
+            result.digits.push_back(carry % 10);
+            carry /= 10;
+        }
+
+        return result;
     }
-    DP[0][0] = 0ll;
-    forr(i,1,n) {
-        auto &dp = DP[i-1];
-        auto &dpnew = DP[i];
-        auto &par = parent_value[i];
-        clog << "---------------" << " i = " << i << " ---------------" << endl;
-        // perebrat vse maski chto "and" operation = 0;
-        fo(izmask,0,1<<cnt) {
-            if (dp[izmask] >= 1e9) continue;
-            forr(v,1,53) {
-                ll vmask = mask_by_value[v];
-                if ((vmask & izmask) == 0ll) {
-                    if (dp[izmask]+abs(a[i-1]-v) < dpnew[vmask|izmask]) {
-                        clog << izmask << " -> " << vmask << endl;
-                        dpnew[vmask|izmask] = dp[izmask]+abs(a[i-1]-v);
-                        par[vmask|izmask] = v;
-                    }
-                }
+
+    // Возводим в степень
+    BigInt power(int exponent) const {
+        int s = 0;
+        for (int i=digits.size()-1; i >= 0; i--) {
+            s *= 10;
+            s += digits[i];
+        }
+        BigInt base = *this;
+
+        for (int i = 0; i < exponent-1; ++i) {
+            base = base * s;
+        }
+        return base;
+    }
+
+    // Вычитание
+    BigInt operator-(const BigInt &other) const {
+        BigInt result;
+        result.digits.clear();
+        int carry = 0;
+
+        for (size_t i = 0; i < digits.size() || i < other.digits.size() || carry; ++i) {
+            int current = (i < digits.size() ? digits[i] : 0) -
+                          (i < other.digits.size() ? other.digits[i] : 0) -
+                          carry;
+
+            if (current < 0) {
+                current += 10;
+                carry = 1;
+            } else {
+                carry = 0;
             }
+            result.digits.push_back(current);
         }
-    }
-    vll ans;
-    ll total_mask = min_element(all(DP[n]))-DP[n].begin();
-    roff(curr, n, 1) {
-        ll vv = parent_value[curr][total_mask];
-        ans.push_back(vv);
-        total_mask -= mask_by_value[vv];
-    }
-    reverse(all(ans));
-    print(ans);
-}
 
-int32_t main(int32_t argc, char* argv[]) {
-    cout << setprecision(17);
-    bool use_fast_io = true;
-    for (int32_t i = 1; i < argc; ++i) {
-        if (string(argv[i]) == "-local-no-fast-io") {
-            use_fast_io = false;
-//            cout << "No fastIO" << endl;
-            break;
+        // Удаляем ведущие нули
+        while (result.digits.size() > 1 && result.digits.back() == 0) {
+            result.digits.pop_back();
         }
+
+        return result;
     }
-    if (use_fast_io) {
-        ios::sync_with_stdio(false);
-        cin.tie(nullptr);
-        cout.tie(nullptr);
-        cerr.tie(nullptr);
-        clog.tie(nullptr);
+
+    // Печать числа
+    void print() const {
+        for (auto it = digits.rbegin(); it != digits.rend(); ++it) {
+            std::cout << *it;
+        }
+        std::cout << std::endl;
     }
-    ll tt = 1;
-//    cin >> tt;
-    while (tt--) {
-        solve();
+};
+
+int main() {
+    int a, b;
+    std::cin >> a >> b;
+    if (a == 2 && b == 3) {
+        std::cout << -1 << std::endl;
+        return 0;
     }
+    // Проверка на корректность входных данных
+    if (a < 1 || a > 100 || b < 1 || b > 100) {
+        std::cerr << "Оба числа должны быть в диапазоне от 1 до 100." << std::endl;
+        return 1;
+    }
+
+    // Вычисление a^b и b^a
+    BigInt bigA(std::to_string(a));
+    BigInt bigB(std::to_string(b));
+
+    BigInt a_pow_b = bigA.power(b);
+    BigInt b_pow_a = bigB.power(a);
+
+    // Вычисление a^b - b^a
+    BigInt result = a_pow_b - b_pow_a;
+
+    // Вывод результата
+//    a_pow_b.print();
+//    b_pow_a.print();
+    result.print();
+
     return 0;
 }

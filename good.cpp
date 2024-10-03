@@ -1,3 +1,4 @@
+// https://codeforces.com/contest/2014/submission/284237706
 #include <bits/stdc++.h>
 using namespace std;
 using ll = long long;
@@ -189,159 +190,70 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
-
+bitset<1000000> seen;
 void solve() {
-    LL(n);
+    seen.reset();
+    ll n, c;
+    cin >> n >> c;
+    vll a(n+1);
+    forr(i,1,n){
+        cin>>a[i];
+    }
     vvll sm(n+1);
-    fo(i,0,n-1){
+    fo(i, 0, n-1) {
         ll u, v;
         cin >> u >> v;
-        sm[u].push_back(v);
         sm[v].push_back(u);
+        sm[u].push_back(v);
     }
-    // dp[v][i] — подъем на 1 << i
-    ll log = 2;
-    ll nn = n; while (nn != 1) {
-        nn >>= 1;
-        log += 1;
-    }
-    // идем по вершинам в порядке сверху вниз (сверху от текущей все посчитано)
-    // dp[v][i] = dp[dp[v][i-1]][i-1]
-//    vll euler3;
-//    function<void(ll)> compute_euler3 = [&](ll v){
-//        seen[v] = true;
-//        euler3.push_back(v);
-//        for (const auto &x: sm[v]) {
-//            if (!seen[x]) {
-//                compute_euler3(x);
-//                euler3.push_back(v);
-//            }
-//        }
-//    };
-    bitset<1000000ll> seen;
-    vector<vector<ll>> dp (n+1, vector<ll>(log, 1));
-    vll depth(n+1, -1);
-    function<void(ll, ll)> compute_binary_lifts = [&](ll v, ll p){
+    vvll vs;
+    vs.emplace_back();
+    ll maxh = -1;
+    function<void(ll, ll)> dfs = [&] (ll v, ll h) {
+        maxh = max(maxh, h);
         seen[v] = true;
-        dp[v][0] = p;
-        fo(i, 1, log) {
-            dp[v][i] = dp[dp[v][i-1]][i-1];
-        }
-        for (const auto &x: sm[v]) {
-            if (!seen[x]) compute_binary_lifts(x, v);
+        if (h >= vs.size()) vs.emplace_back();
+        vs[h].push_back(v);
+        for (const auto &x : sm[v]) {
+            if (!seen[x]) {
+                dfs(x, h+1);
+            }
         }
     };
-    function<void(ll, ll)> compute_d = [&](ll v, ll d){
-        seen[v] = true;
-        depth[v] = d;
-        for (const auto &x: sm[v]) {
-            if(!seen[x])compute_d(x, d+1);
-        }
-    };
-    compute_binary_lifts(1, 1);
+    dfs(1, 1);
     seen.reset();
-    compute_d(1, 0);
-    LL(q);
-    fo(i,0,q){
-        ll origin, destination, limit;
-        cin >> origin >> destination >> limit;
-        clog << origin << " " << destination << " " << limit << endl;
-        if (n == 1) {
-            cout << 1 << endl;
-            continue;
-        }
-        if (origin == destination) {
-            cout << destination << endl;
-            continue;
-        }
-        ll origincopy = origin;
-        ll destinationcopy = destination;
-        ll d1 = depth[origincopy];
-        ll d2 = depth[destinationcopy];
-        if (d1 > d2) {
-            swap(d1, d2);
-            swap(origincopy, destinationcopy);
-        }
-        ll diff = d2-d1;
-        assert(diff >= 0);
-        fo(j,0,log){
-            if((1<<j)&diff){
-                destinationcopy = dp[destinationcopy][j];
+    vector<vector<ll>> dp(n+1, vector<ll> (2));
+    // dp[v][flag] - профит с поддерева вершины v, если она спасена(flag=1) или убита(flag=0)
+    function<void(ll)> compute_dp = [&] (ll v) {
+        seen[v] = true;
+        ll tot1 = a[v];
+        for (const auto &x : sm[v]) {
+            if (seen[x]) {
+                tot1 += max(dp[x][0], dp[x][1]-2*c);
             }
         }
-        if (destinationcopy == origincopy) {
-            if (diff <= limit) {
-                cout << destination << endl;
-                continue;
-            } else {
-                if (depth[origin] > depth[destination]) {
-                    fo(j,0,log){
-                        if((1<<j)&limit){
-                            origin = dp[origin][j];
-                        }
-                    }
-                    cout << origin << endl;
-                } else {
-                    ll limit2 = diff-limit;
-                    fo(j,0,log){
-                        if((1<<j)&limit2){
-                            destination = dp[destination][j];
-                        }
-                    }
-                    cout << destination << endl;
-                }
-            }
-            continue;
-        }
-        fo(j,0,log){
-            ll l = 0, r = log-1;
-            ll good = -1;
-            while (l <= r) {
-                ll mid = (l+r) >> 1;
-                if (dp[origincopy][mid] != dp[destinationcopy][mid]) {
-                    good = mid;
-                    l = mid+1;
-                } else {
-                    r = mid-1;
-                }
-            }
-            if (good != -1) {
-                clog << good << endl;
-                origincopy = dp[origincopy][good];
-                destinationcopy = dp[destinationcopy][good];
+        ll tot0 = 0;
+        for (const auto &x : sm[v]) {
+            if (seen[x]) {
+                tot0 += max(dp[x][0], dp[x][1]);
             }
         }
-        assert(origincopy != destinationcopy);
-        assert(dp[origincopy][0] == dp[destinationcopy][0]);
-        ll LCA = dp[origincopy][0];
-        ll length = depth[origin]-depth[LCA]+depth[destination]-depth[LCA];
-        assert(depth[origin]-depth[LCA] >= 0);
-        assert(depth[destination]-depth[LCA] >= 0);
-        if (length <= limit) {
-            cout << destination << endl;
-        } else {
-            ll do_lca = depth[origin]-depth[LCA];
-            if (do_lca >= limit) {
-                fo(jj,0,log){
-                    if((1<<jj)&limit){
-                        origin = dp[origin][jj];
-                    }
-                }
-                cout << origin << endl;
-                continue;
-            }
-            // doshli do lca i spuskaemsya
-            ll nehvat = length-limit;
-            assert(nehvat <= depth[destination]-depth[LCA]);
-            assert(nehvat>0);
-            fo(jj,0,log){
-                if((1<<jj)&nehvat){
-                    destination = dp[destination][jj];
-                }
-            }
-            cout << destination << endl;
+        dp[v][1] = tot1;
+        dp[v][0] = tot0;
+//        clog << "dp[" << v << "][1] = " << tot1 << endl;
+//        clog << "dp[" << v << "][0] = " << tot0 << endl;
+    };
+    roff(h, maxh, 1) {
+        auto &curr_layer = vs[h];
+//        for (const auto &x : curr_layer) {
+//            clog << x << ';';
+//        }
+//        clog << endl;
+        for (const auto &x : curr_layer) {
+            compute_dp(x);
         }
     }
+    cout << max(dp[1][0], dp[1][1]) << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
@@ -362,7 +274,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-//    cin >> tt;
+    cin >> tt;
     while (tt--) {
         solve();
     }
