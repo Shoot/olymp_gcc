@@ -192,59 +192,156 @@ void copy_this () {
 
 void solve() {
     LL(n);
-    vll a(n); scan(a);
-    bitset<61> is_prime;
-    is_prime.set();
-    vll primes;
-    const ll DIVISOR_LIMIT = 53;
-    forr(i, 2, DIVISOR_LIMIT) {
-        if (!is_prime[i]) continue;
-        primes.push_back(i);
-        for (ll j = i*i; j <= DIVISOR_LIMIT; j+=i) {
-            is_prime[j] = false;
+    vvll sm(n+1);
+    fo(i,0,n-1){
+        ll u, v;
+        cin >> u >> v;
+        sm[u].push_back(v);
+        sm[v].push_back(u);
+    }
+    // dp[v][i] — подъем на 1 << i
+    ll log = 2;
+    ll nn = n; while (nn != 1) {
+        nn >>= 1;
+        log += 1;
+    }
+    // идем по вершинам в порядке сверху вниз (сверху от текущей все посчитано)
+    // dp[v][i] = dp[dp[v][i-1]][i-1]
+//    vll euler3;
+//    function<void(ll)> compute_euler3 = [&](ll v){
+//        seen[v] = true;
+//        euler3.push_back(v);
+//        for (const auto &x: sm[v]) {
+//            if (!seen[x]) {
+//                compute_euler3(x);
+//                euler3.push_back(v);
+//            }
+//        }
+//    };
+    bitset<1000000ll> seen;
+    vector<vector<ll>> dp (n+1, vector<ll>(log, 1));
+    vll depth(n+1, -1);
+    function<void(ll, ll)> compute_binary_lifts = [&](ll v, ll p){
+        seen[v] = true;
+        dp[v][0] = p;
+        fo(i, 1, log) {
+            dp[v][i] = dp[dp[v][i-1]][i-1];
         }
-    }
-    for (auto const &x: primes) {
-        clog << x << ' ';
-    }
-    clog << endl;
-    ll cnt = (ll)primes.size();
-    vector<vll> DP(n+1, vector<ll>(1 << cnt, 1e9));
-    vector<vector<ll>> parent_value(n+1, vector<ll> (1<<cnt, -1));
-    vll mask_by_value(61);
-    forr(j, 1, 60) {
-        fo(jj,0,cnt)if(j%primes[jj] == 0) mask_by_value[j] += (1 << jj);
-    }
-    DP[0][0] = 0ll;
-    forr(i,1,n) {
-        auto &dp = DP[i-1];
-        auto &dpnew = DP[i];
-        auto &par = parent_value[i];
-//        clog << "---------------" << " i = " << i << " ---------------" << endl;
-        // perebrat vse maski chto "and" operation = 0;
-        fo(izmask,0,1<<cnt) {
-            if (dp[izmask] >= 1e9) continue;
-            forr(v,1,53) {
-                ll vmask = mask_by_value[v];
-                if ((vmask & izmask) == 0ll) {
-                    if (dp[izmask]+abs(a[i-1]-v) < dpnew[vmask|izmask]) {
-//                        clog << izmask << " -> " << vmask << endl;
-                        dpnew[vmask|izmask] = dp[izmask]+abs(a[i-1]-v);
-                        par[vmask|izmask] = v;
-                    }
-                }
+        for (const auto &x: sm[v]) {
+            if (!seen[x]) compute_binary_lifts(x, v);
+        }
+    };
+    function<void(ll, ll)> compute_d = [&](ll v, ll d){
+        seen[v] = true;
+        depth[v] = d;
+        for (const auto &x: sm[v]) {
+            if(!seen[x])compute_d(x, d+1);
+        }
+    };
+    compute_binary_lifts(1, 1);
+    seen.reset();
+    compute_d(1, 0);
+    LL(q);
+    fo(i,0,q){
+        ll origin, destination, limit;
+        cin >> origin >> destination >> limit;
+        clog << origin << " " << destination << " " << limit << endl;
+        if (n == 1) {
+            cout << 1 << endl;
+            continue;
+        }
+        if (origin == destination) {
+            cout << destination << endl;
+            continue;
+        }
+        ll origincopy = origin;
+        ll destinationcopy = destination;
+        ll d1 = depth[origincopy];
+        ll d2 = depth[destinationcopy];
+        if (d1 > d2) {
+            swap(d1, d2);
+            swap(origincopy, destinationcopy);
+        }
+        ll diff = d2-d1;
+        assert(diff >= 0);
+        fo(j,0,log){
+            if((1<<j)&diff){
+                destinationcopy = dp[destinationcopy][j];
             }
         }
+        if (destinationcopy == origincopy) {
+            if (diff <= limit) {
+                cout << destination << endl;
+                continue;
+            } else {
+                if (depth[origin] > depth[destination]) {
+                    fo(j,0,log){
+                        if((1<<j)&limit){
+                            origin = dp[origin][j];
+                        }
+                    }
+                    cout << origin << endl;
+                } else {
+                    ll limit2 = diff-limit;
+                    fo(j,0,log){
+                        if((1<<j)&limit2){
+                            destination = dp[destination][j];
+                        }
+                    }
+                    cout << destination << endl;
+                }
+            }
+            continue;
+        }
+        fo(j,0,log){
+            ll l = 0, r = log-1;
+            ll good = -1;
+            while (l <= r) {
+                ll mid = (l+r) >> 1;
+                if (dp[origincopy][mid] != dp[destinationcopy][mid]) {
+                    good = mid;
+                    l = mid+1;
+                } else {
+                    r = mid-1;
+                }
+            }
+            if (good != -1) {
+                clog << good << endl;
+                origincopy = dp[origincopy][good];
+                destinationcopy = dp[destinationcopy][good];
+            }
+        }
+        assert(origincopy != destinationcopy);
+        assert(dp[origincopy][0] == dp[destinationcopy][0]);
+        ll LCA = dp[origincopy][0];
+        ll length = depth[origin]-depth[LCA]+depth[destination]-depth[LCA];
+        assert(depth[origin]-depth[LCA] >= 0);
+        assert(depth[destination]-depth[LCA] >= 0);
+        if (length <= limit) {
+            cout << destination << endl;
+        } else {
+            ll do_lca = depth[origin]-depth[LCA];
+            if (do_lca >= limit) {
+                fo(jj,0,log){
+                    if((1<<jj)&limit){
+                        origin = dp[origin][jj];
+                    }
+                }
+                cout << origin << endl;
+                continue;
+            }
+            // doshli do lca i spuskaemsya
+            ll nehvat = length-limit;
+            assert(nehvat <= depth[destination]-depth[LCA]);
+            assert(nehvat>0);
+            fo(jj,0,log){
+                if((1<<jj)&nehvat){
+                    destination = dp[destination][jj];
+                }
+            }
+            cout << destination << endl;
+        }
     }
-    vll ans;
-    ll total_mask = min_element(all(DP[n]))-DP[n].begin();
-    roff(curr, n, 1) {
-        ll vv = parent_value[curr][total_mask];
-        ans.push_back(vv);
-        total_mask -= mask_by_value[vv];
-    }
-    reverse(all(ans));
-    print(ans);
 }
 
 int32_t main(int32_t argc, char* argv[]) {
