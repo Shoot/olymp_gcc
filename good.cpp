@@ -14,13 +14,56 @@ using vpll = vector<pll>;
 #define fo(XX, X, fi) for(ll XX = X; XX < fi; XX++)
 #define forr(XX, X, fi) for(ll XX = X; XX <= fi; XX++)
 #define roff(XX, X, fi) for(ll XX = X; XX >= fi; XX--)
-//ostream& endl(ostream& os) {
-//    return os << '\n';
-//}
+ostream& endl(ostream& os) {
+    return os << '\n';
+}
 #define vv(type,name,n,...) \
     vector<vector<type>> name(n,vector<type>(__VA_ARGS__))
 #define vvv(type,name,n,m,...) \
     vector<vector<vector<type>>> name(n,vector<vector<type>>(m,vector<type>(__VA_ARGS__)))
+#define LL(...) \
+  ll __VA_ARGS__; \
+  IN(__VA_ARGS__)
+#define fi first
+#define se second
+template <class T, class S> inline bool chmax(T &a, const S &b) { return (a < b ? a = b, 1 : 0); }
+template <class T, class S> inline bool chmin(T &a, const S &b) { return (a > b ? a = b, 1 : 0); }
+template <typename T, typename U>
+ostream& operator<<(ostream& os, const pair<T, U>& A) {
+    os << A.fi << " " << A.se;
+    return os;
+}
+template <typename T>
+ostream& operator<<(ostream& os, const vector<T>& A) {
+    for (size_t i = 0; i < A.size(); i++) {
+        if(i) os << " ";
+        os << A[i];
+    }
+    return os;
+}
+void scan(int &a) { cin >> a; }
+void scan(long long &a) { cin >> a; }
+void scan(char &a) { cin >> a; }
+void scan(double &a) { cin >> a; }
+void scan(long double &a) { cin >> a; }
+void scan(string &a) { cin >> a; }
+template <class T, class S> void scan(pair<T, S> &p) { scan(p.first), scan(p.second); }
+template <class T> void scan(vector<T> &a) {for(auto &i : a) scan(i);}
+template <class T> void scan(T &a) { cin >> a; }
+void IN() {}
+template <class Head, class... Tail> void IN(Head &head, Tail &...tail) {
+    scan(head);
+    IN(tail...);
+}
+void print() {
+    cout << "\n";
+}
+template <class Head, class... Tail>
+void print(Head&& head, Tail&&... tail) {
+    cout << head;
+    if (sizeof...(Tail)) cout << " ";
+    print(forward<Tail>(tail)...);
+}
 #ifdef LOCAL
 #include <algo/debug.h>
 #else
@@ -148,38 +191,60 @@ void copy_this () {
 */
 
 void solve() {
-    ll m, n;
-    cin >> m >> n;
-//    ll su = 0;
-//    uniform_int_distribution<ll> distr(1ll, m);
-//    fo(tryy,0,1000000000) {
-//        ll maxi = 0;
-//        fo(i,0,n) {
-//            maxi = max(maxi, distr(rng));
-//        }
-//        su += maxi;
-//    }
-//    cout << ((ld)su)/1000000000;
-
-//    ld one =  ((ld)m+1)/2;
-//    ld cur = one;
-//    fo(i,0,n-1) {
-//        cur += ((ld)m-cur)/2;
-//        cout << cur << endl;
-//    }
-//    cout << cur << endl;
-
-//    forr(maximum, 1, m) {
-//        forr(number_of_maximums, 1, n) {
-//            tot += C(n, number_of_maximums)*powm(((ld)maximum-1)/((ld)maximum), n-number_of_maximums);
-//        }
-//        n*(maximum-1)
-//    }
-    ld ans = (ld)m;
-    forr(i,1,m-1) {
-        ans -= poww((ld)i/(ld)m, n);
+    LL(n);
+    vll a(n); scan(a);
+    bitset<61> is_prime;
+    is_prime.set();
+    vll primes;
+    const ll DIVISOR_LIMIT = 53;
+    forr(i, 2, DIVISOR_LIMIT) {
+        if (!is_prime[i]) continue;
+        primes.push_back(i);
+        for (ll j = i*i; j <= DIVISOR_LIMIT; j+=i) {
+            is_prime[j] = false;
+        }
     }
-    cout << ans << endl;
+    for (auto const &x: primes) {
+        clog << x << ' ';
+    }
+    clog << endl;
+    ll cnt = (ll)primes.size();
+    vector<vll> DP(n+1, vector<ll>(1 << cnt, 1e9));
+    vector<vector<ll>> parent_value(n+1, vector<ll> (1<<cnt, -1));
+    vll mask_by_value(61);
+    forr(j, 1, 60) {
+        fo(jj,0,cnt)if(j%primes[jj] == 0) mask_by_value[j] += (1 << jj);
+    }
+    DP[0][0] = 0ll;
+    forr(i,1,n) {
+        auto &dp = DP[i-1];
+        auto &dpnew = DP[i];
+        auto &par = parent_value[i];
+//        clog << "---------------" << " i = " << i << " ---------------" << endl;
+        // perebrat vse maski chto "and" operation = 0;
+        fo(izmask,0,1<<cnt) {
+            if (dp[izmask] >= 1e9) continue;
+            forr(v,1,53) {
+                ll vmask = mask_by_value[v];
+                if ((vmask & izmask) == 0ll) {
+                    if (dp[izmask]+abs(a[i-1]-v) < dpnew[vmask|izmask]) {
+//                        clog << izmask << " -> " << vmask << endl;
+                        dpnew[vmask|izmask] = dp[izmask]+abs(a[i-1]-v);
+                        par[vmask|izmask] = v;
+                    }
+                }
+            }
+        }
+    }
+    vll ans;
+    ll total_mask = min_element(all(DP[n]))-DP[n].begin();
+    roff(curr, n, 1) {
+        ll vv = parent_value[curr][total_mask];
+        ans.push_back(vv);
+        total_mask -= mask_by_value[vv];
+    }
+    reverse(all(ans));
+    print(ans);
 }
 
 int32_t main(int32_t argc, char* argv[]) {

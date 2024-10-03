@@ -5,12 +5,64 @@ using pll = pair<ll, ll>;
 using ld = long double;
 using qll = queue<ll>;
 using vll = vector<ll>;
+using vvll = vector<vector<ll>>;
 using qld = queue<ld>;
 using vld = vector<ld>;
 using qpll = queue<pll>;
 using vpll = vector<pll>;
+#define all(value) value.begin(), value.end()
+#define fo(XX, X, fi) for(ll XX = X; XX < fi; XX++)
+#define forr(XX, X, fi) for(ll XX = X; XX <= fi; XX++)
+#define roff(XX, X, fi) for(ll XX = X; XX >= fi; XX--)
 ostream& endl(ostream& os) {
     return os << '\n';
+}
+#define vv(type,name,n,...) \
+    vector<vector<type>> name(n,vector<type>(__VA_ARGS__))
+#define vvv(type,name,n,m,...) \
+    vector<vector<vector<type>>> name(n,vector<vector<type>>(m,vector<type>(__VA_ARGS__)))
+#define LL(...) \
+  ll __VA_ARGS__; \
+  IN(__VA_ARGS__)
+#define fi first
+#define se second
+template <class T, class S> inline bool chmax(T &a, const S &b) { return (a < b ? a = b, 1 : 0); }
+template <class T, class S> inline bool chmin(T &a, const S &b) { return (a > b ? a = b, 1 : 0); }
+template <typename T, typename U>
+ostream& operator<<(ostream& os, const pair<T, U>& A) {
+    os << A.fi << " " << A.se;
+    return os;
+}
+template <typename T>
+ostream& operator<<(ostream& os, const vector<T>& A) {
+    for (size_t i = 0; i < A.size(); i++) {
+        if(i) os << " ";
+        os << A[i];
+    }
+    return os;
+}
+void scan(int &a) { cin >> a; }
+void scan(long long &a) { cin >> a; }
+void scan(char &a) { cin >> a; }
+void scan(double &a) { cin >> a; }
+void scan(long double &a) { cin >> a; }
+void scan(string &a) { cin >> a; }
+template <class T, class S> void scan(pair<T, S> &p) { scan(p.first), scan(p.second); }
+template <class T> void scan(vector<T> &a) {for(auto &i : a) scan(i);}
+template <class T> void scan(T &a) { cin >> a; }
+void IN() {}
+template <class Head, class... Tail> void IN(Head &head, Tail &...tail) {
+    scan(head);
+    IN(tail...);
+}
+void print() {
+    cout << "\n";
+}
+template <class Head, class... Tail>
+void print(Head&& head, Tail&&... tail) {
+    cout << head;
+    if (sizeof...(Tail)) cout << " ";
+    print(forward<Tail>(tail)...);
 }
 #ifdef LOCAL
 #include <algo/debug.h>
@@ -19,7 +71,7 @@ ostream& endl(ostream& os) {
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #endif
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-uniform_int_distribution<ll> distrib(2ll, 10ll);
+uniform_int_distribution<ll> distrib(0ll, LLONG_MAX);
 constexpr ll MOD = 1e9+7;
 void in(vector<ll> & a) {
     for (auto & x : a) cin >> x;
@@ -57,6 +109,16 @@ ll powm(ll a, ll b, ll MOD) {
 ll poww(ll a, ll b) {
     assert(b >= 0);
     ll d = 1;
+    while (b) {
+        if (b&1) d = (d*a);
+        b >>= 1;
+        a = (a*a);
+    }
+    return d;
+}
+ld poww(ld a, ll b) {
+    assert(b >= 0);
+    ld d = 1;
     while (b) {
         if (b&1) d = (d*a);
         b >>= 1;
@@ -115,6 +177,9 @@ void build_ft(vector<ll> & a, vector<ll> & tree) {
         if (r < n) tree[r] += tree[i];
     }
 } // zero-indexed!!!
+ll inv(ll i, ll m) {
+    if (i == 1) return 1; return m-((inv(m%i, i)*m)/i);
+}
 /*
 void copy_this () {
     ll n; cin >> n;
@@ -125,42 +190,73 @@ void copy_this () {
 }
 */
 
-ll inv(ll i, ll m) {
-    cout << i << " " << m << endl;
-    if (i == 1) return 1;
-    return m-((inv(m%i, i)*m)/i);
-}
-//vector<ll> lp(1e8+1, 0);
-//vector<ll> calc(1e8+1, 0);
-//void linear_sieve(ll limit) {
-//    vector<ll> pr;
-//    for (ll i=2; i <= limit; i+=1) {
-//        if (lp[i] == 0) {
-//            pr.push_back(i);
-//            lp[i] = i;
-//        }
-//        ll j = 0;
-//        ll shit = pr.size();
-//        ll shit2 = lp.size();
-//        while (j < shit && pr[j] <= lp[i] && pr[j]*i < shit2) {
-//            lp[pr[j]*i] = pr[j];
-//            j += 1;
-//        }
-//    }
-//}
-
 void solve() {
-    vll
+    LL(n);
+    vll a(n); scan(a);
+    bitset<61> is_prime;
+    is_prime.set();
+    vll primes;
+    const ll DIVISOR_LIMIT = 53;
+    forr(i, 2, DIVISOR_LIMIT) {
+        if (!is_prime[i]) continue;
+        primes.push_back(i);
+        for (ll j = i*i; j <= DIVISOR_LIMIT; j+=i) {
+            is_prime[j] = false;
+        }
+    }
+    for (auto const &x: primes) {
+        clog << x << ' ';
+    }
+    clog << endl;
+    ll cnt = (ll)primes.size();
+    vector<vll> DP(n+1, vector<ll>(1 << cnt, 1e9));
+    vector<vector<ll>> parent_value(n+1, vector<ll> (1<<cnt, -1));
+    vll mask_by_value(61);
+    forr(j, 1, 60) {
+        fo(jj,0,cnt)if(j%primes[jj] == 0) mask_by_value[j] += (1 << jj);
+    }
+    DP[0][0] = 0ll;
+    forr(i,1,n) {
+        auto &dp = DP[i-1];
+        auto &dpnew = DP[i];
+        auto &par = parent_value[i];
+        clog << "---------------" << " i = " << i << " ---------------" << endl;
+        // perebrat vse maski chto "and" operation = 0;
+        fo(izmask,0,1<<cnt) {
+            if (dp[izmask] >= 1e9) continue;
+            forr(v,1,53) {
+                ll vmask = mask_by_value[v];
+                if ((vmask & izmask) == 0ll) {
+                    if (dp[izmask]+abs(a[i-1]-v) < dpnew[vmask|izmask]) {
+                        clog << izmask << " -> " << vmask << endl;
+                        dpnew[vmask|izmask] = dp[izmask]+abs(a[i-1]-v);
+                        par[vmask|izmask] = v;
+                    }
+                }
+            }
+        }
+    }
+    vll ans;
+    ll total_mask = min_element(all(DP[n]))-DP[n].begin();
+    roff(curr, n, 1) {
+        ll vv = parent_value[curr][total_mask];
+        ans.push_back(vv);
+        total_mask -= mask_by_value[vv];
+    }
+    reverse(all(ans));
+    print(ans);
 }
 
 int32_t main(int32_t argc, char* argv[]) {
+    cout << setprecision(17);
     bool use_fast_io = true;
-    for (int32_t i = 1; i < argc; ++i)
+    for (int32_t i = 1; i < argc; ++i) {
         if (string(argv[i]) == "-local-no-fast-io") {
             use_fast_io = false;
 //            cout << "No fastIO" << endl;
             break;
         }
+    }
     if (use_fast_io) {
         ios::sync_with_stdio(false);
         cin.tie(nullptr);
