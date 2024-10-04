@@ -192,50 +192,95 @@ void copy_this () {
 }
 */
 const ll N = 1e5+1;
-vll fact(N);
-vll revfact(N);
-ll C(ll n, ll k) {
-    return mul(mul(fact[n],revfact[k]),revfact[n-k]);
-}
+bitset<1000000> seen;
 void solve() {
-    fact[0] = 1;
-    revfact[0] = 1;
-    fo(i, 1, N) {
-        fact[i] = mul(fact[i-1], i);
+    ll n, m;
+    cin >> n >> m;
+    vvll sm(n+1);
+    vll deg(n+1);
+    vpll rebra (m);
+    map<pll, bool> mp;
+    fo(i, 0, m) {
+        ll u, v;
+        cin >> u >> v;
+        mp[{u, v}] = true;
+        mp[{v, u}] = true;
+        rebra[i].first = u;
+        rebra[i].second = v;
+//        sm[u].push_back(v);
+        deg[u] += 1;
+//        sm[v].push_back(u);
+        deg[v] += 1;
     }
-    revfact[N-1] = powm(fact[N-1], MOD-2);
-    roff(i, N-2, 0) {
-        revfact[i] = mul(revfact[i+1], i+1);
+    for (const auto &[u, v] : rebra) {
+        if (deg[v] < deg[u]) {
+            sm[v].push_back(u);
+            continue;
+        }
+        if (deg[u] < deg[v]) {
+            sm[u].push_back(v);
+            continue;
+        }
+        if (v < u) {
+            sm[v].push_back(u);
+        }
+        if (u < v) {
+            sm[u].push_back(v);
+        }
     }
-    ll n;
-    cin >> n;
-    ll left=0;
-    ll right=0;
-    ll up=0;
-    ll down=0;
-    fo(i,0,n){
-        ll x; cin >> x;
-        right += x > 0;
-        left += x < 0;
+    vpll vs (n);
+    forr(i, 1, n) {
+        vs[i-1].first = deg[i];
+        vs[i-1].second = i;
     }
-    fo(i,0,n){
-        ll y; cin >> y;
-        up += y > 0;
-        down += y < 0;
+    sort(all(vs));
+    map<pll, bool> tri;
+    fo(first, 0, n) {
+        fo(second, first+1, n) {
+            fo(third, second+1, n) {
+                if (
+                        mp[{vs[first].second, vs[second].second}] &&
+                        mp[{vs[second].second, vs[third].second}] &&
+                        mp[{vs[second].second, vs[first].second}]
+                ) {
+                    tri[{vs[first].second, vs[second].second}] = true;
+                    tri[{vs[second].second, vs[first].second}] = true;
+                    tri[{vs[second].second, vs[third].second}] = true;
+                    tri[{vs[third].second, vs[second].second}] = true;
+                    tri[{vs[third].second, vs[first].second}] = true;
+                    tri[{vs[first].second, vs[third].second}] = true;
+                    clog << vs[first].second << " " << vs[second].second << " " << vs[third].second << endl;
+                }
+            }
+        }
     }
-//    ll define_l_r = C(n, left);
-//    cout << define_l_r << endl;
-    ll total = 0;
-    forr(rightup, 0, min(right, up)) {
-        ll rightdown = right-rightup;
-        ll leftup = up-rightup;
-        ll leftdown = down-rightdown;
-        if (leftdown < 0) continue;
-        ll ans = mul(mul(C(right, rightup), C(left, leftdown)),
-                     mul(C(up, rightup), C(down, leftdown)));
-        total = sum(ans, total);
-    }
-    cout << total << endl;
+//    vll heavy;
+//    const ll C = ll(sqrtl(2*ld(m)));
+//    clog << "C = " << C << endl;
+//    forr(i, 1, n) {
+//        if (deg[i] >= C) {
+//            heavy.push_back(i);
+//            clog << i << " is heavy" << endl;
+//        }
+//    }
+//    ll heavy_sz = heavy.size();
+//    map<pll, bool> tri;
+//    fo(i, 0, heavy_sz) {
+//        fo(j, i+1, heavy_sz) {
+//            fo(k, j+1, heavy_sz) {
+//                if (mp[{heavy[i], heavy[j]}] && mp[{heavy[j], heavy[k]}] && mp[{heavy[k], heavy[i]}]) {
+//                    tri[{heavy[i], heavy[j]}] = true;
+//                    tri[{heavy[j], heavy[i]}] = true;
+//                    tri[{heavy[j], heavy[k]}] = true;
+//                    tri[{heavy[k], heavy[j]}] = true;
+//                    tri[{heavy[k], heavy[i]}] = true;
+//                    tri[{heavy[i], heavy[k]}] = true;
+//                    cout << heavy[i] << " " << heavy[j] << " " << heavy[k] << endl;
+//                }
+//            }
+//        }
+//    }
+
 }
 
 int32_t main(int32_t argc, char* argv[]) {
