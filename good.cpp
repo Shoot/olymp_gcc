@@ -191,25 +191,21 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
-const ll N = 1e5+1;
-bitset<1000000> seen;
 void solve() {
     ll n, m;
     cin >> n >> m;
     vvll sm(n+1);
     vll deg(n+1);
     vpll rebra (m);
-    map<pll, bool> mp;
+    vector<set<ll>> edge_exists (n+1);
     fo(i, 0, m) {
         ll u, v;
         cin >> u >> v;
-        mp[{u, v}] = true;
-        mp[{v, u}] = true;
+        edge_exists[u].insert(v);
+        edge_exists[v].insert(u);
         rebra[i].first = u;
         rebra[i].second = v;
-//        sm[u].push_back(v);
         deg[u] += 1;
-//        sm[v].push_back(u);
         deg[v] += 1;
     }
     for (const auto &[u, v] : rebra) {
@@ -223,64 +219,42 @@ void solve() {
         }
         if (v < u) {
             sm[v].push_back(u);
+            continue;
         }
         if (u < v) {
             sm[u].push_back(v);
+            continue;
         }
+        assert(false);
     }
-    vpll vs (n);
-    forr(i, 1, n) {
-        vs[i-1].first = deg[i];
-        vs[i-1].second = i;
-    }
-    sort(all(vs));
-    map<pll, bool> tri;
-    fo(first, 0, n) {
-        fo(second, first+1, n) {
-            fo(third, second+1, n) {
+    map<pll, ll> tri;
+    ll ops = 0ll;
+    forr(first, 1, n) {
+        for(auto const & second : sm[first]) {
+            for(auto const & third : sm[second]) {
+                ops += 1;
+                assert(ops < 5e6);
                 if (
-                        mp[{vs[first].second, vs[second].second}] &&
-                        mp[{vs[second].second, vs[third].second}] &&
-                        mp[{vs[second].second, vs[first].second}]
+                        edge_exists[third].contains(first)
                 ) {
-                    tri[{vs[first].second, vs[second].second}] = true;
-                    tri[{vs[second].second, vs[first].second}] = true;
-                    tri[{vs[second].second, vs[third].second}] = true;
-                    tri[{vs[third].second, vs[second].second}] = true;
-                    tri[{vs[third].second, vs[first].second}] = true;
-                    tri[{vs[first].second, vs[third].second}] = true;
-                    clog << vs[first].second << " " << vs[second].second << " " << vs[third].second << endl;
+                    tri[{first, second}] += 1;
+                    tri[{second, first}] += 1;
+                    tri[{second, third}] += 1;
+                    tri[{third, second}] += 1;
+                    tri[{third, first}] += 1;
+                    tri[{first, third}] += 1;
                 }
             }
         }
     }
-//    vll heavy;
-//    const ll C = ll(sqrtl(2*ld(m)));
-//    clog << "C = " << C << endl;
-//    forr(i, 1, n) {
-//        if (deg[i] >= C) {
-//            heavy.push_back(i);
-//            clog << i << " is heavy" << endl;
-//        }
-//    }
-//    ll heavy_sz = heavy.size();
-//    map<pll, bool> tri;
-//    fo(i, 0, heavy_sz) {
-//        fo(j, i+1, heavy_sz) {
-//            fo(k, j+1, heavy_sz) {
-//                if (mp[{heavy[i], heavy[j]}] && mp[{heavy[j], heavy[k]}] && mp[{heavy[k], heavy[i]}]) {
-//                    tri[{heavy[i], heavy[j]}] = true;
-//                    tri[{heavy[j], heavy[i]}] = true;
-//                    tri[{heavy[j], heavy[k]}] = true;
-//                    tri[{heavy[k], heavy[j]}] = true;
-//                    tri[{heavy[k], heavy[i]}] = true;
-//                    tri[{heavy[i], heavy[k]}] = true;
-//                    cout << heavy[i] << " " << heavy[j] << " " << heavy[k] << endl;
-//                }
-//            }
-//        }
-//    }
-
+    if (n > 10) assert(false);
+    ll tot = 0;
+    for (const auto &[u, v] : rebra) {
+        if (tri.contains({u, v})) {
+            tot += (tri[{u, v}])*(tri[{u, v}]-1)/2;
+        }
+    }
+    cout << tot << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
