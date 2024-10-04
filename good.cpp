@@ -1,5 +1,6 @@
 #include <bits/stdc++.h>
 using namespace std;
+using vbo = vector<bool>;
 using ll = long long;
 using pll = pair<ll, ll>;
 using ld = long double;
@@ -190,76 +191,72 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
-bitset<1000000> seen;
 void solve() {
     ll n, m;
     cin >> n >> m;
-    vvll sm(n+1);
+    vvll sm_naperad(n+1); // sm_naperad[i].size() <= sqrt(2*m)
+    vvll sm(n+1); // ∑ {i<=i<=n} sm[i].size()    ==    2*m
     vll deg(n+1);
     vpll rebra (m);
-    vector<set<ll>> edge_exists (n+1);
     fo(i, 0, m) {
         ll u, v;
         cin >> u >> v;
-        edge_exists[u].insert(v);
-        edge_exists[v].insert(u);
-        rebra[i].first = u;
-        rebra[i].second = v;
         deg[u] += 1;
         deg[v] += 1;
+        rebra[i].first = u;
+        rebra[i].second = v;
     }
     for (const auto &[u, v] : rebra) {
         sm[u].push_back(v);
         sm[v].push_back(u);
-//        if (deg[v] < deg[u]) {
-//            sm[v].push_back(u);
-//            continue;
-//        }
-//        if (deg[u] < deg[v]) {
-//            sm[u].push_back(v);
-//            continue;
-//        }
-//        if (v < u) {
-//            sm[v].push_back(u);
-//            continue;
-//        }
-//        if (u < v) {
-//            sm[u].push_back(v);
-//            continue;
-//        }
-//        assert(false);
+        if (deg[v] < deg[u]) {
+            sm_naperad[v].push_back(u);
+            continue;
+        }
+        if (deg[u] < deg[v]) {
+            sm_naperad[u].push_back(v);
+            continue;
+        }
+        if (v < u) {
+            sm_naperad[v].push_back(u);
+            continue;
+        }
+        if (u < v) {
+            sm_naperad[u].push_back(v);
+            continue;
+        }
+        assert(false);
     }
-    map<pll, ll> tri;
-    ll ops = 0ll;
-    forr(first, 1, n) if (deg[first] == 3 && !seen[first]) {
-        seen[first] = true;
-        for(auto const & second : sm[first]) if (!seen[second]) {
-            seen[second] = true;
-            for(auto const & third : sm[second]) if (deg[third] == 3 && !seen[third]) {
-                seen[third] = true;
-                ops += 1;
-                assert(ops < 5e6);
-                if (
-                        edge_exists[third].contains(first)
-                        ) {
-                    tri[{first, second}] += 1;
-                    tri[{second, first}] += 1;
-                    tri[{second, third}] += 1;
-                    tri[{third, second}] += 1;
-                    tri[{third, first}] += 1;
-                    tri[{first, third}] += 1;
+    ll ans = 0;
+    vbo has_common_edge_with_start(n+1);
+    fill(all(deg), 0ll);
+    // в degree теперь контрибьютят только треугольнички, +1 к значению с каждого инцедентного треугольничка
+    forr(start,1,n){
+        for (const auto &x : sm[start]) {
+            has_common_edge_with_start[x] = true;
+        }
+        for (const auto &x : sm[start]) {
+            for (const auto &y : sm_naperad[x]) {
+                if(has_common_edge_with_start[y]) // x indeed has common edge with start
+                {
+                    deg[x] += 1;
+                    deg[y] += 1;
                 }
             }
         }
-    }
-    if (n > 10) assert(false);
-    ll tot = 0;
-    for (const auto &[u, v] : rebra) {
-        if (tri.contains({u, v})) {
-            tot += (tri[{u, v}])*(tri[{u, v}]-1)/2;
+        for (const auto &x : sm[start]) {
+            ans += deg[x]*(deg[x]-1)/2;
+            // СОСЕД ВХОДИТ В ДВА ТРЕУГОЛЬНИКА ОДНОВРЕМЕННО
+            // КОЛВО СПОСОБОВ ВЫБРАТЬ ПАРУ
+
+            // НЕВОЗМОЖНО ЧТО У ВЕРШИНЫ start ЕСТЬ ЕЩЕ 1 или больше СОСЕД КОТОРЫЙ "РАЗДЕЛЯЕТ" эту же перу треугольников
+            // ЭТУ ЖЕ ПАРУ ТРЕУГОЛЬНИКОВ ПОСЧИТАЕМ С ДРУГОЙ СТОРОНЫ (ребро которое разделяет будет идти x->start (start будет = x))
+            has_common_edge_with_start[x] = false;
+            deg[x] = 0ll;
+            // снимаем контрибушн со всех соседей
         }
     }
-    cout << tot << endl;
+    cout << ans/2 << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
