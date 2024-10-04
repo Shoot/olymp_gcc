@@ -209,49 +209,46 @@ void solve() {
         deg[v] += 1;
     }
     for (const auto &[u, v] : rebra) {
-        if (deg[v] < deg[u]) {
-            sm[v].push_back(u);
-            continue;
-        }
-        if (deg[u] < deg[v]) {
-            sm[u].push_back(v);
-            continue;
-        }
-        if (v < u) {
-            sm[v].push_back(u);
-            continue;
-        }
-        if (u < v) {
-            sm[u].push_back(v);
-            continue;
-        }
-        assert(false);
+        sm[v].push_back(u);
+        sm[u].push_back(v);
+//        if (deg[v] < deg[u]) {
+//            sm[v].push_back(u);
+//            continue;
+//        }
+//        if (deg[u] < deg[v]) {
+//            sm[u].push_back(v);
+//            continue;
+//        }
+//        if (v < u) {
+//            sm[v].push_back(u);
+//            continue;
+//        }
+//        if (u < v) {
+//            sm[u].push_back(v);
+//            continue;
+//        }
+//        assert(false);
     }
-    map<pll, ll> tri;
-    ll ops = 0ll;
-    forr(first, 1, n) {
+    vll deg_eq_three;
+    forr(i, 1, n) {
+        if (deg[i] == 3) {
+            deg_eq_three.push_back(i);
+        }
+    }
+    ll tot = 0;
+    for(const auto &first : deg_eq_three) {
+        tot += deg[first]*(deg[first]-1)/2;
         for(auto const & second : sm[first]) {
+            if (deg[first] < deg[second] || (deg[first] == deg[second]) && first < second)
             for(auto const & third : sm[second]) {
-                ops += 1;
-                assert(ops < 5e6);
+                if (deg[second] < deg[third] || (deg[second] == deg[third]) && second < third)
                 if (
                         edge_exists[third].contains(first)
                 ) {
-                    tri[{first, second}] += 1;
-                    tri[{second, first}] += 1;
-                    tri[{second, third}] += 1;
-                    tri[{third, second}] += 1;
-                    tri[{third, first}] += 1;
-                    tri[{first, third}] += 1;
+                    deg[second] += 1;
+                    deg[third] += 1;
                 }
             }
-        }
-    }
-    if (n > 10) assert(false);
-    ll tot = 0;
-    for (const auto &[u, v] : rebra) {
-        if (tri.contains({u, v})) {
-            tot += (tri[{u, v}])*(tri[{u, v}]-1)/2;
         }
     }
     cout << tot << endl;
