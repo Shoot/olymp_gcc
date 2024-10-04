@@ -1,4 +1,3 @@
-// https://codeforces.com/contest/2014/submission/284237706
 #include <bits/stdc++.h>
 using namespace std;
 using ll = long long;
@@ -191,6 +190,7 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
+bitset<1000000> seen;
 void solve() {
     ll n, m;
     cin >> n >> m;
@@ -209,8 +209,8 @@ void solve() {
         deg[v] += 1;
     }
     for (const auto &[u, v] : rebra) {
-        sm[v].push_back(u);
         sm[u].push_back(v);
+        sm[v].push_back(u);
 //        if (deg[v] < deg[u]) {
 //            sm[v].push_back(u);
 //            continue;
@@ -229,26 +229,34 @@ void solve() {
 //        }
 //        assert(false);
     }
-    vll deg_eq_three;
-    forr(i, 1, n) {
-        if (deg[i] == 3) {
-            deg_eq_three.push_back(i);
-        }
-    }
-    ll tot = 0;
-    for(const auto &first : deg_eq_three) {
-        tot += deg[first]*(deg[first]-1)/2;
-        for(auto const & second : sm[first]) {
-            if (deg[first] < deg[second] || (deg[first] == deg[second]) && first < second)
-            for(auto const & third : sm[second]) {
-                if (deg[second] < deg[third] || (deg[second] == deg[third]) && second < third)
+    map<pll, ll> tri;
+    ll ops = 0ll;
+    forr(first, 1, n) if (deg[first] == 3 && !seen[first]) {
+        seen[first] = true;
+        for(auto const & second : sm[first]) if (!seen[second]) {
+            seen[second] = true;
+            for(auto const & third : sm[second]) if (deg[third] == 3 && !seen[third]) {
+                seen[third] = true;
+                ops += 1;
+                assert(ops < 5e6);
                 if (
                         edge_exists[third].contains(first)
-                ) {
-                    deg[second] += 1;
-                    deg[third] += 1;
+                        ) {
+                    tri[{first, second}] += 1;
+                    tri[{second, first}] += 1;
+                    tri[{second, third}] += 1;
+                    tri[{third, second}] += 1;
+                    tri[{third, first}] += 1;
+                    tri[{first, third}] += 1;
                 }
             }
+        }
+    }
+    if (n > 10) assert(false);
+    ll tot = 0;
+    for (const auto &[u, v] : rebra) {
+        if (tri.contains({u, v})) {
+            tot += (tri[{u, v}])*(tri[{u, v}]-1)/2;
         }
     }
     cout << tot << endl;
