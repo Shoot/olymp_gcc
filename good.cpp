@@ -73,7 +73,8 @@ void print(Head&& head, Tail&&... tail) {
 #endif
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 uniform_int_distribution<ll> distrib(0ll, LLONG_MAX);
-constexpr ll MOD = 1e9+7;
+constexpr ll MOD = 998244353;
+//constexpr ll MOD = 1e9+7;
 void in(vector<ll> & a) {
     for (auto & x : a) cin >> x;
 }
@@ -190,38 +191,51 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
-bitset<1000000> seen;
+const ll N = 1e5+1;
+vll fact(N);
+vll revfact(N);
+ll C(ll n, ll k) {
+    return mul(mul(fact[n],revfact[k]),revfact[n-k]);
+}
 void solve() {
+    fact[0] = 1;
+    revfact[0] = 1;
+    fo(i, 1, N) {
+        fact[i] = mul(fact[i-1], i);
+    }
+    revfact[N-1] = powm(fact[N-1], MOD-2);
+    roff(i, N-2, 0) {
+        revfact[i] = mul(revfact[i+1], i+1);
+    }
     ll n;
     cin >> n;
-    vvll sm(n+1);
-    fo(i,0,n-1){
-        ll u, v; cin >> u >> v;
-        sm[u].push_back(v);
-        sm[v].push_back(u);
+    ll left=0;
+    ll right=0;
+    ll up=0;
+    ll down=0;
+    fo(i,0,n){
+        ll x; cin >> x;
+        right += x > 0;
+        left += x < 0;
     }
-    ll ans = 1e9;
-    function<ll(ll)> dfs = [&] (ll v) {
-        seen[v] = true;
-        vll children;
-        for (const auto &x : sm[v]) {
-            if (!seen[x]) {
-                children.push_back(dfs(x)+1);
-            }
-        }
-        sort(all(children));
-        if (children.empty()) return 0ll;
-        if (children.size() > 1) ans = min(ans, children[0]+children[1]);
-        return children[0];
-    };
-    forr(start, 1, n) {
-        if (sm[start].size() > 1) {
-            dfs(start);
-            cout << ans << endl;
-            return;
-        }
+    fo(i,0,n){
+        ll y; cin >> y;
+        up += y > 0;
+        down += y < 0;
     }
-    cout << n-1 << endl;
+//    ll define_l_r = C(n, left);
+//    cout << define_l_r << endl;
+    ll total = 0;
+    forr(rightup, 0, min(right, up)) {
+        ll rightdown = right-rightup;
+        ll leftup = up-rightup;
+        ll leftdown = down-rightdown;
+        if (leftdown < 0) continue;
+        ll ans = mul(mul(C(right, rightup), C(left, leftdown)),
+                     mul(C(up, rightup), C(down, leftdown)));
+        total = sum(ans, total);
+    }
+    cout << total << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
