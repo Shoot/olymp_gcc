@@ -192,68 +192,36 @@ void copy_this () {
 */
 bitset<1000000> seen;
 void solve() {
-    seen.reset();
-    ll n, c;
-    cin >> n >> c;
-    vll a(n+1);
-    forr(i,1,n){
-        cin>>a[i];
-    }
+    ll n;
+    cin >> n;
     vvll sm(n+1);
-    fo(i, 0, n-1) {
-        ll u, v;
-        cin >> u >> v;
-        sm[v].push_back(u);
+    fo(i,0,n-1){
+        ll u, v; cin >> u >> v;
         sm[u].push_back(v);
+        sm[v].push_back(u);
     }
-    vvll vs;
-    vs.emplace_back();
-    ll maxh = -1;
-    function<void(ll, ll)> dfs = [&] (ll v, ll h) {
-        maxh = max(maxh, h);
+    ll ans = 1e9;
+    function<ll(ll)> dfs = [&] (ll v) {
         seen[v] = true;
-        if (h >= vs.size()) vs.emplace_back();
-        vs[h].push_back(v);
+        vll children;
         for (const auto &x : sm[v]) {
             if (!seen[x]) {
-                dfs(x, h+1);
+                children.push_back(dfs(x)+1);
             }
         }
+        sort(all(children));
+        if (children.empty()) return 0ll;
+        if (children.size() > 1) ans = min(ans, children[0]+children[1]);
+        return children[0];
     };
-    dfs(1, 1);
-    seen.reset();
-    vector<vector<ll>> dp(n+1, vector<ll> (2));
-    // dp[v][flag] - профит с поддерева вершины v, если она спасена(flag=1) или убита(flag=0)
-    function<void(ll)> compute_dp = [&] (ll v) {
-        seen[v] = true;
-        ll tot1 = a[v];
-        for (const auto &x : sm[v]) {
-            if (seen[x]) {
-                tot1 += max(dp[x][0], dp[x][1]-2*c);
-            }
-        }
-        ll tot0 = 0;
-        for (const auto &x : sm[v]) {
-            if (seen[x]) {
-                tot0 += max(dp[x][0], dp[x][1]);
-            }
-        }
-        dp[v][1] = tot1;
-        dp[v][0] = tot0;
-//        clog << "dp[" << v << "][1] = " << tot1 << endl;
-//        clog << "dp[" << v << "][0] = " << tot0 << endl;
-    };
-    roff(h, maxh, 1) {
-        auto &curr_layer = vs[h];
-//        for (const auto &x : curr_layer) {
-//            clog << x << ';';
-//        }
-//        clog << endl;
-        for (const auto &x : curr_layer) {
-            compute_dp(x);
+    forr(start, 1, n) {
+        if (sm[start].size() > 1) {
+            dfs(start);
+            cout << ans << endl;
+            return;
         }
     }
-    cout << max(dp[1][0], dp[1][1]) << endl;
+    cout << n-1 << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
@@ -274,7 +242,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-    cin >> tt;
+//    cin >> tt;
     while (tt--) {
         solve();
     }
