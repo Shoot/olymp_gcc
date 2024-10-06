@@ -72,7 +72,7 @@ void print(Head&& head, Tail&&... tail) {
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #endif
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-uniform_int_distribution<ll> distrib(0ll, LLONG_MAX);
+uniform_int_distribution<ll> distrib(0ll, 1e9);
 constexpr ll MOD = 998244353;
 //constexpr ll MOD = 1e9+7;
 void in(vector<ll> & a) {
@@ -192,71 +192,28 @@ void copy_this () {
 }
 */
 void solve() {
-    ll n, m;
-    cin >> n >> m;
-    vvll sm_naperad(n+1); // sm_naperad[i].size() <= sqrt(2*m)
-    vvll sm(n+1); // ∑ {i<=i<=n} sm[i].size()    ==    2*m
-    vll deg(n+1);
-    vpll rebra (m);
-    fo(i, 0, m) {
-        ll u, v;
-        cin >> u >> v;
-        deg[u] += 1;
-        deg[v] += 1;
-        rebra[i].first = u;
-        rebra[i].second = v;
-    }
-    for (const auto &[u, v] : rebra) {
-        sm[u].push_back(v);
-        sm[v].push_back(u);
-        if (deg[v] < deg[u]) {
-            sm_naperad[v].push_back(u);
-            continue;
+    ll n, m, missing_car_penalty, missing_route_penalty;
+    cin >> n >> m >> missing_car_penalty >> missing_route_penalty;
+    vll cars(n); IN(cars); sort(all(cars));
+    vll routes(m); IN(routes); sort(all(routes));
+    vector<vll> dp(n+1, vector<ll>(m+1, 1e9));
+    for (ll j = 0; j <= m; j++)
+        dp[0][j] = missing_route_penalty*j;
+    for (ll i = 0; i <= n; i++)
+        dp[i][0] = missing_car_penalty*i;
+    for (ll i=1; i<=n; i++) {
+        // вводим новую маршрутку под номером i
+        for (ll j = 1; j <= m; j++) {
+            dp[i][j] = min({dp[i][j],
+                           dp[i-1][j-1]+abs(cars[i-1]-routes[j-1]),
+                           dp[i-1][j]+missing_car_penalty,
+                           dp[i][j-1]+missing_route_penalty});
+            // clog << i << " " << j << ": " << dp[i][j] << endl;
         }
-        if (deg[u] < deg[v]) {
-            sm_naperad[u].push_back(v);
-            continue;
-        }
-        if (v < u) {
-            sm_naperad[v].push_back(u);
-            continue;
-        }
-        if (u < v) {
-            sm_naperad[u].push_back(v);
-            continue;
-        }
-        assert(false);
-    }
-    ll ans = 0;
-    vbo has_common_edge_with_start(n+1);
-    fill(all(deg), 0ll);
-    // в degree теперь контрибьютят только треугольнички, +1 к значению с каждого инцедентного треугольничка
-    forr(start,1,n){
-        for (const auto &x : sm[start]) {
-            has_common_edge_with_start[x] = true;
-        }
-        for (const auto &x : sm[start]) {
-            for (const auto &y : sm_naperad[x]) {
-                if(has_common_edge_with_start[y]) // x indeed has common edge with start
-                {
-                    deg[x] += 1;
-                    deg[y] += 1;
-                }
-            }
-        }
-        for (const auto &x : sm[start]) {
-            ans += deg[x]*(deg[x]-1)/2;
-            // СОСЕД ВХОДИТ В ДВА ТРЕУГОЛЬНИКА ОДНОВРЕМЕННО
-            // КОЛВО СПОСОБОВ ВЫБРАТЬ ПАРУ
 
-            // НЕВОЗМОЖНО ЧТО У ВЕРШИНЫ start ЕСТЬ ЕЩЕ 1 или больше СОСЕД КОТОРЫЙ "РАЗДЕЛЯЕТ" эту же перу треугольников
-            // ЭТУ ЖЕ ПАРУ ТРЕУГОЛЬНИКОВ ПОСЧИТАЕМ С ДРУГОЙ СТОРОНЫ (ребро которое разделяет будет идти x->start (start будет = x))
-            has_common_edge_with_start[x] = false;
-            deg[x] = 0ll;
-            // снимаем контрибушн со всех соседей
-        }
+        // dp[i][j] — ввели маршрутки до i, ввели маршруты до j-ого
     }
-    cout << ans/2 << endl;
+    cout << dp[n][m] << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
