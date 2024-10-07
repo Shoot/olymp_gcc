@@ -193,22 +193,17 @@ void copy_this () {
 }
 */
 void solve() {
-    ll l, r;
-    cin >> l >> r;
-    ll og_ans = 0;
-    roff(i,60,0) {
-        if (((1ll << i) & r) - ((1ll << i) & l)) {
-            og_ans = (1ll << (i+1)) - 1;
-            break;
-        }
-    }
-    vvvvv(ll, dp, 61, 2, 2, 2, 2, (-1));
+    ll l = 0;
+    ll r;
+    cin >> r;
+    vvvvv(pll, dp, 61, 2, 2, 2, 2, make_pair(0ll, 0ll));
+    unordered_map<ll, ll> cnt;
     // dp[бит][x уже больше l][x уже меньше r][y уже больше l][y уже меньше r]
-    function<ll(ll, ll, ll, ll, ll)> count = [&](ll i, ll xl, ll xr, ll yl, ll yr) {
-        clog << i << " " << xl << " " << xr << " " << yl << " " << yr << endl;
-        if (i < 0) return 0ll;
-        if (dp[i][xl][xr][yl][yr] != -1) return dp[i][xl][xr][yl][yr]; // alrhvebeencalced
+    function<pll(ll, ll, ll, ll, ll)> count = [&](ll i, ll xl, ll xr, ll yl, ll yr) {
+        if (i < 0) return make_pair(0ll, 1ll);
+        if (dp[i][xl][xr][yl][yr] != make_pair(0ll, 0ll)) return dp[i][xl][xr][yl][yr]; // alrhvebeencalced
         ll res = -1e9;
+        ll rescnt = -1e9;
         ll lefthas0 = !((1ll << i)&l);
         ll righthas0 = !((1ll << i)&r);
         ll lefthas1 = ((1ll << i)&l);
@@ -233,8 +228,7 @@ void solve() {
         }
         for (const auto &xi : ithbitofx) {
             for (const auto &yi : ithbitofy) {
-//                clog << (xi^yi) << endl;
-                ll addition = ((xi^yi) << (i));
+                ll addition = ((xi|yi) << (i));
                 ll nxl = xl;
                 if (xi && lefthas0) {
                     nxl = 1;
@@ -251,22 +245,19 @@ void solve() {
                 if (!yi && righthas1) {
                     nyr = 1;
                 }
-//                watch(addition);
-                res = max(res, addition+count(i-1, nxl, nxr, nyl, nyr));
+                pll go = count(i-1, nxl, nxr, nyl, nyr);
+                if (go.first+addition > res) {
+                    res = go.first+addition;
+                    rescnt = go.second;
+                } else if (go.first+addition == res) {
+                    rescnt = sum(rescnt, go.second);
+                }
             }
         }
-        return dp[i][xl][xr][yl][yr]=res;
+        return dp[i][xl][xr][yl][yr]=make_pair(res, rescnt);
     };
-//    ll maxi = -1e9;
-//    for (ll i=l; i<=r; i++) {
-//        for (ll j=l; j<=r; j++) {
-//            maxi = max(maxi, i^j);
-//        }
-//    }
-    ll my_ans = count(60,0,0,0,0);
-    cout << my_ans << endl;
-//    cout << og_ans << endl;
-//    assert(my_ans == og_ans);
+    pll my_ans = count(60,0,0,0,0);
+    cout << 2*my_ans.first << " " << my_ans.second << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
