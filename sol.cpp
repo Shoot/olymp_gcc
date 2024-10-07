@@ -11,6 +11,7 @@ using qld = queue<ld>;
 using vld = vector<ld>;
 using qpll = queue<pll>;
 using vpll = vector<pll>;
+#define watch(x) clog << #x << " equals " << x << endl;
 #define all(value) value.begin(), value.end()
 #define fo(XX, X, fi) for(ll XX = X; XX < fi; XX++)
 #define forr(XX, X, fi) for(ll XX = X; XX <= fi; XX++)
@@ -18,10 +19,10 @@ using vpll = vector<pll>;
 ostream& endl(ostream& os) {
     return os << '\n';
 }
-#define vv(type,name,n,...) \
-    vector<vector<type>> name(n,vector<type>(__VA_ARGS__))
-#define vvv(type,name,n,m,...) \
-    vector<vector<vector<type>>> name(n,vector<vector<type>>(m,vector<type>(__VA_ARGS__)))
+#define vv(type,name,n,...) vector<vector<type>> name(n,vector<type>(__VA_ARGS__))
+#define vvv(type,name,n,m,...) vector<vector<vector<type>>> name(n,vector<vector<type>>(m,vector<type>(__VA_ARGS__)))
+#define vvvv(type,name,n,m,k,...) vector<vector<vector<vector<type>>>> name(n,vector<vector<vector<type>>>(m,vector<vector<type>>(k, vector<type>(__VA_ARGS__))))
+#define vvvvv(type,name,n,m,k,l,...) vector<vector<vector<vector<vector<type>>>>> name(n,vector<vector<vector<vector<type>>>>(m,vector<vector<vector<type>>>(k, vector<vector<type>>(l, vector<type>(__VA_ARGS__)))))
 #define LL(...) \
   ll __VA_ARGS__; \
   IN(__VA_ARGS__)
@@ -72,8 +73,8 @@ void print(Head&& head, Tail&&... tail) {
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #endif
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-uniform_int_distribution<ll> distrib(0ll, LLONG_MAX);
-constexpr ll MOD = 998244353;
+uniform_int_distribution<ll> distrib(0ll, 1e9);
+constexpr ll MOD = 1e9+7;
 //constexpr ll MOD = 1e9+7;
 void in(vector<ll> & a) {
     for (auto & x : a) cin >> x;
@@ -191,74 +192,81 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
-bitset<1000000> seen;
 void solve() {
-    ll n, m;
-    cin >> n >> m;
-    vvll sm_naperad(n+1); // sm_naperad[i].size() <= sqrt(2*m)
-    vvll sm(n+1);
-    vll deg(n+1);
-    vpll rebra (m);
-    vector<set<ll>> edge_exists (n+1);
-    fo(i, 0, m) {
-        ll u, v;
-        cin >> u >> v;
-        edge_exists[u].insert(v);
-        edge_exists[v].insert(u);
-        rebra[i].first = u;
-        rebra[i].second = v;
-        deg[u] += 1;
-        deg[v] += 1;
+    ll l, r;
+    cin >> l >> r;
+    ll og_ans = 0;
+    roff(i,60,0) {
+        if (((1ll << i) & r) - ((1ll << i) & l)) {
+            og_ans = (1ll << (i+1)) - 1;
+            break;
+        }
     }
-    for (const auto &[u, v] : rebra) {
-        sm[u].push_back(v);
-        sm[v].push_back(u);
-        if (deg[v] < deg[u]) {
-            sm_naperad[v].push_back(u);
-            continue;
+    vvvvv(ll, dp, 61, 2, 2, 2, 2, (-1));
+    // dp[бит][x уже больше l][x уже меньше r][y уже больше l][y уже меньше r]
+    function<ll(ll, ll, ll, ll, ll)> count = [&](ll i, ll xl, ll xr, ll yl, ll yr) {
+        clog << i << " " << xl << " " << xr << " " << yl << " " << yr << endl;
+        if (i < 0) return 0ll;
+        if (dp[i][xl][xr][yl][yr] != -1) return dp[i][xl][xr][yl][yr]; // alrhvebeencalced
+        ll res = -1e9;
+        ll lefthas0 = !((1ll << i)&l);
+        ll righthas0 = !((1ll << i)&r);
+        ll lefthas1 = ((1ll << i)&l);
+        ll righthas1 = ((1ll << i)&r);
+        vll ithbitofx;
+        vll ithbitofy;
+        if (lefthas0 || xl) {
+            // у икса может быть выключен iый бит
+            ithbitofx.push_back(0);
         }
-        if (deg[u] < deg[v]) {
-            sm_naperad[u].push_back(v);
-            continue;
+        if (righthas1 || xr) {
+            // у икса может быть включен iый бит
+            ithbitofx.push_back(1);
         }
-        if (v < u) {
-            sm_naperad[v].push_back(u);
-            continue;
+        if (lefthas0 || yl) {
+            // у игрека может быть выключен iый бит
+            ithbitofy.push_back(0);
         }
-        if (u < v) {
-            sm_naperad[u].push_back(v);
-            continue;
+        if (righthas1 || yr) {
+            // у игрека может быть включен iый бит
+            ithbitofy.push_back(1);
         }
-        assert(false);
-    }
-//    vpll vs(n+1);
-//    forr(i,1,n){
-//        vs[i].first = deg[i];
-//        vs[i].second = i;
-//    }
-//    sort(all(vs));
-    ll ans = 0;
-    vbo in_use(n+1);
-    fill(all(deg), 0ll);
-    forr(i,1,n){
-        for (const auto &x : sm[i]) {
-            in_use[x] = true;
-        }
-        for (const auto &x : sm[i]) {
-            for (const auto &y : sm_naperad[x]) {
-                if(in_use[y]) {
-                    deg[x] += 1;
-                    deg[y] += 1;
+        for (const auto &xi : ithbitofx) {
+            for (const auto &yi : ithbitofy) {
+//                clog << (xi^yi) << endl;
+                ll addition = ((xi^yi) << (i));
+                ll nxl = xl;
+                if (xi && lefthas0) {
+                    nxl = 1;
                 }
+                ll nxr = xr;
+                if (!xi && righthas1) {
+                    nxr = 1;
+                }
+                ll nyl = yl;
+                if (yi && lefthas0) {
+                    nyl = 1;
+                }
+                ll nyr = yr;
+                if (!yi && righthas1) {
+                    nyr = 1;
+                }
+//                watch(addition);
+                res = max(res, addition+count(i-1, nxl, nxr, nyl, nyr));
             }
         }
-        for (const auto &x : sm[i]) {
-            ans += deg[x]*(deg[x]-1)/2;
-            in_use[x] = false;
-            deg[x] = 0ll;
-        }
-    }
-    cout << ans/2 << endl;
+        return dp[i][xl][xr][yl][yr]=res;
+    };
+//    ll maxi = -1e9;
+//    for (ll i=l; i<=r; i++) {
+//        for (ll j=l; j<=r; j++) {
+//            maxi = max(maxi, i^j);
+//        }
+//    }
+    ll my_ans = count(60,0,0,0,0);
+    cout << my_ans << endl;
+//    cout << og_ans << endl;
+//    assert(my_ans == og_ans);
 }
 
 int32_t main(int32_t argc, char* argv[]) {
