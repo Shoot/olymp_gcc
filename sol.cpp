@@ -132,11 +132,20 @@ ld poww(ld a, ll b) {
 ll mul(ll a, ll b) {
     return (a*b)%MOD;
 }
+ll mul(ll a, ll b, ll MOD) {
+    return (a*b)%MOD;
+}
 ll sum(ll a, ll b) {
     return (a+b)%MOD;
 }
+ll sum(ll a, ll b, ll MOD) {
+    return (a+b)%MOD;
+}
 ll sub(ll a, ll b) {
-    return (a-b+100*MOD)%MOD;
+    return (a-(b%MOD)+MOD)%MOD;
+}
+ll sub(ll a, ll b, ll MOD) {
+    return (a-(b%MOD)+MOD)%MOD;
 }
 ll fj0dsq983gf8(ll index, vector<ll> & tree)  {
     index += 1;
@@ -193,71 +202,29 @@ void copy_this () {
 }
 */
 void solve() {
-    ll l = 0;
-    ll r;
-    cin >> r;
-    vvvvv(pll, dp, 61, 2, 2, 2, 2, make_pair(0ll, 0ll));
-    unordered_map<ll, ll> cnt;
-    // dp[бит][x уже больше l][x уже меньше r][y уже больше l][y уже меньше r]
-    function<pll(ll, ll, ll, ll, ll)> count = [&](ll i, ll xl, ll xr, ll yl, ll yr) {
-        if (i < 0) return make_pair(0ll, 1ll);
-        if (dp[i][xl][xr][yl][yr] != make_pair(0ll, 0ll)) return dp[i][xl][xr][yl][yr]; // alrhvebeencalced
-        ll res = -1e9;
-        ll rescnt = -1e9;
-        ll lefthas0 = !((1ll << i)&l);
-        ll righthas0 = !((1ll << i)&r);
-        ll lefthas1 = ((1ll << i)&l);
-        ll righthas1 = ((1ll << i)&r);
-        vll ithbitofx;
-        vll ithbitofy;
-        if (lefthas0 || xl) {
-            // у икса может быть выключен iый бит
-            ithbitofx.push_back(0);
+    ll n,m; cin >> n >> m;
+    vll a(n); IN(a);
+    vll b(n); IN(b);
+    for (auto &x : a) {
+        x = sum(0, x, m);
+    }
+    multiset<ll> st;
+    for (auto &x : b) {
+        x = sub(0, x, m);
+        st.insert(x);
+    }
+    // как можно больше раз отнять модуль
+    sort(all(a));
+    ll tot = 0;
+    fo(i,0,n) {
+        tot += a[i]+b[i];
+        auto it = st.lower_bound(m-a[i]);
+        if (it != st.end()) {
+            st.erase(it);
+            tot -= m;
         }
-        if (righthas1 || xr) {
-            // у икса может быть включен iый бит
-            ithbitofx.push_back(1);
-        }
-        if (lefthas0 || yl) {
-            // у игрека может быть выключен iый бит
-            ithbitofy.push_back(0);
-        }
-        if (righthas1 || yr) {
-            // у игрека может быть включен iый бит
-            ithbitofy.push_back(1);
-        }
-        for (const auto &xi : ithbitofx) {
-            for (const auto &yi : ithbitofy) {
-                ll addition = ((xi|yi) << (i));
-                ll nxl = xl;
-                if (xi && lefthas0) {
-                    nxl = 1;
-                }
-                ll nxr = xr;
-                if (!xi && righthas1) {
-                    nxr = 1;
-                }
-                ll nyl = yl;
-                if (yi && lefthas0) {
-                    nyl = 1;
-                }
-                ll nyr = yr;
-                if (!yi && righthas1) {
-                    nyr = 1;
-                }
-                pll go = count(i-1, nxl, nxr, nyl, nyr);
-                if (go.first+addition > res) {
-                    res = go.first+addition;
-                    rescnt = go.second;
-                } else if (go.first+addition == res) {
-                    rescnt = sum(rescnt, go.second);
-                }
-            }
-        }
-        return dp[i][xl][xr][yl][yr]=make_pair(res, rescnt);
-    };
-    pll my_ans = count(60,0,0,0,0);
-    cout << 2*my_ans.first << " " << my_ans.second << endl;
+    }
+    cout << tot << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
@@ -278,7 +245,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-//    cin >> tt;
+    cin >> tt;
     while (tt--) {
         solve();
     }
