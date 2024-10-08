@@ -73,7 +73,7 @@ void print(Head&& head, Tail&&... tail) {
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #endif
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-uniform_int_distribution<ll> distrib(0ll, 1e9);
+uniform_int_distribution<ll> distrib(1ll, 1000000ll);
 constexpr ll MOD = 1e9+7;
 //constexpr ll MOD = 1e9+7;
 void in(vector<ll> & a) {
@@ -202,31 +202,77 @@ void copy_this () {
 }
 */
 void solve() {
-    ll n,m; cin >> n >> m;
-    vll a(n); IN(a);
-    vll b(n); IN(b);
-    for (auto &x : a) {
-        x = sum(0, x, m);
-    }
-    multiset<ll> st;
-    for (auto &x : b) {
-        x = sub(0, x, m);
-        st.insert(x);
-    }
-    // как можно больше раз отнять модуль
-    sort(all(a));
-    ll tot = 0;
-    fo(i,0,n) {
-        tot += a[i]+b[i];
-        auto it = st.lower_bound(m-a[i]);
-        if (it != st.end()) {
-            st.erase(it);
-            tot -= m;
+    ll N = 1e6+1;
+    vll div(N);
+    forr(i,2,N) {
+        if (div[i] == 0) {
+            div[i] = i;
+            for(ll j=i*i; j<N; j+=i) {
+                div[j] = i;
+            }
         }
     }
-    cout << tot << endl;
+    function<void(ll, vector<ll> &)> get_prime_factors = [&] (ll x, vector<ll> & ans) {
+        unordered_set<ll> divs;
+        while (x > 1) {
+            divs.insert(div[x]);
+            x/=div[x];
+        }
+        for (const auto &d : divs) {
+            ans.push_back(d);
+        }
+    };
+    ll n=2e5;
+    cin >> n;
+    vll a(n);
+    for (auto &x : a) {
+        cin >> x;
+//        x = distrib(rng);
+    }
+    vll cnt(N);
+    fo(i,0,n){
+        vll ans;
+        get_prime_factors(a[i], ans);
+        fo(mask, 0, 1<<ans.size()) {
+            ll divisor = 1;
+            fo(bit, 0, ans.size()) {
+                if ((1ll << bit)&mask) {
+                    divisor *= ans[bit];
+                }
+            }
+            cnt[divisor] += 1;
+        }
+    }
+    fo(i,0,n) {
+        vll ans;
+        get_prime_factors(a[i], ans);
+        ll inc_exl = 0;
+        fo(mask, 0, (1ll<<ans.size())) {
+            ll divisor = 1;
+            fo(bit, 0, ans.size()) {
+                if ((1 << bit)&mask) {
+                    divisor *= ans[bit];
+                }
+            }
+            if (__builtin_popcountll(mask)%2==0) {
+                inc_exl += cnt[divisor];
+            } else {
+                inc_exl -= cnt[divisor];
+            }
+        }
+        if (inc_exl != 0) {
+            fo(j,0,n) {
+                if (i==j) continue;
+                if (__gcd(a[i], a[j]) == 1) {
+                    cout << "NO" << endl;
+                    cout << a[i] << " " << a[j] << endl;
+                    return;
+                }
+            }
+        }
+    }
+    cout << "YES" << endl;
 }
-
 int32_t main(int32_t argc, char* argv[]) {
     cout << setprecision(17);
     bool use_fast_io = true;
@@ -245,7 +291,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-    cin >> tt;
+//    cin >> tt;
     while (tt--) {
         solve();
     }
