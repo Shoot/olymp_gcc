@@ -201,77 +201,33 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
-void solve() {
-    ll N = 1e6+1;
-    vll div(N);
-    forr(i,2,N) {
-        if (div[i] == 0) {
-            div[i] = i;
-            for(ll j=i*i; j<N; j+=i) {
-                div[j] = i;
-            }
-        }
-    }
-    function<void(ll, vector<ll> &)> get_prime_factors = [&] (ll x, vector<ll> & ans) {
-        unordered_set<ll> divs;
-        while (x > 1) {
-            divs.insert(div[x]);
-            x/=div[x];
-        }
-        for (const auto &d : divs) {
-            ans.push_back(d);
-        }
-    };
-    ll n=2e5;
-    cin >> n;
-    vll a(n);
-    for (auto &x : a) {
-        cin >> x;
-//        x = distrib(rng);
-    }
-    vll cnt(N);
-    fo(i,0,n){
-        vll ans;
-        get_prime_factors(a[i], ans);
-        fo(mask, 0, 1<<ans.size()) {
-            ll divisor = 1;
-            fo(bit, 0, ans.size()) {
-                if ((1ll << bit)&mask) {
-                    divisor *= ans[bit];
-                }
-            }
-            cnt[divisor] += 1;
-        }
-    }
-    fo(i,0,n) {
-        vll ans;
-        get_prime_factors(a[i], ans);
-        ll inc_exl = 0;
-        fo(mask, 0, (1ll<<ans.size())) {
-            ll divisor = 1;
-            fo(bit, 0, ans.size()) {
-                if ((1 << bit)&mask) {
-                    divisor *= ans[bit];
-                }
-            }
-            if (__builtin_popcountll(mask)%2==0) {
-                inc_exl += cnt[divisor];
+vector<int> slow_prefix_function(string s) {
+    cout << s << endl;
+    int n = (int) s.size();
+    vector<int> p(n, 0);
+    for (int i = 1; i < n; i++){
+//        clog << i << "." << endl;
+        for (int len = 1; len <= i; len++) {
+//            clog << 0 << " " << 0+len-1 << " vs " << i-len+1 << " " << i << endl;
+//            clog << s.substr(0, len) << endl;
+//            clog << s.substr(i - len + 1, len) << endl;
+            if (s.substr(0, len) == s.substr(i - len + 1, len)) {
+                p[i] = len;
+//                clog << "true" << endl;
             } else {
-                inc_exl -= cnt[divisor];
+//                clog << "false" << endl;
             }
         }
-        if (inc_exl != 0) {
-            fo(j,0,n) {
-                if (i==j) continue;
-                if (__gcd(a[i], a[j]) == 1) {
-                    cout << "NO" << endl;
-                    cout << a[i] << " " << a[j] << endl;
-                    return;
-                }
-            }
-        }
+            // если префикс длины len равен суффиксу длины len
+
     }
-    cout << "YES" << endl;
+    return p;
+}
+void solve() {
+    string s("aataataa");
+    for (const auto &x : slow_prefix_function(s)) {
+        cout << x << endl;
+    }
 }
 int32_t main(int32_t argc, char* argv[]) {
     cout << setprecision(17);
