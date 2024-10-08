@@ -1,7 +1,7 @@
 #include <bits/stdc++.h>
 using namespace std;
 using vbo = vector<bool>;
-using ll = long long;
+using ll = int;
 using pll = pair<ll, ll>;
 using ld = long double;
 using qll = queue<ll>;
@@ -201,33 +201,64 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
-vector<int> slow_prefix_function(string s) {
-    cout << s << endl;
-    int n = (int) s.size();
-    vector<int> p(n, 0);
-    for (int i = 1; i < n; i++){
-//        clog << i << "." << endl;
-        for (int len = 1; len <= i; len++) {
-//            clog << 0 << " " << 0+len-1 << " vs " << i-len+1 << " " << i << endl;
-//            clog << s.substr(0, len) << endl;
-//            clog << s.substr(i - len + 1, len) << endl;
-            if (s.substr(0, len) == s.substr(i - len + 1, len)) {
-                p[i] = len;
-//                clog << "true" << endl;
-            } else {
-//                clog << "false" << endl;
+int dp[2006][2006][2][2];
+void solve() {
+    // dp[номер символа][ost][однозначно больше l][однозначно меньше r]
+    ll div, digit;
+    cin >> div >> digit;
+    string l, r;
+    cin >> l >> r;
+    ll invert = 0;
+    if (l.size()%2!=0) {
+        invert = 1;
+        watch(invert);
+    }
+    reverse(all(l));
+    reverse(all(r));
+//    while (l.size() < 2010) l += '0';
+//    while (r.size() < 2010) r += '0';
+    memset(dp, -1, sizeof(dp));
+    function<ll(ll, ll, ll, ll)> do_dp = [&] (ll i, ll ost, ll xl, ll xr) {
+        if (i < 0) {
+            return ll(ost==0);
+        }
+        if (dp[i][ost][xl][xr] != -1) {
+            return dp[i][ost][xl][xr];
+        }
+        vll possible_digits;
+        if (xl && xr) {
+            fo(d, 0, 10) {
+                possible_digits.push_back(d);
+            }
+        } else if (!xl&&!xr) {
+            forr(d, l[i]-'0', r[i]-'0') {
+                possible_digits.push_back(d);
+            }
+        } else if (xl&&!xr) {
+            forr(d, 0, r[i]-'0') {
+                possible_digits.push_back(d);
+            }
+        } else if (!xl&&xr) {
+            forr(d, l[i]-'0', 9) {
+                possible_digits.push_back(d);
             }
         }
-            // если префикс длины len равен суффиксу длины len
 
-    }
-    return p;
-}
-void solve() {
-    string s("aataataa");
-    for (const auto &x : slow_prefix_function(s)) {
-        cout << x << endl;
-    }
+        ll res = 0;
+        for (const auto &d : possible_digits) {
+            if (i%2==invert && d != digit) continue;
+            if (i%2!=invert && d == digit) continue;
+            ll new_ost = (10*ost+d)%div;
+            ll new_xl = xl;
+            if (d > l[i]-'0') new_xl = 1;
+            ll new_xr = xr;
+            if (d < r[i]-'0') new_xr = 1;
+            res = sum(res, do_dp(i-1, new_ost, new_xl, new_xr));
+        }
+//        cout << i << " " << ost << " " << xl << " " << xr << ": " << res << endl;
+        return dp[i][ost][xl][xr] = res;
+    };
+    cout << do_dp(l.size()-1, 0, 0, 0) << endl;
 }
 int32_t main(int32_t argc, char* argv[]) {
     cout << setprecision(17);
