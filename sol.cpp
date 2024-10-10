@@ -1,7 +1,7 @@
 #include <bits/stdc++.h>
 using namespace std;
 using vbo = vector<bool>;
-using ll = int;
+using ll = long long;
 using pll = pair<ll, ll>;
 using ld = long double;
 using qll = queue<ll>;
@@ -73,7 +73,7 @@ void print(Head&& head, Tail&&... tail) {
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #endif
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-uniform_int_distribution<ll> distrib(1ll, 1000000ll);
+uniform_int_distribution<ll> distrib(0ll, 9ll);
 constexpr ll MOD = 1e9+7;
 //constexpr ll MOD = 1e9+7;
 void in(vector<ll> & a) {
@@ -201,64 +201,21 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
-int dp[2006][2006][2][2];
-void solve() {
-    // dp[номер символа][ost][однозначно больше l][однозначно меньше r]
-    ll div, digit;
-    cin >> div >> digit;
-    string l, r;
-    cin >> l >> r;
-    ll invert = 0;
-    if (l.size()%2!=0) {
-        invert = 1;
-        watch(invert);
-    }
-    reverse(all(l));
-    reverse(all(r));
-//    while (l.size() < 2010) l += '0';
-//    while (r.size() < 2010) r += '0';
-    memset(dp, -1, sizeof(dp));
-    function<ll(ll, ll, ll, ll)> do_dp = [&] (ll i, ll ost, ll xl, ll xr) {
-        if (i < 0) {
-            return ll(ost==0);
-        }
-        if (dp[i][ost][xl][xr] != -1) {
-            return dp[i][ost][xl][xr];
-        }
-        vll possible_digits;
-        if (xl && xr) {
-            fo(d, 0, 10) {
-                possible_digits.push_back(d);
-            }
-        } else if (!xl&&!xr) {
-            forr(d, l[i]-'0', r[i]-'0') {
-                possible_digits.push_back(d);
-            }
-        } else if (xl&&!xr) {
-            forr(d, 0, r[i]-'0') {
-                possible_digits.push_back(d);
-            }
-        } else if (!xl&&xr) {
-            forr(d, l[i]-'0', 9) {
-                possible_digits.push_back(d);
-            }
-        }
 
-        ll res = 0;
-        for (const auto &d : possible_digits) {
-            if (i%2==invert && d != digit) continue;
-            if (i%2!=invert && d == digit) continue;
-            ll new_ost = (10*ost+d)%div;
-            ll new_xl = xl;
-            if (d > l[i]-'0') new_xl = 1;
-            ll new_xr = xr;
-            if (d < r[i]-'0') new_xr = 1;
-            res = sum(res, do_dp(i-1, new_ost, new_xl, new_xr));
+void solve() {
+    ll n; cin >> n;
+    vll a(n+1); IN(a);
+    ll N = 1e5+1;
+    vll done(N, 0);
+    ll tot = 0ll;
+    for (const auto &x : a) {
+        ll curr = x-1-done[x];
+        for (ll j = 2 * x; j < N; j += x) {
+            done[j] += curr;
         }
-//        cout << i << " " << ost << " " << xl << " " << xr << ": " << res << endl;
-        return dp[i][ost][xl][xr] = res;
-    };
-    cout << do_dp(l.size()-1, 0, 0, 0) << endl;
+        tot += curr;
+    }
+    cout << tot << endl;
 }
 int32_t main(int32_t argc, char* argv[]) {
     cout << setprecision(17);
