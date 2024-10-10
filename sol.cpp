@@ -60,7 +60,7 @@ void print(Head&& head, Tail&&... tail) {
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #endif
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-uniform_int_distribution<ll> distrib(1ll, 10ll);
+uniform_int_distribution<ll> distrib(1ll, 12ll);
 constexpr ll MOD = 1e9+7;
 //constexpr ll MOD = 1e9+7;
 void in(vector<ll> & a) {
@@ -193,7 +193,7 @@ void solve() {
     ll n;
 //    cin >> n;
 //    n += 1;
-    n = 3;
+    n = 2;
     vll a(n);
     const ll N = 1.1e5;
     vll cnt(N);
@@ -202,45 +202,54 @@ void solve() {
 //        cin >> x;
         cnt[x] += 1;
     }
+    vll lp(N);
+    for (ll i = 2; i < N; i += 1) {
+        if (lp[i] == 0) {
+            lp[i] = i;
+            for (ll j = i*i; j < N; j += i) {
+                lp[j] = i;
+            }
+        }
+    }
     sort(a.begin(), a.end());
     a.erase(unique(a.begin(), a.end()), a.end());
     n = ll(a.size());
     ll tot = 0ll;
-    vll b;
-    for (const auto &x : a) {
+    bitset<N> seen_this_div;
+    for (auto const &x : a) {
         bool good = true;
         for (ll j = 2 * x; j < N; j += x) {
-            if (cnt[j] > 0) {
-                good = false;
+            if (cnt[j]) good = false;
+        }
+        if (!good) continue;
+        ll curr = x - 1;
+        ll x_ = x;
+        unordered_set<ll> divs;
+        while (x_ != 1) {
+            divs.insert(lp[x_]);
+            x_ /= lp[x_];
+        }
+        for (const auto &d : divs) {
+            if (seen_this_div[d]) {
+                curr -= d - 1;
+            } else {
+                seen_this_div[d] = true;
             }
         }
-        if (good) {
-//            clog << x << "!" << endl;
-            tot += x - 1;
-            b.push_back(x);
-        }
+        tot += curr;
     }
     function<ll()> tupoi_brut = [&]() {
         set<pll> st;
-        for (const auto &x : a) {
+        for (const auto &x: a) {
             for (ll i = 1; i < x; i += 1) {
                 ll num = i;
                 ll denum = x;
                 ll g = gcd(num, denum);
-                st.insert(make_pair(num/g, denum/g));
+                st.insert(make_pair(num / g, denum / g));
             }
         }
-//        for (auto &[i, j] : st) {
-//            cout << i << " " << j << endl;
-//        }
         return ll(st.size());
     };
-    n = ll(b.size());
-    for (ll i = 0; i < n; i += 1) {
-        for (ll j = i + 1; j < n; j += 1) {
-            tot -= gcd(b[i], b[j]) - 1;
-        }
-    }
     ll ogans = tupoi_brut();
     if (tot != ogans) {
         cout << tot << endl;
