@@ -191,15 +191,15 @@ void copy_this () {
 */
 void solve() {
     ll n;
-//    cin >> n;
-//    n += 1;
-    n = 2;
+    cin >> n;
+    n += 1;
+//    n = 2;
     vll a(n);
     const ll N = 1.1e5;
     vll cnt(N);
     for (auto &x : a) {
-        x = distrib(rng);
-//        cin >> x;
+//        x = distrib(rng);
+        cin >> x;
         cnt[x] += 1;
     }
     vll lp(N);
@@ -214,33 +214,36 @@ void solve() {
     sort(a.begin(), a.end());
     a.erase(unique(a.begin(), a.end()), a.end());
     n = ll(a.size());
-    ll tot = 0ll;
-    bitset<N> seen_this_div;
-    for (auto const &x : a) {
-        bool good = true;
-        for (ll j = 2 * x; j < N; j += x) {
-            if (cnt[j]) good = false;
-        }
-        if (!good) continue;
-        ll curr = x - 1;
-        ll x_ = x;
-        unordered_set<ll> divs;
-        while (x_ != 1) {
-            divs.insert(lp[x_]);
-            x_ /= lp[x_];
-        }
-        for (const auto &d : divs) {
-            if (seen_this_div[d]) {
-                curr -= d - 1;
-            } else {
-                seen_this_div[d] = true;
+    bitset<N> seen;
+    for (const auto &x : a) {
+        seen[x] = true;
+        for (ll j = 2; j * j <= x; j += 1) {
+            if (x % j == 0) {
+                seen[j] = true;
+                seen[x/j] = true;
             }
         }
-        tot += curr;
+    }
+    ll tot = 0ll;
+    for (ll i = 2; i < N; i += 1) {
+        if (seen[i]) {
+            ll i_ = i;
+            unordered_set<ll> st;
+            while (i_ != 1) {
+                st.insert(lp[i_]);
+                i_ /= lp[i_];
+            }
+            ll phi = i;
+            for (const auto &x : st) {
+                phi /= x;
+                phi *= x - 1;
+            }
+            tot += phi;
+        }
     }
     function<ll()> tupoi_brut = [&]() {
         set<pll> st;
-        for (const auto &x: a) {
+        for (const auto &x : a) {
             for (ll i = 1; i < x; i += 1) {
                 ll num = i;
                 ll denum = x;
@@ -250,15 +253,16 @@ void solve() {
         }
         return ll(st.size());
     };
-    ll ogans = tupoi_brut();
-    if (tot != ogans) {
-        cout << tot << endl;
-        cout << ogans << endl;
-        for (auto const &x : a) {
-            cout << x << "!" << endl;
-        }
-        assert(false);
-    }
+//    ll ogans = tupoi_brut();
+//    if (tot != ogans) {
+//        cout << tot << endl;
+//        cout << ogans << endl;
+//        for (auto const &x : a) {
+//            cout << x << "!" << endl;
+//        }
+//        assert(false);
+//    }
+    cout << tot << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
@@ -279,7 +283,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-    cin >> tt;
+//    cin >> tt;
     while (tt--) {
         solve();
     }
