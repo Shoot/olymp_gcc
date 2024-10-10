@@ -2,6 +2,7 @@
 using namespace std;
 using vbo = vector<bool>;
 using ll = long long;
+using ull = unsigned long long;
 using pll = pair<ll, ll>;
 using ld = long double;
 using qll = queue<ll>;
@@ -202,78 +203,42 @@ void copy_this () {
 }
 */
 void solve() {
-    string s;
-    cin >> s;
-    ll n = ll(s.size());
-    ll o = 26;
-    vll pref_hash(n+1);
-    forr(i,1,n) {
-        pref_hash[i] = sum(mul(pref_hash[i-1], o), s[i-1]);
+    string r; cin >> r;
+    reverse(all(r));
+    ll q;
+    cin >> q;
+    vector<bool> ban(10, false);
+    fo(i,0,q) {
+        ll x;
+        cin >> x;
+        ban[x] = true;
     }
-    ll N = 6e5;
-    vll powo(N);
-    vll revpow_o(N);
-    powo[0] = 1;
-    fo(i,1,N) {
-        powo[i] = mul(powo[i-1], o);
-    }
-    revpow_o[N-1] = powm(powo[N-1], MOD-2);
-    roff(i, N-2, 0) {
-        revpow_o[i] = mul(revpow_o[i+1], o);
-    }
-    assert(powo[0] == 1);
-    assert(powo[1] == o);
-    assert(revpow_o[0] == 1);
-    assert(revpow_o[1] == powm(o, MOD-2));
-    function<ll(ll, ll)> compute_hash = [&] (ll l, ll r) {
-        return mul(
-                sub(pref_hash[r],pref_hash[l-1]),
-                revpow_o[l-1]
-        );
+    vvv(ll, dp, 100, 2, 2, (-1));
+    function<ll(ll, ll, ll)> do_dp = [&](ll i, ll xr, ll any_positive_digits) {
+        if (i < 0) {
+            return any_positive_digits;
+        }
+        if (dp[i][xr][any_positive_digits] != -1) {
+            return dp[i][xr][any_positive_digits];
+        }
+        ll curr = 0ll;
+        if (!any_positive_digits && ban[0]) curr += do_dp(i-1, (xr)||(r[i]!='0'), 0);
+        if (xr) {
+            fo(j,0,10) {
+                if (!ban[j]) {
+                    curr += do_dp(i-1, 1, any_positive_digits||(j != 0));
+                }
+            }
+        } else {
+            forr(j,0,r[i]-'0') {
+                if (!ban[j]) {
+                    curr += do_dp(i-1, j < (r[i]-'0'), any_positive_digits||(j != 0));
+                }
+            }
+        }
+        return dp[i][xr][any_positive_digits]=curr;
     };
-    ll tot = 0;
-    forr(alen,1,n-2) {
-        ll curr_minus = 0;
-        if (alen*3 == n) {
-            // a == b == c
-            ll a = compute_hash(1, alen);
-            ll b = compute_hash(alen+1, alen+alen);
-            ll c = compute_hash(alen+alen+1, alen+alen+alen);
-            if (a == c && a == b) {
-//                cout << "a == b == c";
-                curr_minus -= 2;
-            }
-        }
-        if (alen+alen+1 <= n) {
-            if (compute_hash(1, alen) == compute_hash(alen+1, alen+alen)) {
-//                cout << "a == b" << endl;
-                curr_minus += 1;
-            } else {
-//                cout << "a != b" << endl;
-            }
-        }
-        if (alen+alen+1 <= n) {
-            if (compute_hash(1, alen) == compute_hash(n-alen+1, n)) {
-//                cout << "a == c" << endl;
-                curr_minus += 1;
-            } else {
-//                cout << "a != c" << endl;
-            }
-        }
-        if ((n-alen) % 2 == 0) {
-            ll b_eq_c_len = (n-alen)/2;
-            if (compute_hash(alen+1, alen+b_eq_c_len) == compute_hash(n-b_eq_c_len+1, n)) {
-                curr_minus += 1;
-//                cout << "b == c" << endl;
-            } else {
-//                cout << "b != c" << endl;
-            }
-        }
-        ll contrib = n-1-alen-curr_minus;
-//        cout << alen << ": " << contrib << endl;
-        tot += contrib;
-    }
-    cout << tot << endl;
+    cout << do_dp(r.size()-1, 0, 0) << endl;
 }
 int32_t main(int32_t argc, char* argv[]) {
     cout << setprecision(17);
