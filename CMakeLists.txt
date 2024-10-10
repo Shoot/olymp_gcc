@@ -5,4 +5,4 @@ set(CMAKE_CXX_STANDARD 20)
 
 #add_executable(olymp_gcc good.cpp)
 #add_executable(olymp_gcc good.cpp)
-add_executable(olymp_gcc good.cpp)
+add_executable(olymp_gcc sol.cpp)

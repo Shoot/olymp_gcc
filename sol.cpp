@@ -2,6 +2,7 @@
 using namespace std;
 using vbo = vector<bool>;
 using ll = long long;
+using ull = unsigned long long;
 using pll = pair<ll, ll>;
 using ld = long double;
 using qll = queue<ll>;
@@ -11,23 +12,9 @@ using qld = queue<ld>;
 using vld = vector<ld>;
 using qpll = queue<pll>;
 using vpll = vector<pll>;
-#define watch(x) clog << #x << " equals " << x << endl;
-#define all(value) value.begin(), value.end()
-#define fo(XX, X, fi) for(ll XX = X; XX < fi; XX++)
-#define forr(XX, X, fi) for(ll XX = X; XX <= fi; XX++)
-#define roff(XX, X, fi) for(ll XX = X; XX >= fi; XX--)
 ostream& endl(ostream& os) {
     return os << '\n';
 }
-#define vv(type,name,n,...) vector<vector<type>> name(n,vector<type>(__VA_ARGS__))
-#define vvv(type,name,n,m,...) vector<vector<vector<type>>> name(n,vector<vector<type>>(m,vector<type>(__VA_ARGS__)))
-#define vvvv(type,name,n,m,k,...) vector<vector<vector<vector<type>>>> name(n,vector<vector<vector<type>>>(m,vector<vector<type>>(k, vector<type>(__VA_ARGS__))))
-#define vvvvv(type,name,n,m,k,l,...) vector<vector<vector<vector<vector<type>>>>> name(n,vector<vector<vector<vector<type>>>>(m,vector<vector<vector<type>>>(k, vector<vector<type>>(l, vector<type>(__VA_ARGS__)))))
-#define LL(...) \
-  ll __VA_ARGS__; \
-  IN(__VA_ARGS__)
-#define fi first
-#define se second
 template <class T, class S> inline bool chmax(T &a, const S &b) { return (a < b ? a = b, 1 : 0); }
 template <class T, class S> inline bool chmin(T &a, const S &b) { return (a > b ? a = b, 1 : 0); }
 template <typename T, typename U>
@@ -38,7 +25,7 @@ ostream& operator<<(ostream& os, const pair<T, U>& A) {
 template <typename T>
 ostream& operator<<(ostream& os, const vector<T>& A) {
     for (size_t i = 0; i < A.size(); i++) {
-        if(i) os << " ";
+        if (i) os << " ";
         os << A[i];
     }
     return os;
@@ -73,7 +60,7 @@ void print(Head&& head, Tail&&... tail) {
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #endif
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-uniform_int_distribution<ll> distrib(0ll, 9ll);
+uniform_int_distribution<ll> distrib(1ll, 10ll);
 constexpr ll MOD = 1e9+7;
 //constexpr ll MOD = 1e9+7;
 void in(vector<ll> & a) {
@@ -190,7 +177,8 @@ void build_ft(vector<ll> & a, vector<ll> & tree) {
     }
 } // zero-indexed!!!
 ll inv(ll i, ll m) {
-    if (i == 1) return 1; return m-((inv(m%i, i)*m)/i);
+    if (i == 1) return 1;
+    return m - ((inv(m % i, i) * m) / i);
 }
 /*
 void copy_this () {
@@ -201,22 +189,69 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
-
 void solve() {
-    ll n; cin >> n;
-    vll a(n+1); IN(a);
-    ll N = 1e5+1;
-    vll done(N, 0);
-    ll tot = 0ll;
-    for (const auto &x : a) {
-        ll curr = x-1-done[x];
-        for (ll j = 2 * x; j < N; j += x) {
-            done[j] += curr;
-        }
-        tot += curr;
+    ll n;
+//    cin >> n;
+//    n += 1;
+    n = 3;
+    vll a(n);
+    const ll N = 1.1e5;
+    vll cnt(N);
+    for (auto &x : a) {
+        x = distrib(rng);
+//        cin >> x;
+        cnt[x] += 1;
     }
-    cout << tot << endl;
+    sort(a.begin(), a.end());
+    a.erase(unique(a.begin(), a.end()), a.end());
+    n = ll(a.size());
+    ll tot = 0ll;
+    vll b;
+    for (const auto &x : a) {
+        bool good = true;
+        for (ll j = 2 * x; j < N; j += x) {
+            if (cnt[j] > 0) {
+                good = false;
+            }
+        }
+        if (good) {
+//            clog << x << "!" << endl;
+            tot += x - 1;
+            b.push_back(x);
+        }
+    }
+    function<ll()> tupoi_brut = [&]() {
+        set<pll> st;
+        for (const auto &x : a) {
+            for (ll i = 1; i < x; i += 1) {
+                ll num = i;
+                ll denum = x;
+                ll g = gcd(num, denum);
+                st.insert(make_pair(num/g, denum/g));
+            }
+        }
+//        for (auto &[i, j] : st) {
+//            cout << i << " " << j << endl;
+//        }
+        return ll(st.size());
+    };
+    n = ll(b.size());
+    for (ll i = 0; i < n; i += 1) {
+        for (ll j = i + 1; j < n; j += 1) {
+            tot -= gcd(b[i], b[j]) - 1;
+        }
+    }
+    ll ogans = tupoi_brut();
+    if (tot != ogans) {
+        cout << tot << endl;
+        cout << ogans << endl;
+        for (auto const &x : a) {
+            cout << x << "!" << endl;
+        }
+        assert(false);
+    }
 }
+
 int32_t main(int32_t argc, char* argv[]) {
     cout << setprecision(17);
     bool use_fast_io = true;
@@ -235,7 +270,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-//    cin >> tt;
+    cin >> tt;
     while (tt--) {
         solve();
     }
