@@ -189,80 +189,48 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
+const int N = 1e8+1;
+vector<int> primes;
+bitset<N> is_prime;
+vector<int> phi(N);
+
 void solve() {
-    ll n;
+    is_prime.set();
+    for (int i = 2; i < N; i += 1) {
+        if (is_prime[i]) {
+            phi[i] = i - 1;
+            primes.push_back(i);
+            for (ll j = ll(i) * ll(i); j < N; j += i) {
+                is_prime[j] = false;
+            }
+        }
+    }
+    int n;
     cin >> n;
-    n += 1;
-//    n = 2;
-    vll a(n);
-    const ll N = 1.1e5;
-    vll cnt(N);
-    for (auto &x : a) {
-//        x = distrib(rng);
-        cin >> x;
-        cnt[x] += 1;
-    }
-    vll lp(N);
-    for (ll i = 2; i < N; i += 1) {
-        if (lp[i] == 0) {
-            lp[i] = i;
-            for (ll j = i*i; j < N; j += i) {
-                lp[j] = i;
+    phi[1] = 1;
+    for (int i = 2; i <= n; i += 1) {
+        for (auto const &x : primes) {
+            if (i * x > n) break;
+            phi[i * x] = phi[i] * (x - 1);
+            if (i % x == 0) {
+                phi[i * x] += phi[i];
+                break;
             }
         }
     }
-    sort(a.begin(), a.end());
-    a.erase(unique(a.begin(), a.end()), a.end());
-    n = ll(a.size());
-    bitset<N> seen;
-    for (const auto &x : a) {
-        seen[x] = true;
-        for (ll j = 2; j * j <= x; j += 1) {
-            if (x % j == 0) {
-                seen[j] = true;
-                seen[x/j] = true;
-            }
+    ll tot = 1;
+    for (ll i = 2; i <= n; i += 1) {
+        tot += phi[i];
+        if (i % 100 == 0) {
+            cout << tot << ' ';
+            tot = 0;
         }
     }
-    ll tot = 0ll;
-    for (ll i = 2; i < N; i += 1) {
-        if (seen[i]) {
-            ll i_ = i;
-            unordered_set<ll> st;
-            while (i_ != 1) {
-                st.insert(lp[i_]);
-                i_ /= lp[i_];
-            }
-            ll phi = i;
-            for (const auto &x : st) {
-                phi /= x;
-                phi *= x - 1;
-            }
-            tot += phi;
-        }
+    if (n % 100 != 0) {
+        cout << tot << endl;
+    } else {
+        cout << endl;
     }
-    function<ll()> tupoi_brut = [&]() {
-        set<pll> st;
-        for (const auto &x : a) {
-            for (ll i = 1; i < x; i += 1) {
-                ll num = i;
-                ll denum = x;
-                ll g = gcd(num, denum);
-                st.insert(make_pair(num / g, denum / g));
-            }
-        }
-        return ll(st.size());
-    };
-//    ll ogans = tupoi_brut();
-//    if (tot != ogans) {
-//        cout << tot << endl;
-//        cout << ogans << endl;
-//        for (auto const &x : a) {
-//            cout << x << "!" << endl;
-//        }
-//        assert(false);
-//    }
-    cout << tot << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
