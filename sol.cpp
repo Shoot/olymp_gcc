@@ -196,87 +196,99 @@ void copy_this () {
 */
 
 void solve() {
-    ll n, m;
-    cin >> n >> m;
-    vector<vector<ll>> a(n+1, vector<ll>(m+1));
-    vector<vector<bool>> will_drain(n+1, vector<bool>(m+1, false));
-    vector<vector<bool>> seen(n+1, vector<bool>(m+1, false));
+    ll n; cin >> n;
+    vll a(n+1);
     for (ll i = 1; i <= n; i += 1) {
-        for (ll j = 1; j <= m; j += 1) {
-            cin >> a[i][j];
-        }
+        cin >> a[i];
     }
-    function<void(ll, ll)> drain = [&] (ll x, ll y) {
-        will_drain[x][y] = true;
-        seen[x][y] = true;
-        for (const auto &dx : {-1, 1, 0}) {
-            for (const auto &dy : {-1, 1, 0}) {
-                if (abs(dx) && abs(dy)) continue;
-                if (x+dx > n || y+dy>m || x+dx < 1 || y+dx < 1 || seen[x+dx][y+dy]) {
-                    continue;
-                }
-                if (a[x+dx][y+dy] >= a[x][y]) {
-                    drain(x+dx, y+dy);
+    vll b(n+1);
+    for (ll i = 1; i <= n; i += 1) {
+        cin >> b[i];
+    }
+    vll prefa(n+1);
+    for (ll i = 1; i <= n; i += 1) {
+        prefa[i] = gcd(prefa[i-1], a[i]);
+    }
+    vll prefb(n+1);
+    for (ll i = 1; i <= n; i += 1) {
+        prefb[i] = gcd(prefb[i-1], b[i]);
+    }
+    vll suffa(n+2);
+    suffa[n] = a[n];
+    for (ll i = n - 1; i >= 1; i -= 1) {
+        suffa[i] = gcd(suffa[i+1], a[i]);
+    }
+    vll suffb(n+2);
+    suffb[n] = b[n];
+    for (ll i = n - 1; i >= 1; i -= 1) {
+        suffb[i] = gcd(suffb[i+1], b[i]);
+    }
+    function<pll(ll, ll)> dnc = [&] (ll l, ll r) {
+        if (l > r) return make_pair(-1ll, 0ll);
+//        cout << l << " " << r << endl << endl;
+        if (r - l + 1 == 1) {
+            return make_pair(gcd(gcd(prefa[l-1], b[l]), suffa[l+1])+
+                             gcd(gcd(prefb[l-1], a[l]), suffb[l+1]), 1ll);
+        }
+        ll mid = (l + r) >> 1;
+        map<pll, ll> lmap;
+        map<pll, ll> rmap;
+        rmap[make_pair(suffa[mid+1], suffb[mid+1])] += 1;
+        ll currlefta = 0ll;
+        ll currleftb = 0ll;
+        for (ll left = mid; left >= l; left -= 1) {
+            currlefta = gcd(currlefta, a[left]);
+            currleftb = gcd(currleftb, b[left]);
+            lmap[make_pair(gcd(prefa[left-1], currleftb),
+                 gcd(prefb[left-1], currlefta))] += 1;
+        }
+        ll currrighta = 0ll;
+        ll currrightb = 0ll;
+        for (ll right = mid + 1; right <= r; right += 1) {
+            currrighta = gcd(currrighta, a[right]);
+            currrightb = gcd(currrightb, b[right]);
+            rmap[make_pair(gcd(suffa[right+1], currrightb),
+                 gcd(suffb[right+1], currrighta))] += 1;
+        }
+//        cout << "l:" << endl;
+//        for (const auto & [i, j] : lmap) {
+//            cout << i.first << " " << i.second  << ' ' << j << endl;
+//        }
+//        cout << "r:" << endl;
+//        for (const auto & [i, j] : rmap) {
+//            cout << i.first << " " << i.second  << ' ' << j << endl;
+//        }
+        ll kol = 0;
+        ll ans = -1;
+        for (const auto & [i, j] : lmap) {
+            for (const auto &[ii, jj]: rmap) {
+                ll val = gcd(i.first, ii.first)+gcd(i.second, ii.second);
+                if (val > ans) {
+                    ans = val;
+                    kol = j * jj;
+                } else if (val == ans) {
+                    kol += j * jj;
                 }
             }
         }
+        auto val_l = dnc(l, mid-1);
+        auto val_r = dnc(mid+1, r);
+        if (val_l.first > ans) {
+            kol = val_l.second;
+            ans = val_l.first;
+        } else if (val_l.first == ans) {
+            kol += val_l.second;
+        }
+        if (val_r.first > ans) {
+            kol = val_r.second;
+            ans = val_r.first;
+        } else if (val_r.first == ans) {
+            kol += val_r.second;
+        }
+        return make_pair(ans, kol);
     };
-    for (ll i = 1; i <= n; i += 1) {
-        drain(i, 1);
-        for (auto &x : seen) {
-            fill(x.begin(), x.end(), false);
-        }
-        drain(i, m);
-        for (auto &x : seen) {
-            fill(x.begin(), x.end(), false);
-        }
-    }
-    for (ll i = 2; i < m; i += 1) {
-        for (auto &x : seen) {
-            fill(x.begin(), x.end(), false);
-        }
-        drain(1, i);
-        for (auto &x : seen) {
-            fill(x.begin(), x.end(), false);
-        }
-        drain(n, i);
-    }
-    for (ll i = 1; i <= n; i += 1) {
-        for (ll j = 1; j <= m; j += 1) {
-            clog << will_drain[i][j] << ' ';
-        }
-        clog << endl;
-    }
-    function<ll(ll, ll)> gran_mini = [&] (ll x, ll y) {
-        seen[x][y] = true;
-        if (will_drain[x][y]) return a[x][y];
-        ll mini = 1e10;
-        for (const auto &dx : {-1, 1, 0}) {
-            for (const auto &dy : {-1, 1, 0}) {
-                if (abs(dx) && abs(dy)) continue;
-                if (x+dx > n || y+dy>m || x+dx < 1 || y+dx < 1 || seen[x+dx][y+dy]) {
-                    continue;
-                }
-                mini = min(mini, gran_mini(x+dx, y+dy));
-            }
-        }
-        return mini;
-    };
-    ll tot = 0ll;
-    for (ll i = 1; i <= n; i += 1) {
-        for (ll j = 1; j <= m; j += 1) {
-            if (will_drain[i][j] == 0) {
-//                cout << i << ' ' << j << endl;
-                for (auto &x : seen) {
-                    fill(x.begin(), x.end(), false);
-                }
-                ll limit = gran_mini(i, j);
-                tot += limit-a[i][j];
-//                cout << i << " " << j << " " << limit << endl;
-            }
-        }
-    }
-    cout << tot << endl;
+    auto [i, j] = dnc(1, n);
+    cout << i << ' ' << j << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
@@ -297,7 +309,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-//    cin >> tt;
+    cin >> tt;
     while (tt--) {
         solve();
     }
