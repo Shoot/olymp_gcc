@@ -195,34 +195,122 @@ void copy_this () {
 }
 */
 void solve() {
-    ordered_set<pll> t;
-    ll n; cin >> n;
-    ll sz; cin >> sz;
-    ll k; cin >> k; // к-ое число снизу
-    vll a(n);
-    for (auto &x : a) {
-        cin >> x;
+    ll _2=-1, _3=-1, _5=-1, _7=-1, _11=-1, _13=-1, _17=-1;
+    ll tot = 0;
+    for (ll i = 0; i < 1; i += 1) {
+        cout << "? " << 2 << endl;
+        cout.flush();
+        ll ans;
+        cin >> ans;
+        if (ans == 1) {
+            _2 = tot%2;
+            break;
+        }
+        tot += 1;
     }
-    multiset<ll> st;
-    for (ll i = 0; i < sz - 1; i += 1) {
-        t.insert(make_pair(a[i], i));
-    }
-    ll b = 0;
-    for (ll i = 0; i+sz-1 < n; i += 1) {
-        t.insert(make_pair(a[i+sz-1], i+sz-1));
-        if (i != 0) t.erase(make_pair(a[i-1], i-1));
-        auto it = t.find_by_order(k-1);
-//        clog << it->first << endl;
-        b = max(b, it->first);
+    if (_2 == -1) _2 = (tot)%2;
+    clog << "2 : " << _2 << endl;
 
+    for (ll i = 0; i < 2; i += 1) {
+        cout << "? " << 3 << endl;
+        cout.flush();
+        ll ans;
+        cin >> ans;
+        if (ans == 1) {
+            _3 = tot%3;
+            break;
+        }
+        tot += 1;
     }
-    ll tot = -b;
-    for (const auto &x : a) {
-        if (x > b) {
-            tot += x;
+    if (_3 == -1) _3 = (tot)%3;
+    clog << "3 : " << _3 << endl;
+
+    for (ll i = 0; i < 4; i += 1) {
+        cout << "? " << 5 << endl;
+        cout.flush();
+        ll ans;
+        cin >> ans;
+        if (ans == 1) {
+            _5 = tot%5;
+            break;
+        }
+        tot += 1;
+    }
+    if (_5 == -1) _5 = (tot)%5;
+    clog << "5 : " << _5 << endl;
+
+    for (ll i = 0; i < 6; i += 1) {
+        cout << "? " << 7 << endl;
+        cout.flush();
+        ll ans;
+        cin >> ans;
+        if (ans == 1) {
+            _7 = tot%7;
+            break;
+        }
+        tot += 1;
+    }
+    if (_7 == -1) _7 = (tot)%7;
+    clog << "7 : " << _7 << endl;
+
+    for (ll i = 0; i < 10; i += 1) {
+        cout << "? " << 11 << endl;
+        cout.flush();
+        ll ans;
+        cin >> ans;
+        if (ans == 1) {
+            _11 = tot%11;
+            break;
+        }
+        tot += 1;
+    }
+    if (_11 == -1) _11 = (tot)%11;
+    clog << "11 : " << _11 << endl;
+
+    for (ll i = 0; i < 12; i += 1) {
+        cout << "? " << 13 << endl;
+        cout.flush();
+        ll ans;
+        cin >> ans;
+        if (ans == 1) {
+            _13 = tot%13;
+            break;
+        }
+        tot += 1;
+    }
+    if (_13 == -1) _13 = (tot)%13;
+    clog << "13 : " << _13 << endl;
+
+    for (ll i = 0; i < 16; i += 1) {
+        cout << "? " << 17 << endl;
+        cout.flush();
+        ll ans;
+        cin >> ans;
+        if (ans == 1) {
+            _17 = tot%17;
+            break;
+        }
+        tot += 1;
+    }
+    if (_17 == -1) _17 = (tot)%17;
+    clog << "17 : " << _17 << endl;
+
+    ll maxi = 5e5;
+    for (ll i = 0; i <= maxi; i += 1) {
+        if (i%2 == _2 &&
+        i%3 == _3 &&
+        i%5 == _5 &&
+        i%7 == _7 &&
+        i%11 == _11 &&
+        i%13 == _13 &&
+        i%17 == _17) {
+            cout << "! " << i << endl;
+            cout.flush();
+            ll du; cin >> du;
+            return;
         }
     }
-    cout << tot << endl;
+    assert(false);
 }
 
 int32_t main(int32_t argc, char* argv[]) {
@@ -243,7 +331,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-//    cin >> tt;
+    cin >> tt;
     while (tt--) {
         solve();
     }
