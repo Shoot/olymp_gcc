@@ -12,6 +12,11 @@ using qld = queue<ld>;
 using vld = vector<ld>;
 using qpll = queue<pll>;
 using vpll = vector<pll>;
+#include <ext/pb_ds/assoc_container.hpp>
+#include <ext/pb_ds/tree_policy.hpp>
+using namespace __gnu_pbds;
+using namespace std;
+template <typename T> using ordered_set =  tree<T, null_type, less<T>, rb_tree_tag, tree_order_statistics_node_update>;
 ostream& endl(ostream& os) {
     return os << '\n';
 }
@@ -190,57 +195,33 @@ void copy_this () {
 }
 */
 void solve() {
-    ll n,div; cin >> n >> div;
+    ordered_set<pll> t;
+    ll n; cin >> n;
+    ll sz; cin >> sz;
+    ll k; cin >> k; // к-ое число снизу
     vll a(n);
     for (auto &x : a) {
         cin >> x;
-        x %= div;
     }
-    ll tot = 0;
-    function<void(ll, ll)> dnc = [&] (ll l, ll r) {
-        ll contrib = 0;
-        if (r-l+1 <= 2) {
-            for (ll i = l; i <= r; i += 1) {
-                ll curr = 0;
-                for (ll j = i; j <= r; j += 1) {
-                    curr += a[j];
-                    contrib += (curr % div == 0);
-                }
-            }
-        } else {
-            ll mid = (l+r) >> 1;
-            dnc(l, mid-1);
-            dnc(mid+1, r);
-            unordered_map<ll, ll> lmap;
-            unordered_map<ll, ll> rmap;
-            ll lcurr = 0;
-            for (ll i = mid; i >= l; i -= 1) {
-                lcurr += a[i];
-                lcurr %= div;
-                contrib += lcurr == 0;
-                lmap[lcurr] += 1;
-            }
-            ll rcurr = 0;
-            for (ll i = mid+1; i <= r; i += 1) {
-                rcurr += a[i];
-                rcurr %= div;
-                rmap[rcurr] += 1;
-            }
-            for (const auto &[i, j] : lmap) {
-//                cout << i << ": ";
-                ll looking_for = (div-i)%div;
-                if (rmap.find(looking_for) != rmap.end()) {
-//                    cout << rmap[looking_for] << endl;
-                    contrib += j*rmap[looking_for];
-                } else {
-//                    cout << 0 << endl;
-                }
-            }
+    multiset<ll> st;
+    for (ll i = 0; i < sz - 1; i += 1) {
+        t.insert(make_pair(a[i], i));
+    }
+    ll b = 0;
+    for (ll i = 0; i+sz-1 < n; i += 1) {
+        t.insert(make_pair(a[i+sz-1], i+sz-1));
+        if (i != 0) t.erase(make_pair(a[i-1], i-1));
+        auto it = t.find_by_order(k-1);
+//        clog << it->first << endl;
+        b = max(b, it->first);
+
+    }
+    ll tot = -b;
+    for (const auto &x : a) {
+        if (x > b) {
+            tot += x;
         }
-        clog << l << "-" << r << ": " << contrib << endl;
-        tot += contrib;
-    };
-    dnc(0, n-1);
+    }
     cout << tot << endl;
 }
 
