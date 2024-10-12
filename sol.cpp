@@ -189,48 +189,59 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
-const int N = 1e8+1;
-vector<int> primes;
-bitset<N> is_prime;
-vector<int> phi(N);
-
 void solve() {
-    is_prime.set();
-    for (int i = 2; i < N; i += 1) {
-        if (is_prime[i]) {
-            phi[i] = i - 1;
-            primes.push_back(i);
-            for (ll j = ll(i) * ll(i); j < N; j += i) {
-                is_prime[j] = false;
+    ll n,div; cin >> n >> div;
+    vll a(n);
+    for (auto &x : a) {
+        cin >> x;
+        x %= div;
+    }
+    ll tot = 0;
+    function<void(ll, ll)> dnc = [&] (ll l, ll r) {
+        ll contrib = 0;
+        if (r-l+1 <= 2) {
+            for (ll i = l; i <= r; i += 1) {
+                ll curr = 0;
+                for (ll j = i; j <= r; j += 1) {
+                    curr += a[j];
+                    contrib += (curr % div == 0);
+                }
+            }
+        } else {
+            ll mid = (l+r) >> 1;
+            dnc(l, mid-1);
+            dnc(mid+1, r);
+            unordered_map<ll, ll> lmap;
+            unordered_map<ll, ll> rmap;
+            ll lcurr = 0;
+            for (ll i = mid; i >= l; i -= 1) {
+                lcurr += a[i];
+                lcurr %= div;
+                contrib += lcurr == 0;
+                lmap[lcurr] += 1;
+            }
+            ll rcurr = 0;
+            for (ll i = mid+1; i <= r; i += 1) {
+                rcurr += a[i];
+                rcurr %= div;
+                rmap[rcurr] += 1;
+            }
+            for (const auto &[i, j] : lmap) {
+//                cout << i << ": ";
+                ll looking_for = (div-i)%div;
+                if (rmap.find(looking_for) != rmap.end()) {
+//                    cout << rmap[looking_for] << endl;
+                    contrib += j*rmap[looking_for];
+                } else {
+//                    cout << 0 << endl;
+                }
             }
         }
-    }
-    int n;
-    cin >> n;
-    phi[1] = 1;
-    for (int i = 2; i <= n; i += 1) {
-        for (auto const &x : primes) {
-            if (i * x > n) break;
-            phi[i * x] = phi[i] * (x - 1);
-            if (i % x == 0) {
-                phi[i * x] += phi[i];
-                break;
-            }
-        }
-    }
-    ll tot = 1;
-    for (ll i = 2; i <= n; i += 1) {
-        tot += phi[i];
-        if (i % 100 == 0) {
-            cout << tot << ' ';
-            tot = 0;
-        }
-    }
-    if (n % 100 != 0) {
-        cout << tot << endl;
-    } else {
-        cout << endl;
-    }
+        clog << l << "-" << r << ": " << contrib << endl;
+        tot += contrib;
+    };
+    dnc(0, n-1);
+    cout << tot << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
