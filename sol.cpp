@@ -196,33 +196,87 @@ void copy_this () {
 */
 
 void solve() {
-    ll n;
-    cin >> n;
-    vll a(n);
-    ll su = 0;
-    for (auto &x : a) {
-        cin >> x;
-        su += x;
-    }
-    ll N = 5e5+1;
-    vll dp(N, -1);
-    vll new_dp(N, -1);
-    // dp[diff] = sum
-    dp[0] = 0ll;
-    for (ll i = 0; i < n; i += 1) {
-//        cout << i << endl;
-        fill(new_dp.begin(), new_dp.end(), -1ll);
-        for (ll prevdiff = 0; prevdiff < N; prevdiff += 1) if (dp[prevdiff] != -1) {
-            new_dp[prevdiff] = max(new_dp[prevdiff], dp[prevdiff]);
-//            cout << "new_dp[" << prevdiff << "] = " << new_dp[prevdiff] << endl;
-            new_dp[abs(prevdiff-a[i])] = max(new_dp[abs(prevdiff-a[i])], dp[prevdiff]+a[i]);
-//            cout << "new_dp[" << abs(prevdiff-a[i]) << "] = " << new_dp[abs(prevdiff-a[i])] << endl;
-            new_dp[abs(prevdiff+a[i])] = max(new_dp[abs(prevdiff+a[i])], dp[prevdiff]+a[i]);
-//            cout << "new_dp[" << abs(prevdiff+a[i]) << "] = " << new_dp[abs(prevdiff+a[i])] << endl;
+    ll n, m;
+    cin >> n >> m;
+    vector<vector<ll>> a(n+1, vector<ll>(m+1));
+    vector<vector<bool>> will_drain(n+1, vector<bool>(m+1, false));
+    vector<vector<bool>> seen(n+1, vector<bool>(m+1, false));
+    for (ll i = 1; i <= n; i += 1) {
+        for (ll j = 1; j <= m; j += 1) {
+            cin >> a[i][j];
         }
-        swap(dp, new_dp);
     }
-    cout << su-2*dp[0]/2+dp[0]/2 << endl;
+    function<void(ll, ll)> drain = [&] (ll x, ll y) {
+        will_drain[x][y] = true;
+        seen[x][y] = true;
+        for (const auto &dx : {-1, 1, 0}) {
+            for (const auto &dy : {-1, 1, 0}) {
+                if (abs(dx) && abs(dy)) continue;
+                if (x+dx > n || y+dy>m || x+dx < 1 || y+dx < 1 || seen[x+dx][y+dy]) {
+                    continue;
+                }
+                if (a[x+dx][y+dy] >= a[x][y]) {
+                    drain(x+dx, y+dy);
+                }
+            }
+        }
+    };
+    for (ll i = 1; i <= n; i += 1) {
+        drain(i, 1);
+        for (auto &x : seen) {
+            fill(x.begin(), x.end(), false);
+        }
+        drain(i, m);
+        for (auto &x : seen) {
+            fill(x.begin(), x.end(), false);
+        }
+    }
+    for (ll i = 2; i < m; i += 1) {
+        for (auto &x : seen) {
+            fill(x.begin(), x.end(), false);
+        }
+        drain(1, i);
+        for (auto &x : seen) {
+            fill(x.begin(), x.end(), false);
+        }
+        drain(n, i);
+    }
+    for (ll i = 1; i <= n; i += 1) {
+        for (ll j = 1; j <= m; j += 1) {
+            clog << will_drain[i][j] << ' ';
+        }
+        clog << endl;
+    }
+    function<ll(ll, ll)> gran_mini = [&] (ll x, ll y) {
+        seen[x][y] = true;
+        if (will_drain[x][y]) return a[x][y];
+        ll mini = 1e10;
+        for (const auto &dx : {-1, 1, 0}) {
+            for (const auto &dy : {-1, 1, 0}) {
+                if (abs(dx) && abs(dy)) continue;
+                if (x+dx > n || y+dy>m || x+dx < 1 || y+dx < 1 || seen[x+dx][y+dy]) {
+                    continue;
+                }
+                mini = min(mini, gran_mini(x+dx, y+dy));
+            }
+        }
+        return mini;
+    };
+    ll tot = 0ll;
+    for (ll i = 1; i <= n; i += 1) {
+        for (ll j = 1; j <= m; j += 1) {
+            if (will_drain[i][j] == 0) {
+//                cout << i << ' ' << j << endl;
+                for (auto &x : seen) {
+                    fill(x.begin(), x.end(), false);
+                }
+                ll limit = gran_mini(i, j);
+                tot += limit-a[i][j];
+//                cout << i << " " << j << " " << limit << endl;
+            }
+        }
+    }
+    cout << tot << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
