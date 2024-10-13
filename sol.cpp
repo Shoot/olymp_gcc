@@ -15,7 +15,6 @@ using vpll = vector<pll>;
 #include <ext/pb_ds/assoc_container.hpp>
 #include <ext/pb_ds/tree_policy.hpp>
 using namespace __gnu_pbds;
-using namespace std;
 template <typename T> using ordered_set =  tree<T, null_type, less<T>, rb_tree_tag, tree_order_statistics_node_update>;
 ostream& endl(ostream& os) {
     return os << '\n';
@@ -203,116 +202,85 @@ struct Node {
 bitset<1001> full1;
 const ll N = 2.1e5;
 vll Root(N);
-ll avail = 0ll;
 vector<Node> Tree(20*N);
 vector<ll> Id(20*N);
 vector<bitset<1001>> dp(2*N);
-ll n, m, nw = 0;
-ll Build(ll id,ll l,ll r,ll pos) {
+ll n = 0ll, m = 0ll, nw = 0ll, avail = 0ll;
+ll build_polka(ll id, ll polka, ll l=1,ll r=n) {
     ll u=++avail;
     Tree[u]=Tree[id];
-
-    if(l==r) {
+    if (l==r) {
         ++nw;
         Id[u]=nw;
         return u;
     }
-
-    ll lft=2*id;
-    ll rgt=lft+1;
-    ll mid=(l+r)/2;
-    if(pos<=mid)    Tree[u].l=Build(Tree[u].l,l,mid,pos);
-    else            Tree[u].r=Build(Tree[u].r,mid+1,r,pos);
+    ll mid=(l+r) >> 1;
+    if (polka<=mid) Tree[u].l=build_polka(Tree[u].l,polka,l,mid);
+    else Tree[u].r=build_polka(Tree[u].r,polka,mid+1,r);
     return u;
 }
-
-ll Toogle(ll id,ll l,ll r,ll pos,ll p,ll f) {
+ll point_set_query(ll id, ll polka, ll mesto, ll value, ll l=1, ll r=n) {
     ll u=++avail;
     Tree[u]=Tree[id];
-
-    if(l==r) {
+    if (l==r) {
         ++nw;
         Id[u]=nw;
-        dp[nw]=dp[ Id[id] ];
-        ll cnt=Tree[id].sum;
-        ll tp=dp[ nw ].test(p);
-        if(f!=tp) {
-            dp[ nw ].flip(p);
-            if(f) cnt++;
-            else cnt--;
+        dp[nw]=dp[Id[id]];
+        ll sum_after_point_update=Tree[id].sum;
+        if (value!=dp[nw].test(mesto)) {
+            dp[nw].flip(mesto);
+            if (value) sum_after_point_update += 1;
+            else sum_after_point_update -= 1;
         }
-
-//        trace4(p,tp,f,cnt)
-
-        Tree[u].sum=cnt;
+        Tree[u].sum=sum_after_point_update;
         return u;
     }
-
-    ll lft=2*id;
-    ll rgt=lft+1;
-    ll mid=(l+r)/2;
-
-    if(pos<=mid)        Tree[u].l=Toogle(Tree[u].l,l,mid,pos,p,f);
-    else                Tree[u].r=Toogle(Tree[u].r,mid+1,r,pos,p,f);
-
-    Tree[u].sum=Tree[ Tree[u].l ].sum+Tree[ Tree[u].r ].sum;
+    ll mid=(l+r) >> 1;
+    if (polka<=mid) Tree[u].l=point_set_query(Tree[u].l,polka,mesto,value,l,mid);
+    else Tree[u].r=point_set_query(Tree[u].r,polka,mesto,value,mid+1,r);
+    Tree[u].sum=Tree[Tree[u].l].sum+Tree[Tree[u].r].sum;
     return u;
 }
-
-
-ll Update(ll id,ll l,ll r,ll pos) {
+ll toggle_range_query(ll id, ll pos, ll l=1, ll r=n) {
     ll u=++avail;
     Tree[u]=Tree[id];
-
-    if(l==r) {
-
+    if (l==r) {
         ++nw;
         Id[u]=nw;
-
-        dp[nw]=dp[ Id[id] ];
-        ll age=Tree[id].sum;
-        age=m-age;
-        Tree[u].sum=age;
+        dp[nw]=dp[Id[id]];
+        Tree[u].sum=m-Tree[id].sum;
         dp[nw]=dp[nw]^full1;
-
         return u;
     }
-
-    ll lft=2*id;
-    ll rgt=lft+1;
-    ll mid=(l+r)/2;
-
-    if(pos<=mid)        Tree[u].l=Update(Tree[u].l,l,mid,pos);
-    else                Tree[u].r=Update(Tree[u].r,mid+1,r,pos);
-
-    Tree[u].sum=Tree[ Tree[u].l ].sum+Tree[ Tree[u].r ].sum;
+    ll mid=(l+r) >> 1;
+    if (pos<=mid) Tree[u].l=toggle_range_query(Tree[u].l,pos,l,mid);
+    else Tree[u].r=toggle_range_query(Tree[u].r,pos,mid+1,r);
+    Tree[u].sum=Tree[Tree[u].l].sum+Tree[Tree[u].r].sum;
     return u;
 }
 void solve() {
     cin >> n >> m;
     ll q; cin >> q;
     full1.set();
-    Root[0]=0;
-    Tree[0]=Node();
-    for (ll i = 1; i <= n; i += 1) Root[0]=Build(Root[0],1,n,i);
+    for (ll i = 1; i <= n; i += 1) Root[0] = build_polka(Root[0], i);
     for (ll qq = 1; qq <= q; qq += 1) {
         ll type; cin >> type;
         if (type == 1) {
             // a[polka][mesto] = 1
             ll polka, mesto;
             cin >> polka >> mesto;
-            Root[qq]=Toogle(Root[qq-1],1,n,polka,mesto-1,1);
+            Root[qq]=point_set_query(Root[qq-1],polka,mesto,1);
         } else if (type == 2) {
             // a[polka][mesto] = 0
             ll polka, mesto;
             cin >> polka >> mesto;
-            Root[qq]=Toogle(Root[qq-1],1,n,polka,mesto-1,0);
+            Root[qq]=point_set_query(Root[qq-1],polka,mesto,0);
         } else if (type == 3) {
             // invert a[polka]
             ll polka; cin >> polka;
-            Root[qq]=Update(Root[qq-1],1,n,polka);
+            Root[qq]=toggle_range_query(Root[qq-1],polka);
         } else {
-            // begin from state #x
+            // restart from state #x
             ll x; cin >> x;
             Root[qq]=Root[x];
         }
