@@ -35,8 +35,7 @@ ostream& operator<<(ostream& os, const vector<T>& A) {
     }
     return os;
 }
-void scan(int &a) { cin >> a; }
-void scan(long long &a) { cin >> a; }
+void scan(ll &a) { cin >> a; }
 void scan(char &a) { cin >> a; }
 void scan(double &a) { cin >> a; }
 void scan(long double &a) { cin >> a; }
@@ -194,101 +193,131 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
+struct Node {
+    ll l, r, sum;
+    Node() {
+        l=r=0;
+        sum=0;
+    }
+};
+bitset<1001> full1;
+const ll N = 2.1e5;
+vll Root(N);
+ll avail = 0ll;
+vector<Node> Tree(20*N);
+vector<ll> Id(20*N);
+vector<bitset<1001>> dp(2*N);
+ll n, m, nw = 0;
+ll Build(ll id,ll l,ll r,ll pos) {
+    ll u=++avail;
+    Tree[u]=Tree[id];
 
+    if(l==r) {
+        ++nw;
+        Id[u]=nw;
+        return u;
+    }
+
+    ll lft=2*id;
+    ll rgt=lft+1;
+    ll mid=(l+r)/2;
+    if(pos<=mid)    Tree[u].l=Build(Tree[u].l,l,mid,pos);
+    else            Tree[u].r=Build(Tree[u].r,mid+1,r,pos);
+    return u;
+}
+
+ll Toogle(ll id,ll l,ll r,ll pos,ll p,ll f) {
+    ll u=++avail;
+    Tree[u]=Tree[id];
+
+    if(l==r) {
+        ++nw;
+        Id[u]=nw;
+        dp[nw]=dp[ Id[id] ];
+        ll cnt=Tree[id].sum;
+        ll tp=dp[ nw ].test(p);
+        if(f!=tp) {
+            dp[ nw ].flip(p);
+            if(f) cnt++;
+            else cnt--;
+        }
+
+//        trace4(p,tp,f,cnt)
+
+        Tree[u].sum=cnt;
+        return u;
+    }
+
+    ll lft=2*id;
+    ll rgt=lft+1;
+    ll mid=(l+r)/2;
+
+    if(pos<=mid)        Tree[u].l=Toogle(Tree[u].l,l,mid,pos,p,f);
+    else                Tree[u].r=Toogle(Tree[u].r,mid+1,r,pos,p,f);
+
+    Tree[u].sum=Tree[ Tree[u].l ].sum+Tree[ Tree[u].r ].sum;
+    return u;
+}
+
+
+ll Update(ll id,ll l,ll r,ll pos) {
+    ll u=++avail;
+    Tree[u]=Tree[id];
+
+    if(l==r) {
+
+        ++nw;
+        Id[u]=nw;
+
+        dp[nw]=dp[ Id[id] ];
+        ll age=Tree[id].sum;
+        age=m-age;
+        Tree[u].sum=age;
+        dp[nw]=dp[nw]^full1;
+
+        return u;
+    }
+
+    ll lft=2*id;
+    ll rgt=lft+1;
+    ll mid=(l+r)/2;
+
+    if(pos<=mid)        Tree[u].l=Update(Tree[u].l,l,mid,pos);
+    else                Tree[u].r=Update(Tree[u].r,mid+1,r,pos);
+
+    Tree[u].sum=Tree[ Tree[u].l ].sum+Tree[ Tree[u].r ].sum;
+    return u;
+}
 void solve() {
-    ll n; cin >> n;
-    vll a(n+1);
-    for (ll i = 1; i <= n; i += 1) {
-        cin >> a[i];
-    }
-    vll b(n+1);
-    for (ll i = 1; i <= n; i += 1) {
-        cin >> b[i];
-    }
-    vll prefa(n+1);
-    for (ll i = 1; i <= n; i += 1) {
-        prefa[i] = gcd(prefa[i-1], a[i]);
-    }
-    vll prefb(n+1);
-    for (ll i = 1; i <= n; i += 1) {
-        prefb[i] = gcd(prefb[i-1], b[i]);
-    }
-    vll suffa(n+2);
-    suffa[n] = a[n];
-    for (ll i = n - 1; i >= 1; i -= 1) {
-        suffa[i] = gcd(suffa[i+1], a[i]);
-    }
-    vll suffb(n+2);
-    suffb[n] = b[n];
-    for (ll i = n - 1; i >= 1; i -= 1) {
-        suffb[i] = gcd(suffb[i+1], b[i]);
-    }
-    function<pll(ll, ll)> dnc = [&] (ll l, ll r) {
-        if (l > r) return make_pair(-1ll, 0ll);
-//        cout << l << " " << r << endl << endl;
-        if (r - l + 1 == 1) {
-            return make_pair(gcd(gcd(prefa[l-1], b[l]), suffa[l+1])+
-                             gcd(gcd(prefb[l-1], a[l]), suffb[l+1]), 1ll);
+    cin >> n >> m;
+    ll q; cin >> q;
+    full1.set();
+    Root[0]=0;
+    Tree[0]=Node();
+    for (ll i = 1; i <= n; i += 1) Root[0]=Build(Root[0],1,n,i);
+    for (ll qq = 1; qq <= q; qq += 1) {
+        ll type; cin >> type;
+        if (type == 1) {
+            // a[polka][mesto] = 1
+            ll polka, mesto;
+            cin >> polka >> mesto;
+            Root[qq]=Toogle(Root[qq-1],1,n,polka,mesto-1,1);
+        } else if (type == 2) {
+            // a[polka][mesto] = 0
+            ll polka, mesto;
+            cin >> polka >> mesto;
+            Root[qq]=Toogle(Root[qq-1],1,n,polka,mesto-1,0);
+        } else if (type == 3) {
+            // invert a[polka]
+            ll polka; cin >> polka;
+            Root[qq]=Update(Root[qq-1],1,n,polka);
+        } else {
+            // begin from state #x
+            ll x; cin >> x;
+            Root[qq]=Root[x];
         }
-        ll mid = (l + r) >> 1;
-        map<pll, ll> lmap;
-        map<pll, ll> rmap;
-        rmap[make_pair(suffa[mid+1], suffb[mid+1])] += 1;
-        ll currlefta = 0ll;
-        ll currleftb = 0ll;
-        for (ll left = mid; left >= l; left -= 1) {
-            currlefta = gcd(currlefta, a[left]);
-            currleftb = gcd(currleftb, b[left]);
-            lmap[make_pair(gcd(prefa[left-1], currleftb),
-                 gcd(prefb[left-1], currlefta))] += 1;
-        }
-        ll currrighta = 0ll;
-        ll currrightb = 0ll;
-        for (ll right = mid + 1; right <= r; right += 1) {
-            currrighta = gcd(currrighta, a[right]);
-            currrightb = gcd(currrightb, b[right]);
-            rmap[make_pair(gcd(suffa[right+1], currrightb),
-                 gcd(suffb[right+1], currrighta))] += 1;
-        }
-//        cout << "l:" << endl;
-//        for (const auto & [i, j] : lmap) {
-//            cout << i.first << " " << i.second  << ' ' << j << endl;
-//        }
-//        cout << "r:" << endl;
-//        for (const auto & [i, j] : rmap) {
-//            cout << i.first << " " << i.second  << ' ' << j << endl;
-//        }
-        ll kol = 0;
-        ll ans = -1;
-        for (const auto & [i, j] : lmap) {
-            for (const auto &[ii, jj]: rmap) {
-                ll val = gcd(i.first, ii.first)+gcd(i.second, ii.second);
-                if (val > ans) {
-                    ans = val;
-                    kol = j * jj;
-                } else if (val == ans) {
-                    kol += j * jj;
-                }
-            }
-        }
-        auto val_l = dnc(l, mid-1);
-        auto val_r = dnc(mid+1, r);
-        if (val_l.first > ans) {
-            kol = val_l.second;
-            ans = val_l.first;
-        } else if (val_l.first == ans) {
-            kol += val_l.second;
-        }
-        if (val_r.first > ans) {
-            kol = val_r.second;
-            ans = val_r.first;
-        } else if (val_r.first == ans) {
-            kol += val_r.second;
-        }
-        return make_pair(ans, kol);
-    };
-    auto [i, j] = dnc(1, n);
-    cout << i << ' ' << j << endl;
+        cout << Tree[Root[qq]].sum << endl;
+    }
 }
 
 int32_t main(int32_t argc, char* argv[]) {
@@ -309,7 +338,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-    cin >> tt;
+//    cin >> tt;
     while (tt--) {
         solve();
     }
