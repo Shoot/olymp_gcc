@@ -192,99 +192,58 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
-struct Node {
-    ll l, r, sum;
-    Node() {
-        l=r=0;
-        sum=0;
-    }
-};
-bitset<1001> full1;
-const ll N = 2.1e5;
-vll Root(N);
-vector<Node> Tree(20*N);
-vector<ll> Id(20*N);
-vector<bitset<1001>> dp(2*N);
-ll n = 0ll, m = 0ll, nw = 0ll, avail = 0ll;
-ll build_polka(ll id, ll polka, ll l=1,ll r=n) {
-    ll u=++avail;
-    Tree[u]=Tree[id];
-    if (l==r) {
-        ++nw;
-        Id[u]=nw;
-        return u;
-    }
-    ll mid=(l+r) >> 1;
-    if (polka<=mid) Tree[u].l=build_polka(Tree[u].l,polka,l,mid);
-    else Tree[u].r=build_polka(Tree[u].r,polka,mid+1,r);
-    return u;
-}
-ll point_set_query(ll id, ll polka, ll mesto, ll value, ll l=1, ll r=n) {
-    ll u=++avail;
-    Tree[u]=Tree[id];
-    if (l==r) {
-        ++nw;
-        Id[u]=nw;
-        dp[nw]=dp[Id[id]];
-        ll sum_after_point_update=Tree[id].sum;
-        if (value!=dp[nw].test(mesto)) {
-            dp[nw].flip(mesto);
-            if (value) sum_after_point_update += 1;
-            else sum_after_point_update -= 1;
-        }
-        Tree[u].sum=sum_after_point_update;
-        return u;
-    }
-    ll mid=(l+r) >> 1;
-    if (polka<=mid) Tree[u].l=point_set_query(Tree[u].l,polka,mesto,value,l,mid);
-    else Tree[u].r=point_set_query(Tree[u].r,polka,mesto,value,mid+1,r);
-    Tree[u].sum=Tree[Tree[u].l].sum+Tree[Tree[u].r].sum;
-    return u;
-}
-ll toggle_range_query(ll id, ll pos, ll l=1, ll r=n) {
-    ll u=++avail;
-    Tree[u]=Tree[id];
-    if (l==r) {
-        ++nw;
-        Id[u]=nw;
-        dp[nw]=dp[Id[id]];
-        Tree[u].sum=m-Tree[id].sum;
-        dp[nw]=dp[nw]^full1;
-        return u;
-    }
-    ll mid=(l+r) >> 1;
-    if (pos<=mid) Tree[u].l=toggle_range_query(Tree[u].l,pos,l,mid);
-    else Tree[u].r=toggle_range_query(Tree[u].r,pos,mid+1,r);
-    Tree[u].sum=Tree[Tree[u].l].sum+Tree[Tree[u].r].sum;
-    return u;
-}
 void solve() {
-    cin >> n >> m;
-    ll q; cin >> q;
-    full1.set();
-    for (ll i = 1; i <= n; i += 1) Root[0] = build_polka(Root[0], i);
-    for (ll qq = 1; qq <= q; qq += 1) {
-        ll type; cin >> type;
-        if (type == 1) {
-            // a[polka][mesto] = 1
-            ll polka, mesto;
-            cin >> polka >> mesto;
-            Root[qq]=point_set_query(Root[qq-1],polka,mesto,1);
-        } else if (type == 2) {
-            // a[polka][mesto] = 0
-            ll polka, mesto;
-            cin >> polka >> mesto;
-            Root[qq]=point_set_query(Root[qq-1],polka,mesto,0);
-        } else if (type == 3) {
-            // invert a[polka]
-            ll polka; cin >> polka;
-            Root[qq]=toggle_range_query(Root[qq-1],polka);
-        } else {
-            // restart from state #x
-            ll x; cin >> x;
-            Root[qq]=Root[x];
+    ll ask = 1;
+    ll n; cin >> n;
+    vll good;
+    vll other;
+    good.push_back(1);
+    while (ask != n+1) {
+        if (ask == good.back()) {
+            ask += 1;
+            continue;
         }
-        cout << Tree[Root[qq]].sum << endl;
+        cout << "? " << good.back() << " " << ask << endl;
+        cout.flush();
+        ll answ;
+        cin >> answ;
+        if (answ == 1) {
+            good.push_back(ask);
+        } else {
+            other.push_back(ask);
+        }
+        ask += 1;
+    }
+    // в good одни лжецы
+    // в good предатель -> лжецы
+    // в good рыцари -> предатель -> лжецы
+    ll sz = ll(good.size());
+    // найти первый нет про good[0]
+    ll l = 1;
+    ll r = sz-1;
+    ll first_net = -1;
+    while (l <= r) {
+        ll mid = (l+r) >> 1;
+        cout << "? " << good[mid] << ' ' << good[0] << endl;
+        cout.flush();
+        ll answ; cin >> answ;
+        if (answ == 0) {
+            first_net = mid;
+            r = mid-1;
+        } else {
+            l = mid + 1;
+        }
+    }
+    if (first_net != -1) {
+        cout << good[first_net] << endl;
+        cout.flush();
+        // МОЖЕТ БЫТЬ ЧТО МЫ НАЧАЛИ С ПРЕДАТЕЛЯ
+    } else {
+        // в good одни лжецы
+        // в good предатель -> лжецы
+        // ЗНАЧИТ #1 - лжец или предатель
+
+        // можем за один запрос проверить что первый предатель — спросить у good[1] про good[0]
     }
 }
 
@@ -306,7 +265,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-//    cin >> tt;
+    cin >> tt;
     while (tt--) {
         solve();
     }
