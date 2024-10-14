@@ -192,58 +192,56 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
+
 void solve() {
-    ll ask = 1;
     ll n; cin >> n;
-    vll good;
-    vll other;
-    good.push_back(1);
-    while (ask != n+1) {
-        if (ask == good.back()) {
-            ask += 1;
+    ll m; cin >> m;
+    ll q; cin >> q;
+    vll parent(n+1);
+    iota(parent.begin(), parent.end(), 0ll);
+    vll stopped_being_root(n+1);
+    vll size(n+1, 1ll);
+    function<ll(ll,ll)> get_parent = [&] (ll u, ll t) {
+        if (parent[u] == u || stopped_being_root[u] > t) {
+            return u;
+        }
+        return get_parent(parent[u], t);
+    };
+    function<void(ll,ll,ll)> merge = [&] (ll u, ll v, ll t) {
+        u = get_parent(u,t);
+        v = get_parent(v,t);
+        if (u == v) {
+            return;
+        }
+        if (size[u] > size[v]) {
+            swap(u, v);
+        }
+        parent[u] = v;
+        size[v] += size[u];
+        stopped_being_root[u] = t;
+    };
+    for(ll t=1;t<=m;t+=1){
+        ll i,j; cin >> i >> j;
+        merge(i, j, t);
+    }
+    for(ll qq=0;qq<q; qq++){
+        ll i,j;cin>>i>>j;
+        if (i == j) {
+            cout << 0 << endl;
             continue;
         }
-        cout << "? " << good.back() << " " << ask << endl;
-        cout.flush();
-        ll answ;
-        cin >> answ;
-        if (answ == 1) {
-            good.push_back(ask);
-        } else {
-            other.push_back(ask);
+        ll l = 1; ll r = m;
+        ll good = -1;
+        while (l <= r) {
+            ll mid = (l+r) >> 1;
+            if (get_parent(i,mid) == get_parent(j,mid)) {
+                good = mid;
+                r = mid-1;
+            } else {
+                l=mid+1;
+            }
         }
-        ask += 1;
-    }
-    // в good одни лжецы
-    // в good предатель -> лжецы
-    // в good рыцари -> предатель -> лжецы
-    ll sz = ll(good.size());
-    // найти первый нет про good[0]
-    ll l = 1;
-    ll r = sz-1;
-    ll first_net = -1;
-    while (l <= r) {
-        ll mid = (l+r) >> 1;
-        cout << "? " << good[mid] << ' ' << good[0] << endl;
-        cout.flush();
-        ll answ; cin >> answ;
-        if (answ == 0) {
-            first_net = mid;
-            r = mid-1;
-        } else {
-            l = mid + 1;
-        }
-    }
-    if (first_net != -1) {
-        cout << good[first_net] << endl;
-        cout.flush();
-        // МОЖЕТ БЫТЬ ЧТО МЫ НАЧАЛИ С ПРЕДАТЕЛЯ
-    } else {
-        // в good одни лжецы
-        // в good предатель -> лжецы
-        // ЗНАЧИТ #1 - лжец или предатель
-
-        // можем за один запрос проверить что первый предатель — спросить у good[1] про good[0]
+        cout << good << endl;
     }
 }
 
@@ -265,7 +263,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-    cin >> tt;
+//    cin >> tt;
     while (tt--) {
         solve();
     }
