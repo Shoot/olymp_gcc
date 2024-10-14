@@ -194,55 +194,44 @@ void copy_this () {
 */
 
 void solve() {
-    ll n; cin >> n;
-    ll m; cin >> m;
-    ll q; cin >> q;
-    vll parent(n+1);
-    iota(parent.begin(), parent.end(), 0ll);
-    vll stopped_being_root(n+1);
-    vll size(n+1, 1ll);
-    function<ll(ll,ll)> get_parent = [&] (ll u, ll t) {
-        if (parent[u] == u || stopped_being_root[u] > t) {
-            return u;
+    ll n,k; cin >> n >> k;
+    vll a(n);
+    vector<vll> tests_intellect;
+    vector<vll> tests_strength;
+    tests_intellect.emplace_back();
+    tests_strength.emplace_back();
+    for (auto &x : a) {
+        cin >> x;
+        if (x == 0) {
+            tests_intellect.emplace_back();
+            tests_strength.emplace_back();
         }
-        return get_parent(parent[u], t);
-    };
-    function<void(ll,ll,ll)> merge = [&] (ll u, ll v, ll t) {
-        u = get_parent(u,t);
-        v = get_parent(v,t);
-        if (u == v) {
-            return;
-        }
-        if (size[u] > size[v]) {
-            swap(u, v);
-        }
-        parent[u] = v;
-        size[v] += size[u];
-        stopped_being_root[u] = t;
-    };
-    for(ll t=1;t<=m;t+=1){
-        ll i,j; cin >> i >> j;
-        merge(i, j, t);
+        else if (x > 0) tests_intellect.back().push_back(x);
+        else if (x < 0) tests_strength.back().push_back(-x);
     }
-    for(ll qq=0;qq<q; qq++){
-        ll i,j;cin>>i>>j;
-        if (i == j) {
-            cout << 0 << endl;
-            continue;
-        }
-        ll l = 1; ll r = m;
-        ll good = -1;
-        while (l <= r) {
-            ll mid = (l+r) >> 1;
-            if (get_parent(i,mid) == get_parent(j,mid)) {
-                good = mid;
-                r = mid-1;
-            } else {
-                l=mid+1;
-            }
-        }
-        cout << good << endl;
+    for (auto &x : tests_intellect) {
+        sort(x.begin(), x.end());
     }
+    for (auto &x : tests_strength) {
+        sort(x.begin(), x.end());
+    }
+    // dp[intellect] = passed_tests
+    vll new_dp(k+1);
+    vll dp(k+1);
+    for (ll testing = 0; testing <= k; testing += 1) {
+        fill(new_dp.begin(), new_dp.end(), -1ll);
+        for (ll intellect = 0; intellect <= testing; intellect += 1) {
+            ll CURR_INTELLECT = intellect;
+            ll CURR_STRENGTH = testing-intellect;
+            ll this_group_passed_intellect = upper_bound(tests_intellect[testing].begin(), tests_intellect[testing].end(), CURR_INTELLECT)-tests_intellect[testing].begin();
+            ll this_group_passed_strength = upper_bound(tests_strength[testing].begin(), tests_strength[testing].end(), CURR_STRENGTH)-tests_strength[testing].begin();
+            ll updated_passed_value = dp[intellect]+this_group_passed_intellect+this_group_passed_strength;
+            new_dp[CURR_INTELLECT] = max(new_dp[CURR_INTELLECT], updated_passed_value);
+            new_dp[CURR_INTELLECT+1] = max(new_dp[CURR_INTELLECT+1], updated_passed_value);
+        }
+        swap(dp, new_dp);
+    }
+    cout << *max_element(dp.begin(), dp.end()) << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
