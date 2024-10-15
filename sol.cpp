@@ -15,7 +15,7 @@ using vpll = vector<pll>;
 #include <ext/pb_ds/assoc_container.hpp>
 #include <ext/pb_ds/tree_policy.hpp>
 using namespace __gnu_pbds;
-template <typename T> using ordered_set =  tree<T, null_type, less<T>, rb_tree_tag, tree_order_statistics_node_update>;
+template <typename T> using ordered_set = tree<T, null_type, less<T>, rb_tree_tag, tree_order_statistics_node_update>;
 ostream& endl(ostream& os) {
     return os << '\n';
 }
@@ -89,13 +89,13 @@ ll powm(ll a, ll b) {
     }
     return d;
 }
-ll powm(ll a, ll b, ll MOD) {
+ll powm(ll a, ll b, ll MODD) {
     assert(b >= 0);
     ll d = 1;
     while (b) {
-        if (b&1) d = (d*a) % MOD;
+        if (b&1) d = (d*a) % MODD;
         b >>= 1;
-        a = (a*a) % MOD;
+        a = (a*a) % MODD;
     }
     return d;
 }
@@ -122,20 +122,20 @@ ld poww(ld a, ll b) {
 ll mul(ll a, ll b) {
     return (a*b)%MOD;
 }
-ll mul(ll a, ll b, ll MOD) {
-    return (a*b)%MOD;
+ll mul(ll a, ll b, ll MODD) {
+    return (a*b)%MODD;
 }
 ll sum(ll a, ll b) {
     return (a+b)%MOD;
 }
-ll sum(ll a, ll b, ll MOD) {
-    return (a+b)%MOD;
+ll sum(ll a, ll b, ll MODD) {
+    return (a+b)%MODD;
 }
 ll sub(ll a, ll b) {
     return (a-(b%MOD)+MOD)%MOD;
 }
-ll sub(ll a, ll b, ll MOD) {
-    return (a-(b%MOD)+MOD)%MOD;
+ll sub(ll a, ll b, ll MODD) {
+    return (a-(b%MODD)+MODD)%MODD;
 }
 ll fj0dsq983gf8(ll index, vector<ll> & tree)  {
     index += 1;
@@ -148,7 +148,7 @@ ll fj0dsq983gf8(ll index, vector<ll> & tree)  {
 } // zero-indexed!!!
 ll get_sum_ft(ll left, ll right, vector<ll> & tree) {
     ll n = (ll)tree.size();
-    if (!(left <= right)) return 0;
+    if (left > right) return 0;
     assert(left <= right);
     if (right >= n) {
         clog << "FENWICK ALERT: R >= tree.size() (IT'S ZERO INDEXED !!!)" << endl;
@@ -179,10 +179,6 @@ void build_ft(vector<ll> & a, vector<ll> & tree) {
         if (r < n) tree[r] += tree[i];
     }
 } // zero-indexed!!!
-ll inv(ll i, ll m) {
-    if (i == 1) return 1;
-    return m - ((inv(m % i, i) * m) / i);
-}
 /*
 void copy_this () {
     ll n; cin >> n;
@@ -194,43 +190,59 @@ void copy_this () {
 */
 
 void solve() {
-    ll n,k; cin >> n >> k;
-    vll a(n);
-    vector<vll> tests_intellect;
-    vector<vll> tests_strength;
-    tests_intellect.emplace_back();
-    tests_strength.emplace_back();
-    for (auto &x : a) {
-        cin >> x;
+    ll n, m;
+    cin >> n >> m;
+    vll dp(m+1, 0ll);
+    vll addition(m+1, 0ll);
+    ll zero_cnt = 0ll;
+    // dp[A value] = tests passed
+    for (ll ii=1;ii<=n;ii++){
+        ll x; cin >> x;
         if (x == 0) {
-            tests_intellect.emplace_back();
-            tests_strength.emplace_back();
+            zero_cnt += 1;
+            for (ll i=1;i<=m;i++){
+                addition[i] += addition[i-1];
+            }
+            // A difference array can be used to perform multiple range update where we need to find the answer only after performing all the queries.
+            for (ll i = 0; i <= m; i += 1) {
+                dp[i] = dp[i] + addition[i];
+            }
+            fill(addition.begin(), addition.end(), 0ll);
+//            for (const auto &y : dp) {
+//                cout << y << ' ';
+//            }
+//            cout << endl;
+            // Transition (we can increment A or B each time)
+            for (ll i = m; i >= 1; i -= 1) {
+                dp[i] = max(dp[i], dp[i-1]);
+            }
+        } else if (x > 0) {
+            if (x > zero_cnt) continue;
+            ll l = x;
+            ll r = zero_cnt;
+//            cout << l << " -1- " << r << endl;
+            addition[l] += 1;
+            if (r+1 <= m) addition[r+1] -= 1;
+        } else {
+            x = -x;
+            if (x > zero_cnt) continue;
+            ll l = 0;
+            ll r = zero_cnt-x;
+//            cout << l << " -2- " << r << endl;
+            addition[l] += 1;
+            if (r+1 <= m) addition[r+1] -= 1;
         }
-        else if (x > 0) tests_intellect.back().push_back(x);
-        else if (x < 0) tests_strength.back().push_back(-x);
     }
-    for (auto &x : tests_intellect) {
-        sort(x.begin(), x.end());
+    for (ll i=1;i<=m;i++){
+        addition[i] += addition[i-1];
     }
-    for (auto &x : tests_strength) {
-        sort(x.begin(), x.end());
+    for (ll i = 0; i <= m; i += 1) {
+        dp[i] = dp[i] + addition[i];
     }
-    // dp[intellect] = passed_tests
-    vll new_dp(k+1);
-    vll dp(k+1);
-    for (ll testing = 0; testing <= k; testing += 1) {
-        fill(new_dp.begin(), new_dp.end(), -1ll);
-        for (ll intellect = 0; intellect <= testing; intellect += 1) {
-            ll CURR_INTELLECT = intellect;
-            ll CURR_STRENGTH = testing-intellect;
-            ll this_group_passed_intellect = upper_bound(tests_intellect[testing].begin(), tests_intellect[testing].end(), CURR_INTELLECT)-tests_intellect[testing].begin();
-            ll this_group_passed_strength = upper_bound(tests_strength[testing].begin(), tests_strength[testing].end(), CURR_STRENGTH)-tests_strength[testing].begin();
-            ll updated_passed_value = dp[intellect]+this_group_passed_intellect+this_group_passed_strength;
-            new_dp[CURR_INTELLECT] = max(new_dp[CURR_INTELLECT], updated_passed_value);
-            new_dp[CURR_INTELLECT+1] = max(new_dp[CURR_INTELLECT+1], updated_passed_value);
-        }
-        swap(dp, new_dp);
-    }
+//    for (const auto &y : dp) {
+//        cout << y << ' ';
+//    }
+//    cout << endl;
     cout << *max_element(dp.begin(), dp.end()) << endl;
 }
 

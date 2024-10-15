@@ -1,0 +1,15 @@
+{
+    "configurations": [
+        {
+            "type": "command",
+            "name": "Build",
+            "program": "g++",
+            "args": ["sol.cpp", "-o", "main"],
+        },
+        {
+            "type": "command",
+            "name": "Run",
+            "program": "$PROJECT_DIR$/main",
+        },
+    ]
+}
