@@ -19,6 +19,8 @@ template <typename T> using ordered_set = tree<T, null_type, less<T>, rb_tree_ta
 ostream& endl(ostream& os) {
     return os << '\n';
 }
+#define all(xxx) xxx.begin(), xxx.end()
+#define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl;
 template <class T, class S> inline bool chmax(T &a, const S &b) { return (a < b ? a = b, 1 : 0); }
 template <class T, class S> inline bool chmin(T &a, const S &b) { return (a > b ? a = b, 1 : 0); }
 template <typename T, typename U>
@@ -64,8 +66,8 @@ void print(Head&& head, Tail&&... tail) {
 #endif
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 uniform_int_distribution<ll> distrib(1ll, 12ll);
-constexpr ll MOD = 1e9+7;
 //constexpr ll MOD = 1e9+7;
+constexpr ll MOD = 998244353;
 void in(vector<ll> & a) {
     for (auto & x : a) cin >> x;
 }
@@ -190,60 +192,48 @@ void copy_this () {
 */
 
 void solve() {
-    ll n, m;
+    ll n,m;
     cin >> n >> m;
-    vll dp(m+1, 0ll);
-    vll addition(m+1, 0ll);
-    ll zero_cnt = 0ll;
-    // dp[A value] = tests passed
-    for (ll ii=1;ii<=n;ii++){
-        ll x; cin >> x;
-        if (x == 0) {
-            zero_cnt += 1;
-            for (ll i=1;i<=m;i++){
-                addition[i] += addition[i-1];
-            }
-            // A difference array can be used to perform multiple range update where we need to find the answer only after performing all the queries.
-            for (ll i = 0; i <= m; i += 1) {
-                dp[i] = dp[i] + addition[i];
-            }
-            fill(addition.begin(), addition.end(), 0ll);
-//            for (const auto &y : dp) {
-//                cout << y << ' ';
-//            }
-//            cout << endl;
-            // Transition (we can increment A or B each time)
-            for (ll i = m; i >= 1; i -= 1) {
-                dp[i] = max(dp[i], dp[i-1]);
-            }
-        } else if (x > 0) {
-            if (x > zero_cnt) continue;
-            ll l = x;
-            ll r = zero_cnt;
-//            cout << l << " -1- " << r << endl;
-            addition[l] += 1;
-            if (r+1 <= m) addition[r+1] -= 1;
-        } else {
-            x = -x;
-            if (x > zero_cnt) continue;
-            ll l = 0;
-            ll r = zero_cnt-x;
-//            cout << l << " -2- " << r << endl;
-            addition[l] += 1;
-            if (r+1 <= m) addition[r+1] -= 1;
+    vll dp(m+1);
+    vll new_dp(m+1);
+    dp[0] = 1;
+    for (ll i=0;i<m;i+=1){
+        fill(all(new_dp), 0ll);
+        for (ll to = 0; to<= m; to += 1) {
+            if (to-1 >= 0) new_dp[to] = sum(new_dp[to], dp[to-1]);
+            if (to+1 <= m) new_dp[to] = sum(new_dp[to], dp[to+1]);
         }
+        swap(dp, new_dp);
     }
-    for (ll i=1;i<=m;i++){
-        addition[i] += addition[i-1];
-    }
-    for (ll i = 0; i <= m; i += 1) {
-        dp[i] = dp[i] + addition[i];
-    }
-//    for (const auto &y : dp) {
-//        cout << y << ' ';
+    function<vll(vll,ll)> pow_same_size = [&](const vll& a, ll b) {
+        vll res(m+1);
+        vll new_res(m+1);
+        res[0] = 1;
+        while (b--) {
+            fill(all(new_res),0ll);
+            for (ll j = 0; j <= m; j += 1) {
+                for (ll k = 0; k+j <= m; k += 1) {
+                    new_res[j+k] = sum(new_res[j+k], a[j]*res[k]);
+                }
+            }
+            swap(res, new_res);
+        }
+        return res;
+    };
+    auto except1 = pow_same_size(dp, n-1);
+//    for (auto &x : dp) {
+//        cout << x << endl;
 //    }
 //    cout << endl;
-    cout << *max_element(dp.begin(), dp.end()) << endl;
+//    for (auto &x : except1) {
+//        cout << x << endl;
+//    }
+//    cout << endl;
+    ll tot = 0;
+    for(ll i=0; i<=m; i+=1){
+        tot = sum(tot,mul(except1[i], dp[i]));
+    }
+    cout << tot << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
