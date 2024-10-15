@@ -192,48 +192,116 @@ void copy_this () {
 */
 
 void solve() {
-    ll n,m;
-    cin >> n >> m;
-    vll dp(m+1);
-    vll new_dp(m+1);
-    dp[0] = 1;
-    for (ll i=0;i<m;i+=1){
-        fill(all(new_dp), 0ll);
-        for (ll to = 0; to<= m; to += 1) {
-            if (to-1 >= 0) new_dp[to] = sum(new_dp[to], dp[to-1]);
-            if (to+1 <= m) new_dp[to] = sum(new_dp[to], dp[to+1]);
-        }
-        swap(dp, new_dp);
+    ll n; cin >> n;
+    vll a(n);
+    for (auto &x : a) {
+        cin >> x;
     }
-    function<vll(vll,ll)> pow_same_size = [&](const vll& a, ll b) {
-        vll res(m+1);
-        vll new_res(m+1);
-        res[0] = 1;
-        while (b--) {
-            fill(all(new_res),0ll);
-            for (ll j = 0; j <= m; j += 1) {
-                for (ll k = 0; k+j <= m; k += 1) {
-                    new_res[j+k] = sum(new_res[j+k], a[j]*res[k]);
-                }
+    bool shit = false;
+    vll res;
+    function<void(ll,ll,ll)> transition = [&] (ll from, ll to, ll sz) {
+//        cout << from << to << sz << endl;
+        if (sz == 0) {
+            if (to != from) {
+                shit = true;
             }
-            swap(res, new_res);
+            return;
         }
-        return res;
+        if (sz == 1) {
+            if (to*2 != from && to*2+1 != from && to != from*2 && to != from*2+1) {
+                shit = true;
+                return;
+            }
+            res.push_back(to);
+            return;
+        }
+        string s1;
+        string s2;
+        bool active1 = false;
+        bool active2 = false;
+        for (ll bit = 60; bit >= 0; bit -= 1) {
+            if (from & (1ll << bit) || active1) {
+                active1 = true;
+                s1.push_back('0'+bool(from & (1 << bit)));
+            }
+            if (to & (1ll << bit) || active2) {
+                active2 = true;
+                s2.push_back('0'+bool(to & (1 << bit)));
+            }
+        }
+        ll size_min = ll(min(s1.size(), s2.size()));
+        ll common_prefix = size_min;
+        for (ll i = 0; i < size_min; i += 1) {
+            if (s1[i] != s2[i]) {
+                common_prefix = i;
+                break;
+            }
+        }
+        if (s1 == s2) {
+            res.push_back(from*2);
+            transition(from*2, to, sz-1);
+            return;
+        }
+//        cout << s1 << " -> " << s2 << "  ( in " << sz << " steps, common=" << common_prefix << " )" << endl;
+        if (common_prefix < s1.size()) {
+            res.push_back(from/2);
+            transition(from/2, to, sz-1);
+        } else {
+            bool next = s2[common_prefix]-'0';
+            res.push_back(from*2+next);
+            transition(from*2+next, to, sz-1);
+        }
     };
-    auto except1 = pow_same_size(dp, n-1);
-//    for (auto &x : dp) {
-//        cout << x << endl;
-//    }
-//    cout << endl;
-//    for (auto &x : except1) {
-//        cout << x << endl;
-//    }
-//    cout << endl;
-    ll tot = 0;
-    for(ll i=0; i<=m; i+=1){
-        tot = sum(tot,mul(except1[i], dp[i]));
+    ll non_minus = -1;
+    for (ll i = 0; i < n; i += 1) {
+        if (a[i] != -1) {
+            non_minus = i;
+            break;
+        }
     }
-    cout << tot << endl;
+    if (non_minus == -1) {
+        ll curr = 1;
+        for (ll i = 0; i < n; i += 1) {
+            if (curr == 1) {
+                curr *= 2;
+            } else {
+                curr /= 2;
+            }
+            cout << curr << ' ';
+        }
+        cout << endl;
+        return;
+    }
+    if (non_minus % 2 == 0) {
+        a[0] = a[non_minus];
+    } else {
+        a[0] = a[non_minus]*2;
+        a[1] = a[non_minus];
+    }
+    ll prev = -1;
+    for (ll i = 0; i < n; ++i) {
+        if (a[i] != -1) {
+            if (prev != -1) {
+                transition(a[prev], a[i], i-prev);
+                if (shit) {
+                    cout << -1 << endl;
+                    return;
+                }
+                prev = i;
+            } else {
+                res.push_back(a[i]);
+                prev = i;
+            }
+        }
+    }
+    while (res.size() != n) {
+        if (res.back() >= 2) {
+            res.push_back(res.back()/2);
+        } else {
+            res.push_back(res.back()*2);
+        }
+    }
+    print(res);
 }
 
 int32_t main(int32_t argc, char* argv[]) {
@@ -254,7 +322,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-//    cin >> tt;
+    cin >> tt;
     while (tt--) {
         solve();
     }
