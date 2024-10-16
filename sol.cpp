@@ -177,8 +177,8 @@ void build_ft(vector<ll> & a, vector<ll> & tree) {
     assert(tree.size() == a.size());
     for (ll i = 0; i < n; i++) {
         tree[i] += a[i];
-        ll r = i | (i + 1);
-        if (r < n) tree[r] += tree[i];
+        ll good = i | (i + 1);
+        if (good < n) tree[good] += tree[i];
     }
 } // zero-indexed!!!
 /*
@@ -190,46 +190,81 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
-
+vll primes;
+constexpr ll N = 1e6+1;
+vector<set<int>> g (N);
 void solve() {
-    const ll N = 2e5+1;
-    vll kv;
-    ll su, kol; cin >> su >> kol;
-    for (ll i = 1; i <= su; i += 1) {
-        if (i*i >= su) break;
-        kv.push_back(su-i*i);
-    }
-    ll sz = ll(kv.size());
-    vector<vector<bitset<N>>> dp (sz+10, vector<bitset<N>>(kol+10));
-    for (auto &i : dp) {
-        i[0][0] = true;
-    }
-    for (ll pref = 1; pref <= sz; pref += 1) {
-        for (ll taken = 0; taken <= kol; taken += 1) {
-            dp[pref+1][taken+1] |= dp[pref][taken] << kv[pref-1];
-            dp[pref+1][taken] |= dp[pref][taken];
-            clog << "new element: " << kv[pref-1] << " !" << endl;
+    ll n; cin >> n;
+    // (vertices are prime numbers)
+
+
+    // as few vertices as possible
+    // n-1 ребер в пути !!!
+    // петли разрешены, кратные ребра запрещены!!
+    function<ll(ll)> get_number_of_edges_by_number_of_vertices = [&] (ll vertices) {
+        if (vertices % 2 == 1) {
+            return vertices * (vertices + 1) / 2;
+        } else {
+            return vertices * vertices / 2 + 1;
+        }
+    };
+    ll l = 1, r = n;
+    ll good = 1;
+    while (l <= r) {
+        ll mid = (l+r) >> 1;
+        if (get_number_of_edges_by_number_of_vertices(mid) >= n-1) {
+            good = mid;
+            r = mid-1;
+        } else {
+            l = mid+1;
         }
     }
-    if (!dp[sz+1][kol][su]) {
-        cout << "NO" << endl;
-        return;
-    }
-    cout << "YES" << endl;
-    for (ll pref = sz; pref >= 1; pref -= 1) {
-        if (kol == 0) break;
-        if (dp[pref][kol-1][su-kv[pref-1]]) {
-            su -= kv[pref-1];
-            cout << kv[pref-1] << ' ';
-            kol -= 1;
+    clog << "number of unique primes is " << good << endl;
+    if (good % 2 == 1) {
+        for (int i = 1; i <= good; i++) {
+            for (int j = i; j <= good; j++) {
+                g[i].insert(j);
+                g[j].insert(i);
+            }
         }
+    } else {
+        for (int i = 1; i <= good; i++) {
+            for (int j = i; j <= good; j++)
+                if ((j != i + 1 || i % 2 == 1)) {
+                    g[i].insert(j);
+                    g[j].insert(i);
+                }
+        }
+    }
+    vector<int> ans = {1};
+    auto findEulerPath = [&](auto self, int v) -> void {
+        while (!g[v].empty()) {
+            int u = *g[v].begin();
+            if (u != v)
+                g[u].erase(v);
+            g[v].erase(g[v].begin());
+            self(self, u);
+        }
+        ans.emplace_back(v);
+    };
+    findEulerPath(findEulerPath, ans.back());
+    reverse(ans.begin(), ans.end());
+    for (int i = 0; i < n; i++) {
+        cout << primes[ans[i]-1] << " ";
     }
     cout << endl;
-//    cout << dp[sz+1][kol][su] << endl;
-
+    for (int i = 1; i <= good; i++) g[i].clear();
 }
 
 int32_t main(int32_t argc, char* argv[]) {
+    bitset<1'000'0000> is_prime;
+    is_prime.set();
+    for (ll i = 2; i < 1e7; i += 1) if (is_prime[i]) {
+        primes.push_back(i);
+        for (ll j = i*i; j < 1e7; j += i) {
+            is_prime[j] = false;
+        }
+    }
     cout << setprecision(17);
     bool use_fast_io = true;
     for (int32_t i = 1; i < argc; ++i) {
@@ -247,7 +282,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-//    cin >> tt;
+    cin >> tt;
     while (tt--) {
         solve();
     }
