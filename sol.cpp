@@ -190,57 +190,69 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
-vll primes;
-constexpr ll N = 1e6+1;
-vector<set<int>> g (N);
+struct shit {
+    ll idx;
+    ll high_priority_class, low_priority_class;
+};
 void solve() {
+    function<ll(shit,shit)> comp = [] (shit a, shit b){
+        if (a.high_priority_class == b.high_priority_class) {
+            return a.low_priority_class < b.low_priority_class;
+        }
+        return a.high_priority_class < b.high_priority_class;
+    };
     string s;
     cin >> s;
-    s += '\0';
+    s.push_back('\0');
     ll n = ll(s.size());
-    ll l = 0, r = 0;
-    vll Nfunc(n-1);
-    for (ll i = 1; i < n-1; i += 1) {
-        if (r < i) {
-            l = i;
-            ll j = 0;
-            while (s[i+j] == s[j]) {
-                j += 1;
-            }
-            r = i+j-1;
-            Nfunc[i] = j;
-            continue;
+    vector<shit> curr(n);
+    for (ll i = 0; i < n; i += 1) {
+        curr[i].idx = i;
+        curr[i].high_priority_class = s[i];
+        curr[i].low_priority_class = s[i];
+    }
+    sort(all(curr), comp);
+    ll classes_cnt = 1;
+    vll c(n);
+    for (ll i = 0; i < n; i += 1) {
+        if (i > 0 && (curr[i].high_priority_class!=curr[i-1].high_priority_class ||
+                curr[i].low_priority_class!=curr[i-1].low_priority_class)) {
+            classes_cnt += 1;
         }
-        ll shit = i-l;
-        ll shitval = min(Nfunc[shit], r-i+1);
-        ll add = 0;
-        if (i+shitval-1>=r) {
-            l = i;
-            ll new_r = i+shitval;
-            while (s[new_r-l] == s[new_r]) {
-                new_r += 1;
+        c[curr[i].idx] = classes_cnt;
+//        cout << curr[i].idx << " " << curr[i].high_priority_class << " " << curr[i].low_priority_class << endl;
+    }
+    for (ll k = 0; classes_cnt < n; k += 1) {
+        ll two_pow_k = 1ll << k;
+        for (ll i = 0; i < n; i += 1) {
+            curr[i].idx = i;
+            curr[i].high_priority_class = c[i];
+            curr[i].low_priority_class = c[(i+two_pow_k)%n];
+//            cout << curr[i].idx << " " << curr[i].high_priority_class << " " << curr[i].low_priority_class << endl;
+        }
+        sort(all(curr), comp);
+        classes_cnt = 1;
+        for (ll i = 0; i < n; i += 1) {
+            if (i > 0 && (curr[i].high_priority_class!=curr[i-1].high_priority_class ||
+                          curr[i].low_priority_class!=curr[i-1].low_priority_class)) {
+                classes_cnt += 1;
             }
-            r = new_r-1;
-            Nfunc[i] = r-l+1;
-        } else {
-            Nfunc[i] = shitval;
+            c[curr[i].idx] = classes_cnt;
         }
     }
-    for (const auto &x : Nfunc) {
-        cout << x << ' ';
+    vpll clasort(n);
+    for (ll i = 0; i <n; i+=1) {
+        clasort[i].first = c[i];
+        clasort[i].second = i;
+    }
+    sort(all(clasort));
+    for (ll i = 0; i < n; i+=1) {
+        cout << clasort[i].second << ' ';
     }
     cout << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
-    bitset<1'000'0000> is_prime;
-    is_prime.set();
-    for (ll i = 2; i < 1e7; i += 1) if (is_prime[i]) {
-            primes.push_back(i);
-            for (ll j = i*i; j < 1e7; j += i) {
-                is_prime[j] = false;
-            }
-        }
     cout << setprecision(17);
     bool use_fast_io = true;
     for (int32_t i = 1; i < argc; ++i) {
