@@ -194,77 +194,53 @@ vll primes;
 constexpr ll N = 1e6+1;
 vector<set<int>> g (N);
 void solve() {
-    ll n; cin >> n;
-    // (vertices are prime numbers)
-
-
-    // as few vertices as possible
-    // n-1 ребер в пути !!!
-    // петли разрешены, кратные ребра запрещены!!
-    function<ll(ll)> get_number_of_edges_by_number_of_vertices = [&] (ll vertices) {
-        if (vertices % 2 == 1) {
-            return vertices * (vertices + 1) / 2;
-        } else {
-            return vertices * vertices / 2 + 1;
-        }
-    };
-    ll l = 1, r = n;
-    ll good = 1;
-    while (l <= r) {
-        ll mid = (l+r) >> 1;
-        if (get_number_of_edges_by_number_of_vertices(mid) >= n-1) {
-            good = mid;
-            r = mid-1;
-        } else {
-            l = mid+1;
-        }
-    }
-    clog << "number of unique primes is " << good << endl;
-    if (good % 2 == 1) {
-        for (int i = 1; i <= good; i++) {
-            for (int j = i; j <= good; j++) {
-                g[i].insert(j);
-                g[j].insert(i);
+    string s;
+    cin >> s;
+    s += '\0';
+    ll n = ll(s.size());
+    ll l = 0, r = 0;
+    vll Nfunc(n-1);
+    for (ll i = 1; i < n-1; i += 1) {
+        if (r < i) {
+            l = i;
+            ll j = 0;
+            while (s[i+j] == s[j]) {
+                j += 1;
             }
+            r = i+j-1;
+            Nfunc[i] = j;
+            continue;
         }
-    } else {
-        for (int i = 1; i <= good; i++) {
-            for (int j = i; j <= good; j++)
-                if ((j != i + 1 || i % 2 == 1)) {
-                    g[i].insert(j);
-                    g[j].insert(i);
-                }
+        ll shit = i-l;
+        ll shitval = min(Nfunc[shit], r-i+1);
+        ll add = 0;
+        if (i+shitval-1>=r) {
+            l = i;
+            ll new_r = i+shitval;
+            while (s[new_r-l] == s[new_r]) {
+                new_r += 1;
+            }
+            r = new_r-1;
+            Nfunc[i] = r-l+1;
+        } else {
+            Nfunc[i] = shitval;
         }
     }
-    vector<int> ans = {1};
-    auto findEulerPath = [&](auto self, int v) -> void {
-        while (!g[v].empty()) {
-            int u = *g[v].begin();
-            if (u != v)
-                g[u].erase(v);
-            g[v].erase(g[v].begin());
-            self(self, u);
-        }
-        ans.emplace_back(v);
-    };
-    findEulerPath(findEulerPath, ans.back());
-    reverse(ans.begin(), ans.end());
-    for (int i = 0; i < n; i++) {
-        cout << primes[ans[i]-1] << " ";
+    for (const auto &x : Nfunc) {
+        cout << x << ' ';
     }
     cout << endl;
-    for (int i = 1; i <= good; i++) g[i].clear();
 }
 
 int32_t main(int32_t argc, char* argv[]) {
     bitset<1'000'0000> is_prime;
     is_prime.set();
     for (ll i = 2; i < 1e7; i += 1) if (is_prime[i]) {
-        primes.push_back(i);
-        for (ll j = i*i; j < 1e7; j += i) {
-            is_prime[j] = false;
+            primes.push_back(i);
+            for (ll j = i*i; j < 1e7; j += i) {
+                is_prime[j] = false;
+            }
         }
-    }
     cout << setprecision(17);
     bool use_fast_io = true;
     for (int32_t i = 1; i < argc; ++i) {
@@ -282,7 +258,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-    cin >> tt;
+//    cin >> tt;
     while (tt--) {
         solve();
     }
