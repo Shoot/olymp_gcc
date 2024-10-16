@@ -192,116 +192,41 @@ void copy_this () {
 */
 
 void solve() {
-    ll n; cin >> n;
-    vll a(n);
-    for (auto &x : a) {
-        cin >> x;
+    const ll N = 2e5+1;
+    vll kv;
+    ll su, kol; cin >> su >> kol;
+    for (ll i = 1; i <= su; i += 1) {
+        if (i*i >= su) break;
+        kv.push_back(su-i*i);
     }
-    bool shit = false;
-    vll res;
-    function<void(ll,ll,ll)> transition = [&] (ll from, ll to, ll sz) {
-//        cout << from << to << sz << endl;
-        if (sz == 0) {
-            if (to != from) {
-                shit = true;
-            }
-            return;
-        }
-        if (sz == 1) {
-            if (to*2 != from && to*2+1 != from && to != from*2 && to != from*2+1) {
-                shit = true;
-                return;
-            }
-            res.push_back(to);
-            return;
-        }
-        string s1;
-        string s2;
-        bool active1 = false;
-        bool active2 = false;
-        for (ll bit = 60; bit >= 0; bit -= 1) {
-            if (from & (1ll << bit) || active1) {
-                active1 = true;
-                s1.push_back('0'+bool(from & (1 << bit)));
-            }
-            if (to & (1ll << bit) || active2) {
-                active2 = true;
-                s2.push_back('0'+bool(to & (1 << bit)));
-            }
-        }
-        ll size_min = ll(min(s1.size(), s2.size()));
-        ll common_prefix = size_min;
-        for (ll i = 0; i < size_min; i += 1) {
-            if (s1[i] != s2[i]) {
-                common_prefix = i;
-                break;
-            }
-        }
-        if (s1 == s2) {
-            res.push_back(from*2);
-            transition(from*2, to, sz-1);
-            return;
-        }
-//        cout << s1 << " -> " << s2 << "  ( in " << sz << " steps, common=" << common_prefix << " )" << endl;
-        if (common_prefix < s1.size()) {
-            res.push_back(from/2);
-            transition(from/2, to, sz-1);
-        } else {
-            bool next = s2[common_prefix]-'0';
-            res.push_back(from*2+next);
-            transition(from*2+next, to, sz-1);
-        }
-    };
-    ll non_minus = -1;
-    for (ll i = 0; i < n; i += 1) {
-        if (a[i] != -1) {
-            non_minus = i;
-            break;
+    ll sz = ll(kv.size());
+    vector<vector<bitset<N>>> dp (sz+10, vector<bitset<N>>(kol+10));
+    for (auto &i : dp) {
+        i[0][0] = true;
+    }
+    for (ll pref = 1; pref <= sz; pref += 1) {
+        for (ll taken = 0; taken <= kol; taken += 1) {
+            dp[pref+1][taken+1] |= dp[pref][taken] << kv[pref-1];
+            dp[pref+1][taken] |= dp[pref][taken];
+            clog << "new element: " << kv[pref-1] << " !" << endl;
         }
     }
-    if (non_minus == -1) {
-        ll curr = 1;
-        for (ll i = 0; i < n; i += 1) {
-            if (curr == 1) {
-                curr *= 2;
-            } else {
-                curr /= 2;
-            }
-            cout << curr << ' ';
-        }
-        cout << endl;
+    if (!dp[sz+1][kol][su]) {
+        cout << "NO" << endl;
         return;
     }
-    if (non_minus % 2 == 0) {
-        a[0] = a[non_minus];
-    } else {
-        a[0] = a[non_minus]*2;
-        a[1] = a[non_minus];
-    }
-    ll prev = -1;
-    for (ll i = 0; i < n; ++i) {
-        if (a[i] != -1) {
-            if (prev != -1) {
-                transition(a[prev], a[i], i-prev);
-                if (shit) {
-                    cout << -1 << endl;
-                    return;
-                }
-                prev = i;
-            } else {
-                res.push_back(a[i]);
-                prev = i;
-            }
+    cout << "YES" << endl;
+    for (ll pref = sz; pref >= 1; pref -= 1) {
+        if (kol == 0) break;
+        if (dp[pref][kol-1][su-kv[pref-1]]) {
+            su -= kv[pref-1];
+            cout << kv[pref-1] << ' ';
+            kol -= 1;
         }
     }
-    while (res.size() != n) {
-        if (res.back() >= 2) {
-            res.push_back(res.back()/2);
-        } else {
-            res.push_back(res.back()*2);
-        }
-    }
-    print(res);
+    cout << endl;
+//    cout << dp[sz+1][kol][su] << endl;
+
 }
 
 int32_t main(int32_t argc, char* argv[]) {
@@ -322,7 +247,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-    cin >> tt;
+//    cin >> tt;
     while (tt--) {
         solve();
     }
