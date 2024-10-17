@@ -253,17 +253,20 @@ int32_t main(int32_t argc, char* argv[]) {
         vector<vector<ll>> d(2, vector<ll>(1.1e5, 1'000'000'000));
         auto start = pll(0, 0);
         d[start.first][start.second] = 0;
-        set<pll> q;
-        q.insert(start);
+        deque<pll> q;
+        q.push_front(start);
         while (!q.empty()) {
-            auto v = *q.begin();
-            q.erase(q.begin());
+            auto v = q.front();
+            q.pop_front();
             for (auto edge : adj[v]) {
                 pll u = edge.first;
                 ll w = edge.second;
                 if (d[v.first][v.second] + w < d[u.first][u.second]) {
                     d[u.first][u.second] = d[v.first][v.second] + w;
-                    q.insert(u);
+                    if (w == 1)
+                        q.push_back(u);
+                    else
+                        q.push_front(u);
                 }
             }
         }
