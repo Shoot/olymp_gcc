@@ -240,58 +240,32 @@ void solve() {
             c[curr[i].idx] = classes_cnt;
         }
     }
-    vpll clasort(n);
-    for (ll i = 0; i <n; i+=1) {
-        clasort[i].first = c[i];
-        clasort[i].second = i;
+    vll rank(n);
+    vll sa(n);
+    vll lcp(n-1);
+    for (ll i = 0; i < n; i+=1) {
+        rank[i] = c[i]-1;
+        sa[c[i]-1] = i;
     }
-    sort(all(clasort));
-//    for (ll i = 0; i < n; i+=1) {
-//        cout << clasort[i].second << ' ';
-//    }
-//    cout << endl;
-    ll q; cin >> q;
-//    for (ll i = 0; i < n; i += 1) {
-//        cout << s.substr(clasort[i].second, 9999) << endl;
-//    }
-    while (q--) {
-        string target;
-        cin >> target;
-        ll sz = ll(target.size());
-        ll l = 0, r = n-1;
-        ll first_equal = n-1;
-        while (l <= r) {
-            ll mid = (l+r) >> 1;
-            ll idx = clasort[mid].second;
-            auto possible = s.substr(idx, sz);
-            if (possible < target) {
-                l = mid+1;
-                first_equal = mid+1;
-            } else {
-                r = mid-1;
-            }
-        }
-        ll last_equal = n-1;
-        l = 0, r = n-1;
-        while (l <= r) {
-            ll mid = (l+r) >> 1;
-            ll idx = clasort[mid].second;
-            auto possible = s.substr(idx, sz);
-            if (possible > target) {
-                r = mid-1;
-                last_equal = mid-1;
-            } else {
-                l = mid+1;
-            }
-        }
-        ll kol = last_equal-first_equal+1;
-        cout << kol << endl;
-//        if (kol>0) {
-//            cout << "Yes" << endl;
-//        } else {
-//            cout << "No" << endl;
-//        }
+    for (const auto &x : sa) {
+        cout << x << ' ';
     }
+    cout << endl;
+    ll k = 0;
+    for(int i=0; i<n; i++, k?k--:0)
+    {
+        if(rank[i]==n-1) {
+            k=0;
+            continue;
+        }
+        int j=sa[rank[i]+1];
+        while(i+k<n && j+k<n && s[i+k]==s[j+k]) k++;
+        lcp[rank[i]]=k;
+    }
+    for (const auto &x : lcp) {
+        cout << x << ' ';
+    }
+    cout << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
