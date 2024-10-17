@@ -194,8 +194,8 @@ void solve() {
 
 }
 int32_t main(int32_t argc, char* argv[]) {
-//    ifstream cin("path.in");
-//    ofstream cout("path.out");
+    ifstream cin("path.in");
+    ofstream cout("path.out");
     cout << setprecision(17);
     bool use_fast_io = true;
     for (int32_t i = 1; i < argc; ++i) {
@@ -218,30 +218,47 @@ int32_t main(int32_t argc, char* argv[]) {
     while (tt--) {
         ll n, m, s;
         s = 1;
-        cin >> n >> m;
-        vector<__int128> d(n+1, 1e25);
+        const ll INF = 1e17;
+        cin >> n >> m >> s;
+        vector<ll> d(n+1, INF);
         d[s] = 0;
         struct edge {
             ll u, v, w;
         };
+        vector<vll> adj(n+1);
         function<void(edge)> relax = [&] (edge x) {
-            if (d[x.u]+x.w < d[x.v]) d[x.v] = d[x.u]+x.w;
-//            if (d[x.v]+x.w < d[x.u]) d[x.u] = d[x.v]+x.w;
+            if (d[x.u] < INF && (d[x.u]+x.w < d[x.v])) d[x.v] = d[x.u]+x.w;
         };
         vector<edge> edges(m);
         for (auto &edge : edges) {
             cin >> edge.u >> edge.v >> edge.w;
+            adj[edge.u].push_back(edge.v);
         }
-        for (ll xx = 0; xx < n-1; xx += 1) {
+        for (ll xx = 0; xx < 2e4; xx += 1) {
             for (auto const &edge : edges) {
                 relax(edge);
             }
         }
+        vbo fucked(n+1, false);
+        function<void(ll)> fuck_you = [&] (ll v) {
+            fucked[v] = true;
+            for (const auto &adj : adj[v]) {
+                if (!fucked[adj]) fuck_you(adj);
+            }
+        };
+        for (const auto &x : edges) {
+            if (d[x.u] < INF && (d[x.u]+x.w < d[x.v])) fuck_you(x.v);
+        }
         for (ll i = 1; i <= n; i += 1) {
-            if (d[i] != 1e25) {
-                cout << (ll)d[i] << ' ';
+            if (fucked[i]) {
+                cout << "-" << endl;
+                continue;
+            }
+            if (d[i] != INF) {
+                assert(d[i] < 1e16);
+                cout << d[i] << endl;
             } else {
-                cout << "30000" << ' ';
+                cout << "*" << endl;
             }
         }
         cout << endl;
