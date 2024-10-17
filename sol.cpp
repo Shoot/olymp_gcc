@@ -216,7 +216,7 @@ void solve() {
     vll c(n);
     for (ll i = 0; i < n; i += 1) {
         if (i > 0 && (curr[i].high_priority_class!=curr[i-1].high_priority_class ||
-                curr[i].low_priority_class!=curr[i-1].low_priority_class)) {
+                      curr[i].low_priority_class!=curr[i-1].low_priority_class)) {
             classes_cnt += 1;
         }
         c[curr[i].idx] = classes_cnt;
@@ -246,10 +246,52 @@ void solve() {
         clasort[i].second = i;
     }
     sort(all(clasort));
-    for (ll i = 0; i < n; i+=1) {
-        cout << clasort[i].second << ' ';
+//    for (ll i = 0; i < n; i+=1) {
+//        cout << clasort[i].second << ' ';
+//    }
+//    cout << endl;
+    ll q; cin >> q;
+//    for (ll i = 0; i < n; i += 1) {
+//        cout << s.substr(clasort[i].second, 9999) << endl;
+//    }
+    while (q--) {
+        string target;
+        cin >> target;
+        ll sz = ll(target.size());
+        ll l = 0, r = n-1;
+        ll first_equal = n-1;
+        while (l <= r) {
+            ll mid = (l+r) >> 1;
+            ll idx = clasort[mid].second;
+            auto possible = s.substr(idx, sz);
+            if (possible < target) {
+                l = mid+1;
+                first_equal = mid+1;
+            } else {
+                r = mid-1;
+            }
+        }
+        ll last_equal = n-1;
+        l = 0, r = n-1;
+        while (l <= r) {
+            ll mid = (l+r) >> 1;
+            ll idx = clasort[mid].second;
+            auto possible = s.substr(idx, sz);
+            if (possible > target) {
+                r = mid-1;
+                last_equal = mid-1;
+            } else {
+                l = mid+1;
+            }
+        }
+        ll kol = last_equal-first_equal+1;
+        cout << kol << endl;
+//        if (kol>0) {
+//            cout << "Yes" << endl;
+//        } else {
+//            cout << "No" << endl;
+//        }
     }
-    cout << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
