@@ -194,8 +194,8 @@ void solve() {
 
 }
 int32_t main(int32_t argc, char* argv[]) {
-//    ifstream cin("dijkstra.in");
-//    ofstream cout("dijkstra.out");
+    ifstream cin("distance.in");
+    ofstream cout("distance.out");
     cout << setprecision(17);
     bool use_fast_io = true;
     for (int32_t i = 1; i < argc; ++i) {
@@ -216,22 +216,20 @@ int32_t main(int32_t argc, char* argv[]) {
 //    cin >> tt;
 
     while (tt--) {
-        ll n;
-        cin >> n;
+        ll n, m;
+        cin >> n >> m;
         vector<vpll> g (n+1);
         ll start, finish;
         cin >> start >> finish;
-        for (ll i = 1; i <= n; i += 1) {
-            for (ll j = 1; j <= n; j += 1) {
-                ll w;
-                cin >> w;
-                if (w != -1) {
-                    g[i].push_back(pll(j, w));
-                }
-            }
+        for (ll i = 0; i < m; i+=1) {
+            ll u, v, w;
+            cin >> u >> v >> w;
+            g[u].push_back(pll(v, w));
+            g[v].push_back(pll(u, w));
         }
         set<pll> st;
         vll d(n+1, 1e17);
+        vll par(n+1);
         d[start] = 0;
         st.insert(pll(0, start));
         while (!st.empty()) {
@@ -241,6 +239,7 @@ int32_t main(int32_t argc, char* argv[]) {
             for (auto const &[nxt, w]: g[u]) {
                 if (d[u]+w < d[nxt]) {
                     d[nxt] = d[u]+w;
+                    par[nxt] = u;
                     st.insert(pll(d[nxt], nxt));
                 }
             }
@@ -250,6 +249,17 @@ int32_t main(int32_t argc, char* argv[]) {
             continue;
         }
         cout << d[finish] << endl;
+        vll ans;
+        ans.push_back(finish);
+        while (finish != start) {
+            finish = par[finish];
+            ans.push_back(finish);
+        }
+        reverse(all(ans));
+        for (const auto &x : ans) {
+            cout << x << ' ';
+        }
+        cout << endl;
     }
     return 0;
 }
