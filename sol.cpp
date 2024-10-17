@@ -191,18 +191,11 @@ void copy_this () {
 }
 */
 void solve() {
-//    ll a, b;
-//    cin >> a >> b;
-//    ll maxi = -1e9;
-//    for (ll i = b; i >= max(b-1, 0ll); i -= 1) {
-//        maxi = max(maxi, a*i/__gcd(a, i));
-//    }
-//    cout << maxi << endl;
-}
 
+}
 int32_t main(int32_t argc, char* argv[]) {
-    ifstream cin("lcm.in");
-    ofstream cout("lcm.out");
+    ifstream cin("streets.in");
+    ofstream cout("streets.out");
     cout << setprecision(17);
     bool use_fast_io = true;
     for (int32_t i = 1; i < argc; ++i) {
@@ -220,17 +213,62 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-    cin >> tt;
+//    cin >> tt;
     while (tt--) {
-        ll a, b;
-        cin >> a >> b;
-        ll maxi = -1e9;
-        for (ll i = b; ; i -= 1) {
-            ll g = __gcd(a, i);
-            maxi = max(maxi, a*i/g);
-            if (g == 1) break;
+        ll n, m, k;
+        cin >> n >> m >> k;
+        map<pll, vector<pair<pll, ll>>> adj;
+        for (ll i = 0; i < n; i += 1) {
+            ll u;
+            cin >> u;
+            adj[pll(0, u)].push_back(make_pair(pll(0, u+1), 1));
+            adj[pll(0, u+1)].push_back(make_pair(pll(0, u), 1));
         }
-        cout << maxi << endl;
+        for (ll i = 0; i < m; i += 1) {
+            ll u;
+            cin >> u;
+            adj[pll(1, u)].push_back(make_pair(pll(1, u+1), 1));
+            adj[pll(1, u+1)].push_back(make_pair(pll(1, u), 1));
+        }
+        for (ll i = 0; i < k; i += 1) {
+            ll u;
+            cin >> u;
+            adj[pll(0, u)].push_back(make_pair(pll(1, u), 1));
+            adj[pll(1, u)].push_back(make_pair(pll(0, u), 1));
+        }
+        for (ll i = 0; i < 2; i += 1) {
+            for (ll j = 0; j < 1.05e5; j += 1) {
+                if (j != 0) {
+                    // vniz
+                    if (find(all(adj[pll(i,j)]), make_pair(pll(i, j-1), 1)) == adj[pll(i,j)].end()) {
+                        adj[pll(i,j)].push_back(make_pair(pll(i, j-1), 0));
+                    }
+                }
+                // vverh
+                if (find(all(adj[pll(i,j)]), make_pair(pll(i, j+1), 1)) == adj[pll(i,j)].end()) {
+                    adj[pll(i,j)].push_back(make_pair(pll(i, j+1), 0));
+                }
+            }
+        }
+        vector<vector<ll>> d(2, vector<ll>(1.1e5, 1'000'000'000));
+        auto start = pll(0, 0);
+        d[start.first][start.second] = 0;
+        set<pll> q;
+        q.insert(start);
+        while (!q.empty()) {
+            auto v = *q.begin();
+            q.erase(q.begin());
+            for (auto edge : adj[v]) {
+                pll u = edge.first;
+                ll w = edge.second;
+                if (d[v.first][v.second] + w < d[u.first][u.second]) {
+                    d[u.first][u.second] = d[v.first][v.second] + w;
+                    q.insert(u);
+                }
+            }
+        }
+        ll fi; cin >> fi;
+        cout << d[1][fi] << endl;
     }
     return 0;
 }
