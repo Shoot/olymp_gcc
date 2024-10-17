@@ -247,10 +247,10 @@ void solve() {
         rank[i] = c[i]-1;
         sa[c[i]-1] = i;
     }
-    for (const auto &x : sa) {
-        cout << x << ' ';
-    }
-    cout << endl;
+//    for (const auto &x : sa) {
+//        cout << x << ' ';
+//    }
+//    cout << endl;
     ll k = 0;
     for(int i=0; i<n; i++, k?k--:0)
     {
@@ -262,10 +262,8 @@ void solve() {
         while(i+k<n && j+k<n && s[i+k]==s[j+k]) k++;
         lcp[rank[i]]=k;
     }
-    for (const auto &x : lcp) {
-        cout << x << ' ';
-    }
-    cout << endl;
+    n -= 1;
+    cout << n*(n+1)/2-accumulate(all(lcp), 0ll) << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
