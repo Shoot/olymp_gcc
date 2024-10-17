@@ -190,83 +190,19 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
-struct shit {
-    ll idx;
-    ll high_priority_class, low_priority_class;
-};
 void solve() {
-    function<ll(shit,shit)> comp = [] (shit a, shit b){
-        if (a.high_priority_class == b.high_priority_class) {
-            return a.low_priority_class < b.low_priority_class;
-        }
-        return a.high_priority_class < b.high_priority_class;
-    };
-    string s;
-    cin >> s;
-    s.push_back('\0');
-    ll n = ll(s.size());
-    vector<shit> curr(n);
-    for (ll i = 0; i < n; i += 1) {
-        curr[i].idx = i;
-        curr[i].high_priority_class = s[i];
-        curr[i].low_priority_class = s[i];
-    }
-    sort(all(curr), comp);
-    ll classes_cnt = 1;
-    vll c(n);
-    for (ll i = 0; i < n; i += 1) {
-        if (i > 0 && (curr[i].high_priority_class!=curr[i-1].high_priority_class ||
-                      curr[i].low_priority_class!=curr[i-1].low_priority_class)) {
-            classes_cnt += 1;
-        }
-        c[curr[i].idx] = classes_cnt;
-//        cout << curr[i].idx << " " << curr[i].high_priority_class << " " << curr[i].low_priority_class << endl;
-    }
-    for (ll k = 0; classes_cnt < n; k += 1) {
-        ll two_pow_k = 1ll << k;
-        for (ll i = 0; i < n; i += 1) {
-            curr[i].idx = i;
-            curr[i].high_priority_class = c[i];
-            curr[i].low_priority_class = c[(i+two_pow_k)%n];
-//            cout << curr[i].idx << " " << curr[i].high_priority_class << " " << curr[i].low_priority_class << endl;
-        }
-        sort(all(curr), comp);
-        classes_cnt = 1;
-        for (ll i = 0; i < n; i += 1) {
-            if (i > 0 && (curr[i].high_priority_class!=curr[i-1].high_priority_class ||
-                          curr[i].low_priority_class!=curr[i-1].low_priority_class)) {
-                classes_cnt += 1;
-            }
-            c[curr[i].idx] = classes_cnt;
-        }
-    }
-    vll rank(n);
-    vll sa(n);
-    vll lcp(n-1);
-    for (ll i = 0; i < n; i+=1) {
-        rank[i] = c[i]-1;
-        sa[c[i]-1] = i;
-    }
-//    for (const auto &x : sa) {
-//        cout << x << ' ';
+//    ll a, b;
+//    cin >> a >> b;
+//    ll maxi = -1e9;
+//    for (ll i = b; i >= max(b-1, 0ll); i -= 1) {
+//        maxi = max(maxi, a*i/__gcd(a, i));
 //    }
-//    cout << endl;
-    ll k = 0;
-    for(int i=0; i<n; i++, k?k--:0)
-    {
-        if(rank[i]==n-1) {
-            k=0;
-            continue;
-        }
-        int j=sa[rank[i]+1];
-        while(i+k<n && j+k<n && s[i+k]==s[j+k]) k++;
-        lcp[rank[i]]=k;
-    }
-    n -= 1;
-    cout << n*(n+1)/2-accumulate(all(lcp), 0ll) << endl;
+//    cout << maxi << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
+    ifstream cin("lcm.in");
+    ofstream cout("lcm.out");
     cout << setprecision(17);
     bool use_fast_io = true;
     for (int32_t i = 1; i < argc; ++i) {
@@ -284,9 +220,17 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-//    cin >> tt;
+    cin >> tt;
     while (tt--) {
-        solve();
+        ll a, b;
+        cin >> a >> b;
+        ll maxi = -1e9;
+        for (ll i = b; ; i -= 1) {
+            ll g = __gcd(a, i);
+            maxi = max(maxi, a*i/g);
+            if (g == 1) break;
+        }
+        cout << maxi << endl;
     }
     return 0;
 }
