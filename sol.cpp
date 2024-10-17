@@ -194,8 +194,8 @@ void solve() {
 
 }
 int32_t main(int32_t argc, char* argv[]) {
-    ifstream cin("path.in");
-    ofstream cout("path.out");
+//    ifstream cin("dijkstra.in");
+//    ofstream cout("dijkstra.out");
     cout << setprecision(17);
     bool use_fast_io = true;
     for (int32_t i = 1; i < argc; ++i) {
@@ -216,52 +216,40 @@ int32_t main(int32_t argc, char* argv[]) {
 //    cin >> tt;
 
     while (tt--) {
-        ll n, m, s;
-        s = 1;
-        const ll INF = 1e17;
-        cin >> n >> m >> s;
-        vector<ll> d(n+1, INF);
-        d[s] = 0;
-        struct edge {
-            ll u, v, w;
-        };
-        vector<vll> adj(n+1);
-        function<void(edge)> relax = [&] (edge x) {
-            if (d[x.u] < INF && (d[x.u]+x.w < d[x.v])) d[x.v] = d[x.u]+x.w;
-        };
-        vector<edge> edges(m);
-        for (auto &edge : edges) {
-            cin >> edge.u >> edge.v >> edge.w;
-            adj[edge.u].push_back(edge.v);
-        }
-        for (ll xx = 0; xx < 2e4; xx += 1) {
-            for (auto const &edge : edges) {
-                relax(edge);
-            }
-        }
-        vbo fucked(n+1, false);
-        function<void(ll)> fuck_you = [&] (ll v) {
-            fucked[v] = true;
-            for (const auto &adj : adj[v]) {
-                if (!fucked[adj]) fuck_you(adj);
-            }
-        };
-        for (const auto &x : edges) {
-            if (d[x.u] < INF && (d[x.u]+x.w < d[x.v])) fuck_you(x.v);
-        }
+        ll n;
+        cin >> n;
+        vector<vpll> g (n+1);
+        ll start, finish;
+        cin >> start >> finish;
         for (ll i = 1; i <= n; i += 1) {
-            if (fucked[i]) {
-                cout << "-" << endl;
-                continue;
-            }
-            if (d[i] != INF) {
-                assert(d[i] < 1e16);
-                cout << d[i] << endl;
-            } else {
-                cout << "*" << endl;
+            for (ll j = 1; j <= n; j += 1) {
+                ll w;
+                cin >> w;
+                if (w != -1) {
+                    g[i].push_back(pll(j, w));
+                }
             }
         }
-        cout << endl;
+        set<pll> st;
+        vll d(n+1, 1e17);
+        d[start] = 0;
+        st.insert(pll(0, start));
+        while (!st.empty()) {
+            auto top = *st.begin();
+            ll u = top.second;
+            st.erase(st.begin());
+            for (auto const &[nxt, w]: g[u]) {
+                if (d[u]+w < d[nxt]) {
+                    d[nxt] = d[u]+w;
+                    st.insert(pll(d[nxt], nxt));
+                }
+            }
+        }
+        if (d[finish] == 1e17) {
+            cout << -1 << endl;
+            continue;
+        }
+        cout << d[finish] << endl;
     }
     return 0;
 }
