@@ -190,62 +190,78 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
-
+ll N = 5e6+1;
+vll fact(N);
+vll ifact(N);
 void solve() {
     ll n;
-    cin >> n;
-    vll a(n);
-    vll b(n);
-    for (auto &x : a) cin >> x;
-    map<ll, set<ll>> indices_by_val;
-    for (ll i = 0; i < n; i += 1) {
-        cin >> b[i];
-        indices_by_val[b[i]].insert(i);
+    cin>>n;
+    vector<ll>cnt(n+1);
+    for(ll i=0;i<n;i++)
+    {
+        ll x;
+        cin>>x;
+        cnt[x]++;
     }
-    ll m; cin >> m;
-    vll br(m);
-    for (auto &x : br) cin >> x;
-    for (ll i = 0; i < n; i += 1) {
-        if (a[i] < b[i]) {
-            cout << "NO" << endl;
-            return;
+    function<ll(ll, ll)> C = [&] (ll n, ll k) {
+        if(k==0)return 1ll;
+        if(n<0||n<k)return 0ll;
+        return mul(mul(fact[n], ifact[n-k]), ifact[k]);
+    };
+    vector<ll>prev_dp_cnt(n+100),prev_dp_sum(n+100);
+    prev_dp_cnt.back()=1;
+    for(auto &x:cnt)
+    {
+        auto suf_cnt_prev_dp=prev_dp_cnt;
+        auto suf_sum_prev_dp=prev_dp_sum;
+        for(ll i=prev_dp_sum.size()-2;i>=0;i--){
+            suf_cnt_prev_dp[i]=sum(suf_cnt_prev_dp[i],suf_cnt_prev_dp[i+1]);
+            suf_sum_prev_dp[i]=sum(suf_sum_prev_dp[i],suf_sum_prev_dp[i+1]);
         }
-    }
-    vll nxt_greater(n, n);
-    stack<ll> stck_of_records;
-    for (ll i = n-1; i >= 0; i -= 1) {
-        while (!stck_of_records.empty() && b[stck_of_records.top()] <= b[i]) stck_of_records.pop();
-        if (!stck_of_records.empty()) nxt_greater[i] = stck_of_records.top();
-        stck_of_records.push(i);
-    }
-    for (const auto &x : br) {
-        // do NOT count a[i] == b[i] as something that needs to be done
-        while (!indices_by_val[x].empty() &&
-                a[*indices_by_val[x].begin()] == b[*indices_by_val[x].begin()])
+        vector<ll>x_choose_more_or_eq_sum(x+1);
+        for(ll i=0;i<=x;i++)x_choose_more_or_eq_sum[i]=C(x,i);
+        for(ll i=x-1;i>=0;i--){
+            x_choose_more_or_eq_sum[i]=sum(x_choose_more_or_eq_sum[i],x_choose_more_or_eq_sum[i+1]);
+        }
+        vector<ll>nw_dp_cnt(x+1),nw_dp_sum(x+1);
+        for(ll new_minimum_val=0;new_minimum_val<=x;new_minimum_val++)
         {
-            indices_by_val[x].erase(indices_by_val[x].begin());
+            if(new_minimum_val+1<prev_dp_sum.size()){ // new_minimum_val+1 existsed, 
+                // new_minimum_val+1 or more before
+                // we choose EXACTLY new_minimum_val
+                nw_dp_cnt[new_minimum_val]=sum(nw_dp_cnt[new_minimum_val],
+                                  mul(suf_cnt_prev_dp[new_minimum_val+1],C(x,new_minimum_val)));
+                nw_dp_sum[new_minimum_val]=sum(nw_dp_sum[new_minimum_val],
+                                  mul(suf_sum_prev_dp[new_minimum_val+1],C(x,new_minimum_val)));
+            }
+            if(new_minimum_val<prev_dp_sum.size()){ // new_minimum_val existsed
+                // exactly new_minimum_val before
+                nw_dp_cnt[new_minimum_val]=sum(nw_dp_cnt[new_minimum_val],mul(prev_dp_cnt[new_minimum_val],
+                       x_choose_more_or_eq_sum[new_minimum_val])); // min is alr good so we choose anything
+                nw_dp_sum[new_minimum_val]=sum(nw_dp_sum[new_minimum_val],mul(prev_dp_sum[new_minimum_val],
+                       x_choose_more_or_eq_sum[new_minimum_val])); // min is alr good so we choose anything
+                
+            }
+            nw_dp_sum[new_minimum_val]=sum(nw_dp_sum[new_minimum_val],
+                                        mul(nw_dp_cnt[new_minimum_val],new_minimum_val));
         }
-        if (indices_by_val[x].empty()) continue;
-//        watch(x);
-        ll first_undone = *indices_by_val[x].begin();
-//        watch(first_undone);
-        auto r_limit = nxt_greater[first_undone];
-//        watch(r_limit);
-        while (!indices_by_val[x].empty() && *indices_by_val[x].begin() < r_limit) {
-            auto it = indices_by_val[x].begin();
-            a[*it] = b[*it];
-            indices_by_val[x].erase(it);
-        }
+        prev_dp_cnt=nw_dp_cnt;
+        prev_dp_sum=nw_dp_sum;
     }
-    for (ll i = 0; i < n; i += 1) {
-        if (a[i] != b[i]) {
-            cout << "NO" << endl;
-            return;
-        }
-    }
-    cout << "YES" << endl;
+    ll ans=0;
+    for(auto &x:prev_dp_sum)ans=sum(ans,x);
+    cout<<ans<<endl;
 }
 int32_t main(int32_t argc, char* argv[]) {
+    fact[0] = 1;
+    ifact[0] = 1;
+    for (ll i = 1; i < N; i += 1) {
+        fact[i] = mul(fact[i-1], i);
+    }
+    ifact[N-1] = powm(fact[N-1], MOD-2);
+    for (ll i = N-2; i >= 1; i -= 1) {
+        ifact[i] = mul(ifact[i+1], i+1);
+    }
 //    ifstream cin("distance.in");
 //    ofstream cout("distance.out");
     cout << setprecision(17);
