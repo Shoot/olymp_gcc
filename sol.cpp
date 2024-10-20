@@ -69,7 +69,7 @@ uniform_int_distribution<ll> distrib(1ll, 12ll);
 //constexpr ll MOD = 1e9+7;
 constexpr ll MOD = 998244353;
 void in(vector<ll> & a) {
-    for (auto & x : a) cin >> x;
+    for (auto & zero_leaf : a) cin >> zero_leaf;
 }
 void in(vector<ll> & a, ll l, ll r) {
     for (ll i=l; i < r; i+=1) {
@@ -190,78 +190,44 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
-ll N = 5e6+1;
-vll fact(N);
-vll ifact(N);
 void solve() {
-    ll n;
-    cin>>n;
-    vector<ll>cnt(n+1);
-    for(ll i=0;i<n;i++)
-    {
-        ll x;
-        cin>>x;
-        cnt[x]++;
+    ll n; cin >> n;
+    vll profit(n);
+    vll tp(n);
+    vector<vpll> sm(n);
+    for (ll i = 0; i < n; i += 1) {
+        cin >> profit[i];
     }
-    function<ll(ll, ll)> C = [&] (ll n, ll k) {
-        if(k==0)return 1ll;
-        if(n<0||n<k)return 0ll;
-        return mul(mul(fact[n], ifact[n-k]), ifact[k]);
-    };
-    vector<ll>prev_dp_cnt(n+100),prev_dp_sum(n+100);
-    prev_dp_cnt.back()=1;
-    for(auto &x:cnt)
-    {
-        auto suf_cnt_prev_dp=prev_dp_cnt;
-        auto suf_sum_prev_dp=prev_dp_sum;
-        for(ll i=prev_dp_sum.size()-2;i>=0;i--){
-            suf_cnt_prev_dp[i]=sum(suf_cnt_prev_dp[i],suf_cnt_prev_dp[i+1]);
-            suf_sum_prev_dp[i]=sum(suf_sum_prev_dp[i],suf_sum_prev_dp[i+1]);
-        }
-        vector<ll>x_choose_more_or_eq_sum(x+1);
-        for(ll i=0;i<=x;i++)x_choose_more_or_eq_sum[i]=C(x,i);
-        for(ll i=x-1;i>=0;i--){
-            x_choose_more_or_eq_sum[i]=sum(x_choose_more_or_eq_sum[i],x_choose_more_or_eq_sum[i+1]);
-        }
-        vector<ll>nw_dp_cnt(x+1),nw_dp_sum(x+1);
-        for(ll new_minimum_val=0;new_minimum_val<=x;new_minimum_val++)
-        {
-            if(new_minimum_val+1<prev_dp_sum.size()){ // new_minimum_val+1 existsed, 
-                // new_minimum_val+1 or more before
-                // we choose EXACTLY new_minimum_val
-                nw_dp_cnt[new_minimum_val]=sum(nw_dp_cnt[new_minimum_val],
-                                  mul(suf_cnt_prev_dp[new_minimum_val+1],C(x,new_minimum_val)));
-                nw_dp_sum[new_minimum_val]=sum(nw_dp_sum[new_minimum_val],
-                                  mul(suf_sum_prev_dp[new_minimum_val+1],C(x,new_minimum_val)));
-            }
-            if(new_minimum_val<prev_dp_sum.size()){ // new_minimum_val existsed
-                // exactly new_minimum_val before
-                nw_dp_cnt[new_minimum_val]=sum(nw_dp_cnt[new_minimum_val],mul(prev_dp_cnt[new_minimum_val],
-                       x_choose_more_or_eq_sum[new_minimum_val])); // min is alr good so we choose anything
-                nw_dp_sum[new_minimum_val]=sum(nw_dp_sum[new_minimum_val],mul(prev_dp_sum[new_minimum_val],
-                       x_choose_more_or_eq_sum[new_minimum_val])); // min is alr good so we choose anything
-                
-            }
-            nw_dp_sum[new_minimum_val]=sum(nw_dp_sum[new_minimum_val],
-                                        mul(nw_dp_cnt[new_minimum_val],new_minimum_val));
-        }
-        prev_dp_cnt=nw_dp_cnt;
-        prev_dp_sum=nw_dp_sum;
+    for (ll i = 0; i < n; i += 1) {
+        cin >> tp[i];
+        tp[i] -= 1;
+        sm[i].push_back(pll(tp[i], profit[i]));
+        if (i) sm[i].push_back(pll(i-1, 0));
     }
-    ll ans=0;
-    for(auto &x:prev_dp_sum)ans=sum(ans,x);
-    cout<<ans<<endl;
+    set<pll> st;
+    st.insert(pll(0, 0));
+    vll d(n, 1e17);
+    d[0] = 0;
+    while (!st.empty()) {
+        auto top = st.begin();
+        auto from = top->second;
+        st.erase(top);
+        for (const auto &[to, w] : sm[from]) {
+            if (d[to] > d[from]+w) {
+                d[to] = d[from]+w;
+                st.insert(pll(d[to], to));
+            }
+        }
+    }
+    ll cum = 0;
+    ll maxi = 0;
+    for (ll i = 0; i < n; i += 1) {
+        cum += profit[i];
+        maxi = max(maxi, cum-d[i]);
+    }
+    cout << maxi << endl;
 }
 int32_t main(int32_t argc, char* argv[]) {
-    fact[0] = 1;
-    ifact[0] = 1;
-    for (ll i = 1; i < N; i += 1) {
-        fact[i] = mul(fact[i-1], i);
-    }
-    ifact[N-1] = powm(fact[N-1], MOD-2);
-    for (ll i = N-2; i >= 1; i -= 1) {
-        ifact[i] = mul(ifact[i+1], i+1);
-    }
 //    ifstream cin("distance.in");
 //    ofstream cout("distance.out");
     cout << setprecision(17);
