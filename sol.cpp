@@ -191,41 +191,67 @@ void copy_this () {
 }
 */
 void solve() {
-    ll n; cin >> n;
-    vll profit(n);
-    vll tp(n);
-    vector<vpll> sm(n);
-    for (ll i = 0; i < n; i += 1) {
-        cin >> profit[i];
+    ll n, q; cin >> n >> q;
+    vll a(n);
+    for (auto &x : a) {
+        cin >> x;
     }
-    for (ll i = 0; i < n; i += 1) {
-        cin >> tp[i];
-        tp[i] -= 1;
-        sm[i].push_back(pll(tp[i], profit[i]));
-        if (i) sm[i].push_back(pll(i-1, 0));
+    vpll queries;
+    for (ll i = 0; i < q; i += 1) {
+        ll l, r;
+        cin >> l >> r;
+        l -= 1;
+        r -= 1;
+        queries.push_back(pll(l,r));
     }
-    set<pll> st;
-    st.insert(pll(0, 0));
-    vll d(n, 1e17);
-    d[0] = 0;
-    while (!st.empty()) {
-        auto top = st.begin();
-        auto from = top->second;
-        st.erase(top);
-        for (const auto &[to, w] : sm[from]) {
-            if (d[to] > d[from]+w) {
-                d[to] = d[from]+w;
-                st.insert(pll(d[to], to));
-            }
+    auto unsorted_queries = queries;
+    const ll K = 500;
+    sort(all(queries), [&] (pll a, pll b) {
+        if (a.first/K == b.first/K) {
+            return a.second < b.second;
         }
+        return a.first/K < b.first/K;
+    });
+    map<pll, ll> ans;
+    ll curr_l = -1;
+    ll curr_r = -1;
+    const ll N = 1e6+1;
+    vll curr_cnt(N);
+    ll curr_ans = 0;
+    for (ll i = 0; i < q; i += 1) {
+        ll l = queries[i].first;
+        ll r = queries[i].second;
+        while (curr_l < l-1) {
+            curr_ans -= curr_cnt[a[curr_l+1]]*curr_cnt[a[curr_l+1]]*a[curr_l+1];
+            curr_cnt[a[curr_l+1]] -= 1;
+            curr_ans += curr_cnt[a[curr_l+1]]*curr_cnt[a[curr_l+1]]*a[curr_l+1];
+            curr_l += 1;
+        }
+        while (curr_l > l-1) {
+            curr_ans -= curr_cnt[a[curr_l]]*curr_cnt[a[curr_l]]*a[curr_l];
+            curr_cnt[a[curr_l]] += 1;
+            curr_ans += curr_cnt[a[curr_l]]*curr_cnt[a[curr_l]]*a[curr_l];
+            curr_l -= 1;
+        }
+        while (curr_r < r) {
+            curr_ans -= curr_cnt[a[curr_r+1]]*curr_cnt[a[curr_r+1]]*a[curr_r+1];
+            curr_cnt[a[curr_r+1]] += 1;
+            curr_ans += curr_cnt[a[curr_r+1]]*curr_cnt[a[curr_r+1]]*a[curr_r+1];
+            curr_r += 1;
+        }
+        while (curr_r > r) {
+            curr_ans -= curr_cnt[a[curr_r]]*curr_cnt[a[curr_r]]*a[curr_r];
+            curr_cnt[a[curr_r]] -= 1;
+            curr_ans += curr_cnt[a[curr_r]]*curr_cnt[a[curr_r]]*a[curr_r];
+            curr_r -= 1;
+        }
+//        cout << l << " " << r << ": " << curr_ans << endl;
+        ans[pll(l,r)] = curr_ans;
     }
-    ll cum = 0;
-    ll maxi = 0;
-    for (ll i = 0; i < n; i += 1) {
-        cum += profit[i];
-        maxi = max(maxi, cum-d[i]);
+    // (kol[x]**2)*x
+    for (ll i = 0; i < q; i += 1) {
+        cout << ans[unsorted_queries[i]] << endl;
     }
-    cout << maxi << endl;
 }
 int32_t main(int32_t argc, char* argv[]) {
 //    ifstream cin("distance.in");
@@ -247,7 +273,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-    cin >> tt;
+//    cin >> tt;
 
     while (tt--) {
         solve();
