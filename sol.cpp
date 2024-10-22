@@ -191,42 +191,124 @@ void copy_this () {
 }
 */
 void solve() {
-    ll n, q;
-    cin >> n >> q;
-    vll a(n);
-    for (auto &x : a) cin >> x;
-    const ll K = 500ll;
-    vll block_inc(1e6);
-    for (ll ii = 0; ii < q; ii += 1) {
-        ll type; cin >> type;
-        if (type == 1) {
-            ll l, r, x;
-            cin >> l >> r >> x;
-            l -= 1;
-            r -= 1;
-            ll l_block = l/K;
-            ll r_block = r/K;
-            for (ll i = l_block+1; i < r_block; i += 1) {
-                block_inc[i] += x;
-            }
-            ll i = l;
-            while (i/K == l_block && i >= l && i <= r) {
-                a[i] += x;
-                i += 1;
-            }
-            if (l_block != r_block) {
-                i = r;
-                while (i/K == r_block && i >= l && i <= r) {
-                    a[i] += x;
-                    i -= 1;
-                }
-            }
-        } else {
-            ll pos; cin >> pos;
-            pos -= 1;
-            cout << block_inc[pos/K]+a[pos] << endl;
-        }
+    ll n;
+    cin >> n;
+    vll beauty(n+1);
+    vll depth_by_v(n+1);
+    vll time_in_by_v(n+1);
+    vll time_out_by_v(n+1);
+    for (ll i = 1; i <= n; i += 1) {
+        cin >> beauty[i];
     }
+    vvll sm(n+1);
+    for (ll i = 2; i <= n; i += 1) {
+        ll p;
+        cin >> p;
+        sm[p].push_back(i);
+    }
+    const ll N = 1e5+1;
+    bitset<N> seen;
+    ll time = 0;
+    vll euler_tour(n+n-1);
+    function<void(ll,ll)> dfs = [&] (ll v, ll d) {
+        depth_by_v[v] = d;
+        seen[v] = true;
+        time_in_by_v[v] = time;
+        time_out_by_v[v] = time;
+        euler_tour[time++] = v;
+        for (const auto &x : sm[v]) {
+            dfs(x, d+1);
+            time_out_by_v[v] = time;
+            euler_tour[time++] = v;
+        }
+    };
+    dfs(1,0);
+//    for (const auto &x : euler_tour) {
+//        cout << x << ' ';
+//    }
+//    cout << endl;
+    assert(time == euler_tour.size());
+    vpll queries;
+    map<pll,ll> answer;
+    struct node {
+        ll maxi=0;
+    };
+    vector<node> st(4*(n+1)+5);
+    auto inc = [&] (auto f, ll pos, ll val, ll tl, ll tr, ll v = 0) -> void {
+        if (tl == pos && tr == pos) {
+            st[v].maxi += val;
+        } else {
+            ll mid = (tl+tr) >> 1;
+            if (pos <= mid) {
+                f(f, pos, val, tl, mid, 2*v+1);
+            } else {
+                f(f, pos, val, mid+1, tr, 2*v+2);
+            }
+            st[v].maxi = max(st[2*v+1].maxi, st[2*v+2].maxi);
+        }
+    };
+    unordered_map<ll, ll> times_counted;
+    for (auto &v : euler_tour) {
+        times_counted[v] += 1;
+        if (times_counted[v] == 1) inc(inc, depth_by_v[v], beauty[v], 0, n);
+//        curr_value_by_depth[depth_by_v[v]] += beauty[v];
+//        cout << depth_by_v[v] << "+= " << beauty[v] << endl;
+    }
+    for (ll v = 2; v <= n; v += 1) {
+        queries.push_back(pll(time_in_by_v[v], time_out_by_v[v]));
+        // delete subtree of v
+        // max sum on one layer
+    }
+    auto queries_natural = queries;
+    const ll K = 500;
+    sort(all(queries), [&] (pll a, pll b) {
+        if (a.first/K == b.first/K) return a.second < b.second;
+        return a.first/K < b.first/K;
+    });
+
+    ll curr_l = -1; // first included -1
+    ll curr_r = -1; // last included
+    for (auto const &[l,r] : queries) {
+        while (curr_l < l-1) {
+            times_counted[euler_tour[curr_l+1]] += 1;
+            if (times_counted[euler_tour[curr_l+1]] == 1)
+                inc(inc, depth_by_v[euler_tour[curr_l+1]], beauty[euler_tour[curr_l+1]], 0, n);
+//            curr_value_by_depth[depth_by_v[euler_tour[curr_l+1]]] += beauty[euler_tour[curr_l+1]];
+//            cout << "-" << euler_tour[curr_l+1] << endl;
+            curr_l += 1;
+        }
+        while (curr_l > l-1) {
+            times_counted[euler_tour[curr_l]] -= 1;
+            if (times_counted[euler_tour[curr_l]] == 0)
+                inc(inc, depth_by_v[euler_tour[curr_l]], -beauty[euler_tour[curr_l]], 0, n);
+//            curr_value_by_depth[depth_by_v[euler_tour[curr_l]]] -= beauty[euler_tour[curr_l]];
+//            cout << "+" << euler_tour[curr_l] << endl;
+            curr_l -= 1;
+        }
+        while (curr_r < r) {
+            times_counted[euler_tour[curr_r+1]] -= 1;
+            if (times_counted[euler_tour[curr_r+1]] == 0)
+                inc(inc, depth_by_v[euler_tour[curr_r+1]], -beauty[euler_tour[curr_r+1]], 0, n);
+//            curr_value_by_depth[depth_by_v[euler_tour[curr_r+1]]] -= beauty[euler_tour[curr_r+1]];
+//            cout << "+" << euler_tour[curr_r+1] << endl;
+            curr_r += 1;
+        }
+        while (curr_r > r) {
+            times_counted[euler_tour[curr_r]] += 1;
+            if (times_counted[euler_tour[curr_r]] == 1)
+                inc(inc, depth_by_v[euler_tour[curr_r]], beauty[euler_tour[curr_r]], 0, n);
+//            curr_value_by_depth[depth_by_v[euler_tour[curr_r]]] += beauty[euler_tour[curr_r]];
+//            cout << "-" << euler_tour[curr_r] << endl;
+            curr_r -= 1;
+        }
+        ll curr_ans = st[0].maxi;
+//        cout << l << " " << r << ": " << curr_ans << endl;
+        answer[pll(l,r)] = curr_ans;
+    }
+    for (auto const &[i,j] : queries_natural) {
+        cout << answer[pll(i,j)] << ' ';
+    }
+    cout << endl;
 }
 int32_t main(int32_t argc, char* argv[]) {
 //    ifstream cin("distance.in");
@@ -248,7 +330,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-//    cin >> tt;
+    cin >> tt;
 
     while (tt--) {
         solve();
