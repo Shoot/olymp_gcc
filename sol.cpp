@@ -156,11 +156,11 @@ ll get_sum_ft(ll left, ll right, vector<ll> & tree) {
         clog << "FENWICK ALERT: R >= tree.size() (IT'S ZERO INDEXED !!!)" << endl;
         right = n-1;
     }
-    ll ans = fj0dsq983gf8(right, tree);
+    ll dist_from_last_bfs = fj0dsq983gf8(right, tree);
     if (left-1 >= 0) {
-        ans -= fj0dsq983gf8(left - 1, tree);
+        dist_from_last_bfs -= fj0dsq983gf8(left - 1, tree);
     }
-    return ans;
+    return dist_from_last_bfs;
 } // zero-indexed!!!
 void inc_ft(ll index, ll inc, vector<ll> & tree) {
     ll n = (ll)tree.size();
@@ -191,66 +191,121 @@ void copy_this () {
 }
 */
 void solve() {
-    ll n, q; cin >> n >> q;
-    vll a(n);
-    for (auto &x : a) {
-        cin >> x;
+    ll n, q;
+    cin >> n >> q;
+    vvll sm(n+1);
+    for (ll i = 0; i < n-1; i += 1) {
+        ll u, v;
+        cin >> u >> v;
+        sm[u].push_back(v);
+        sm[v].push_back(u);
     }
-    vpll queries;
-    for (ll i = 0; i < q; i += 1) {
-        ll l, r;
-        cin >> l >> r;
-        l -= 1;
-        r -= 1;
-        queries.push_back(pll(l,r));
+    // lca precompute using euler tour
+    vll euler_tour;
+    bitset<100001> seen;
+    vll depth;
+    vll time_in(n+1);
+    ll time = 0;
+    function<void(ll, ll)> dfs_euler_tour = [&] (ll v, ll d) {
+        seen[v] = true;
+        euler_tour.push_back(v);
+        depth.push_back(d);
+        time_in[v] = time++;
+        for (auto &x : sm[v]) if (!seen[x]) {
+            dfs_euler_tour(x, d+1);
+            euler_tour.push_back(v);
+            depth.push_back(d);
+            time++;
+        }
+    };
+    dfs_euler_tour(1, 0);
+//    for (auto &y : euler_tour) {
+//        cout << y << ' ';
+//    }
+//    cout << endl;
+//    for (auto &y : depth) {
+//        cout << y << ' ';
+//    }
+//    cout << endl;
+    // find euler_tour(min_element(depth[  time_in[u], ... time_in[v]  ])-h.begin())
+    ll sz = ll(depth.size());
+    vvll st(20, vll(sz));
+    st[0] = depth;
+    for (ll i = 1; i < 20; i += 1) {
+        for (ll j = 0; j < sz; j += 1) {
+            ll nxt = j + (1ll << (i-1));
+            if (nxt >= sz) break;
+            st[i][j] = min(st[i-1][j], st[i-1][nxt]);
+        }
     }
-    auto unsorted_queries = queries;
-    const ll K = 500;
-    sort(all(queries), [&] (pll a, pll b) {
-        if (a.first/K == b.first/K) {
-            return a.second < b.second;
+    function<ll(ll,ll)> lca_d = [&] (ll u, ll v) {
+        if (time_in[u] > time_in[v]) {
+            swap(u,v);
         }
-        return a.first/K < b.first/K;
-    });
-    map<pll, ll> ans;
-    ll curr_l = -1;
-    ll curr_r = -1;
-    const ll N = 1e6+1;
-    vll curr_cnt(N);
-    ll curr_ans = 0;
-    for (ll i = 0; i < q; i += 1) {
-        ll l = queries[i].first;
-        ll r = queries[i].second;
-        while (curr_l < l-1) {
-            curr_ans -= curr_cnt[a[curr_l+1]]*curr_cnt[a[curr_l+1]]*a[curr_l+1];
-            curr_cnt[a[curr_l+1]] -= 1;
-            curr_ans += curr_cnt[a[curr_l+1]]*curr_cnt[a[curr_l+1]]*a[curr_l+1];
-            curr_l += 1;
+        ll l = time_in[u];
+        ll r = time_in[v];
+        if (l == r) return depth[l];
+        ll power_of_two = ll(log2l(r-l+1));
+//        cout << l << " " << r << ": " << power_of_two << endl;
+//        ll OG = 1e9;
+//        for (ll i = l; i <= r; i += 1) {
+//            OG = min(OG, depth[i]);
+//        }
+        ll my_ans = min(st[power_of_two][l], st[power_of_two][r-(1ll << power_of_two)+1]);
+        return my_ans;
+    };
+    function<ll(ll,ll)> dist = [&] (ll u, ll v) {
+        auto lca_depth = lca_d(u,v);
+        auto u_depth = depth[time_in[u]];
+        auto v_depth = depth[time_in[v]];
+        return abs(lca_depth-u_depth)+abs(lca_depth-v_depth);
+    };
+    const ll K = 320;
+    ll prev = -1;
+    qll qq;
+    vll vertices_to_bfs;
+    vertices_to_bfs.push_back(1);
+    vll dist_from_last_bfs(n+1, 1e9);
+    dist_from_last_bfs[1] = 0;
+    bitset<100001> seen_bfs;
+    function<void(void)> bfs = [&] () {
+        while (!qq.empty()) {
+            auto tp = qq.front();
+            qq.pop();
+            seen_bfs[tp] = true;
+            for (const auto &x : sm[tp]) if (!seen_bfs[x]) {
+                seen_bfs[x] = true;
+                dist_from_last_bfs[x] = min(dist_from_last_bfs[x], dist_from_last_bfs[tp]+1);
+                qq.push(x);
+            }
         }
-        while (curr_l > l-1) {
-            curr_ans -= curr_cnt[a[curr_l]]*curr_cnt[a[curr_l]]*a[curr_l];
-            curr_cnt[a[curr_l]] += 1;
-            curr_ans += curr_cnt[a[curr_l]]*curr_cnt[a[curr_l]]*a[curr_l];
-            curr_l -= 1;
+    };
+    for (ll i = 0; i < q; i +=1){
+        ll type; cin >> type;
+        ll v; cin >> v;
+        if (type == 1) {
+            vertices_to_bfs.push_back(v);
+            dist_from_last_bfs[v] = 0;
+            // color_red
+        } else {
+            // closest_red
+            // поднимаемся вверх пока не найдем вершину с актуальным значением,
+            // mini = min(mini, podn+relevant_value)
+            ll mini = dist_from_last_bfs[v];
+            for (const auto &x : vertices_to_bfs) {
+                mini = min(mini, dist(v, x));
+            }
+            cout << mini << endl;
         }
-        while (curr_r < r) {
-            curr_ans -= curr_cnt[a[curr_r+1]]*curr_cnt[a[curr_r+1]]*a[curr_r+1];
-            curr_cnt[a[curr_r+1]] += 1;
-            curr_ans += curr_cnt[a[curr_r+1]]*curr_cnt[a[curr_r+1]]*a[curr_r+1];
-            curr_r += 1;
+        if (i/K != prev) {
+            for (const auto &x : vertices_to_bfs) {
+                qq.push(x);
+            }
+            vertices_to_bfs.clear();
+            seen_bfs.reset();
+            bfs();
+            prev = i/K;
         }
-        while (curr_r > r) {
-            curr_ans -= curr_cnt[a[curr_r]]*curr_cnt[a[curr_r]]*a[curr_r];
-            curr_cnt[a[curr_r]] -= 1;
-            curr_ans += curr_cnt[a[curr_r]]*curr_cnt[a[curr_r]]*a[curr_r];
-            curr_r -= 1;
-        }
-//        cout << l << " " << r << ": " << curr_ans << endl;
-        ans[pll(l,r)] = curr_ans;
-    }
-    // (kol[x]**2)*x
-    for (ll i = 0; i < q; i += 1) {
-        cout << ans[unsorted_queries[i]] << endl;
     }
 }
 int32_t main(int32_t argc, char* argv[]) {
