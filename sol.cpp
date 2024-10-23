@@ -191,129 +191,113 @@ void copy_this () {
 }
 */
 void solve() {
-    const __int128 DEAD = 1e20;
-    ll n, q;
-    cin >> n >> q;
-    vll height(n);
-    vll health(n);
-    struct node {
-        ll pos_of_minimum=0, larger_than_1e16=0;
-        __int128 val_for_merging=0, unpushed_val_for_merging=0;
-    };
-    vector<node> st(4*n+5);
-    for (ll i = 0; i < n; i += 1) {
-        cin >> height[i] >> health[i];
-        if (health[i] <= 0) assert(false);
+    ll n,m,h;
+    cin >> n >> m >> h;
+    const ll N = 1e6+1;
+    bitset<N> boost_exists;
+    for (ll i = 0; i < h; i += 1) {
+        ll x;
+        cin >> x;
+        boost_exists[x] = true;
     }
-    auto merge = [&] (node a, node b) -> node {
-        node ret;
-        ret.larger_than_1e16 = a.larger_than_1e16 + b.larger_than_1e16;
-        if (a.val_for_merging < b.val_for_merging) {
-            ret.val_for_merging = a.val_for_merging;
-            ret.pos_of_minimum = a.pos_of_minimum;
-        } else {
-            ret.val_for_merging = b.val_for_merging;
-            ret.pos_of_minimum = b.pos_of_minimum;
-        }
-        assert(ret.unpushed_val_for_merging == 0);
-        return ret;
+    vector<vpll> sm (n+1);
+    for (ll i = 0; i < m; i += 1) {
+        ll u,v,w;
+        cin >> u >> v >> w;
+        sm[u].push_back(pll(v, w));
+        sm[v].push_back(pll(u, w));
+    }
+    const ll inf = 1e17;
+    vll d(n+1, inf);
+    vll d_alr_boosted(n+1, inf);
+    auto cmp = [&](auto &a, auto &b){
+        return
+                make_pair(a.second?d_alr_boosted[a.first]:d[a.first],a) <
+                make_pair(b.second?d_alr_boosted[b.first]:d[b.first],b);
     };
-    auto build = [&] (auto f, ll v, ll tl, ll tr) -> void {
-        if (tl == tr) {
-            st[v].pos_of_minimum = tl;
-            st[v].val_for_merging = health[tl];
-            return;
-        }
-        ll tm = (tl+tr) >> 1;
-        f(f, 2*v+1, tl, tm);
-        f(f, 2*v+2, tm+1, tr);
-        st[v] = merge(st[2*v+1], st[2*v+2]);
-    };
-    auto push = [&] (ll v, ll tl, ll tr) {
-        st[2*v+1].unpushed_val_for_merging += st[v].unpushed_val_for_merging;
-        st[2*v+2].unpushed_val_for_merging += st[v].unpushed_val_for_merging;
-        st[2*v+1].val_for_merging += st[v].unpushed_val_for_merging;
-        st[2*v+2].val_for_merging += st[v].unpushed_val_for_merging;
-        st[v].unpushed_val_for_merging = 0;
-        ll tm = (tl+tr) >> 1;
-        if (st[v].larger_than_1e16 == tr-tl+1) {
-            st[2*v+1].larger_than_1e16 = tm-tl+1;
-            st[2*v+2].larger_than_1e16 = tr-(tm+1)+1;
-        }
-    };
-    auto get_merged_segment = [&] (auto f, ll v, ll tl, ll tr, ll l, ll r) -> node {
-        if (tl == l && tr == r) {
-            return st[v];
-        }
-        push(v, tl, tr);
-        ll tm = (tl+tr) >> 1;
-        if (l <= tm && r >= tm+1) {
-            return merge(f(f, 2*v+1, tl, tm, l, min(tm, r)),
-                         f(f, 2*v+2, tm+1, tr, max(tm+1, l), r));
-        }
-        if (l <= tm) {
-            return f(f, 2*v+1, tl, tm, l, min(tm, r));
-        }
-        if (r >= tm+1) {
-            return f(f, 2*v+2, tm+1, tr, max(tm+1, l), r);
-        }
-        assert(false);
-    };
-    auto range_inc = [&] (auto f, ll v, ll tl, ll tr, ll l, ll r, __int128 value) -> void {
-        if (tl == l && tr == r) {
-            if (value == DEAD) {
-                st[v].larger_than_1e16 = r-l+1;
-            }
-            st[v].val_for_merging += value;
-            st[v].unpushed_val_for_merging += value;
-            return;
-        }
-        push(v, tl, tr);
-        ll tm = (tl+tr) >> 1;
-        if (l <= tm) {
-            f(f, 2*v+1, tl, tm, l, min(tm, r), value);
-        }
-        if (r > tm) {
-            f(f, 2*v+2, tm+1, tr, max(tm+1, l), r, value);
-        }
-        st[v] = merge(st[2*v+1], st[2*v+2]);
-    };
-    build(build, 0, 0, n-1);
-    // pos of minimum health after range inc
-    for (ll i = 0; i < q; i += 1) {
-        ll tp=distrib(rng)%2+1;
-        cin >> tp;
-        if (tp == 1) {
-            ll l, r, x;
-            cin >> l >> r >> x;
-            l -= 1;
-            r -= 1;
-            range_inc(range_inc, 0, 0, n-1, l, r, -x);
-            while (st[0].val_for_merging <= 0) {
-                ll maxi = st[0].pos_of_minimum;
-                for (ll drop = st[0].pos_of_minimum; drop <= min(n-1, maxi); drop += 1) {
-                    maxi = max(maxi, drop+height[drop]-1);
+    set<pair<ll,ll>,decltype(cmp)> st(cmp);
+    // v,boost_alr_exists
+    d[1] = 0;
+    st.insert(pll(1, 0));
+    while (!st.empty()) {
+        auto tp = st.begin();
+        ll v = tp->first;
+        auto alr = tp->second;
+        st.erase(tp);
+        if (!boost_exists[v] && !alr) {
+            for (const auto &[x, w] : sm[v]) {
+                ll new_dist = d[v]+w;
+                if (d[x] > new_dist) {
+                    d[x] = new_dist;
+                    st.insert(pll(x, 0));
                 }
-//                cout << st[0].pos_of_minimum << " ----> " << min(n-1, maxi) << endl;
-                range_inc(range_inc, 0, 0, n-1,
-                          st[0].pos_of_minimum,
-                          min(n-1, maxi), DEAD);
             }
         } else {
-            ll l, r;
-            cin >> l >> r;
-            l -= 1;
-            r -= 1;
-            ll ans = r-l+1-get_merged_segment(get_merged_segment, 0, 0, n-1, l, r).larger_than_1e16;
-            cout << ans << endl;
+            for (const auto &[x, w] : sm[v]) {
+                ll new_dist = (alr?d_alr_boosted[v]:d[v])+w/2;
+                if (d_alr_boosted[x] > new_dist) {
+                    d_alr_boosted[x] = new_dist;
+                    st.insert(pll(x, 1));
+                }
+            }
         }
     }
+    if (d[n] == inf && d_alr_boosted[n] == inf) {
+        cout << "-1" << endl;
+        return;
+    }
+    vll d2(n+1, inf);
+    vll d2_alr_boosted(n+1, inf);
+    auto cmp2 = [&](auto &a, auto &b){
+        return
+                make_pair(a.second?d2_alr_boosted[a.first]:d2[a.first],a) <
+                make_pair(b.second?d2_alr_boosted[b.first]:d2[b.first],b);
+    };
+    set<pair<ll,ll>,decltype(cmp2)> st2(cmp2);
+    // v,boost_alr_exists
+    d2[n] = 0;
+    st2.insert(pll(n, 0));
+    while (!st2.empty()) {
+        auto tp = st2.begin();
+        ll v = tp->first;
+        auto alr = tp->second;
+        st2.erase(tp);
+        if (!boost_exists[v] && !alr) {
+            for (const auto &[x, w] : sm[v]) {
+                ll new_dist = d2[v]+w;
+                if (d2[x] > new_dist) {
+//                    cout << v << " ---> " << x << ": " << new_dist << endl;
+                    d2[x] = new_dist;
+                    st2.insert(pll(x, 0));
+                }
+            }
+        } else {
+            for (const auto &[x, w] : sm[v]) {
+                ll new_dist = (alr?d2_alr_boosted[v]:d2[v])+w/2;
+                if (d2_alr_boosted[x] > new_dist) {
+//                    cout << v << " --->>>> " << x << ": " << new_dist << endl;
+                    d2_alr_boosted[x] = new_dist;
+                    st2.insert(pll(x, 1));
+                }
+            }
+        }
+    }
+    ll mini = 1e18;
+    for (ll i = 1; i <= n; i += 1) {
+//        cout << i << ": " << d[i] << " " << d_alr_boosted[i] << endl;
+//        cout << i << ": " << d2[i] << " " << d2_alr_boosted[i] << endl;
+        mini = min(mini, max(
+                min(d[i], d_alr_boosted[i]),
+                min(d2[i], d2_alr_boosted[i])
+        ));
+    }
+    cout << mini << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
 //    ifstream cin("distance.in");
 //    ofstream cout("distance.out");
-    cout << setprecision(17);
+    cout << fixed << setprecision(17);
     bool use_fast_io = true;
     for (int32_t i = 1; i < argc; ++i) {
         if (string(argv[i]) == "-local-no-fast-io") {
@@ -330,7 +314,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-//    cin >> tt;
+    cin >> tt;
 
     while (tt--) {
         solve();
