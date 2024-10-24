@@ -67,7 +67,7 @@ void print(Head&& head, Tail&&... tail) {
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 uniform_int_distribution<ll> distrib(1ll, 3ll);
 //constexpr ll MOD = 1e9+7;
-constexpr ll MOD = 998244353;
+constexpr ll MOD = 1e9+7;
 void in(vector<ll> & a) {
     for (auto & zero_leaf : a) cin >> zero_leaf;
 }
@@ -191,107 +191,29 @@ void copy_this () {
 }
 */
 void solve() {
-    ll n,m,h;
-    cin >> n >> m >> h;
-    const ll N = 1e6+1;
-    bitset<N> boost_exists;
-    for (ll i = 0; i < h; i += 1) {
-        ll x;
-        cin >> x;
-        boost_exists[x] = true;
-    }
-    vector<vpll> sm (n+1);
-    for (ll i = 0; i < m; i += 1) {
-        ll u,v,w;
-        cin >> u >> v >> w;
-        sm[u].push_back(pll(v, w));
-        sm[v].push_back(pll(u, w));
-    }
-    const ll inf = 1e17;
-    vll d(n+1, inf);
-    vll d_alr_boosted(n+1, inf);
-    auto cmp = [&](auto &a, auto &b){
-        return
-                make_pair(a.second?d_alr_boosted[a.first]:d[a.first],a) <
-                make_pair(b.second?d_alr_boosted[b.first]:d[b.first],b);
-    };
-    set<pair<ll,ll>,decltype(cmp)> st(cmp);
-    // v,boost_alr_exists
-    d[1] = 0;
-    st.insert(pll(1, 0));
-    while (!st.empty()) {
-        auto tp = st.begin();
-        ll v = tp->first;
-        auto alr = tp->second;
-        st.erase(tp);
-        if (!boost_exists[v] && !alr) {
-            for (const auto &[x, w] : sm[v]) {
-                ll new_dist = d[v]+w;
-                if (d[x] > new_dist) {
-                    d[x] = new_dist;
-                    st.insert(pll(x, 0));
-                }
-            }
-        } else {
-            for (const auto &[x, w] : sm[v]) {
-                ll new_dist = (alr?d_alr_boosted[v]:d[v])+w/2;
-                if (d_alr_boosted[x] > new_dist) {
-                    d_alr_boosted[x] = new_dist;
-                    st.insert(pll(x, 1));
-                }
-            }
+    ll n, k;
+    cin >> n >> k;
+    string s;
+    cin >> s;
+    vpll last_pos(26);
+    map<ll, ll> cnt;
+    vll d(n, 1e10);
+    vector<multiset<ll>> dists_by_char(26);
+    d[0] = 0;
+    for (ll i = 0; i < n; i += 1) {
+        if (i > k) {
+            cnt[s[i-k-1]-'A'] += 1;
+            dists_by_char[s[i-k-1]-'A'].erase(dists_by_char[s[i-k-1]-'A'].find(d[i-k-1]));
         }
-    }
-    if (d[n] == inf && d_alr_boosted[n] == inf) {
-        cout << "-1" << endl;
-        return;
-    }
-    vll d2(n+1, inf);
-    vll d2_alr_boosted(n+1, inf);
-    auto cmp2 = [&](auto &a, auto &b){
-        return
-                make_pair(a.second?d2_alr_boosted[a.first]:d2[a.first],a) <
-                make_pair(b.second?d2_alr_boosted[b.first]:d2[b.first],b);
-    };
-    set<pair<ll,ll>,decltype(cmp2)> st2(cmp2);
-    // v,boost_alr_exists
-    d2[n] = 0;
-    st2.insert(pll(n, 0));
-    while (!st2.empty()) {
-        auto tp = st2.begin();
-        ll v = tp->first;
-        auto alr = tp->second;
-        st2.erase(tp);
-        if (!boost_exists[v] && !alr) {
-            for (const auto &[x, w] : sm[v]) {
-                ll new_dist = d2[v]+w;
-                if (d2[x] > new_dist) {
-//                    cout << v << " ---> " << x << ": " << new_dist << endl;
-                    d2[x] = new_dist;
-                    st2.insert(pll(x, 0));
-                }
-            }
-        } else {
-            for (const auto &[x, w] : sm[v]) {
-                ll new_dist = (alr?d2_alr_boosted[v]:d2[v])+w/2;
-                if (d2_alr_boosted[x] > new_dist) {
-//                    cout << v << " --->>>> " << x << ": " << new_dist << endl;
-                    d2_alr_boosted[x] = new_dist;
-                    st2.insert(pll(x, 1));
-                }
-            }
+        cnt[s[i]-'A'] += 1;
+        for (ll prev = 0; prev<26; prev += 1) if (cnt[prev]) {
+            if (dists_by_char[prev].empty()) continue;
+            if (prev == s[i]-'A') d[i] = min(d[i], *dists_by_char[prev].begin());
+            else d[i] = min(d[i], *dists_by_char[prev].begin()+1);
         }
+        dists_by_char[s[i]-'A'].insert(d[i]);
     }
-    ll mini = 1e18;
-    for (ll i = 1; i <= n; i += 1) {
-//        cout << i << ": " << d[i] << " " << d_alr_boosted[i] << endl;
-//        cout << i << ": " << d2[i] << " " << d2_alr_boosted[i] << endl;
-        mini = min(mini, max(
-                min(d[i], d_alr_boosted[i]),
-                min(d2[i], d2_alr_boosted[i])
-        ));
-    }
-    cout << mini << endl;
+    cout << d.back() << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
@@ -314,7 +236,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-    cin >> tt;
+//    cin >> tt;
 
     while (tt--) {
         solve();
