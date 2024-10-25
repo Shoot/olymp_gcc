@@ -67,7 +67,7 @@ void print(Head&& head, Tail&&... tail) {
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 uniform_int_distribution<ll> distrib(1ll, 3ll);
 //constexpr ll MOD = 1e9+7;
-constexpr ll MOD = 998244353;
+constexpr ll MOD = 1e9+7;
 void in(vector<ll> & a) {
     for (auto & zero_leaf : a) cin >> zero_leaf;
 }
@@ -192,67 +192,80 @@ void copy_this () {
 */
 void solve() {
     ll n; cin >> n;
-    vll a(n+1);
-    vll good(n+1);
-    for (ll i = 1; i <= n; i += 1) {
-        cin >> a[i];
-
+    unordered_map<ll, vpll> tasks_by_t_appeared;
+    map<pair<ll, pll>, ll> id_by_shit;
+    set<ll> key_points;
+//    auto start = chrono::high_resolution_clock::now();
+//    ll TIME_1 = 0;
+//    ll TIME_2 = 0;
+    ll maxi = 0;
+    for (ll i = 0; i < n; i += 1) {
+        ll t, need_t, profit;
+        cin >> t >> need_t >> profit;
+        tasks_by_t_appeared[t].push_back(pll(need_t, profit));
+        key_points.insert(t);
+        id_by_shit[make_pair(t, make_pair(need_t, profit))] = i+1;
+        maxi = max(maxi, t);
     }
-    for (ll i = 1; i <= n; i += 1) {
-        if (a[i] == i) good[i] = 1;
-        if (a[a[i]] == i) good[i] = 1;
-    }
-//    for (ll i = 1; i <= n; i += 1) {
-//        cout << good[i] << ' ';
-//    }
-//    cout << endl;
-    auto update_good = [&] (ll i) {
-        if (a[i] == i) good[i] = 1;
-        if (a[a[i]] == i) good[i] = 1;
-    };
-    ll tot = 0;
-    while (accumulate(all(good), 0ll) != n) {
-        for (ll i = 1; i <= n; i += 1) {
-            if (!good[i]) {
-//            for (ll j = 1; j <= n; j += 1) {
-//                cout << a[j] << ' ';
-//            }
-                auto shit = a[a[i]];
-                auto shit2 = a[a[a[i]]];
-                auto shit3 = a[a[a[a[i]]]];
-                auto shit0 = a[i];
-                if (shit == i) continue;
-                swap(a[shit],a[i]);
-//                for (ll ii = 1; ii <= n; ii += 1) {
-//                    update_good(ii);
-//                }
-//            cout << "swap " << shit << "&" << i << endl;
-//            for (ll j = 1; j <= n; j += 1) {
-//                cout << a[j] << ' ';
-//            }
-//            cout << endl;
-            update_good(i);
-            update_good(shit0);
-            update_good(shit);
-            update_good(shit2);
-            update_good(shit3);
-//            for (ll j = 1; j <= n; j += 1) {
-//                cout << good[j] << ' ';
-//            }
-//            cout << endl;
-                tot += 1;
-            }
+    unordered_map<ll, ll> dp;
+    unordered_map<ll, ll> prev_t;
+    unordered_map<ll, ll> id_used_to_get_here;
+    ll previous = 0;
+//    ll ops_0 = 0;
+    for (auto const &t : key_points) {
+//        auto finish1 = chrono::high_resolution_clock::now();
+//        assert(TIME_1 < 1000); // FAIL
+        if (dp[t] < dp[previous]) {
+            dp[t] = dp[previous];
+            prev_t[t] = prev_t[previous];
+            id_used_to_get_here[t] = id_used_to_get_here[previous];
         }
+        for (auto const &[need_t, profit] : tasks_by_t_appeared[t]) {
+//            ops_0 += 1;
+//            assert(ops_0 <= 1e5); // PASSED
+            ll id = id_by_shit[make_pair(t, make_pair(need_t, profit))];
+            auto val = profit+dp[t];
+            if (t+need_t > maxi) {
+                if (dp[1ll<<50] < val) {
+                    dp[1ll<<50] = val;
+                    prev_t[1ll<<50] = t;
+                    id_used_to_get_here[1ll<<50] = id;
+                }
+                //TIME_1 += chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now()-startlocal).count();
+                continue;
+            }
+//            cout << t+need_t << "-> " << *it << endl;
+            auto to = *key_points.lower_bound(t+need_t);
+            if (dp[to] < val) {
+                dp[to] = val;
+                prev_t[to] = t;
+                id_used_to_get_here[to] = id;
+            }
+            //TIME_1 += chrono::duration_cast<chrono::milliseconds>(
+            //        chrono::high_resolution_clock::now()-startlocal
+            //        ).count();
+        }
+        previous = t;
     }
-
-    cout << tot << endl;
-//    assert();
-//    cout << "-> " << tot << endl;
-//    for (ll i = 1; i <= n; i += 1) {
-//        cout << good[i] << ' ';
-//    }
-//    cout << endl;
-//    cout << "----" << endl;
+    ll END = 1ll << 50;
+    ll shit = END;
+    vll ans;
+    cout << dp[END] << endl;
+//    ll ops = 0;
+    while (true) {
+//        ops += 1;
+//        assert(ops < 1e6);
+        if (id_used_to_get_here.find(shit) == id_used_to_get_here.end()) break;
+        ll id = id_used_to_get_here[shit];
+        shit = prev_t[shit];
+        ans.push_back(id);
+    }
+    reverse(all(ans));
+    cout << ans.size() << endl;
+    for (const auto &x : ans) {
+        cout << x << ' ';
+    }
+    cout << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
@@ -275,7 +288,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-    cin >> tt;
+//    cin >> tt;
 
     while (tt--) {
         solve();
