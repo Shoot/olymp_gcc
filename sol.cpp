@@ -1,283 +1,284 @@
-    #include <bits/stdc++.h>
-    using namespace std;
-    using vbo = vector<bool>;
-    using ll = long long;
-    using ull = unsigned long long;
-    using pll = pair<ll, ll>;
-    using ld = long double;
-    using qll = queue<ll>;
-    using vll = vector<ll>;
-    using vvll = vector<vector<ll>>;
-    using qld = queue<ld>;
-    using vld = vector<ld>;
-    using qpll = queue<pll>;
-    using vpll = vector<pll>;
-    #include <ext/pb_ds/assoc_container.hpp>
-    #include <ext/pb_ds/tree_policy.hpp>
-    using namespace __gnu_pbds;
-    template <typename T> using ordered_set = tree<T, null_type, less<T>, rb_tree_tag, tree_order_statistics_node_update>;
-    ostream& endl(ostream& os) {
-        return os << '\n';
+#include <bits/stdc++.h>
+using namespace std;
+using vbo = vector<bool>;
+using ll = long long;
+using ull = unsigned long long;
+using pll = pair<ll, ll>;
+using ld = long double;
+using qll = queue<ll>;
+using vll = vector<ll>;
+using vvll = vector<vector<ll>>;
+using qld = queue<ld>;
+using vld = vector<ld>;
+using qpll = queue<pll>;
+using vpll = vector<pll>;
+#include <ext/pb_ds/assoc_container.hpp>
+#include <ext/pb_ds/tree_policy.hpp>
+using namespace __gnu_pbds;
+template <typename T> using ordered_set = tree<T, null_type, less<T>, rb_tree_tag, tree_order_statistics_node_update>;
+ostream& endl(ostream& os) {
+    return os << '\n';
+}
+#define all(xxx) xxx.begin(), xxx.end()
+#define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl;
+template <class T, class S> inline bool chmax(T &a, const S &b) { return (a < b ? a = b, 1 : 0); }
+template <class T, class S> inline bool chmin(T &a, const S &b) { return (a > b ? a = b, 1 : 0); }
+template <typename T, typename U>
+ostream& operator<<(ostream& os, const pair<T, U>& A) {
+    os << A.fi << " " << A.se;
+    return os;
+}
+template <typename T>
+ostream& operator<<(ostream& os, const vector<T>& A) {
+    for (size_t i = 0; i < A.size(); i++) {
+        if (i) os << " ";
+        os << A[i];
     }
-    #define all(xxx) xxx.begin(), xxx.end()
-    #define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl;
-    template <class T, class S> inline bool chmax(T &a, const S &b) { return (a < b ? a = b, 1 : 0); }
-    template <class T, class S> inline bool chmin(T &a, const S &b) { return (a > b ? a = b, 1 : 0); }
-    template <typename T, typename U>
-    ostream& operator<<(ostream& os, const pair<T, U>& A) {
-        os << A.fi << " " << A.se;
-        return os;
+    return os;
+}
+void scan(ll &a) { cin >> a; }
+void scan(char &a) { cin >> a; }
+void scan(double &a) { cin >> a; }
+void scan(long double &a) { cin >> a; }
+void scan(string &a) { cin >> a; }
+template <class T, class S> void scan(pair<T, S> &p) { scan(p.first), scan(p.second); }
+template <class T> void scan(vector<T> &a) {for(auto &i : a) scan(i);}
+template <class T> void scan(T &a) { cin >> a; }
+void IN() {}
+template <class Head, class... Tail> void IN(Head &head, Tail &...tail) {
+    scan(head);
+    IN(tail...);
+}
+void print() {
+    cout << "\n";
+}
+template <class Head, class... Tail>
+void print(Head&& head, Tail&&... tail) {
+    cout << head;
+    if (sizeof...(Tail)) cout << " ";
+    print(forward<Tail>(tail)...);
+}
+#ifdef LOCAL
+#include <algo/debug.h>
+#else
+//#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math,trapv")
+#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
+#endif
+mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
+uniform_int_distribution<ll> distrib(1ll, 3ll);
+//constexpr ll MOD = 1e9+7;
+constexpr ll MOD = 998244353;
+void in(vector<ll> & a) {
+    for (auto & zero_leaf : a) cin >> zero_leaf;
+}
+void in(vector<ll> & a, ll l, ll r) {
+    for (ll i=l; i < r; i+=1) {
+        cin >> a[i];
     }
-    template <typename T>
-    ostream& operator<<(ostream& os, const vector<T>& A) {
-        for (size_t i = 0; i < A.size(); i++) {
-            if (i) os << " ";
-            os << A[i];
-        }
-        return os;
+}
+void inn(vector<ll> & a, ll l, ll rr) {
+    for (ll i=l; i <= rr; i+=1) {
+        cin >> a[i];
     }
-    void scan(ll &a) { cin >> a; }
-    void scan(char &a) { cin >> a; }
-    void scan(double &a) { cin >> a; }
-    void scan(long double &a) { cin >> a; }
-    void scan(string &a) { cin >> a; }
-    template <class T, class S> void scan(pair<T, S> &p) { scan(p.first), scan(p.second); }
-    template <class T> void scan(vector<T> &a) {for(auto &i : a) scan(i);}
-    template <class T> void scan(T &a) { cin >> a; }
-    void IN() {}
-    template <class Head, class... Tail> void IN(Head &head, Tail &...tail) {
-        scan(head);
-        IN(tail...);
+}
+ll powm(ll a, ll b) {
+    assert(b >= 0);
+    ll d = 1;
+    while (b) {
+        if (b&1) d = (d*a) % MOD;
+        b >>= 1;
+        a = (a*a) % MOD;
     }
-    void print() {
-        cout << "\n";
+    return d;
+}
+ll powm(ll a, ll b, ll MODD) {
+    assert(b >= 0);
+    ll d = 1;
+    while (b) {
+        if (b&1) d = (d*a) % MODD;
+        b >>= 1;
+        a = (a*a) % MODD;
     }
-    template <class Head, class... Tail>
-    void print(Head&& head, Tail&&... tail) {
-        cout << head;
-        if (sizeof...(Tail)) cout << " ";
-        print(forward<Tail>(tail)...);
+    return d;
+}
+ll poww(ll a, ll b) {
+    assert(b >= 0);
+    ll d = 1;
+    while (b) {
+        if (b&1) d = (d*a);
+        b >>= 1;
+        a = (a*a);
     }
-    #ifdef LOCAL
-    #include <algo/debug.h>
-    #else
-    //#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math,trapv")
-    #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
-    #endif
-    mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-    uniform_int_distribution<ll> distrib(1ll, 3ll);
-    //constexpr ll MOD = 1e9+7;
-    constexpr ll MOD = 1e9+7;
-    void in(vector<ll> & a) {
-        for (auto & zero_leaf : a) cin >> zero_leaf;
+    return d;
+}
+ld poww(ld a, ll b) {
+    assert(b >= 0);
+    ld d = 1;
+    while (b) {
+        if (b&1) d = (d*a);
+        b >>= 1;
+        a = (a*a);
     }
-    void in(vector<ll> & a, ll l, ll r) {
-        for (ll i=l; i < r; i+=1) {
-            cin >> a[i];
-        }
+    return d;
+}
+ll mul(ll a, ll b) {
+    return (a*b)%MOD;
+}
+ll mul(ll a, ll b, ll MODD) {
+    return (a*b)%MODD;
+}
+ll sum(ll a, ll b) {
+    return (a+b)%MOD;
+}
+ll sum(ll a, ll b, ll MODD) {
+    return (a+b)%MODD;
+}
+ll sub(ll a, ll b) {
+    return (a-(b%MOD)+MOD)%MOD;
+}
+ll sub(ll a, ll b, ll MODD) {
+    return (a-(b%MODD)+MODD)%MODD;
+}
+ll fj0dsq983gf8(ll index, vector<ll> & tree)  {
+    index += 1;
+    ll sum = 0;
+    while (index > 0) {
+        sum += tree[index-1];
+        index -= index & -index;
     }
-    void inn(vector<ll> & a, ll l, ll rr) {
-        for (ll i=l; i <= rr; i+=1) {
-            cin >> a[i];
-        }
+    return sum;
+} // zero-indexed!!!
+ll get_sum_ft(ll left, ll right, vector<ll> & tree) {
+    ll n = (ll)tree.size();
+    if (left > right) return 0;
+    assert(left <= right);
+    if (right >= n) {
+        clog << "FENWICK ALERT: R >= tree.size() (IT'S ZERO INDEXED !!!)" << endl;
+        right = n-1;
     }
-    ll powm(ll a, ll b) {
-        assert(b >= 0);
-        ll d = 1;
-        while (b) {
-            if (b&1) d = (d*a) % MOD;
-            b >>= 1;
-            a = (a*a) % MOD;
-        }
-        return d;
+    ll dist_from_last_bfs = fj0dsq983gf8(right, tree);
+    if (left-1 >= 0) {
+        dist_from_last_bfs -= fj0dsq983gf8(left - 1, tree);
     }
-    ll powm(ll a, ll b, ll MODD) {
-        assert(b >= 0);
-        ll d = 1;
-        while (b) {
-            if (b&1) d = (d*a) % MODD;
-            b >>= 1;
-            a = (a*a) % MODD;
-        }
-        return d;
+    return dist_from_last_bfs;
+} // zero-indexed!!!
+void inc_ft(ll index, ll inc, vector<ll> & tree) {
+    ll n = (ll)tree.size();
+    assert(index >= 0);
+    assert(index < n);
+    index += 1;
+    while (index < n) {
+        tree[index] += inc;
+        index += index & -index;
     }
-    ll poww(ll a, ll b) {
-        assert(b >= 0);
-        ll d = 1;
-        while (b) {
-            if (b&1) d = (d*a);
-            b >>= 1;
-            a = (a*a);
-        }
-        return d;
+} // zero-indexed!!!
+void build_ft(vector<ll> & a, vector<ll> & tree) {
+    ll n = (ll)tree.size();
+    assert(tree.size() == a.size());
+    for (ll i = 0; i < n; i++) {
+        tree[i] += a[i];
+        ll good = i | (i + 1);
+        if (good < n) tree[good] += tree[i];
     }
-    ld poww(ld a, ll b) {
-        assert(b >= 0);
-        ld d = 1;
-        while (b) {
-            if (b&1) d = (d*a);
-            b >>= 1;
-            a = (a*a);
-        }
-        return d;
-    }
-    ll mul(ll a, ll b) {
-        return (a*b)%MOD;
-    }
-    ll mul(ll a, ll b, ll MODD) {
-        return (a*b)%MODD;
-    }
-    ll sum(ll a, ll b) {
-        return (a+b)%MOD;
-    }
-    ll sum(ll a, ll b, ll MODD) {
-        return (a+b)%MODD;
-    }
-    ll sub(ll a, ll b) {
-        return (a-(b%MOD)+MOD)%MOD;
-    }
-    ll sub(ll a, ll b, ll MODD) {
-        return (a-(b%MODD)+MODD)%MODD;
-    }
-    ll fj0dsq983gf8(ll index, vector<ll> & tree)  {
-        index += 1;
-        ll sum = 0;
-        while (index > 0) {
-            sum += tree[index-1];
-            index -= index & -index;
-        }
-        return sum;
-    } // zero-indexed!!!
-    ll get_sum_ft(ll left, ll right, vector<ll> & tree) {
-        ll n = (ll)tree.size();
-        if (left > right) return 0;
-        assert(left <= right);
-        if (right >= n) {
-            clog << "FENWICK ALERT: R >= tree.size() (IT'S ZERO INDEXED !!!)" << endl;
-            right = n-1;
-        }
-        ll dist_from_last_bfs = fj0dsq983gf8(right, tree);
-        if (left-1 >= 0) {
-            dist_from_last_bfs -= fj0dsq983gf8(left - 1, tree);
-        }
-        return dist_from_last_bfs;
-    } // zero-indexed!!!
-    void inc_ft(ll index, ll inc, vector<ll> & tree) {
-        ll n = (ll)tree.size();
-        assert(index >= 0);
-        assert(index < n);
-        index += 1;
-        while (index < n) {
-            tree[index] += inc;
-            index += index & -index;
-        }
-    } // zero-indexed!!!
-    void build_ft(vector<ll> & a, vector<ll> & tree) {
-        ll n = (ll)tree.size();
-        assert(tree.size() == a.size());
-        for (ll i = 0; i < n; i++) {
-            tree[i] += a[i];
-            ll good = i | (i + 1);
-            if (good < n) tree[good] += tree[i];
-        }
-    } // zero-indexed!!!
-    /*
-    void copy_this () {
-        ll n; cin >> n;
-        ll n, k; cin >> n >> k;
-        ll n, q; cin >> n >> q;
-        ll a[n]; for (ll i=0; i < n; i+=1) cin >> a[i];
-        vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
-    }
-    */
-    void solve() {
-        ll n,K; cin >> n >> K;
-        vll shit(n);
-        vll a(n);
-        vll never(n, 0);
-        for (ll i = 0; i < n; i += 1) {
-            cin >> shit[i];
-        }
+} // zero-indexed!!!
+/*
+void copy_this () {
+    ll n; cin >> n;
+    ll n, k; cin >> n >> k;
+    ll n, q; cin >> n >> q;
+    ll a[n]; for (ll i=0; i < n; i+=1) cin >> a[i];
+    vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
+}
+*/
+void solve() {
+    ll n; cin >> n;
+    vll a(n+1);
+    vll good(n+1);
+    for (ll i = 1; i <= n; i += 1) {
+        cin >> a[i];
 
-        for (ll i = 0; i < n; i += 1) {
-            ll j = i;
-            ll it = 0;
-            while (shit[j] != 0) {
-                j = j+shit[j];
-                it+=1;
-                if (it > 200) {
-                    never[i] = 1;
-                    break;
-                }
+    }
+    for (ll i = 1; i <= n; i += 1) {
+        if (a[i] == i) good[i] = 1;
+        if (a[a[i]] == i) good[i] = 1;
+    }
+//    for (ll i = 1; i <= n; i += 1) {
+//        cout << good[i] << ' ';
+//    }
+//    cout << endl;
+    auto update_good = [&] (ll i) {
+        if (a[i] == i) good[i] = 1;
+        if (a[a[i]] == i) good[i] = 1;
+    };
+    ll tot = 0;
+    while (accumulate(all(good), 0ll) != n) {
+        for (ll i = 1; i <= n; i += 1) {
+            if (!good[i]) {
+//            for (ll j = 1; j <= n; j += 1) {
+//                cout << a[j] << ' ';
+//            }
+                auto shit = a[a[i]];
+                auto shit2 = a[a[a[i]]];
+                auto shit3 = a[a[a[a[i]]]];
+                auto shit0 = a[i];
+                if (shit == i) continue;
+                swap(a[shit],a[i]);
+//                for (ll ii = 1; ii <= n; ii += 1) {
+//                    update_good(ii);
+//                }
+//            cout << "swap " << shit << "&" << i << endl;
+//            for (ll j = 1; j <= n; j += 1) {
+//                cout << a[j] << ' ';
+//            }
+//            cout << endl;
+            update_good(i);
+            update_good(shit0);
+            update_good(shit);
+            update_good(shit2);
+            update_good(shit3);
+//            for (ll j = 1; j <= n; j += 1) {
+//                cout << good[j] << ' ';
+//            }
+//            cout << endl;
+                tot += 1;
             }
-            a[i] = j;
         }
-        vector<vpll> sm(n);
-        for (ll i = 0; i < n; i += 1) {
-            for (ll k = -K; k <= K; k += 1) if (i+k >= 0 && i+k < n && !never[i+k]) {
-                sm[i].push_back(make_pair(a[i+k], k));
-            }
-        }
-        set<pll> st;
-        const ll inf = 1e10;
-        vll d(n, inf);
-        vpll par(n);
-        d[0] = 0;
-        st.insert(pll(0,0));
-        while (!st.empty()) {
-            auto v = st.begin()->second;
-            st.erase(st.begin());
-            for (const auto &[x, use] : sm[v]) {
-                if (d[x] > d[v]+1) {
-                    d[x] = d[v]+1;
-                    par[x] = pll(v, use);
-                    st.insert(pll(d[x], x));
-                }
-            }
-        }
-        if (d[n-1] == inf) {
-            cout << "NO" << endl;
-            return;
-        }
-        cout << d[n-1] << endl;
-        ll j = n-1;
-        vll ans;
-        while (j != 0) {
-            ans.push_back(par[j].second);
-            j = par[j].first;
-        }
-        reverse(all(ans));
-        for (const auto &x : ans) {
-            cout << x << ' ';
-        }
-        cout << endl;
-    //    cout << par[n-1].first << " " << par[n-1].second << endl;
     }
 
-    int32_t main(int32_t argc, char* argv[]) {
-    //    ifstream cin("distance.in");
-    //    ofstream cout("distance.out");
-        cout << fixed << setprecision(17);
-        bool use_fast_io = true;
-        for (int32_t i = 1; i < argc; ++i) {
-            if (string(argv[i]) == "-local-no-fast-io") {
-                use_fast_io = false;
-    //            cout << "No fastIO" << endl;
-                break;
-            }
-        }
-        if (use_fast_io) {
-            ios::sync_with_stdio(false);
-            cin.tie(nullptr);
-            cout.tie(nullptr);
-            cerr.tie(nullptr);
-            clog.tie(nullptr);
-        }
-        ll tt = 1;
-    //    cin >> tt;
+    cout << tot << endl;
+//    assert();
+//    cout << "-> " << tot << endl;
+//    for (ll i = 1; i <= n; i += 1) {
+//        cout << good[i] << ' ';
+//    }
+//    cout << endl;
+//    cout << "----" << endl;
+}
 
-        while (tt--) {
-            solve();
+int32_t main(int32_t argc, char* argv[]) {
+//    ifstream cin("distance.in");
+//    ofstream cout("distance.out");
+    cout << fixed << setprecision(17);
+    bool use_fast_io = true;
+    for (int32_t i = 1; i < argc; ++i) {
+        if (string(argv[i]) == "-local-no-fast-io") {
+            use_fast_io = false;
+//            cout << "No fastIO" << endl;
+            break;
         }
-        return 0;
     }
+    if (use_fast_io) {
+        ios::sync_with_stdio(false);
+        cin.tie(nullptr);
+        cout.tie(nullptr);
+        cerr.tie(nullptr);
+        clog.tie(nullptr);
+    }
+    ll tt = 1;
+    cin >> tt;
+
+    while (tt--) {
+        solve();
+    }
+    return 0;
+}
