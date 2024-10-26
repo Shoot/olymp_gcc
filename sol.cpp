@@ -191,81 +191,79 @@ void copy_this () {
 }
 */
 void solve() {
-    ll n; cin >> n;
-    unordered_map<ll, vpll> tasks_by_t_appeared;
-    map<pair<ll, pll>, ll> id_by_shit;
-    set<ll> key_points;
-//    auto start = chrono::high_resolution_clock::now();
-//    ll TIME_1 = 0;
-//    ll TIME_2 = 0;
-    ll maxi = 0;
-    for (ll i = 0; i < n; i += 1) {
-        ll t, need_t, profit;
-        cin >> t >> need_t >> profit;
-        tasks_by_t_appeared[t].push_back(pll(need_t, profit));
-        key_points.insert(t);
-        id_by_shit[make_pair(t, make_pair(need_t, profit))] = i+1;
-        maxi = max(maxi, t);
+    ll n;
+    cin >> n;
+    vvll sm(n);
+    vll depth(n);
+    vll deepest_child_d(n);
+    for (ll i = 0; i < n-1; i += 1) {
+        ll u,v;
+        cin >> u >> v;
+        u -= 1;
+        v -= 1;
+        sm[u].push_back(v);
+        sm[v].push_back(u);
     }
-    unordered_map<ll, ll> dp;
-    unordered_map<ll, ll> prev_t;
-    unordered_map<ll, ll> id_used_to_get_here;
-    ll previous = 0;
-//    ll ops_0 = 0;
-    for (auto const &t : key_points) {
-//        auto finish1 = chrono::high_resolution_clock::now();
-//        assert(TIME_1 < 1000); // FAIL
-        if (dp[t] < dp[previous]) {
-            dp[t] = dp[previous];
-            prev_t[t] = prev_t[previous];
-            id_used_to_get_here[t] = id_used_to_get_here[previous];
+    bitset<1'000'000> seen;
+    auto dfs = [&] (auto f, ll v, ll d) -> void {
+        depth[v] = d;
+        seen[v] = true;
+        for (const auto &x : sm[v]) if (!seen[x]) {
+            seen[x] = true;
+            f(f, x, d+1);
         }
-        for (auto const &[need_t, profit] : tasks_by_t_appeared[t]) {
-//            ops_0 += 1;
-//            assert(ops_0 <= 1e5); // PASSED
-            ll id = id_by_shit[make_pair(t, make_pair(need_t, profit))];
-            auto val = profit+dp[t];
-            if (t+need_t > maxi) {
-                if (dp[1ll<<50] < val) {
-                    dp[1ll<<50] = val;
-                    prev_t[1ll<<50] = t;
-                    id_used_to_get_here[1ll<<50] = id;
-                }
-                //TIME_1 += chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now()-startlocal).count();
-                continue;
-            }
-//            cout << t+need_t << "-> " << *it << endl;
-            auto to = *key_points.lower_bound(t+need_t);
-            if (dp[to] < val) {
-                dp[to] = val;
-                prev_t[to] = t;
-                id_used_to_get_here[to] = id;
-            }
-            //TIME_1 += chrono::duration_cast<chrono::milliseconds>(
-            //        chrono::high_resolution_clock::now()-startlocal
-            //        ).count();
+    };
+    dfs(dfs, 0, 0);
+    vll d_of_deepest_child_minus_own_d(n);
+    bitset<1'000'000> seen2;
+    auto dfs2 = [&] (auto f, ll v) -> void {
+        seen2[v] = true;
+        bool leaf = true;
+        ll maxi = -1;
+        for (const auto &x : sm[v]) if (!seen2[x]) {
+            leaf = false;
+            seen2[x] = true;
+            f(f, x);
+            maxi = max(maxi, deepest_child_d[x]);
         }
-        previous = t;
+        if (leaf) maxi = depth[v];
+        deepest_child_d[v] = maxi;
+        d_of_deepest_child_minus_own_d[v] = deepest_child_d[v]-depth[v];
+        assert(maxi != -1);
+    };
+    dfs2(dfs2, 0);
+    watch(deepest_child_d[0]);
+    vvll up(20, vll(n, -1));
+    up[0][0] = 0;
+    vvll upval(20, vll(n, -1));
+    bitset<1'000'000> seen3;
+    for (ll v = 0; v < n; v += 1) upval[0][v] = deepest_child_d[v]-depth[v];
+    auto dfs3 = [&] (auto f, ll v) -> void {
+        seen3[v] = true;
+        for (const auto &x : sm[v]) if (!seen3[x]) {
+            seen3[x] = true;
+            f(f, x);
+            up[0][x] = v;
+        }
+    };
+    dfs3(dfs3, 0);
+    for (ll i = 1; i < 20; i += 1) {
+        for (ll v = 0; v < n; v += 1) {
+            up[i][v] = up[i-1][up[i-1][v]];
+        }
     }
-    ll END = 1ll << 50;
-    ll shit = END;
-    vll ans;
-    cout << dp[END] << endl;
-//    ll ops = 0;
-    while (true) {
-//        ops += 1;
-//        assert(ops < 1e6);
-        if (id_used_to_get_here.find(shit) == id_used_to_get_here.end()) break;
-        ll id = id_used_to_get_here[shit];
-        shit = prev_t[shit];
-        ans.push_back(id);
+    for (ll i = 0; i < 20; i += 1) {
+        for (ll v = 0; v < n; v += 1) {
+            upval[i][v] = max(upval[i][v], upval[i-1][up[i][v]]);
+        }
     }
-    reverse(all(ans));
-    cout << ans.size() << endl;
-    for (const auto &x : ans) {
-        cout << x << ' ';
+    ll q;
+    cin >> q;
+    for (ll i = 0; i < q; i += 1) {
+        ll v, k;
+        cin >> v >> k;
+        // depth[deepest_child]-depth[shit]
     }
-    cout << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
@@ -288,7 +286,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-//    cin >> tt;
+    cin >> tt;
 
     while (tt--) {
         solve();
