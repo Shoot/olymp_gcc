@@ -190,80 +190,36 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
+
 void solve() {
-    ll n;
-    cin >> n;
-    vvll sm(n);
-    vll depth(n);
-    vll deepest_child_d(n);
-    for (ll i = 0; i < n-1; i += 1) {
-        ll u,v;
-        cin >> u >> v;
-        u -= 1;
-        v -= 1;
-        sm[u].push_back(v);
-        sm[v].push_back(u);
+    ll n, k;
+    cin >> n >> k;
+    vll a(n-1);
+    multiset<ll> values;
+    multiset<ll> values_inv;
+    for (auto &x : a) {
+        cin >> x;
+        values.insert(x);
+        values_inv.insert(-x);
     }
-    bitset<1'000'000> seen;
-    auto dfs = [&] (auto f, ll v, ll d) -> void {
-        depth[v] = d;
-        seen[v] = true;
-        for (const auto &x : sm[v]) if (!seen[x]) {
-            seen[x] = true;
-            f(f, x, d+1);
-        }
-    };
-    dfs(dfs, 0, 0);
-    vll d_of_deepest_child_minus_own_d(n);
-    bitset<1'000'000> seen2;
-    auto dfs2 = [&] (auto f, ll v) -> void {
-        seen2[v] = true;
-        bool leaf = true;
-        ll maxi = -1;
-        for (const auto &x : sm[v]) if (!seen2[x]) {
-            leaf = false;
-            seen2[x] = true;
-            f(f, x);
-            maxi = max(maxi, deepest_child_d[x]);
-        }
-        if (leaf) maxi = depth[v];
-        deepest_child_d[v] = maxi;
-        d_of_deepest_child_minus_own_d[v] = deepest_child_d[v]-depth[v];
-        assert(maxi != -1);
-    };
-    dfs2(dfs2, 0);
-    watch(deepest_child_d[0]);
-    vvll up(20, vll(n, -1));
-    up[0][0] = 0;
-    vvll upval(20, vll(n, -1));
-    bitset<1'000'000> seen3;
-    for (ll v = 0; v < n; v += 1) upval[0][v] = deepest_child_d[v]-depth[v];
-    auto dfs3 = [&] (auto f, ll v) -> void {
-        seen3[v] = true;
-        for (const auto &x : sm[v]) if (!seen3[x]) {
-            seen3[x] = true;
-            f(f, x);
-            up[0][x] = v;
-        }
-    };
-    dfs3(dfs3, 0);
-    for (ll i = 1; i < 20; i += 1) {
-        for (ll v = 0; v < n; v += 1) {
-            up[i][v] = up[i-1][up[i-1][v]];
+    ll best_stay = 0;
+    for (ll i = 1; i < k; i += 1) {
+        auto it = values.lower_bound(i);
+        if (it != values.end()) {
+            best_stay += 1;
+            values.erase(it);
         }
     }
-    for (ll i = 0; i < 20; i += 1) {
-        for (ll v = 0; v < n; v += 1) {
-            upval[i][v] = max(upval[i][v], upval[i-1][up[i][v]]);
+    ll best_leave = 0;
+    for (ll i = k-1; i >= 1; i -= 1) {
+        auto it = values_inv.upper_bound(-i);
+        if (it != values_inv.end()) {
+            best_leave += 1;
+            values_inv.erase(it);
         }
     }
-    ll q;
-    cin >> q;
-    for (ll i = 0; i < q; i += 1) {
-        ll v, k;
-        cin >> v >> k;
-        // depth[deepest_child]-depth[shit]
-    }
+    cout << k-best_leave << endl;
+    cout << best_stay+1 << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
@@ -286,7 +242,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-    cin >> tt;
+//    cin >> tt;
 
     while (tt--) {
         solve();
