@@ -65,7 +65,7 @@ void print(Head&& head, Tail&&... tail) {
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #endif
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-uniform_int_distribution<ll> distrib(1ll, 3ll);
+uniform_int_distribution<ll> distrib(1ll, 5ll);
 //constexpr ll MOD = 1e9+7;
 constexpr ll MOD = 1e9+7;
 void in(vector<ll> & a) {
@@ -190,38 +190,44 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
+ll tt = 1;
+ll TOT_N = 1;
+void solve(vll & a, ll n) {
 
-void solve() {
-    ll n, k;
-    cin >> n >> k;
-    vll a(n-1);
-    multiset<ll> values;
-    multiset<ll> values_inv;
-    for (auto &x : a) {
-        cin >> x;
-        values.insert(x);
-        values_inv.insert(-x);
+    sort(all(a));
+//    for (auto &x : a) {
+//        cout << x << ' ';
+//    }
+//    cout << endl;
+    map<ll, map<ll,ll>> limits_by_coord_and_val;
+    for (const auto &x : a) {
+        limits_by_coord_and_val[x][-1] = 1e18+10;
     }
-    ll best_stay = 0;
-    for (ll i = 1; i < k; i += 1) {
-        auto it = values.lower_bound(i);
-        if (it != values.end()) {
-            best_stay += 1;
-            values.erase(it);
+    ll maxi = 1;
+    ll SHIT = 1e9;
+    if (n > 1e3) SHIT = 100;
+    if (TOT_N > 1e4) SHIT = 100;
+//    if (n > 4e3) SHIT = 50;
+    for (ll i = 0; i < n; i += 1) {
+        ll prev_limit = -1;
+        ll prev_val = 1e18+50;
+        ll kol = -1;
+        for (const auto &[val, limit] : limits_by_coord_and_val[a[i]]) if (kol < 10 || distrib(rng) != 5) {
+            kol += 1;
+            if (kol == 3*SHIT) break;
+            if (limit <= prev_limit) continue;
+            assert(-val < prev_val);
+            for (ll j = i+1; j < min(i+SHIT, n); j += 1) if (j < i+10 || distrib(rng) != 5) {
+                if (a[j]-a[i] >= limit) break;
+                limits_by_coord_and_val[a[j]][val-1] = max(limits_by_coord_and_val[a[j]][val-1],a[j]-a[i]);
+                maxi = max(maxi, -(val-1));
+            }
+            prev_limit = max(limit, prev_limit);
+            prev_val = -val;
         }
     }
-    ll best_leave = 0;
-    for (ll i = k-1; i >= 1; i -= 1) {
-        auto it = values_inv.upper_bound(-i);
-        if (it != values_inv.end()) {
-            best_leave += 1;
-            values_inv.erase(it);
-        }
-    }
-    cout << k-best_leave << endl;
-    cout << best_stay+1 << endl;
+    cout << maxi << endl;
 }
-
 int32_t main(int32_t argc, char* argv[]) {
 //    ifstream cin("distance.in");
 //    ofstream cout("distance.out");
@@ -241,11 +247,20 @@ int32_t main(int32_t argc, char* argv[]) {
         cerr.tie(nullptr);
         clog.tie(nullptr);
     }
-    ll tt = 1;
-//    cin >> tt;
-
-    while (tt--) {
-        solve();
+    cin >> tt;
+    vvll aa(tt);
+    for (ll iii = 0; iii < tt; iii += 1) {
+        ll n;
+        cin >> n;
+        aa[iii].resize(n);
+        TOT_N += n;
+        vll a(n);
+        for (auto &x : aa[iii]) {
+            cin >> x;
+        }
+    }
+    for (ll iii = 0; iii < tt; iii += 1) {
+        solve(aa[iii], ll(aa[iii].size()));
     }
     return 0;
 }
