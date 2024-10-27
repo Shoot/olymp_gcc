@@ -190,52 +190,48 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
-
+vll two(1e6);
+vector<string> precalc;
 void solve() {
-    ll n, m;
-    cin >> n >> m;
-    vll a(n);
-    vll b(m);
-    for (auto &x : a) cin >> x;
-    for (auto &x : b) cin >> x;
-    vll pref_a(n);
-    pref_a[0] = a[0];
-    for (ll i = 1; i < n; i += 1) {
-        pref_a[i] = pref_a[i-1]+a[i];
-    }
-    if (*max_element(all(a)) > b[0]) {
-        cout << -1 << endl;
-        return;
-    }
-    // dp[idx_doing][bi]
-    vll dp(n+1, 1e18);
-    dp[0] = 0;
-    // dp[idx_doing(undone)]
-    for (ll bi = 0; bi < m; bi += 1) {
-//        watch(bi);
-        for (ll i = 0; i < n; i += 1) {
-//            ll ii = i;
-            ll shit = 0;
-            if (i > 0) shit = pref_a[i-1];
-            ll ii = upper_bound(all(pref_a), b[bi]+shit)-pref_a.begin();
-            assert(ii >= 0);
-            assert(ii <= n);
-//            while (ii < n && pref_a[ii]-shit <= b[bi]) {
-//                ii += 1;
-//            }
-            dp[ii] = min(dp[ii], dp[i]+m-bi-1);
-//            watch(ii);
-//            watch(dp[ii]);
+    ll n; cin >> n;
+    if (precalc.empty()) {
+        precalc.push_back("");
+        vector<string> ost11_last3(11);
+        ost11_last3[3] = "3";
+        vector<string> ost11_last6(11);
+        ost11_last3[6] = "6";
+        for (ll l = 1; l < 510; l += 1) {
+            precalc.push_back(ost11_last6[0]); // bc %66==0 -> %2==0
+            vector<string> n_ost11_last3(11);
+            vector<string> n_ost11_last6(11);
+            for (ll ost = 0; ost < 11; ost += 1) {
+                string from_better;
+                if (!ost11_last3[ost].empty()) {
+                    from_better = ost11_last3[ost];
+                } else if (!ost11_last6[ost].empty()) {
+                    from_better = ost11_last6[ost];
+                } else {
+                    continue;
+                }
+                if (!ost11_last3[ost].empty() && !ost11_last6[ost].empty()) {
+                    from_better = min(ost11_last3[ost], ost11_last6[ost]);
+                }
+                n_ost11_last3[(ost*10+3)%11] = from_better+"3";
+                n_ost11_last6[(ost*10+6)%11] = from_better+"6";
+            }
+            ost11_last3 = n_ost11_last3;
+            ost11_last6 = n_ost11_last6;
         }
     }
-    if (dp[n] > 1e17) {
-        cout << -1 << endl;
-        return;
-    }
-    cout << dp[n] << endl;
+    cout << (precalc[n].empty()?"-1":precalc[n]) << endl;
 }
 
+
 int32_t main(int32_t argc, char* argv[]) {
+    two[0] = 1;
+    for (ll i = 1; i < 1e6; i += 1) {
+        two[i] = mul(two[i-1], 2);
+    }
 //    ifstream cin("distance.in");
 //    ofstream cout("distance.out");
     cout << fixed << setprecision(17);
