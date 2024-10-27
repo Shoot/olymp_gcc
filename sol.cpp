@@ -65,7 +65,7 @@ void print(Head&& head, Tail&&... tail) {
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #endif
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-uniform_int_distribution<ll> distrib(1ll, 5ll);
+uniform_int_distribution<ll> distrib(1ll, 3ll);
 //constexpr ll MOD = 1e9+7;
 constexpr ll MOD = 1e9+7;
 void in(vector<ll> & a) {
@@ -190,44 +190,51 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
-ll tt = 1;
-ll TOT_N = 1;
-void solve(vll & a, ll n) {
 
-    sort(all(a));
-//    for (auto &x : a) {
-//        cout << x << ' ';
-//    }
-//    cout << endl;
-    map<ll, map<ll,ll>> limits_by_coord_and_val;
-    for (const auto &x : a) {
-        limits_by_coord_and_val[x][-1] = 1e18+10;
+void solve() {
+    ll n, m;
+    cin >> n >> m;
+    vll a(n);
+    vll b(m);
+    for (auto &x : a) cin >> x;
+    for (auto &x : b) cin >> x;
+    vll pref_a(n);
+    pref_a[0] = a[0];
+    for (ll i = 1; i < n; i += 1) {
+        pref_a[i] = pref_a[i-1]+a[i];
     }
-    ll maxi = 1;
-    ll SHIT = 1e9;
-    if (n > 1e3) SHIT = 100;
-    if (TOT_N > 1e4) SHIT = 100;
-//    if (n > 4e3) SHIT = 50;
-    for (ll i = 0; i < n; i += 1) {
-        ll prev_limit = -1;
-        ll prev_val = 1e18+50;
-        ll kol = -1;
-        for (const auto &[val, limit] : limits_by_coord_and_val[a[i]]) if (kol < 10 || distrib(rng) != 5) {
-            kol += 1;
-            if (kol == 3*SHIT) break;
-            if (limit <= prev_limit) continue;
-            assert(-val < prev_val);
-            for (ll j = i+1; j < min(i+SHIT, n); j += 1) if (j < i+10 || distrib(rng) != 5) {
-                if (a[j]-a[i] >= limit) break;
-                limits_by_coord_and_val[a[j]][val-1] = max(limits_by_coord_and_val[a[j]][val-1],a[j]-a[i]);
-                maxi = max(maxi, -(val-1));
-            }
-            prev_limit = max(limit, prev_limit);
-            prev_val = -val;
+    if (*max_element(all(a)) > b[0]) {
+        cout << -1 << endl;
+        return;
+    }
+    // dp[idx_doing][bi]
+    vll dp(n+1, 1e18);
+    dp[0] = 0;
+    // dp[idx_doing(undone)]
+    for (ll bi = 0; bi < m; bi += 1) {
+//        watch(bi);
+        for (ll i = 0; i < n; i += 1) {
+//            ll ii = i;
+            ll shit = 0;
+            if (i > 0) shit = pref_a[i-1];
+            ll ii = upper_bound(all(pref_a), b[bi]+shit)-pref_a.begin();
+            assert(ii >= 0);
+            assert(ii <= n);
+//            while (ii < n && pref_a[ii]-shit <= b[bi]) {
+//                ii += 1;
+//            }
+            dp[ii] = min(dp[ii], dp[i]+m-bi-1);
+//            watch(ii);
+//            watch(dp[ii]);
         }
     }
-    cout << maxi << endl;
+    if (dp[n] > 1e17) {
+        cout << -1 << endl;
+        return;
+    }
+    cout << dp[n] << endl;
 }
+
 int32_t main(int32_t argc, char* argv[]) {
 //    ifstream cin("distance.in");
 //    ofstream cout("distance.out");
@@ -247,20 +254,11 @@ int32_t main(int32_t argc, char* argv[]) {
         cerr.tie(nullptr);
         clog.tie(nullptr);
     }
+    ll tt = 1;
     cin >> tt;
-    vvll aa(tt);
-    for (ll iii = 0; iii < tt; iii += 1) {
-        ll n;
-        cin >> n;
-        aa[iii].resize(n);
-        TOT_N += n;
-        vll a(n);
-        for (auto &x : aa[iii]) {
-            cin >> x;
-        }
-    }
-    for (ll iii = 0; iii < tt; iii += 1) {
-        solve(aa[iii], ll(aa[iii].size()));
+
+    while (tt--) {
+        solve();
     }
     return 0;
 }
