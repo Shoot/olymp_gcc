@@ -192,38 +192,24 @@ void copy_this () {
 */
 vll two(1e6);
 vector<string> precalc;
+string shit = string(1, '9'+10);
 void solve() {
     ll n; cin >> n;
     if (precalc.empty()) {
-        precalc.push_back("");
-        vector<string> ost11_last3(11);
-        ost11_last3[3] = "3";
-        vector<string> ost11_last6(11);
-        ost11_last3[6] = "6";
+        precalc.assign(1e3, shit);
+        vector<string> dp(66, shit);
+        vector<string> ndp(66, shit);
+        dp[0] = "";
         for (ll l = 1; l < 510; l += 1) {
-            precalc.push_back(ost11_last6[0]); // bc %66==0 -> %2==0
-            vector<string> n_ost11_last3(11);
-            vector<string> n_ost11_last6(11);
-            for (ll ost = 0; ost < 11; ost += 1) {
-                string from_better;
-                if (!ost11_last3[ost].empty()) {
-                    from_better = ost11_last3[ost];
-                } else if (!ost11_last6[ost].empty()) {
-                    from_better = ost11_last6[ost];
-                } else {
-                    continue;
-                }
-                if (!ost11_last3[ost].empty() && !ost11_last6[ost].empty()) {
-                    from_better = min(ost11_last3[ost], ost11_last6[ost]);
-                }
-                n_ost11_last3[(ost*10+3)%11] = from_better+"3";
-                n_ost11_last6[(ost*10+6)%11] = from_better+"6";
+            fill(all(ndp), shit);
+            for (ll ost = 0; ost < 66; ost += 1) if (dp[ost] != shit) for (ll i : {3,6}) {
+                ndp[(ost*10+i)%66] = min(ndp[(ost*10+i)%66], dp[ost]+to_string(i));
             }
-            ost11_last3 = n_ost11_last3;
-            ost11_last6 = n_ost11_last6;
+            swap(dp,ndp);
+            precalc[l] = dp[0];
         }
     }
-    cout << (precalc[n].empty()?"-1":precalc[n]) << endl;
+    cout << (precalc[n]==shit?"-1":precalc[n]) << endl;
 }
 
 
