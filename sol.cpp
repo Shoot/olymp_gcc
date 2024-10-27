@@ -190,32 +190,37 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
-vll two(1e6);
-vector<string> precalc;
-string shit = string(1, '9'+10);
+vll two(1e7);
 void solve() {
     ll n; cin >> n;
-    if (precalc.empty()) {
-        precalc.assign(1e3, shit);
-        vector<string> dp(66, shit);
-        vector<string> ndp(66, shit);
-        dp[0] = "";
-        for (ll l = 1; l < 510; l += 1) {
-            fill(all(ndp), shit);
-            for (ll ost = 0; ost < 66; ost += 1) if (dp[ost] != shit) for (ll i : {3,6}) {
-                ndp[(ost*10+i)%66] = min(ndp[(ost*10+i)%66], dp[ost]+to_string(i));
-            }
-            swap(dp,ndp);
-            precalc[l] = dp[0];
+    stack<pll> st; // pll(rest, tz)
+    // на глубине максимумы тк к ним не можем контрибутить
+    // в стеке не может быть больше 1 огромного (> 1e9)тк огромный максимум забирает РОВНО ВСЁ слева
+    ll curr_val = 0;
+    for (ll i = 0; i < n; i += 1) {
+        ll x;
+        cin >> x;
+        ll x_tz = __builtin_ctzl(x);
+        ll rest = x >> x_tz;
+//        cout << x << '!' << endl;
+        while (!st.empty() && (x_tz > 30 || (rest << x_tz) > st.top().first)) { // кому лучше отдать st.top().second? бОльшему!!
+            // оптимально забрать направо
+            curr_val = sub(curr_val, mul(st.top().first,two[st.top().second]));
+            curr_val = sum(curr_val, st.top().first);
+            x_tz += st.top().second;
+            st.pop();
         }
+        st.push(pll(rest, x_tz));
+        curr_val = sum(curr_val, mul(rest, two[x_tz]));
+        cout << curr_val << ' ';
     }
-    cout << (precalc[n]==shit?"-1":precalc[n]) << endl;
+    cout << endl;
 }
 
 
 int32_t main(int32_t argc, char* argv[]) {
     two[0] = 1;
-    for (ll i = 1; i < 1e6; i += 1) {
+    for (ll i = 1; i < 1e7; i += 1) {
         two[i] = mul(two[i-1], 2);
     }
 //    ifstream cin("distance.in");
