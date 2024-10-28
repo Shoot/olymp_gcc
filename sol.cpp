@@ -190,39 +190,50 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
-vll two(1e7);
 void solve() {
-    ll n; cin >> n;
-    stack<pll> st; // pll(rest, tz)
-    // на глубине максимумы тк к ним не можем контрибутить
-    // в стеке не может быть больше 1 огромного (> 1e9)тк огромный максимум забирает РОВНО ВСЁ слева
-    ll curr_val = 0;
-    for (ll i = 0; i < n; i += 1) {
-        ll x;
+    ll n, k;
+    cin >> n >> k;
+    vll a(n);
+    map<ll, ll> cnt;
+    for (auto &x : a) {
         cin >> x;
-        ll x_tz = __builtin_ctzl(x);
-        ll rest = x >> x_tz;
-//        cout << x << '!' << endl;
-        while (!st.empty() && (x_tz > 30 || (rest << x_tz) > st.top().first)) { // кому лучше отдать st.top().second? бОльшему!!
-            // оптимально забрать направо
-            curr_val = sub(curr_val, mul(st.top().first,two[st.top().second]));
-            curr_val = sum(curr_val, st.top().first);
-            x_tz += st.top().second;
-            st.pop();
-        }
-        st.push(pll(rest, x_tz));
-        curr_val = sum(curr_val, mul(rest, two[x_tz]));
-        cout << curr_val << ' ';
+        cnt[x] += 1;
     }
-    cout << endl;
+    set<pll> s1, s2;
+    ll sum1 = 0;
+    for (auto &[i,j] : cnt) s2.insert(pll(j, i));
+    ll ans = 1ll << 60;
+    ll ops = 0;
+    for (ll x = 0; x <= n; x++) {
+        if (s1.contains(pll(cnt[x - 1], x - 1))) {
+            // меньше m 
+            sum1 -= cnt[x - 1];
+            s1.erase(pll(cnt[x - 1], x - 1));
+        }
+        s2.erase(pll(cnt[x - 1], x - 1));
+        while (!s2.empty() &&
+        sum1 + s2.begin()->first <= k) { // из s2 в s1
+            s1.insert(*s2.begin());
+            sum1 += s2.begin()->first;
+            s2.erase(s2.begin());
+        }
+        if (k < ops) {
+            break;
+        }
+        ll now = x + s2.size();
+        if (x == 0) {
+            now = max(1ll, ll(s2.size()));
+        }
+        ans = now - x;
+        if (cnt[x] == 0) {
+            ops += 1;
+        }
+    }
+    cout << ans << endl;
 }
 
 
 int32_t main(int32_t argc, char* argv[]) {
-    two[0] = 1;
-    for (ll i = 1; i < 1e7; i += 1) {
-        two[i] = mul(two[i-1], 2);
-    }
 //    ifstream cin("distance.in");
 //    ofstream cout("distance.out");
     cout << fixed << setprecision(17);
