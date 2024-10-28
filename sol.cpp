@@ -190,50 +190,43 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
+
 void solve() {
-    ll n, k;
-    cin >> n >> k;
+    ll n; cin >> n;
     vll a(n);
-    map<ll, ll> cnt;
+    map<ll, ll> used;
     for (auto &x : a) {
         cin >> x;
-        cnt[x] += 1;
+        used[x] = true;
     }
-    set<pll> s1, s2;
-    ll moved_to_smaller = 0;
-    for (auto &[i,j] : cnt) s2.insert(pll(j, i));
-    ll ans = 1ll << 60;
-    ll ops = 0;
-    for (ll x = 0; x <= n; x++) {
-        // сначала берем [x+1, inf] в порядке возрастания количества
-        // наш счет это кол-во бОльших чем mex
-        // то есть нам нужно просто перегонять из правой части в левую
-        // и в s1 и в s2 числа больше чем x тк они должны быть актуальны для текущего mex
-        if (s1.contains(pll(cnt[x - 1], x - 1))) {
-            moved_to_smaller -= cnt[x - 1];
-            s1.erase(pll(cnt[x - 1], x - 1));
+    auto can = [&] (ll x) -> bool {
+        ll kol1 = 0;
+        for (ll i = 1; i < n; i += 2) {
+            kol1 += a[i]-a[i-1] > x;
         }
-        s2.erase(pll(cnt[x - 1], x - 1));
-        while (!s2.empty() &&
-        moved_to_smaller + s2.begin()->first <= k) { // из s2 в s1
-            s1.insert(*s2.begin());
-            moved_to_smaller += s2.begin()->first;
-            s2.erase(s2.begin());
+        ll kol2 = 0;
+        for (ll i = n-2; i >= 0; i -= 2) {
+            kol2 += a[i+1]-a[i] > x;
         }
-        if (x == 0) {
-            ans = max(1ll, ll(s2.size()));
+//        watch(x);
+//        watch(kol1);
+//        watch(kol2);
+        if (kol1 > 1 && kol2 > 1) return false;
+        return true;
+    };
+    ll l = 1, r = n;
+    ll good = -1;
+    while (l <= r) {
+        ll mid = (l+r) >> 1;
+//        watch(mid);
+        if (can(mid)) {
+            r = mid-1;
+            good = mid;
         } else {
-            ans = s2.size();
-        }
-        if (ans == 0) break;
-        if (cnt[x] == 0) {
-            ops += 1;
-        }
-        if (k < ops) {
-            break;
+            l = mid+1;
         }
     }
-    cout << ans << endl;
+    cout << good << endl;
 }
 
 
