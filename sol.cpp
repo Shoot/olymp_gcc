@@ -193,40 +193,26 @@ void copy_this () {
 
 void solve() {
     ll n; cin >> n;
-    vll a(n);
-    map<ll, ll> used;
-    for (auto &x : a) {
-        cin >> x;
-        used[x] = true;
-    }
-    auto can = [&] (ll x) -> bool {
-        ll kol1 = 0;
-        for (ll i = 1; i < n; i += 2) {
-            kol1 += a[i]-a[i-1] > x;
+    string s;
+    cin >> s;
+    ll spent = 0;
+    for (ll i = n-1, need_to_buy = 0; i >= 0; i -= 1) {
+        if (s[i] == '0') { // покупаем s[i] (нолик)
+            need_to_buy = max(need_to_buy-1, 0ll);
+            spent += i+1;
+            continue;
         }
-        ll kol2 = 0;
-        for (ll i = n-2; i >= 0; i -= 2) {
-            kol2 += a[i+1]-a[i] > x;
-        }
-//        watch(x);
-//        watch(kol1);
-//        watch(kol2);
-        if (kol1 > 1 && kol2 > 1) return false;
-        return true;
-    };
-    ll l = 1, r = n;
-    ll good = -1;
-    while (l <= r) {
-        ll mid = (l+r) >> 1;
-//        watch(mid);
-        if (can(mid)) {
-            r = mid-1;
-            good = mid;
-        } else {
-            l = mid+1;
+        ll have_option_to_choose = i+1;
+        ll would_have_option_to_choose = i;
+        assert(need_to_buy <= have_option_to_choose);
+        if (need_to_buy >= would_have_option_to_choose) { // покупаем s[i] (единичку)
+            spent += i+1;
+            need_to_buy = max(need_to_buy-1, 0ll);
+        } else { // possible to pay later
+            need_to_buy += 1;
         }
     }
-    cout << good << endl;
+    cout << spent << endl;
 }
 
 
