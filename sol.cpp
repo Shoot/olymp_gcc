@@ -192,27 +192,67 @@ void copy_this () {
 */
 
 void solve() {
-    ll n; cin >> n;
-    string s;
-    cin >> s;
-    ll spent = 0;
-    for (ll i = n-1, need_to_buy = 0; i >= 0; i -= 1) {
-        if (s[i] == '0') { // покупаем s[i] (нолик)
-            need_to_buy = max(need_to_buy-1, 0ll);
-            spent += i+1;
-            continue;
+    ll fi, se, hp, limitfi;
+    cin >> fi >> se >> hp >> limitfi;
+    auto price_by_number_of_full_series_of_boosts = [&] (ll inc) {
+        ll price_series = fi*limitfi+se;
+        ll price = price_series*inc;
+        ll this_hp = hp;
+        for (ll i = 1; i <= inc; i += 1) {
+            this_hp -= i*limitfi;
         }
-        ll have_option_to_choose = i+1;
-        ll would_have_option_to_choose = i;
-        assert(need_to_buy <= have_option_to_choose);
-        if (need_to_buy >= would_have_option_to_choose) { // покупаем s[i] (единичку)
-            spent += i+1;
-            need_to_buy = max(need_to_buy-1, 0ll);
-        } else { // possible to pay later
-            need_to_buy += 1;
+        this_hp = max(this_hp, 0ll);
+        auto test = [&] (ll additional_first_ops) {
+//            ll new_price = price+additional_first_ops*fi; // за инкрисы
+//            ll new_d = inc*limitfi+additional_first_ops; // новый урон
+//            if (new_d == 0) assert(false);
+//            ll to_beat = (this_hp+new_d-1)/new_d; // ударов
+//            new_price += to_beat*se;
+//            return new_price;
+
+
+            cout << endl << price << "+x*" << fi << "+(" << this_hp << "+" << "(" << inc << "*" << limitfi << "+x)-1)/(" << inc <<"*" << limitfi << "+x)*" << se << endl;
+            return price+additional_first_ops*fi+(this_hp+(inc*limitfi+additional_first_ops)-1)/(inc*limitfi+additional_first_ops)*se;
+        };
+        ll l = 0, r = limitfi-1;
+        if (inc == 0) l = 1;
+        ll mini = 1e18;
+        bool prev_more_than_prevprev = false;
+        ll prev = -1e18;
+        bool was = false;
+        for (ll x = l; x <= r; x += 1) {
+            ll denom = inc*limitfi+x;
+
+            if (x!=r && x != l && this_hp%denom!=denom-1 && r-l > 3*denom+10) continue;
+            //  это делимое
+            // мак x из тех что
+            ll f = test(x);
+            watch(x);
+            watch(f);
+            mini = min(mini, f);
+            if (prev_more_than_prevprev && prev < f && was) {
+                cout << "!!!!!!!!!!!!!!!!" << endl;
+            }
+            was |= prev_more_than_prevprev && prev < f;
+            prev_more_than_prevprev = f < prev;
+            prev = f;
+        }
+        return mini;
+    };
+    ll l = 0;
+    ll r = hp;
+    ll good_arg = -1;
+    while (l <= r) {
+        ll mid = (l+r) >> 1;
+        if (price_by_number_of_full_series_of_boosts(mid) < price_by_number_of_full_series_of_boosts(mid+1)) {
+            r = mid-1;
+            good_arg = mid;
+        } else {
+            l = mid+1;
         }
     }
-    cout << spent << endl;
+    assert(good_arg != -1);
+    cout << price_by_number_of_full_series_of_boosts(good_arg) << endl;
 }
 
 
