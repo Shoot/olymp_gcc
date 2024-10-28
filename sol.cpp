@@ -200,33 +200,37 @@ void solve() {
         cnt[x] += 1;
     }
     set<pll> s1, s2;
-    ll sum1 = 0;
+    ll moved_to_smaller = 0;
     for (auto &[i,j] : cnt) s2.insert(pll(j, i));
     ll ans = 1ll << 60;
     ll ops = 0;
     for (ll x = 0; x <= n; x++) {
+        // сначала берем [x+1, inf] в порядке возрастания количества
+        // наш счет это кол-во бОльших чем mex
+        // то есть нам нужно просто перегонять из правой части в левую
+        // и в s1 и в s2 числа больше чем x тк они должны быть актуальны для текущего mex
         if (s1.contains(pll(cnt[x - 1], x - 1))) {
-            // меньше m 
-            sum1 -= cnt[x - 1];
+            moved_to_smaller -= cnt[x - 1];
             s1.erase(pll(cnt[x - 1], x - 1));
         }
         s2.erase(pll(cnt[x - 1], x - 1));
         while (!s2.empty() &&
-        sum1 + s2.begin()->first <= k) { // из s2 в s1
+        moved_to_smaller + s2.begin()->first <= k) { // из s2 в s1
             s1.insert(*s2.begin());
-            sum1 += s2.begin()->first;
+            moved_to_smaller += s2.begin()->first;
             s2.erase(s2.begin());
+        }
+        if (x == 0) {
+            ans = max(1ll, ll(s2.size()));
+        } else {
+            ans = s2.size();
+        }
+        if (ans == 0) break;
+        if (cnt[x] == 0) {
+            ops += 1;
         }
         if (k < ops) {
             break;
-        }
-        ll now = x + s2.size();
-        if (x == 0) {
-            now = max(1ll, ll(s2.size()));
-        }
-        ans = now - x;
-        if (cnt[x] == 0) {
-            ops += 1;
         }
     }
     cout << ans << endl;
