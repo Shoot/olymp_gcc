@@ -190,57 +190,54 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
-
+ll dx[4] = {-1, 0, 0, 1};
+ll dy[4] = {0, 1, -1, 0};
 void solve() {
     ll n, m;
     cin >> n >> m;
-    vector<string> a(n);
-    for (auto &x : a) cin >> x;
-    vvll check(n, vll(m));
-    for (ll i = n-1; i >= 0; i -= 1) {
-        for (ll j = m-1; j >= 0; j -= 1) {
-            if (a[i][j] != '#') continue;
-            if (j == m-1 || i == n-1) {
-                check[i][j] = 1;
-            } else {
-                check[i][j] = min({check[i+1][j], check[i][j+1], check[i+1][j+1]}) + 1;
-            }
+    vvll a(n,vll(m));
+    vvll maximum_nalit(n,vll(m, 1e18));
+    for (auto &x : a) {
+        for (auto &y : x) {
+            cin >> y;
         }
     }
-//    for (const auto &x : check) {
-//        for (const auto &y : x) {
-//            cout << y << ' ';
-//        }
-//        cout << endl;
-//    }
-    ll good = -1;
-    ll l = 1, r = 1e6;
-    while (l <= r) {
-        ll mid = (l+r) >> 1;
-        bool this_mid_is_nice = false;
-        for (ll i = 0; i < n; i+=1) {
-            for (ll j = 0; j < m; j += 1) {
-                if (i + mid + mid < n)
-                if (j - mid >= 0)
-                if (j + mid < m)
-                if (check[i][j] >= mid && check[i+mid][j] >= mid && check[i+mid][j+mid] >= mid && check[i+mid][j-mid] >= mid
-                && check[i+mid+mid][j] >= mid
-                ) {
-                    this_mid_is_nice = true;
-                    break;
+    set<pll> st;
+    for (ll i = 0; i < n; i += 1) {
+        for (ll j = 0; j < m; j += 1) if (i==0||i==n-1||j==0||j==m-1){
+            maximum_nalit[i][j] = a[i][j];
+            st.insert(pll(a[i][j], i+j*n));
+        }
+    }
+    // ИЩЕМ ЛУЧШИЙ ПУТЬ ДЛЯ ВОДЫ
+    // Для воды важен только максимум на пути
+    while (!st.empty()) {
+        auto it = st.begin();
+        ll i = it->second%n;
+        ll j = it->second/n;
+        st.erase(it);
+        for (ll d = 0; d < 4; d += 1) {
+            ll ni = i + dx[d];
+            ll nj = j + dy[d];
+            if (ni >= 0 && ni < n && nj >= 0 && nj < m) {
+                ll umensh = max(maximum_nalit[i][j], // рядом слабенький
+                                a[ni][nj] // банально нельзя
+                                );
+                if (maximum_nalit[ni][nj] > umensh) {
+                    // ВОДА НАШЛА ПУТЬ ЛУЧШЕ
+                    maximum_nalit[ni][nj] = umensh;
+                    st.insert(pll(maximum_nalit[ni][nj], ni+nj*n));
                 }
             }
-            if (this_mid_is_nice) break;
-        }
-        if (this_mid_is_nice) {
-            l = mid+1;
-            good = mid;
-        } else {
-            r = mid-1;
         }
     }
-    assert(good != -1);
-    cout << good << endl;
+    ll ans = 0;
+    for (ll i = 0; i < n; i += 1) {
+        for (ll j = 0; j < m; j += 1) {
+            ans += maximum_nalit[i][j] - a[i][j];
+        }
+    }
+    cout << ans << endl;
 }
 
 
