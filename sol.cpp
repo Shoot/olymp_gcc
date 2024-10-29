@@ -19,8 +19,8 @@ template <typename T> using ordered_set = tree<T, null_type, less<T>, rb_tree_ta
 ostream& endl(ostream& os) {
     return os << '\n';
 }
-#define all(xxx) xxx.begin(), xxx.end()
-#define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl;
+//define all(xxx) xxx.begin(), xxx.end()
+//define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl;
 template <class T, class S> inline bool chmax(T &a, const S &b) { return (a < b ? a = b, 1 : 0); }
 template <class T, class S> inline bool chmin(T &a, const S &b) { return (a > b ? a = b, 1 : 0); }
 template <typename T, typename U>
@@ -190,56 +190,63 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
-ll dx[4] = {-1, 0, 0, 1};
-ll dy[4] = {0, 1, -1, 0};
 void solve() {
     ll n, m;
     cin >> n >> m;
-    vvll a(n,vll(m));
-    vvll maximum_nalit(n,vll(m, 1e18));
-    for (auto &x : a) {
-        for (auto &y : x) {
-            cin >> y;
+    map<ll, set<ll>> check;
+    vll deg(n+1);
+    vpll temp;
+    for (ll i = 0; i < m; i += 1) {
+        ll u, v;
+        cin >> u >> v;
+        temp.push_back(pll(u, v));
+        deg[v] += 1;
+        deg[u] += 1;
+        check[u].insert(v);
+        check[v].insert(u);
+    }
+    vvll sm_naperad(n+1);
+    for (const auto &[i, j] : temp) {
+        if (deg[i] == deg[j]) {
+            if (i > j) {
+                sm_naperad[j].push_back(i);
+            } else {
+                sm_naperad[i].push_back(j);
+            }
+            continue;
+        }
+        if (deg[i] > deg[j]) {
+            sm_naperad[j].push_back(i);
+//            cout << j << "->" << i << endl;
+        } else {
+            sm_naperad[i].push_back(j);
+//            cout << i << "->" << j << endl;
         }
     }
-    set<pll> st;
-    for (ll i = 0; i < n; i += 1) {
-        for (ll j = 0; j < m; j += 1) if (i==0||i==n-1||j==0||j==m-1){
-            maximum_nalit[i][j] = a[i][j];
-            st.insert(pll(a[i][j], i+j*n));
-        }
+    ll sqrtm = sqrt(2*m)+10;
+    for (ll i = 1; i <= n; i += 1) {
+        assert(sm_naperad[i].size() < sqrtm);
     }
-    // ИЩЕМ ЛУЧШИЙ ПУТЬ ДЛЯ ВОДЫ
-    // Для воды важен только максимум на пути
-    while (!st.empty()) {
-        auto it = st.begin();
-        ll i = it->second%n;
-        ll j = it->second/n;
-        st.erase(it);
-        for (ll d = 0; d < 4; d += 1) {
-            ll ni = i + dx[d];
-            ll nj = j + dy[d];
-            if (ni >= 0 && ni < n && nj >= 0 && nj < m) {
-                ll umensh = max(maximum_nalit[i][j], // рядом слабенький
-                                a[ni][nj] // банально нельзя
-                                );
-                if (maximum_nalit[ni][nj] > umensh) {
-                    // ВОДА НАШЛА ПУТЬ ЛУЧШЕ
-                    maximum_nalit[ni][nj] = umensh;
-                    st.insert(pll(maximum_nalit[ni][nj], ni+nj*n));
+    ll ans = 0;
+    vll better_check(n+1);
+    for (ll v = 1; v <= n; v += 1) {
+        for (const auto &u : sm_naperad[v]) {
+            better_check[u] = 1;
+        }
+        for (const auto &u : sm_naperad[v]) {
+            for (const auto &k : sm_naperad[u]) {
+                if (better_check[k]) {
+//                    cout << v << " " << u << " " << k << endl;
+                    ans += 1;
                 }
             }
         }
-    }
-    ll ans = 0;
-    for (ll i = 0; i < n; i += 1) {
-        for (ll j = 0; j < m; j += 1) {
-            ans += maximum_nalit[i][j] - a[i][j];
+        for (const auto &u : sm_naperad[v]) {
+            better_check[u] = 0;
         }
     }
     cout << ans << endl;
 }
-
 
 int32_t main(int32_t argc, char* argv[]) {
 //    ifstream cin("distance.in");
