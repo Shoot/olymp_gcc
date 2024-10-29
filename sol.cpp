@@ -192,59 +192,55 @@ void copy_this () {
 */
 
 void solve() {
-    ll n, w_sz, kol;
-    cin >> n >> w_sz >> kol;
-    w_sz += 1;
-    vll a(n);
+    ll n, m;
+    cin >> n >> m;
+    vector<string> a(n);
     for (auto &x : a) cin >> x;
-    map<ll,ll> mp;
-    map<ll,set<ll>> positions;
-    for (ll i = 0; i < min(n, w_sz); i += 1) {
-        mp[a[i]] += 1;
-        positions[a[i]].insert(i);
-    }
-    vvll global;
-    auto do_shit = [&] () {
-        while (mp.size() >= kol) { // кол-во уникальных достаточное
-            vll shit;
-            ll done = 0;
-            for (const auto &[i,j]: mp) {
-                if (done == kol) break;
-                done += 1;
-                assert(j > 0);
-                assert(!positions[i].empty());
-                shit.push_back(*positions[i].begin());
+    vvll check(n, vll(m));
+    for (ll i = n-1; i >= 0; i -= 1) {
+        for (ll j = m-1; j >= 0; j -= 1) {
+            if (a[i][j] != '#') continue;
+            if (j == m-1 || i == n-1) {
+                check[i][j] = 1;
+            } else {
+                check[i][j] = min({check[i+1][j], check[i][j+1], check[i+1][j+1]}) + 1;
             }
-            for (auto const &x : shit) {
-                assert(!positions[a[x]].empty());
-                positions[a[x]].erase(positions[a[x]].begin());
-                assert(mp.count(a[x]));
-                mp[a[x]] -= 1;
-                assert(mp[a[x]] >= 0);
-                if (mp[a[x]] == 0) mp.erase(a[x]);
+        }
+    }
+//    for (const auto &x : check) {
+//        for (const auto &y : x) {
+//            cout << y << ' ';
+//        }
+//        cout << endl;
+//    }
+    ll good = -1;
+    ll l = 1, r = 1e6;
+    while (l <= r) {
+        ll mid = (l+r) >> 1;
+        bool this_mid_is_nice = false;
+        for (ll i = 0; i < n; i+=1) {
+            for (ll j = 0; j < m; j += 1) {
+                if (i + mid + mid < n)
+                if (j - mid >= 0)
+                if (j + mid < m)
+                if (check[i][j] >= mid && check[i+mid][j] >= mid && check[i+mid][j+mid] >= mid && check[i+mid][j-mid] >= mid
+                && check[i+mid+mid][j] >= mid
+                ) {
+                    this_mid_is_nice = true;
+                    break;
+                }
             }
-            global.push_back(shit);
+            if (this_mid_is_nice) break;
         }
-    };
-    do_shit();
-    for (ll i = w_sz; i < n; i += 1) {
-        mp[a[i]] += 1;
-        positions[a[i]].insert(i);
-        if (positions[a[i-w_sz]].count(i-w_sz)) {
-            mp[a[i-w_sz]] -= 1;
-            if (mp[a[i-w_sz]] == 0) mp.erase(a[i-w_sz]);
-            positions[a[i-w_sz]].erase(i-w_sz);
+        if (this_mid_is_nice) {
+            l = mid+1;
+            good = mid;
+        } else {
+            r = mid-1;
         }
-        do_shit();
     }
-    cout << global.size() << endl;
-    for (const auto &x : global) {
-        for (auto const &y : x) {
-            cout << y+1 << ' ';
-        }
-        cout << endl;
-    }
-
+    assert(good != -1);
+    cout << good << endl;
 }
 
 
