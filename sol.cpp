@@ -71,13 +71,13 @@ constexpr ll MOD = 1e9+7;
 void in(vector<ll> & a) {
     for (auto & zero_leaf : a) cin >> zero_leaf;
 }
-void in(vector<ll> & a, ll l, ll r) {
-    for (ll i=l; i < r; i+=1) {
+void in(vector<ll> & a, ll lx, ll rx) {
+    for (ll i=lx; i < rx; i+=1) {
         cin >> a[i];
     }
 }
-void inn(vector<ll> & a, ll l, ll rr) {
-    for (ll i=l; i <= rr; i+=1) {
+void inn(vector<ll> & a, ll lx, ll rr) {
+    for (ll i=lx; i <= rr; i+=1) {
         cin >> a[i];
     }
 }
@@ -192,67 +192,69 @@ void copy_this () {
 */
 
 void solve() {
-    ll fi, se, hp, limitfi;
-    cin >> fi >> se >> hp >> limitfi;
-    auto price_by_number_of_full_series_of_boosts = [&] (ll inc) {
-        ll price_series = fi*limitfi+se;
-        ll price = price_series*inc;
-        ll this_hp = hp;
-        for (ll i = 1; i <= inc; i += 1) {
-            this_hp -= i*limitfi;
-        }
-        this_hp = max(this_hp, 0ll);
-        auto test = [&] (ll additional_first_ops) {
-//            ll new_price = price+additional_first_ops*fi; // за инкрисы
-//            ll new_d = inc*limitfi+additional_first_ops; // новый урон
-//            if (new_d == 0) assert(false);
-//            ll to_beat = (this_hp+new_d-1)/new_d; // ударов
-//            new_price += to_beat*se;
-//            return new_price;
-
-
-            cout << endl << price << "+x*" << fi << "+(" << this_hp << "+" << "(" << inc << "*" << limitfi << "+x)-1)/(" << inc <<"*" << limitfi << "+x)*" << se << endl;
-            return price+additional_first_ops*fi+(this_hp+(inc*limitfi+additional_first_ops)-1)/(inc*limitfi+additional_first_ops)*se;
-        };
-        ll l = 0, r = limitfi-1;
-        if (inc == 0) l = 1;
-        ll mini = 1e18;
-        bool prev_more_than_prevprev = false;
-        ll prev = -1e18;
-        bool was = false;
-        for (ll x = l; x <= r; x += 1) {
-            ll denom = inc*limitfi+x;
-
-            if (x!=r && x != l && this_hp%denom!=denom-1 && r-l > 3*denom+10) continue;
-            //  это делимое
-            // мак x из тех что
-            ll f = test(x);
-            watch(x);
-            watch(f);
-            mini = min(mini, f);
-            if (prev_more_than_prevprev && prev < f && was) {
-                cout << "!!!!!!!!!!!!!!!!" << endl;
-            }
-            was |= prev_more_than_prevprev && prev < f;
-            prev_more_than_prevprev = f < prev;
-            prev = f;
-        }
-        return mini;
+    auto f = [&] (ll x) {
+        return 70+3*x+(90+(10+x)-1)/(10+x)*60;
     };
-    ll l = 0;
-    ll r = hp;
-    ll good_arg = -1;
-    while (l <= r) {
-        ll mid = (l+r) >> 1;
-        if (price_by_number_of_full_series_of_boosts(mid) < price_by_number_of_full_series_of_boosts(mid+1)) {
-            r = mid-1;
-            good_arg = mid;
+    ll lx = 0, rx = 9;
+    ll RIGHT_LIMIT_DENOM = rx + 10;
+    ll good = -1;
+    while (lx <= rx) {
+        ll mid = (lx+rx) >> 1;
+        ll denom = mid + 10;
+        auto get_best_in_class_arg_and_val = [&] (ll denom_one) -> pll {
+            ll maxi_arg = -1;
+            ll mini_arg = -1;
+            ll same_quotient_l, same_quotient_r;
+            same_quotient_l = 0, same_quotient_r = 1e18;
+            while (same_quotient_l <= same_quotient_r) {
+                ll same_quotient_mid = (same_quotient_l+same_quotient_r) >> 1;
+                if (90/same_quotient_mid < 90/denom_one) {
+                    maxi_arg = same_quotient_mid;
+                    same_quotient_r = same_quotient_mid-1;
+                } else {
+                    same_quotient_l = same_quotient_mid+1;
+                }
+            }
+            same_quotient_l = 0, same_quotient_r = 1e18;
+            while (same_quotient_l <= same_quotient_r) {
+                ll same_quotient_mid = (same_quotient_l+same_quotient_r) >> 1;
+                if (90/same_quotient_mid > 90/denom_one) {
+                    mini_arg = same_quotient_mid;
+                    same_quotient_l = same_quotient_mid+1;
+                } else {
+                    same_quotient_r = same_quotient_mid-1;
+                }
+            }
+            ll sameL = mini_arg+1, sameR = maxi_arg-1;
+            cout << denom_one << ": same from " << sameL << " to " << sameR << endl;
+            if (90%(sameL-1) == 0 && sameL != sameR) {
+                sameL -= 1;
+            }
+            if (90%(sameR) == 0 && sameL != sameR) {
+                sameR -= 1;
+            }
+            sameR = min(sameR, RIGHT_LIMIT_DENOM);
+            cout << denom_one << ": same from " << sameL << " to " << sameR << endl;
+            return pll(sameR, f(sameR));
+        };
+        
+        // ^^^ чтобы округление к одному у всех
+        pll this_group = get_best_in_class_arg_and_val(denom);
+        pll next_group = get_best_in_class_arg_and_val(this_group.first+1);
+        if (this_group.second < next_group.second) {
+            good = this_group.second-10;
+            rx = mid-1;
         } else {
-            l = mid+1;
+            lx = mid+1;
         }
+        cout << lx << " " << rx << endl;
     }
-    assert(good_arg != -1);
-    cout << price_by_number_of_full_series_of_boosts(good_arg) << endl;
+    cout << good << endl;
+    for (ll x = 0; x <= 9; x += 1) {
+        cout << "x = " << x << ", "; watch(f(x));
+        cout << "nominator / (10 + x) = " << 90 / (10 + x) << ", ";
+        cout << "nominator % (10 + x) = " << 90 % (10 + x) << endl << endl;
+    }
 }
 
 
@@ -276,7 +278,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-    cin >> tt;
+//    cin >> tt;
 
     while (tt--) {
         solve();
