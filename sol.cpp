@@ -190,62 +190,32 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
+unsigned int calculateHash(const string &s) {
+    auto pow = [] (unsigned int x, int y) -> unsigned int {
+        unsigned int res = 1;
+        for (ll i = 0; i < y; i += 1) {
+            res *= x;
+        }
+        return res;
+    };
+    unsigned int hash = 0;
+    int n = s.length();
+    for (int i = 0; i < n; i += 1) {
+        cout << (unsigned int)(s[i]) << endl;
+        hash += s[i] * (pow(31u, n-1-i));
+    }
+    return hash;
+}
 void solve() {
-    ll n, m;
-    cin >> n >> m;
-    map<ll, set<ll>> check;
-    vll deg(n+1);
-    vpll temp;
-    for (ll i = 0; i < m; i += 1) {
-        ll u, v;
-        cin >> u >> v;
-        temp.push_back(pll(u, v));
-        deg[v] += 1;
-        deg[u] += 1;
-        check[u].insert(v);
-        check[v].insert(u);
+    ll n; cin >> n;
+
+    for (ll i = 70; i < 70+n; i += 1) {
+        string s(i, ' ');
+//        for (ll o = i-1; o >= 0; o -= 1) s[o] = 'A' + __builtin_popcount(o) % 2;
+//        cout << s << endl;
+        cin >> s;
+        cout << calculateHash(s) << endl;
     }
-    vvll sm_naperad(n+1);
-    for (const auto &[i, j] : temp) {
-        if (deg[i] == deg[j]) {
-            if (i > j) {
-                sm_naperad[j].push_back(i);
-            } else {
-                sm_naperad[i].push_back(j);
-            }
-            continue;
-        }
-        if (deg[i] > deg[j]) {
-            sm_naperad[j].push_back(i);
-//            cout << j << "->" << i << endl;
-        } else {
-            sm_naperad[i].push_back(j);
-//            cout << i << "->" << j << endl;
-        }
-    }
-    ll sqrtm = sqrt(2*m)+10;
-    for (ll i = 1; i <= n; i += 1) {
-        assert(sm_naperad[i].size() < sqrtm);
-    }
-    ll ans = 0;
-    vll better_check(n+1);
-    for (ll v = 1; v <= n; v += 1) {
-        for (const auto &u : sm_naperad[v]) {
-            better_check[u] = 1;
-        }
-        for (const auto &u : sm_naperad[v]) {
-            for (const auto &k : sm_naperad[u]) {
-                if (better_check[k]) {
-//                    cout << v << " " << u << " " << k << endl;
-                    ans += 1;
-                }
-            }
-        }
-        for (const auto &u : sm_naperad[v]) {
-            better_check[u] = 0;
-        }
-    }
-    cout << ans << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
