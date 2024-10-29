@@ -177,8 +177,8 @@ void build_ft(vector<ll> & a, vector<ll> & tree) {
     assert(tree.size() == a.size());
     for (ll i = 0; i < n; i++) {
         tree[i] += a[i];
-        ll good = i | (i + 1);
-        if (good < n) tree[good] += tree[i];
+        ll good_x = i | (i + 1);
+        if (good_x < n) tree[good_x] += tree[i];
     }
 } // zero-indexed!!!
 /*
@@ -195,66 +195,85 @@ void solve() {
     auto f = [&] (ll x) {
         return 70+3*x+(90+(10+x)-1)/(10+x)*60;
     };
-    ll lx = 0, rx = 9;
-    ll RIGHT_LIMIT_DENOM = rx + 10;
-    ll good = -1;
+    const ll LX = 0, RX = 90;
+    ll RIGHT_LIMIT_DENOM = RX + 10;
+    ll lx = LX, rx = RX;
+    ll good_x = -1;
+    auto get_best_in_class_arg_and_val = [&] (ll denom_one) -> pll {
+        if (denom_one > RIGHT_LIMIT_DENOM) return pll(1e20,1e20);
+        ll maxi_arg = -1;
+        if (90 <= denom_one) {
+            maxi_arg = RIGHT_LIMIT_DENOM+1;
+        } else if (90 % denom_one == 0) {
+            ll same_quotient_l, same_quotient_r;
+            same_quotient_l = 0, same_quotient_r = 1e18;
+            while (same_quotient_l <= same_quotient_r) {
+                ll same_quotient_mid = (same_quotient_l+same_quotient_r) >> 1;
+                if (90/same_quotient_mid < 90/denom_one-1) {
+                    maxi_arg = same_quotient_mid;
+                    same_quotient_r = same_quotient_mid-1;
+                } else {
+                    same_quotient_l = same_quotient_mid+1;
+                }
+            }
+        } else {
+            ll same_quotient_l, same_quotient_r;
+            same_quotient_l = 0, same_quotient_r = 1e18;
+            while (same_quotient_l <= same_quotient_r) {
+                ll same_quotient_mid = (same_quotient_l+same_quotient_r) >> 1;
+                if (90/same_quotient_mid < 90/denom_one) {
+                    maxi_arg = same_quotient_mid;
+                    same_quotient_r = same_quotient_mid-1;
+                } else {
+                    same_quotient_l = same_quotient_mid+1;
+                }
+            }
+        }
+        ll sameR = maxi_arg-1;
+        if (90%(sameR) == 0 && denom_one != sameR) {
+            sameR -= 1;
+        }
+        sameR = min(sameR, RIGHT_LIMIT_DENOM);
+        ll func_res = f(sameR-10);
+//            cout << denom_one << ": same to " << sameR << ", f(sameR) = " << func_res << endl;
+        return pll(sameR, func_res);
+    };
     while (lx <= rx) {
         ll mid = (lx+rx) >> 1;
         ll denom = mid + 10;
-        auto get_best_in_class_arg_and_val = [&] (ll denom_one) -> pll {
-            ll maxi_arg = -1;
-            if (90 % denom_one == 0) {
-                ll same_quotient_l, same_quotient_r;
-                same_quotient_l = 0, same_quotient_r = 1e18;
-                while (same_quotient_l <= same_quotient_r) {
-                    ll same_quotient_mid = (same_quotient_l+same_quotient_r) >> 1;
-                    if (90/same_quotient_mid < 90/denom_one-1) {
-                        maxi_arg = same_quotient_mid;
-                        same_quotient_r = same_quotient_mid-1;
-                    } else {
-                        same_quotient_l = same_quotient_mid+1;
-                    }
-                }
-            } else {
-                ll same_quotient_l, same_quotient_r;
-                same_quotient_l = 0, same_quotient_r = 1e18;
-                while (same_quotient_l <= same_quotient_r) {
-                    ll same_quotient_mid = (same_quotient_l+same_quotient_r) >> 1;
-                    if (90/same_quotient_mid < 90/denom_one) {
-                        maxi_arg = same_quotient_mid;
-                        same_quotient_r = same_quotient_mid-1;
-                    } else {
-                        same_quotient_l = same_quotient_mid+1;
-                    }
-                }
-            }
-            ll sameR = maxi_arg-1;
-            if (90%(sameR) == 0 && denom_one != sameR) {
-                sameR -= 1;
-            }
-            sameR = min(sameR, RIGHT_LIMIT_DENOM);
-            ll func_res = f(sameR-10);
-            cout << denom_one << ": same to " << sameR << ", f(sameR) = " << func_res << endl;
-            return pll(sameR, func_res);
-        };
 
         // ^^^ чтобы округление к одному у всех
         pll this_group = get_best_in_class_arg_and_val(denom);
         pll next_group = get_best_in_class_arg_and_val(this_group.first+1);
         if (this_group.second < next_group.second) {
-            good = this_group.second-10;
+            good_x = this_group.first-10;
             rx = mid-1;
         } else {
             lx = mid+1;
         }
-        cout << lx << " " << rx << endl;
+//        cout << lx << " " << rx << endl;
     }
-    cout << good << endl;
-    for (ll x = 0; x <= 9; x += 1) {
-        cout << "x = " << x << ", "; watch(f(x));
-        cout << "nominator / (10 + x) = " << 90 / (10 + x) << ", ";
-        cout << "nominator % (10 + x) = " << 90 % (10 + x) << endl << endl;
+    cout << good_x << endl;
+    cout << f(good_x) << endl;
+    cout << "Hi" << endl;
+    ll denom;
+    for (denom = LX+10; denom <= RIGHT_LIMIT_DENOM;) {
+        watch(denom);
+        pll this_group = get_best_in_class_arg_and_val(denom);
+        watch(this_group.second);
+        denom = this_group.first+1;
     }
+    watch(denom);
+    ll OG = 1e18;
+    for (ll x = LX; x <= RX; x += 1) {
+        cout << x << ": " << f(x) << endl;
+        ll func_value = f(x);
+        OG = min(OG, func_value);
+//        cout << "x = " << x << ", "; watch(func_value);
+//        cout << "nominator / (10 + x) = " << 90 / (10 + x) << ", ";
+//        cout << "nominator % (10 + x) = " << 90 % (10 + x) << endl << endl;
+    }
+    watch(OG);
 }
 
 
