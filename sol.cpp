@@ -203,41 +203,41 @@ void solve() {
         ll denom = mid + 10;
         auto get_best_in_class_arg_and_val = [&] (ll denom_one) -> pll {
             ll maxi_arg = -1;
-            ll mini_arg = -1;
-            ll same_quotient_l, same_quotient_r;
-            same_quotient_l = 0, same_quotient_r = 1e18;
-            while (same_quotient_l <= same_quotient_r) {
-                ll same_quotient_mid = (same_quotient_l+same_quotient_r) >> 1;
-                if (90/same_quotient_mid < 90/denom_one) {
-                    maxi_arg = same_quotient_mid;
-                    same_quotient_r = same_quotient_mid-1;
-                } else {
-                    same_quotient_l = same_quotient_mid+1;
+            if (90 % denom_one == 0) {
+                ll same_quotient_l, same_quotient_r;
+                same_quotient_l = 0, same_quotient_r = 1e18;
+                while (same_quotient_l <= same_quotient_r) {
+                    ll same_quotient_mid = (same_quotient_l+same_quotient_r) >> 1;
+                    if (90/same_quotient_mid < 90/denom_one-1) {
+                        maxi_arg = same_quotient_mid;
+                        same_quotient_r = same_quotient_mid-1;
+                    } else {
+                        same_quotient_l = same_quotient_mid+1;
+                    }
+                }
+            } else {
+                ll same_quotient_l, same_quotient_r;
+                same_quotient_l = 0, same_quotient_r = 1e18;
+                while (same_quotient_l <= same_quotient_r) {
+                    ll same_quotient_mid = (same_quotient_l+same_quotient_r) >> 1;
+                    if (90/same_quotient_mid < 90/denom_one) {
+                        maxi_arg = same_quotient_mid;
+                        same_quotient_r = same_quotient_mid-1;
+                    } else {
+                        same_quotient_l = same_quotient_mid+1;
+                    }
                 }
             }
-            same_quotient_l = 0, same_quotient_r = 1e18;
-            while (same_quotient_l <= same_quotient_r) {
-                ll same_quotient_mid = (same_quotient_l+same_quotient_r) >> 1;
-                if (90/same_quotient_mid > 90/denom_one) {
-                    mini_arg = same_quotient_mid;
-                    same_quotient_l = same_quotient_mid+1;
-                } else {
-                    same_quotient_r = same_quotient_mid-1;
-                }
-            }
-            ll sameL = mini_arg+1, sameR = maxi_arg-1;
-            cout << denom_one << ": same from " << sameL << " to " << sameR << endl;
-            if (90%(sameL-1) == 0 && sameL != sameR) {
-                sameL -= 1;
-            }
-            if (90%(sameR) == 0 && sameL != sameR) {
+            ll sameR = maxi_arg-1;
+            if (90%(sameR) == 0 && denom_one != sameR) {
                 sameR -= 1;
             }
             sameR = min(sameR, RIGHT_LIMIT_DENOM);
-            cout << denom_one << ": same from " << sameL << " to " << sameR << endl;
-            return pll(sameR, f(sameR));
+            ll func_res = f(sameR-10);
+            cout << denom_one << ": same to " << sameR << ", f(sameR) = " << func_res << endl;
+            return pll(sameR, func_res);
         };
-        
+
         // ^^^ чтобы округление к одному у всех
         pll this_group = get_best_in_class_arg_and_val(denom);
         pll next_group = get_best_in_class_arg_and_val(this_group.first+1);
