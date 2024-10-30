@@ -19,8 +19,8 @@ template <typename T> using ordered_set = tree<T, null_type, less<T>, rb_tree_ta
 ostream& endl(ostream& os) {
     return os << '\n';
 }
-//define all(xxx) xxx.begin(), xxx.end()
-//define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl;
+#define all(xxx) xxx.begin(), xxx.end()
+#define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl;
 template <class T, class S> inline bool chmax(T &a, const S &b) { return (a < b ? a = b, 1 : 0); }
 template <class T, class S> inline bool chmin(T &a, const S &b) { return (a > b ? a = b, 1 : 0); }
 template <typename T, typename U>
@@ -190,32 +190,33 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
-unsigned int calculateHash(const string &s) {
-    auto pow = [] (unsigned int x, int y) -> unsigned int {
-        unsigned int res = 1;
-        for (ll i = 0; i < y; i += 1) {
-            res *= x;
-        }
-        return res;
-    };
-    unsigned int hash = 0;
-    int n = s.length();
-    for (int i = 0; i < n; i += 1) {
-        cout << (unsigned int)(s[i]) << endl;
-        hash += s[i] * (pow(31u, n-1-i));
-    }
-    return hash;
-}
+int dx[] = {1, 0, -1, 0};
+int dy[] = {0, 1, 0, -1};
 void solve() {
-    ll n; cin >> n;
-
-    for (ll i = 70; i < 70+n; i += 1) {
-        string s(i, ' ');
-//        for (ll o = i-1; o >= 0; o -= 1) s[o] = 'A' + __builtin_popcount(o) % 2;
-//        cout << s << endl;
-        cin >> s;
-        cout << calculateHash(s) << endl;
+    ll n, k;
+    cin >> n >> k;
+    vll a(n);
+    for (auto &x : a) {
+        cin >> x;
     }
+    vll aa = a;
+    for (ll i = 1; i < n; i += 2) {
+        a[i] += k;
+    }
+//    sort(all(a));
+    nth_element(a.begin(), a.begin()+n/2, a.end());
+    ll tot1 = 0;
+
+    for (auto const &x : a) tot1 += abs(x-a[n/2]);
+
+    for (ll i = 0; i < n; i += 2) {
+        aa[i] += k;
+    }
+//    sort(all(aa));
+    nth_element(aa.begin(), aa.begin()+n/2, aa.end());
+    ll tot3 = 0;
+    for (auto const &x : aa) tot3 += abs(x-aa[n/2]);
+    cout << min({tot1,tot3}) << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
