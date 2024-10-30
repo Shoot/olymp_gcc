@@ -190,38 +190,14 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
-ll OPS = 0;
 vll a;
-vector<vector<int>> damn;
-void fuckedup(vector<int> const & arr1, vector<int> const & arr2, vector<int> & arr3) {
-    int i = 0, j = 0;
-    int k = 0;
-    arr3.resize(arr1.size() + arr2.size());
-    while (i < arr1.size() && j < arr2.size()) {
-        if (arr1[i] < arr2[j]) {
-            arr3[k++] = arr1[i++];
-        }
-        else {
-            arr3[k++] = arr2[j++];
-        }
-    }
-    // Copy the rest of arr1 (if needed):
-    while (i < arr1.size()) {
-        arr3[k++] = arr1[i++];
-    }
-    // Copy the rest of arr2 (if needed):
-    while (j < arr2.size()) {
-        arr3[k++] = arr2[j++];
-    }
-}
+vector<ordered_set<pll>> damn;
 pll get_equal_range(ll v, ll tl, ll tr, ll l, ll r, ll val) {
     if (tl == l && tr == r) {
-        OPS += 1;
-        assert(OPS < 60);
 //            cout << l+1 << " " << r+1 << endl;
-//            print(damn[v]);
-        auto ans = equal_range(damn[v].begin(), damn[v].end(), val);
-        return pll(ans.first-damn[v].begin(), ans.second-damn[v].begin());
+        ll ub = damn[v].order_of_key(pll(val, 1e18));
+        ll lb = damn[v].order_of_key(pll(val, -1e18));
+        return pll(lb, ub);
     }
     pll ans; ans.first = 0; ans.second = 0;
     ll tm = (tl+tr) >> 1;
@@ -237,52 +213,25 @@ pll get_equal_range(ll v, ll tl, ll tr, ll l, ll r, ll val) {
     }
     return ans;
 }
-ll get_upper_bound(ll v, ll tl, ll tr, ll l, ll r, ll val) {
-    if (tl == l && tr == r) {
-        OPS += 1;
-        assert(OPS < 60);
-//            cout << l+1 << " " << r+1 << endl;
-//            print(damn[v]);
-        return upper_bound(damn[v].begin(), damn[v].end(), val)-damn[v].begin();
-    }
-    ll ans = 0;
-    ll tm = (tl+tr) >> 1;
-    if (l <= tm) {
-        ans += get_upper_bound(2*v+1, tl, tm, l, min(tm, r), val);
-    }
-    if (r > tm) {
-        ans += get_upper_bound(2*v+2, tm+1, tr, max(tm+1, l), r, val);
-    }
-    return ans;
-}
 void build(ll v, ll tl, ll tr) {
-    OPS += 1;
-    assert(OPS < 50000*60);
-    if (tl == tr) {
-        damn[v].push_back(a[tl]);
-        return;
+    for (ll i = tl; i <= tr; i += 1) {
+        damn[v].insert(pll(a[i], i));
     }
+    if (tl == tr) return;
     ll tm = (tl + tr) >> 1;
     build(2*v+1, tl, tm);
     build(2*v+2, tm + 1, tr);
-    fuckedup(damn[2*v+1], damn[2*v+2], damn[v]);
 }
 void set_point(ll v, ll tl, ll tr, ll pos, ll val) {
-    OPS += 1;
-    assert(OPS < 60);
     ll tm = (tl+tr) >> 1;
-    if (tl == tr) {
-        assert(tl == pos);
-        assert(damn[v].size() == 1);
-        damn[v][0] = val;
-        return;
-    }
+    damn[v].erase(pll(a[pos], pos));
+    damn[v].insert(pll(val, pos));
+    if (tl == tr) return;
     if (pos <= tm) {
         set_point(2*v+1, tl, tm, pos, val);
     } else {
         set_point(2*v+2, tm+1, tr, pos, val);
     }
-    fuckedup(damn[2*v+1], damn[2*v+2], damn[v]);
 }
 void solve() {
     damn.resize(4*50000+10);
@@ -297,25 +246,20 @@ void solve() {
     ll q;
     cin >> q;
     for (ll i = 0; i < q; i += 1) {
-        OPS = 0;
         char type = 'Q';
         cin >> type;
         if (type == 'Q') {
-            ll x1, y1 = 7, x2, y2 = 7;
-            x1 = 1+distrib(rng);
-            x2 = n-distrib(rng);
+            ll x1, y1, x2, y2;
             cin >> x1 >> y1 >> x2 >> y2;
             ll less_or_eq = (y1+y2)/2;
-//            watch(less_or_eq);
             ll l = x1, r = x2;
             assert(l <= r);
             assert(l >= 1);
             assert(r <= n);
-            if ((y1+y2)%2==0) {
-                pll res = get_equal_range(0, 0, n-1, l-1, r-1, less_or_eq);
+            pll res = get_equal_range(0, 0, n-1, l-1, r-1, less_or_eq);
+            if ((y1+y2)%2 == 0) {
                 ll draw = res.second-res.first;
                 ll first = res.first;
-//                cout << first << " " << draw << endl;
                 ll second = r-l+1-first-draw;
                 if (first == second) {
                     cout << 0 << endl;
@@ -326,9 +270,8 @@ void solve() {
                 }
                 continue;
             }
-            ll first = get_upper_bound(0, 0, n-1, l-1, r-1, less_or_eq);
+            ll first = res.second;
             ll second = r-l+1-first;
-//            cout << first << " " << second << " " << nichya << endl;
             if (first == second) {
                 cout << 0 << endl;
             } else if (first < second) {
@@ -342,8 +285,8 @@ void solve() {
             assert(pos >= 1);
             assert(pos <= n);
             set_point(0, 0, n-1, pos-1, val);
+            a[pos-1] = val;
         }
-//        print(damn[0]);
     }
 }
 
