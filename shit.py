@@ -1,26 +1,49 @@
-import re
-
-def replace_defines_in_cpp(file_path):
-    content = ''
-    with open(file_path, 'r') as file:
-        for line in file.readlines():
-            if not line.startswith('#define'):
-                content += line
-    content = re.sub(r'\bfo\s*\(\s*(\w+)\s*,\s*(\w+)\s*,\s*(\w+)\s*\)',
-                      r'for (ll \1=\2; \1 < \3; \1+=1)', content)
-
-    content = re.sub(r'\bforr\s*\(\s*(\w+)\s*,\s*(\w+)\s*,\s*(\w+)\s*\)',
-                      r'for (ll \1=\2; \1 <= \3; \1+=1)', content)
-    content = re.sub(r'\broff\s*\(\s*(\w+)\s*,\s*(\w+)\s*,\s*(\w+)\s*\)',
-                     r'for (ll \1=\2; \1 >= \3; \1-=1)', content)
-
-
-    # Write the modified content to a new file
-    output_file_path = file_path.replace('.cpp', '2.cpp')
-    with open(output_file_path, 'w') as output_file:
-        output_file.write(content)
-
-    print(f"Replaced defines written to {output_file_path}")
-
-# Example usage
-replace_defines_in_cpp('good.cpp')
+2 2
+3 3
+4 5
+6 10
+11 20
+21 40
+41 79
+80 157
+158 313
+314 625
+626 1250
+1251 2500
+2501 5000
+5001 7500
+7501 8750
+8751 9375
+9376 9688
+9689 9844
+9845 9922
+9923 9961
+9962 9981
+9982 9991
+9992 9994
+9995 9995
+2 2
+3 3
+4 5
+6 10
+11 20
+21 40
+41 79
+80 157
+158 313
+314 625
+626 1250
+1251 2500
+2501 5000
+5001 7500
+7501 8750
+8751 9375
+9376 9688
+9689 9844
+9845 9922
+9923 9961
+9962 9981
+9982 9991
+9992 9994
+9995 9995
+2
