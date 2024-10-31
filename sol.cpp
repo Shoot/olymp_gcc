@@ -148,121 +148,61 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
-ll dp[11][2][2];
-string S, L, R;
-ll do_dp (ll i, ll xl, ll xr) { // xl — S гарантированно больше L, xr — S меньше R
-    if (i == S.size()) return xl==1;
-    if (dp[i][xl][xr] != -1) {
-        return dp[i][xl][xr];
-    }
-    vector<ll> possible_digits;
-    if (S[i] == '?') {
-//        if (i != 0 || S.size() == 1)
-            possible_digits.push_back(0);
-        for (ll j = 1; j <= 9; j += 1) {
-            possible_digits.push_back(j);
-        }
-    } else {
-        possible_digits.push_back(S[i]-'0');
-    }
-    ll this_digit_inL = L[i]-'0';
-    ll this_digit_inR = R[i]-'0';
-    ll su = 0;
-    for (const auto &possible_digit : possible_digits) {
-        if (possible_digit < this_digit_inL && !xl) continue;
-        if (possible_digit > this_digit_inR && !xr) continue;
-        bool nxl = xl || possible_digit > this_digit_inL;
-        bool nxr = xr || possible_digit < this_digit_inR;
-        su += do_dp(i+1, nxl, nxr);
-    }
-    return su;
+vll p(2e5+20);
+vll sz(2e5+20);
+
+ll get_parent(ll x) {
+    return (p[x] == x ? x : p[x] = get_parent(p[x]));
+}
+
+void unite(ll x, ll y) {
+    x = get_parent(x);
+    y = get_parent(y);
+    if (x == y) return;
+    if (sz[x] > sz[y]) swap(x, y);
+    p[x] = y;
+    sz[y] += sz[x];
 }
 void solve() {
-    auto a_less_than_b = [] (string a, string b) {
-        if (a.size() != b.size()) {
-            return a.size()<b.size();
-        }
-        return a<b;
-    };
-    ll n, q; cin >> n >> q;
-    vector<string> a(n);
-    for (auto &x : a) {
-        cin >> x;
-        reverse(all(x));
-        while (x.size() != 10) x.push_back('0');
-        reverse(all(x));
-    }
-    sort(all(a), a_less_than_b);
-    vll first_by_number_of_digits(11, 1e9);
-    vll last_by_number_of_digits(11, -1);
+    ll n; cin >> n;
+    vvll sm(n+1);
     for (ll i = 0; i < n; i += 1) {
-        first_by_number_of_digits[a[i].size()] = min(first_by_number_of_digits[a[i].size()], i);
-        last_by_number_of_digits[a[i].size()] = max(last_by_number_of_digits[a[i].size()], i);
+        ll a, b;
+        cin >> a >> b;
+        sm[a].push_back(b);
+        sm[b].push_back(a);
     }
-//    print(a);
-    ll ans = 0;
-    auto ask = [&] (string s) {
-        reverse(all(s));
-        assert(!s.empty());
-        assert(s.size() < last_by_number_of_digits.size());
-//        cout << "asked " << s << ", prevans below" << endl;
-//        cout << ans << endl;
-        S = s;
-        ll first = first_by_number_of_digits[s.size()];
-        ll last = last_by_number_of_digits[s.size()];
-        if (last == -1) {
-            ll nxt = 1'000'000;
-            for (ll j = s.size(); j < 11; j += 1) {
-                if (last_by_number_of_digits[j] != -1) {
-                    nxt = first_by_number_of_digits[j];
-                    break;
-                }
-            }
-            if (nxt == 1'000'000) return ;
-            ll mnozh = n-nxt;
-            ll kol = 1;
-//            if (S[0] == '?' && S.size() != 1) kol *= 9;
-//            if (S[0] == '?' && S.size() == 1) kol *= 10;
-            for (ll i = 0; i < S.size(); i += 1) {
-                if (S[i] == '?') kol *= 10;
-            }
-            ans += kol*mnozh;
+    for (ll i = 1; i <= n; i += 1) {
+        if (sm[i].size() > 2) {
+            cout << "NO" << endl;
             return;
         }
-        ll mnozh = n-first;
-        memset(dp, -1, sizeof(dp));
-        L = string(S.size(), '\0');
-        R = a[first];
-        ans += mnozh*do_dp(0, 0, 0);
-        for (ll r = first+1; r <= last; r += 1) {
-            memset(dp, -1, sizeof(dp));
-            mnozh -= 1;
-            L = a[r-1];
-            R = a[r];
-            ans += mnozh*do_dp(0, 0, 0);
-        }
-        mnozh -= 1;
-        if (mnozh != 0) {
-            memset(dp, -1, sizeof(dp));
-            assert(mnozh > 0);
-            L = a[last];
-            R = string(S.size(), '9');
-            ans += mnozh*do_dp(0, 0, 0);
-        }
-//        cout << "currans = " << ans << endl;
-    };
-    for (ll i = 0; i < q; i += 1) {
-        string s; cin >> s;
-        reverse(all(s));
-        while (s.size() != 10) s.push_back('0');
-        ans = 0;
-        ask(s);
-//        while (!s.empty() && s.back() == '?') {
-//            s.pop_back();
-//            if (!s.empty()) ask(s);
-//        }
-        cout << ans << endl;
     }
+    vll time(n+1, -1);
+    bool bad = false;
+    auto dfs = [&] (auto f, ll v, ll t) -> void {
+        if (time[v] == -1) {
+            time[v] = t;
+            for (auto const &x : sm[v]) {
+                if (time[x] == -1) {
+                    f(f, x, t+1);
+                } else {
+                    if (abs((t+1)-time[x])%2) {
+                        bad = true;
+                    }
+                }
+            }
+        } else {
+            if (abs((t)-time[v])%2) {
+                bad = true;
+            }
+        }
+    };
+    for (ll i = 1; i <= n; i += 1) {
+        if(time[i]==-1) dfs(dfs, i, 0);
+    }
+    // КАЖДОЕ РЕБРО БЕРЕМ ПО ОЧЕРЕДИ ТО В ОДНО ТО В ДРУГОЕ
+    cout << (bad?"NO":"YES") << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
@@ -285,7 +225,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-//    cin >> tt;
+    cin >> tt;
 
     while (tt--) {
         solve();
