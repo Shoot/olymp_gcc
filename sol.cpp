@@ -150,68 +150,23 @@ void copy_this () {
 */
 
 void solve() {
-    ll n, races, k, s;
-    cin >> n >> races >> k >> s;
-    vll prize_by_place(n);
-    for (ll place = 0; place < k; place += 1) {
-        ll prize; cin >> prize;
-        prize_by_place[place] = prize;
+    ll n, m;
+    cin >> n >> m;
+    vvll a(n, vll(m));
+    for (auto &x : a) for (auto &y : x) cin >> y;
+    // МИН КОЛВО ПУТЕЙ ЧТОБЫ ВСЕ a[i][j] БЫЛИ >= КОЛ-ВО ПОСЕЩЕНИЙ [i][j]
+    // СНАЧАЛА ИДЕМ ВНИЗ А ПОТОМ НАПРАВО
+    vvll dp(n, vll(m));
+    for (ll i = 0; i < n; i += 1) for (ll j = m-1; j >= 0; j -= 1) {
+        dp[i][j] = a[i][j];
+        if (i > 0) dp[i][j] = max(dp[i][j], dp[i-1][j]); // сверху
+        if (i>0 && j+1<m) dp[i][j] = max(dp[i][j], a[i][j]+dp[i-1][j+1]); // справа-сверху
+        if (j+1<m) dp[i][j] = max(dp[i][j], dp[i][j+1]); // справа
     }
-    vll initial(n);
-    for (auto &x : initial) cin >> x;
-    vvll prizes_by_person(n, vll(races));
-    vvll prizes_by_person_pref(n, vll(races));
-    for (ll i = 0; i < races; i += 1) {
-        for (ll place = 0; place < n; place += 1) {
-            ll who; cin >> who;
-            who -= 1;
-            prizes_by_person[who][i] = prize_by_place[place];
-        }
-    }
-    for (auto &x : prizes_by_person) sort(all(x), greater<>());
-//    for (ll guy = 0; guy < n; guy += 1) {
-//        cout << guy << " won ";
-//        print(prizes_by_person[guy]);
+    cout << dp[n-1][0] << endl;
+//    for (auto &x : dp) {
+//        print(x);
 //    }
-    for (ll guy = 0; guy < n; guy += 1) {
-        prizes_by_person_pref[guy][0] = prizes_by_person[guy][0];
-        for (ll race = 1; race < races; race += 1) {
-            prizes_by_person_pref[guy][race] = prizes_by_person_pref[guy][race-1]+prizes_by_person[guy][race];
-        }
-    }
-//    for (ll guy = 0; guy < n; guy += 1) {
-//        cout << guy << " won_pref ";
-//        print(prizes_by_person_pref[guy]);
-//    }
-    ll q; cin >> q;
-    while (q--) {
-        ll u, v;
-        cin >> u >> v;
-        u -= 1;
-        v -= 1;
-        ll l=0, r=1e9;
-        ll good = -1;
-        while (l <= r) {
-            ll mid = (l+r)>>1;
-            ll new_sz = races+mid;
-            ll counted_sz = new_sz-s;
-            ll sum_u = initial[u]+prizes_by_person_pref[u][min(races, counted_sz)-1];
-            if (counted_sz > races) {
-                sum_u += prize_by_place[n-1]*(counted_sz-races);
-            }
-            ll sum_v = initial[v]+prize_by_place[0]*mid+prizes_by_person_pref[v][races-s-1];
-//            cout << u << ' ' << v << ": " << sum_u << ' ' << sum_v << endl;
-//            cout << u << ' ' << v << ": " << initial[u] << ' ' << initial[v] << endl;
-            if (sum_v > sum_u) {
-                r = mid-1;
-                good = mid;
-            } else {
-                l = mid+1;
-            }
-        }
-        assert(good != -1);
-        cout << good << endl;
-    }
 }
 
 int32_t main(int32_t argc, char* argv[]) {
