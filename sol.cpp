@@ -165,44 +165,29 @@ void unite(ll x, ll y) {
 }
 void solve() {
     ll n; cin >> n;
-    vvll sm(n+1);
+    for (ll i = 1; i <= n+n; i += 1) {
+        sz[i] = 1;
+        p[i] = i;
+    }
+    vll cnt(n+1);
     for (ll i = 0; i < n; i += 1) {
         ll a, b;
         cin >> a >> b;
-        sm[a].push_back(b);
-        sm[b].push_back(a);
+        cnt[a] += 1;
+        cnt[b] += 1;
+        unite(a, b+n);
+        unite(b, a+n);
     }
     for (ll i = 1; i <= n; i += 1) {
-        if (sm[i].size() > 2) {
+        if (cnt[i] > 2) {
             cout << "NO" << endl;
             return;
         }
     }
-    vll time(n+1, -1);
     bool bad = false;
-    auto dfs = [&] (auto f, ll v, ll t) -> void {
-        if (time[v] == -1) {
-            time[v] = t;
-            for (auto const &x : sm[v]) {
-                if (time[x] == -1) {
-                    f(f, x, t+1);
-                } else {
-                    if (abs((t+1)-time[x])%2) {
-                        bad = true;
-                    }
-                }
-            }
-        } else {
-            if (abs((t)-time[v])%2) {
-                bad = true;
-            }
-        }
-    };
-    for (ll i = 1; i <= n; i += 1) {
-        if(time[i]==-1) dfs(dfs, i, 0);
-    }
-    // КАЖДОЕ РЕБРО БЕРЕМ ПО ОЧЕРЕДИ ТО В ОДНО ТО В ДРУГОЕ
+    for (ll i = 1; i <= n; i += 1) bad |= get_parent(i) == get_parent(i+n);
     cout << (bad?"NO":"YES") << endl;
+    // прыгаем с одного на другой (два цвета вершин)
 }
 
 int32_t main(int32_t argc, char* argv[]) {
