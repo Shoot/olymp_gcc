@@ -148,46 +148,87 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
-vll p(2e5+20);
-vll sz(2e5+20);
-
-ll get_parent(ll x) {
-    return (p[x] == x ? x : p[x] = get_parent(p[x]));
-}
-
-void unite(ll x, ll y) {
-    x = get_parent(x);
-    y = get_parent(y);
-    if (x == y) return;
-    if (sz[x] > sz[y]) swap(x, y);
-    p[x] = y;
-    sz[y] += sz[x];
-}
+bitset<1'000'000> seen;
 void solve() {
+    seen.reset();
     ll n; cin >> n;
-    for (ll i = 1; i <= n+n; i += 1) {
-        sz[i] = 1;
-        p[i] = i;
+    ll log = 30;
+    vvll sm(n);
+    for (ll i = 0; i < n-1; i += 1) {
+        ll u, v;
+        cin >> u >> v;
+        v -= 1;
+        u -= 1;
+        sm[u].push_back(v);
+        sm[v].push_back(u);
     }
-    vll cnt(n+1);
-    for (ll i = 0; i < n; i += 1) {
-        ll a, b;
-        cin >> a >> b;
-        cnt[a] += 1;
-        cnt[b] += 1;
-        unite(a, b+n);
-        unite(b, a+n);
-    }
-    for (ll i = 1; i <= n; i += 1) {
-        if (cnt[i] > 2) {
+    vvll blift(31, vll(n));
+    vll depth(n);
+    auto compute_blifts = [&] (auto f, ll v, ll p, ll d) -> void {
+        assert(!seen[v]);
+        depth[v] = d;
+        seen[v] = true;
+        blift[0][v] = p;
+        for (ll i = 1; i <= 30; i += 1) {
+            blift[i][v] = blift[i-1][blift[i-1][v]];
+        }
+        for (const auto &x : sm[v]) if (x != p) {
+                f(f, x, v, d+1);
+            }
+    };
+    compute_blifts(compute_blifts, 0, 0, 0);
+    auto compute_lca = [&] (ll u, ll v) -> ll {
+        assert(u < n && v < n);
+        if (depth[u]>depth[v]) swap(u, v);
+        ll diff = depth[v]-depth[u]; assert(diff >= 0);
+        for (ll bit = 0; bit <= 30; bit += 1) if ((1ll<<bit)&diff) {
+                v = blift[bit][v];
+            }
+        if (v == u) return v;
+        for (ll i = 30; i >= 0; i -= 1) {
+            if (blift[i][v] != blift[i][u]) {
+                v = blift[i][v];
+                u = blift[i][u];
+            }
+        }
+        assert(v != u && blift[0][v] == blift[0][u]);
+        return blift[0][u];
+    };
+    ll q; cin >> q;
+    while (q--) {
+        ll sz; cin >> sz;
+        vll a(sz);
+        for (auto &x : a) {
+            cin >> x;
+            x-=1;
+        }
+        sort(all(a), [&] (ll a, ll b) {
+            return depth[a]>depth[b];
+        });
+        // чекаем одну ветку
+        set<ll> vetka;
+        for (ll i = 0; i < sz; i += 1) if (compute_lca(a[i], a[0]) == a[i]) {
+                vetka.insert(a[i]);
+            }
+        vll rest;
+        set<ll> another_vetka;
+        ll restsz = 0;
+        for (const auto &x : a) if (!vetka.contains(x)) rest.push_back(x), restsz+=1;
+        for (const auto &x : rest) {
+            if (compute_lca(x, rest[0]) != x) {
+                break;
+            }
+            another_vetka.insert(x);
+        }
+        if (vetka.size() + another_vetka.size() == sz && (rest.empty() ||
+                                                          depth[compute_lca(a.front(), rest.front())] <= depth[a.back()])) { // a.first() в первую ветку!!
+            // ^^ чекнули LCA самых низких из обеих веток
+            // этот LCA должен быть выше или на высоте самой высокой вершины
+            cout << "YES" << endl;
+        } else {
             cout << "NO" << endl;
-            return;
         }
     }
-    bool bad = false;
-    for (ll i = 1; i <= n; i += 1) bad |= get_parent(i) == get_parent(i+n);
-    cout << (bad?"NO":"YES") << endl;
-    // прыгаем с одного на другой (два цвета вершин)
 }
 
 int32_t main(int32_t argc, char* argv[]) {
@@ -210,7 +251,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-    cin >> tt;
+//    cin >> tt;
 
     while (tt--) {
         solve();
