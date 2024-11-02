@@ -148,60 +148,41 @@ void copy_this () {
     vector<ll> a(n); for (ll modulo=0; modulo < n; modulo+=1) cin >> a[modulo];
 }
 */
+ll max_dlina_puti_so_startom_i_koncom_v[5001][5001];
+ll max_put_so_startom_v[5001];
 void solve() {
-    ll sz = 8;
-//    ll tot = powm(26, sz);
-//    assert(tot < 1e7);
-    string s = string(sz, 'a');
-    uint32_t mnozh_second = 31*31*31*31; mnozh_second *= mnozh_second;
-    uint32_t mnozh_third = mnozh_second*mnozh_second;
-    uint32_t mnozh_first = 1;
-    auto compute_hash = [&] () {
-        uint32_t hash = 0;
-        for (const auto &x : s) {
-            hash *= 31;
-            hash += x;
+    ll n;
+    cin >> n;
+    vll a(n);
+    for (ll i = 0; i < n; i += 1) {
+        cin >> a[i];
+        max_dlina_puti_so_startom_i_koncom_v[i][i] = 1;
+    }
+    sort(all(a));
+    ll ans = -1;
+    for (ll middle = n-1; middle >= 0; middle -= 1) {
+        ll prv = middle-1;
+        for (ll j = 0; j < n; j += 1) max_put_so_startom_v[j] = 0;
+        for (ll nxt = middle; nxt < n; nxt += 1) {
+            while (prv >= 0 && a[middle]-a[prv] <= a[nxt]-a[middle]) prv -= 1;
+            if (prv == -1) break;
+            max_put_so_startom_v[prv] = max(max_put_so_startom_v[prv],
+                                max_dlina_puti_so_startom_i_koncom_v[middle][nxt]+1);
         }
-//        return hash;
-//        return hash*mnozh_first;
-//        return hash*mnozh_second;
-        return hash*mnozh_third;
-    };
-//    ll q; cin >> q;
-//    while (q--) {
-//        cin >> s;
-//        cout << compute_hash() << endl;
-//    }
-//    for (ll mask = 0; mask < tot; mask += 1) {
-//        ll MASK = mask;
-//        for (ll slot = sz-1; slot >= 0; slot -= 1) {
-//            ll val = MASK%26;
-//            MASK /= 26;
-//            s[slot] = 'a'+val;
-//        }
-////        cout << s << endl;
-//        ll HASH = compute_hash();
-//        cout << HASH << endl;
-//        if (HASH < 100000) {
-//            cout << s << " " << HASH << endl;
-//        }
-//    }
-    for (ll times = 0; times < 1e10; times += 1) {
-        for (ll slot = sz-1; slot >= 0; slot -= 1) {
-            s[slot] = 'a'+rand()%26;
-        }
-//        cout << s << endl;
-        uint32_t HASH = compute_hash();
-//        cout << HASH << endl;
-        if (HASH < 100 || HASH+100<HASH) {
-            cout << s << " " << HASH << endl;
+        for (ll j = middle - 1; j >= 0; j -= 1) {
+            max_put_so_startom_v[j] = max(max_put_so_startom_v[j], max_put_so_startom_v[j+1]);
+            max_dlina_puti_so_startom_i_koncom_v[j][middle] = max_put_so_startom_v[j];
         }
     }
+    for (ll i = 0; i < n; i += 1) {
+        ans = max(ans, max_dlina_puti_so_startom_i_koncom_v[0][i]);
+    }
+    cout << ans << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
-//    ifstream cin("distance.in");
-//    ofstream cout("distance.out");
+//    ifstream cin("distance.in");;
+//    ofstream cout("distance.out");;
     cout << fixed << setprecision(17);
     bool use_fast_io = true;
     for (int32_t modulo = 1; modulo < argc; ++modulo) {
@@ -219,7 +200,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-//    cin >> tt;
+    cin >> tt;
 
     while (tt--) {
         solve();
