@@ -3,19 +3,22 @@ using namespace std;
 using vbo = vector<bool>;
 using ll = long long;
 using ull = unsigned long long;
+using pll = pair<ll, ll>;
 using ld = long double;
-using qll = queue<__int128>;
-using vll = vector<__int128>;
-using vvll = vector<vector<__int128>>;
+using qll = queue<ll>;
+using vll = vector<ll>;
+using vvll = vector<vector<ll>>;
 using qld = queue<ld>;
 using vld = vector<ld>;
+using qpll = queue<pll>;
+using vpll = vector<pll>;
 #include <ext/pb_ds/assoc_container.hpp>
 #include <ext/pb_ds/tree_policy.hpp>
 using namespace __gnu_pbds;
 template <typename T> using ordered_set = tree<T, null_type, less<T>, rb_tree_tag, tree_order_statistics_node_update>;
-ostream& endl(ostream& os) {
-    return os << '\n';
-}
+//ostream& endl(ostream& os) {
+//    return os << '\n';
+//}
 //define all(xxx) xxx.begin(), xxx.end()
 //define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl;
 template <class T, class S> inline bool chmax(T &a, const S &b) { return (a < b ? a = b, 1 : 0); }
@@ -63,10 +66,23 @@ void print(Head&& head, Tail&&... tail) {
 #endif
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 uniform_int_distribution<ll> distrib(0ll, 10ll);
+//constexpr ll MOD = 1e9+7;
 constexpr __int128 MOD = 884341072164363733ll;
-//constexpr __int128 MOD = 1e9+7;
+void in(vector<ll> & a) {
+    for (auto & zero_leaf : a) cin >> zero_leaf;
+}
+void in(vector<ll> & a, ll l, ll r) {
+    for (ll i=l; i < r; i+=1) {
+        cin >> a[i];
+    }
+}
+void inn(vector<ll> & a, ll l, ll rr) {
+    for (ll i=l; i <= rr; i+=1) {
+        cin >> a[i];
+    }
+}
 __int128 powm(__int128 a, __int128 b) {
-    //assert(b >= 0);
+    assert(b >= 0);
     __int128 d = 1;
     while (b) {
         if (b&1) d = (d*a) % MOD;
@@ -76,7 +92,7 @@ __int128 powm(__int128 a, __int128 b) {
     return d;
 }
 __int128 powm(__int128 a, __int128 b, __int128 MODD) {
-    //assert(b >= 0);
+    assert(b >= 0);
     __int128 d = 1;
     while (b) {
         if (b&1) d = (d*a) % MODD;
@@ -86,7 +102,7 @@ __int128 powm(__int128 a, __int128 b, __int128 MODD) {
     return d;
 }
 __int128 poww(__int128 a, __int128 b) {
-    //assert(b >= 0);
+    assert(b >= 0);
     __int128 d = 1;
     while (b) {
         if (b&1) d = (d*a);
@@ -96,7 +112,7 @@ __int128 poww(__int128 a, __int128 b) {
     return d;
 }
 ld poww(ld a, __int128 b) {
-    //assert(b >= 0);
+    assert(b >= 0);
     ld d = 1;
     while (b) {
         if (b&1) d = (d*a);
@@ -125,54 +141,16 @@ __int128 sub(__int128 a, __int128 b, __int128 MODD) {
 }
 /*
 void copy_this () {
-    __int128 n; cin >> n;
-    __int128 n, k; cin >> n >> k;
-    __int128 n, q; cin >> n >> q;
-    __int128 a[n]; for (__int128 i=0; i < n; i+=1) cin >> a[i];
-    vector<__int128> a(n); for (__int128 i=0; i < n; i+=1) cin >> a[i];
+    ll n; cin >> n;
+    ll n, k; cin >> n >> k;
+    ll n, q; cin >> n >> q;
+    ll a[n]; for (ll i=0; i < n; i+=1) cin >> a[i];
+    vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
-vll cntbycharlocal(27);
-vll cntbychar(27);
 void solve() {
-    __int128 BASE = 31;
-    __int128 IBASE = powm(31, MOD-2);
     ll n; cin >> n;
-    map<__int128, vector<char>> ask;
-    ll tot = 0;
-    vector<string> v(n);
-    for (auto &x : v) cin >> x;
-    sort(v.begin(), v.end(), [] (string a, string b){return a.size() < b.size();});
-    for (const auto &x : v) {
-        fill(cntbycharlocal.begin(), cntbycharlocal.end(), 0);
-        for (const auto &c : x) cntbycharlocal[c-'a'+1] = 1;
-        for (ll i = 1; i <= 26; i += 1) cntbychar[i] += cntbycharlocal[i];
-    }
-    for (ll i = 0; i < n; i += 1) {
-        ll sz = ll(v[i].size());
-        __int128 hash = 0;
-        for (ll j = sz-1; j >= 0; j -= 1) {
-            hash = mul(hash, BASE);
-            hash = sum(hash, v[i][j]-'a'+1);
-        }
-        __int128 HASH = hash;
-        set<ll> chars;
-        for (ll j = 1; j < sz; j += 1) {
-            chars.insert(v[i][j-1]-'a'+1);
-            hash = sub(hash, v[i][j-1]-'a'+1);
-            hash = mul(hash, IBASE);
-            if (!ask[hash].empty()) for (const auto &c : ask[hash]) {
-                if (chars.contains(c)) tot += 1;
-            }
-        }
-        hash = HASH;
-        if (sz > 1) {
-            ask[mul(sub(hash, v[i][0]-'a'+1), IBASE)].push_back(v[i][0]-'a'+1);
-        } else {
-            tot += cntbychar[v[i][0]-'a'+1]-1;
-        }
-    }
-    cout << tot << endl;
+
 }
 
 int32_t main(int32_t argc, char* argv[]) {
@@ -194,8 +172,8 @@ int32_t main(int32_t argc, char* argv[]) {
         cerr.tie(nullptr);
         clog.tie(nullptr);
     }
-    __int128 tt = 1;
-//    cin >> tt;
+    ll tt = 1;
+    cin >> tt;
 
     while (tt--) {
         solve();
