@@ -67,7 +67,7 @@ void print(Head&& head, Tail&&... tail) {
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 uniform_int_distribution<ll> distrib(0ll, 10ll);
 //constexpr ll MOD = 1e9+7;
-constexpr __int128 MOD = 884341072164363733ll;
+constexpr ll MOD = 1e9+7;
 void in(vector<ll> & a) {
     for (auto & zero_leaf : a) cin >> zero_leaf;
 }
@@ -81,9 +81,9 @@ void inn(vector<ll> & a, ll l, ll rr) {
         cin >> a[i];
     }
 }
-__int128 powm(__int128 a, __int128 b) {
+ll powm(ll a, ll b) {
     assert(b >= 0);
-    __int128 d = 1;
+    ll d = 1;
     while (b) {
         if (b&1) d = (d*a) % MOD;
         b >>= 1;
@@ -91,9 +91,9 @@ __int128 powm(__int128 a, __int128 b) {
     }
     return d;
 }
-__int128 powm(__int128 a, __int128 b, __int128 MODD) {
+ll powm(ll a, ll b, ll MODD) {
     assert(b >= 0);
-    __int128 d = 1;
+    ll d = 1;
     while (b) {
         if (b&1) d = (d*a) % MODD;
         b >>= 1;
@@ -101,9 +101,9 @@ __int128 powm(__int128 a, __int128 b, __int128 MODD) {
     }
     return d;
 }
-__int128 poww(__int128 a, __int128 b) {
+ll poww(ll a, ll b) {
     assert(b >= 0);
-    __int128 d = 1;
+    ll d = 1;
     while (b) {
         if (b&1) d = (d*a);
         b >>= 1;
@@ -111,7 +111,7 @@ __int128 poww(__int128 a, __int128 b) {
     }
     return d;
 }
-ld poww(ld a, __int128 b) {
+ld poww(ld a, ll b) {
     assert(b >= 0);
     ld d = 1;
     while (b) {
@@ -121,22 +121,22 @@ ld poww(ld a, __int128 b) {
     }
     return d;
 }
-__int128 mul(__int128 a, __int128 b) {
+ll mul(ll a, ll b) {
     return (a*b)%MOD;
 }
-__int128 mul(__int128 a, __int128 b, __int128 MODD) {
+ll mul(ll a, ll b, ll MODD) {
     return (a*b)%MODD;
 }
-__int128 sum(__int128 a, __int128 b) {
+ll sum(ll a, ll b) {
     return (a+b)%MOD;
 }
-__int128 sum(__int128 a, __int128 b, __int128 MODD) {
+ll sum(ll a, ll b, ll MODD) {
     return (a+b)%MODD;
 }
-__int128 sub(__int128 a, __int128 b) {
+ll sub(ll a, ll b) {
     return (a-(b%MOD)+MOD)%MOD;
 }
-__int128 sub(__int128 a, __int128 b, __int128 MODD) {
+ll sub(ll a, ll b, ll MODD) {
     return (a-(b%MODD)+MODD)%MODD;
 }
 /*
@@ -149,8 +149,46 @@ void copy_this () {
 }
 */
 void solve() {
-    ll n; cin >> n;
-
+    ll n, q;
+    cin >> n >> q;
+    struct shit {
+        ll v, w;
+    };
+    vector<vector<shit>> sm(n+1); // v_i - префикс длины i
+    for (ll i = 0; i < n; i += 1) {
+        sm[i].push_back(shit(i+1, 1));
+        sm[i+1].push_back(shit(i, 1));
+    }
+    while (q--) {
+        ll l, r;
+        cin >> l >> r;
+        l -= 1;
+        sm[l].push_back(shit(r, 0));
+        sm[r].push_back(shit(l, 0));
+        // (из v в u ребро с весом w): (u <= a_v+w)
+    }
+    deque<ll> vs;
+    vs.push_back(0);
+    vll d(n+1, 1e9);
+    d[0] = 0;
+    while (!vs.empty()) {
+        ll tp = vs.front();
+        vs.pop_front();
+        for (const auto &[u, w] : sm[tp]) {
+            if (d[u] > d[tp]+w) {
+                if (w == 0) {
+                    vs.push_front(u);
+                } else {
+                    vs.push_back(u);
+                }
+                d[u] = d[tp]+w;
+            }
+        }
+    }
+    for (ll i = 1; i <= n; i += 1) {
+        cout << (d[i] > d[i-1]?0:1);
+    }
+    cout << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
@@ -173,7 +211,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-    cin >> tt;
+//    cin >> tt;
 
     while (tt--) {
         solve();
