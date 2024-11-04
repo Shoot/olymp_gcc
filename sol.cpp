@@ -149,91 +149,68 @@ void copy_this () {
 }
 */
 void solve() {
-    ll n; cin >> n;
-    vvll sm1(n);
-    vvll sm2(n);
-    bitset<1000000> seen;
-    for (ll i = 0; i < n-1; i += 1) {
-        ll u, v;
-        cin >> u >> v;
-        u -= 1;
-        v -= 1;
-        sm1[u].push_back(v);
-        sm1[v].push_back(u);
-    }
-    for (ll i = 0; i < n-1; i += 1) {
-        ll u, v;
-        cin >> u >> v;
-        u -= 1;
-        v -= 1;
-        sm2[u].push_back(v);
-        sm2[v].push_back(u);
-    }
-    vll subtree_sz1(n);
-    vll subtree_sz2(n);
-    auto calc_sz = [&] (auto f, ll v, vvll & sm, vll & subtree_sz) -> ll {
-        seen[v] = true;
-        subtree_sz[v] = 1;
-        for (const auto &u : sm[v]) {
-            if (!seen[u]) {
-                subtree_sz[v] += f(f, u, sm, subtree_sz);
-            }
+    ll n, q;
+    cin >> n >> q;
+    // сумма чисел <= x на отрезке
+    // merge sort tree с предпосчетом префсумм
+    vll a(n);
+    for (auto &x : a) cin >> x;
+    vvll tree(4*n+10);
+    vvll preftree(4*n+10);
+    auto build = [&] (auto f, ll v, ll tl, ll tr) -> void {
+        for (ll i = tl; i <= tr; i += 1) {
+            tree[v].push_back(a[i]);
         }
-        return subtree_sz[v];
+        sort(tree[v].begin(), tree[v].end());
+        ll prev = 0;
+        for (const auto &x : tree[v]) {
+            prev += x;
+            preftree[v].push_back(prev);
+        }
+        if (tl == tr) {
+            return;
+        }
+        ll tm = (tl+tr) >> 1;
+        f(f, 2*v+1, tl, tm);
+        f(f, 2*v+2, tm+1, tr);
     };
-    seen.reset();
-    calc_sz(calc_sz, 0, sm1, subtree_sz1);
-    seen.reset();
-    calc_sz(calc_sz, 0, sm2, subtree_sz2);
-    vll centroids1;
-    vll centroids2;
-    auto find_centroids = [&] (auto f, ll v, vvll &sm, vll &centroids, vll &subtree_sz) -> ll {
-        seen[v] = true;
-        for (const auto &u : sm[v]) if (!seen[u]) {
-            seen[u] = true;
-            if (subtree_sz[u] > n/2) {
-                return f(f, u, sm, centroids, subtree_sz);
-            } else if (subtree_sz[u] == n/2) {
-                centroids.push_back(u);
+    auto get_sum_each_less_or_eq = [&] (auto f, ll v, ll tl, ll tr, ll l, ll r, ll val) -> ll {
+        if (tl == l && tr == r) {
+            ll last = upper_bound(tree[v].begin(), tree[v].end(), val)-tree[v].begin()-1;
+            ll ans = 0;
+            if (last >= 0) {
+                ans += preftree[v][last];
             }
+            return ans;
         }
-        return v;
+        ll ans = 0;
+        ll tm = (tl+tr) >> 1;
+        if (l <= tm) {
+            ans += f(f, 2*v+1, tl, tm, l, min(r, tm), val);
+        }
+        if (r > tm) {
+            ans += f(f, 2*v+2, tm+1, tr, max(l, tm+1), r, val);
+        }
+        return ans;
     };
-    seen.reset();
-    centroids1.push_back(find_centroids(find_centroids, 0, sm1, centroids1, subtree_sz1));
-    seen.reset();
-    centroids2.push_back(find_centroids(find_centroids, 0, sm2, centroids2, subtree_sz2));
-    auto calc_hash = [&] (auto f, ll v, vvll &sm) -> ld {
-        seen[v] = true;
-        ld sum = 42;
-        vector<ld> l;
-        for (const auto &u : sm[v]) {
-            if (!seen[u]) {
-                seen[u] = true;
-                l.push_back(f(f, u, sm));
+    build(build, 0, 0, n-1);
+    while (q--) {
+        ll l, r;
+        cin >> l >> r;
+        ll each = 0, can = 0;
+        l -= 1;
+        r -= 1;
+        while (true) {
+            ll nxt = get_sum_each_less_or_eq(get_sum_each_less_or_eq, 0, 0, n-1, l, r, can+1)-
+                     get_sum_each_less_or_eq(get_sum_each_less_or_eq, 0, 0, n-1, l, r, each);
+            if (nxt == 0) {
+                cout << can+1 << endl;
+                break;
             }
+            each = can+1;
+            can = can+nxt;
         }
-        sort(l.begin(), l.end());
-        for (const auto &x : l) {
-            sum += log(x);
-        }
-        return sum;
-    };
-    vector<ld> first;
-    vector<ld> second;
-    for (const auto &c : centroids1) {
-        seen.reset();
-        first.push_back(calc_hash(calc_hash, c, sm1));
     }
-    for (const auto &c : centroids2) {
-        seen.reset();
-        second.push_back(calc_hash(calc_hash, c, sm2));
-    }
-    sort(first.begin(), first.end());
-    sort(second.begin(), second.end());
-//    print(first);
-//    print(second);
-    cout << (first == second?"YES":"NO") << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
