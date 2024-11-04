@@ -149,46 +149,91 @@ void copy_this () {
 }
 */
 void solve() {
-    ll n, q;
-    cin >> n >> q;
-    struct shit {
-        ll v, w;
-    };
-    vector<vector<shit>> sm(n+1); // v_i - префикс длины i
-    for (ll i = 0; i < n; i += 1) {
-        sm[i].push_back(shit(i+1, 1));
-        sm[i+1].push_back(shit(i, 1));
+    ll n; cin >> n;
+    vvll sm1(n);
+    vvll sm2(n);
+    bitset<1000000> seen;
+    for (ll i = 0; i < n-1; i += 1) {
+        ll u, v;
+        cin >> u >> v;
+        u -= 1;
+        v -= 1;
+        sm1[u].push_back(v);
+        sm1[v].push_back(u);
     }
-    while (q--) {
-        ll l, r;
-        cin >> l >> r;
-        l -= 1;
-        sm[l].push_back(shit(r, 0));
-        sm[r].push_back(shit(l, 0));
-        // (из v в u ребро с весом w): (u <= a_v+w)
+    for (ll i = 0; i < n-1; i += 1) {
+        ll u, v;
+        cin >> u >> v;
+        u -= 1;
+        v -= 1;
+        sm2[u].push_back(v);
+        sm2[v].push_back(u);
     }
-    deque<ll> vs;
-    vs.push_back(0);
-    vll d(n+1, 1e9);
-    d[0] = 0;
-    while (!vs.empty()) {
-        ll tp = vs.front();
-        vs.pop_front();
-        for (const auto &[u, w] : sm[tp]) {
-            if (d[u] > d[tp]+w) {
-                if (w == 0) {
-                    vs.push_front(u);
-                } else {
-                    vs.push_back(u);
-                }
-                d[u] = d[tp]+w;
+    vll subtree_sz1(n);
+    vll subtree_sz2(n);
+    auto calc_sz = [&] (auto f, ll v, vvll & sm, vll & subtree_sz) -> ll {
+        seen[v] = true;
+        subtree_sz[v] = 1;
+        for (const auto &u : sm[v]) {
+            if (!seen[u]) {
+                subtree_sz[v] += f(f, u, sm, subtree_sz);
             }
         }
+        return subtree_sz[v];
+    };
+    seen.reset();
+    calc_sz(calc_sz, 0, sm1, subtree_sz1);
+    seen.reset();
+    calc_sz(calc_sz, 0, sm2, subtree_sz2);
+    vll centroids1;
+    vll centroids2;
+    auto find_centroids = [&] (auto f, ll v, vvll &sm, vll &centroids, vll &subtree_sz) -> ll {
+        seen[v] = true;
+        for (const auto &u : sm[v]) if (!seen[u]) {
+            seen[u] = true;
+            if (subtree_sz[u] > n/2) {
+                return f(f, u, sm, centroids, subtree_sz);
+            } else if (subtree_sz[u] == n/2) {
+                centroids.push_back(u);
+            }
+        }
+        return v;
+    };
+    seen.reset();
+    centroids1.push_back(find_centroids(find_centroids, 0, sm1, centroids1, subtree_sz1));
+    seen.reset();
+    centroids2.push_back(find_centroids(find_centroids, 0, sm2, centroids2, subtree_sz2));
+    auto calc_hash = [&] (auto f, ll v, vvll &sm) -> ld {
+        seen[v] = true;
+        ld sum = 42;
+        vector<ld> l;
+        for (const auto &u : sm[v]) {
+            if (!seen[u]) {
+                seen[u] = true;
+                l.push_back(f(f, u, sm));
+            }
+        }
+        sort(l.begin(), l.end());
+        for (const auto &x : l) {
+            sum += log(x);
+        }
+        return sum;
+    };
+    vector<ld> first;
+    vector<ld> second;
+    for (const auto &c : centroids1) {
+        seen.reset();
+        first.push_back(calc_hash(calc_hash, c, sm1));
     }
-    for (ll i = 1; i <= n; i += 1) {
-        cout << (d[i] > d[i-1]?0:1);
+    for (const auto &c : centroids2) {
+        seen.reset();
+        second.push_back(calc_hash(calc_hash, c, sm2));
     }
-    cout << endl;
+    sort(first.begin(), first.end());
+    sort(second.begin(), second.end());
+//    print(first);
+//    print(second);
+    cout << (first == second?"YES":"NO") << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
