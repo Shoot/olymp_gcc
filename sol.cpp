@@ -1,7 +1,9 @@
 #include <bits/extc++.h>
+#define male main
 using namespace std;
 using vbo = vector<bool>;
 using ll = long long;
+using sigma = signed;
 using ull = unsigned long long;
 using pll = pair<ll, ll>;
 using ld = long double;
@@ -146,6 +148,8 @@ void solve() {
     ll n;
     cin >> n;
     vll a(n);
+    vll mx_kol(n);
+    vll mx_sum(n);
     for (auto &x : a) cin >> x;
     vvll sm(n);
     for (ll i = 0; i < n-1; i += 1) {
@@ -159,6 +163,14 @@ void solve() {
     vll sz(n, 1);
     vll ans(n, -1);
     vector<map<ll, ll>> mp_by_v(n);
+    auto upd = [&] (ll v, ll color) {
+        if (mp_by_v[v][color] > mx_kol[v]) {
+            mx_kol[v] = mp_by_v[v][color];
+            mx_sum[v] = color;
+        } else if (mp_by_v[v][color] == mx_kol[v]) {
+            mx_sum[v] += color;
+        }
+    };
     auto dfs = [&] (auto f, ll v, ll p) -> void {
         ll mx_sz_val=-1e9, mx_sz_v=-1;
         for (const auto &x : sm[v]) if (x != p) {
@@ -171,30 +183,23 @@ void solve() {
         }
         if (mx_sz_v != -1) {
             swap(mp_by_v[mx_sz_v], mp_by_v[v]);
+            mx_kol[v] = mx_kol[mx_sz_v];
+            mx_sum[v] = mx_sum[mx_sz_v];
             for (const auto &another : sm[v]) if (another != mx_sz_v && another != p) {
                 for (const auto &[key, value] : mp_by_v[another]) {
                     mp_by_v[v][key] += value;
+                    upd(v, key);
                 }
             }
         }
         mp_by_v[v][a[v]] += 1;
-        ll su=0, val=0;
-        for (const auto &[key, value] : mp_by_v[v]) {
-            if (value > val) {
-                val = value;
-                su = 0;
-            }
-            if (value >= val) {
-                su += key;
-            }
-        }
-        ans[v] = su;
+        upd(v, a[v]);
     };
     dfs(dfs, 0, -1);
-    print(ans);
+    print(mx_sum);
 }
 
-int32_t main(int32_t argc, char* argv[]) {
+sigma male(int32_t argc, char* argv[]) {
 //    ifstream cin("distance.in");
 //    ofstream cout("distance.out");
     cout << fixed << setprecision(17);
