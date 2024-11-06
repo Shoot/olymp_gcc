@@ -1,4 +1,4 @@
-#include <bits/stdc++.h>
+#include <bits/extc++.h>
 using namespace std;
 using vbo = vector<bool>;
 using ll = long long;
@@ -12,8 +12,6 @@ using qld = queue<ld>;
 using vld = vector<ld>;
 using qpll = queue<pll>;
 using vpll = vector<pll>;
-#include <ext/pb_ds/assoc_container.hpp>
-#include <ext/pb_ds/tree_policy.hpp>
 using namespace __gnu_pbds;
 template <typename T> using ordered_set = tree<T, null_type, less<T>, rb_tree_tag, tree_order_statistics_node_update>;
 //ostream& endl(ostream& os) {
@@ -58,12 +56,8 @@ void print(Head&& head, Tail&&... tail) {
     if (sizeof...(Tail)) cout << " ";
     print(forward<Tail>(tail)...);
 }
-#ifdef LOCAL
-#include <algo/debug.h>
-#else
 //#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math,trapv")
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
-#endif
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 uniform_int_distribution<ll> distrib(0ll, 10ll);
 //constexpr ll MOD = 1e9+7;
@@ -148,69 +142,48 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
+struct shit {
+    ll tp, x, y;
+};
 void solve() {
-    ll n, q;
-    cin >> n >> q;
-    // сумма чисел <= x на отрезке
-    // merge sort tree с предпосчетом префсумм
-    vll a(n);
-    for (auto &x : a) cin >> x;
-    vvll tree(4*n+10);
-    vvll preftree(4*n+10);
-    auto build = [&] (auto f, ll v, ll tl, ll tr) -> void {
-        for (ll i = tl; i <= tr; i += 1) {
-            tree[v].push_back(a[i]);
-        }
-        sort(tree[v].begin(), tree[v].end());
-        ll prev = 0;
-        for (const auto &x : tree[v]) {
-            prev += x;
-            preftree[v].push_back(prev);
-        }
-        if (tl == tr) {
-            return;
-        }
-        ll tm = (tl+tr) >> 1;
-        f(f, 2*v+1, tl, tm);
-        f(f, 2*v+2, tm+1, tr);
-    };
-    auto get_sum_each_less_or_eq = [&] (auto f, ll v, ll tl, ll tr, ll l, ll r, ll val) -> ll {
-        if (tl == l && tr == r) {
-            ll last = upper_bound(tree[v].begin(), tree[v].end(), val)-tree[v].begin()-1;
-            ll ans = 0;
-            if (last >= 0) {
-                ans += preftree[v][last];
-            }
-            return ans;
-        }
-        ll ans = 0;
-        ll tm = (tl+tr) >> 1;
-        if (l <= tm) {
-            ans += f(f, 2*v+1, tl, tm, l, min(r, tm), val);
-        }
-        if (r > tm) {
-            ans += f(f, 2*v+2, tm+1, tr, max(l, tm+1), r, val);
-        }
-        return ans;
-    };
-    build(build, 0, 0, n-1);
-    while (q--) {
-        ll l, r;
-        cin >> l >> r;
-        ll each = 0, can = 0;
-        l -= 1;
-        r -= 1;
-        while (true) {
-            ll nxt = get_sum_each_less_or_eq(get_sum_each_less_or_eq, 0, 0, n-1, l, r, can+1)-
-                     get_sum_each_less_or_eq(get_sum_each_less_or_eq, 0, 0, n-1, l, r, each);
-            if (nxt == 0) {
-                cout << can+1 << endl;
-                break;
-            }
-            each = can+1;
-            can = can+nxt;
+    ll q; cin >> q;
+    vector<shit> a(q);
+    for (ll i = 0; i < q; i += 1) {
+        cin >> a[i].tp;
+        if (a[i].tp == 1) {
+            cin >> a[i].x;
+        } else {
+            cin >> a[i].x >> a[i].y;
         }
     }
+    vvll positions_by_value(5e5+1);
+    ll pos = 0;
+    for (auto &[tp, x, y] : a) {
+        if (tp == 1) {
+            positions_by_value[x].push_back(pos++);
+        } else {
+            if (x != y) {
+                if (positions_by_value[x].size() > positions_by_value[y].size()) {
+                    swap(positions_by_value[x], positions_by_value[y]);
+                }
+                for (const auto &p : positions_by_value[x]) {
+                    positions_by_value[y].push_back(p);
+                }
+                positions_by_value[x].clear();
+            }
+        }
+    }
+    vll ans(5e5+1);
+    for (ll val = 1; val <= 5e5; val += 1) {
+        for (auto const &y : positions_by_value[val]) {
+            ans[y] = val;
+        }
+    }
+    for (const auto &x : ans) {
+        if (x == 0) break;
+        cout << x << ' ';
+    }
+    cout << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
