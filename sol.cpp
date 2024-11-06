@@ -142,48 +142,56 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
-struct shit {
-    ll tp, x, y;
-};
 void solve() {
-    ll q; cin >> q;
-    vector<shit> a(q);
-    for (ll i = 0; i < q; i += 1) {
-        cin >> a[i].tp;
-        if (a[i].tp == 1) {
-            cin >> a[i].x;
-        } else {
-            cin >> a[i].x >> a[i].y;
-        }
+    ll n;
+    cin >> n;
+    vll a(n);
+    for (auto &x : a) cin >> x;
+    vvll sm(n);
+    for (ll i = 0; i < n-1; i += 1) {
+        ll u, v;
+        cin >> u >> v;
+        u -= 1;
+        v -= 1;
+        sm[v].push_back(u);
+        sm[u].push_back(v);
     }
-    vvll positions_by_value(5e5+1);
-    ll pos = 0;
-    for (auto &[tp, x, y] : a) {
-        if (tp == 1) {
-            positions_by_value[x].push_back(pos++);
-        } else {
-            if (x != y) {
-                if (positions_by_value[x].size() > positions_by_value[y].size()) {
-                    swap(positions_by_value[x], positions_by_value[y]);
-                }
-                for (const auto &p : positions_by_value[x]) {
-                    positions_by_value[y].push_back(p);
-                }
-                positions_by_value[x].clear();
+    vll sz(n, 1);
+    vll ans(n, -1);
+    vector<map<ll, ll>> mp_by_v(n);
+    auto dfs = [&] (auto f, ll v, ll p) -> void {
+        ll mx_sz_val=-1e9, mx_sz_v=-1;
+        for (const auto &x : sm[v]) if (x != p) {
+            f(f, x, v);
+            sz[v] += sz[x];
+            if (sz[x] > mx_sz_val) {
+                mx_sz_v = x;
+                mx_sz_val = sz[x];
             }
         }
-    }
-    vll ans(5e5+1);
-    for (ll val = 1; val <= 5e5; val += 1) {
-        for (auto const &y : positions_by_value[val]) {
-            ans[y] = val;
+        if (mx_sz_v != -1) {
+            swap(mp_by_v[mx_sz_v], mp_by_v[v]);
+            for (const auto &another : sm[v]) if (another != mx_sz_v && another != p) {
+                for (const auto &[key, value] : mp_by_v[another]) {
+                    mp_by_v[v][key] += value;
+                }
+            }
         }
-    }
-    for (const auto &x : ans) {
-        if (x == 0) break;
-        cout << x << ' ';
-    }
-    cout << endl;
+        mp_by_v[v][a[v]] += 1;
+        ll su=0, val=0;
+        for (const auto &[key, value] : mp_by_v[v]) {
+            if (value > val) {
+                val = value;
+                su = 0;
+            }
+            if (value >= val) {
+                su += key;
+            }
+        }
+        ans[v] = su;
+    };
+    dfs(dfs, 0, -1);
+    print(ans);
 }
 
 int32_t main(int32_t argc, char* argv[]) {
