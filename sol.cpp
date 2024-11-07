@@ -150,39 +150,44 @@ void copy_this () {
 */
 void solve() {
     ll n, k; cin >> n >> k;
-    vpll shit(n);
-    for (auto &[i,j] : shit) {
-        cin >> i;
-    }
-    for (auto &[i,j] : shit) {
-        cin >> j;
-    }
-    sort(all(shit), [&] (pll a, pll b) {
-        return a.second > b.second;
-    });
-    // k самых дешевых (для Алисы) на префиксе
-    multiset<ll> cheapest_on_prefix;
-    ll alice_profit = 0;
+    k = min(k, n-1);
+    vll a(n);
+    for (auto &x : a) cin >> x;
+    a.push_back(1e18);
+    a.push_back(1e18);
+    a.push_back(1e18);
+    a.push_back(1e18);
+    a.push_back(1e18);
+    a.push_back(1e18);
+    a.push_back(1e18);
+    a.push_back(1e18);
+    a.push_back(1e18);
+    a.push_back(1e18);
+    a.push_back(1e18);
+    a.push_back(1e18);
+    // dp[pref][ops]
+    vvll dp(n+12, vll(k+12, 1e18));
     for (ll i = 0; i < n; i += 1) {
-        if (shit[i].second > shit[i].first) {
-            alice_profit += shit[i].second - shit[i].first;
+        dp[i][0] = a[i];
+        if (i) dp[i][0] += dp[i-1][0];
+    }
+    for (ll pref = 0; pref < n; pref += 1){
+        for (ll ops = 0; ops <= k; ops += 1) {
+            ll b4;
+            if (pref == 0) b4 = 0;
+            else b4 = dp[pref-1][ops];
+            ll mini = 1e18;
+            for (ll d = 1; d <= k+1; d += 1) {
+                mini = min(mini, a[pref+d-1]);
+                dp[pref+d-1][ops+d-1] = min(dp[pref+d-1][ops+d-1], b4+(d)*mini);
+            }
         }
     }
-    ll max_profit = 0;
-    if (cheapest_on_prefix.size() == k) max_profit = max(max_profit, alice_profit);
-    for (ll i = 0; i < n; i += 1) {
-        cheapest_on_prefix.insert(shit[i].first);
-        alice_profit -= shit[i].first;
-        if (cheapest_on_prefix.size() > k) {
-            alice_profit += *cheapest_on_prefix.rbegin();
-            cheapest_on_prefix.erase(--cheapest_on_prefix.end());
-        }
-        if (shit[i].second > shit[i].first) {
-            alice_profit -= shit[i].second - shit[i].first;
-        }
-        if (cheapest_on_prefix.size() == k) max_profit = max(max_profit, alice_profit);
+    ll ans = 1e18;
+    for (ll i = 0; i <= k; i += 1) {
+        ans = min(ans, dp[n-1][i]);
     }
-    cout << max_profit << endl;
+    cout << ans << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
