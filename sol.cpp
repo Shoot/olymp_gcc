@@ -1,9 +1,7 @@
-#include <bits/extc++.h>
-#define male main
+#include <bits/stdc++.h>
 using namespace std;
 using vbo = vector<bool>;
 using ll = long long;
-using sigma = signed;
 using ull = unsigned long long;
 using pll = pair<ll, ll>;
 using ld = long double;
@@ -14,13 +12,15 @@ using qld = queue<ld>;
 using vld = vector<ld>;
 using qpll = queue<pll>;
 using vpll = vector<pll>;
+#include <ext/pb_ds/assoc_container.hpp>
+#include <ext/pb_ds/tree_policy.hpp>
 using namespace __gnu_pbds;
 template <typename T> using ordered_set = tree<T, null_type, less<T>, rb_tree_tag, tree_order_statistics_node_update>;
 //ostream& endl(ostream& os) {
 //    return os << '\n';
 //}
-//define all(xxx) xxx.begin(), xxx.end()
-//define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl;
+#define all(xxx) xxx.begin(), xxx.end()
+#define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl;
 template <class T, class S> inline bool chmax(T &a, const S &b) { return (a < b ? a = b, 1 : 0); }
 template <class T, class S> inline bool chmin(T &a, const S &b) { return (a > b ? a = b, 1 : 0); }
 template <typename T, typename U>
@@ -58,8 +58,12 @@ void print(Head&& head, Tail&&... tail) {
     if (sizeof...(Tail)) cout << " ";
     print(forward<Tail>(tail)...);
 }
+#ifdef LOCAL
+#include <algo/debug.h>
+#else
 //#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math,trapv")
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
+#endif
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 uniform_int_distribution<ll> distrib(0ll, 10ll);
 //constexpr ll MOD = 1e9+7;
@@ -145,61 +149,43 @@ void copy_this () {
 }
 */
 void solve() {
-    ll n;
-    cin >> n;
-    vll a(n);
-    vll mx_kol(n);
-    vll mx_sum(n);
-    for (auto &x : a) cin >> x;
-    vvll sm(n);
-    for (ll i = 0; i < n-1; i += 1) {
-        ll u, v;
-        cin >> u >> v;
-        u -= 1;
-        v -= 1;
-        sm[v].push_back(u);
-        sm[u].push_back(v);
+    ll n, k; cin >> n >> k;
+    vpll shit(n);
+    for (auto &[i,j] : shit) {
+        cin >> i;
     }
-    vll sz(n, 1);
-    vll ans(n, -1);
-    vector<map<ll, ll>> mp_by_v(n);
-    auto upd = [&] (ll v, ll color) {
-        if (mp_by_v[v][color] > mx_kol[v]) {
-            mx_kol[v] = mp_by_v[v][color];
-            mx_sum[v] = color;
-        } else if (mp_by_v[v][color] == mx_kol[v]) {
-            mx_sum[v] += color;
+    for (auto &[i,j] : shit) {
+        cin >> j;
+    }
+    sort(all(shit), [&] (pll a, pll b) {
+        return a.second > b.second;
+    });
+    // k самых дешевых (для Алисы) на префиксе
+    multiset<ll> cheapest_on_prefix;
+    ll alice_profit = 0;
+    for (ll i = 0; i < n; i += 1) {
+        if (shit[i].second > shit[i].first) {
+            alice_profit += shit[i].second - shit[i].first;
         }
-    };
-    auto dfs = [&] (auto f, ll v, ll p) -> void {
-        ll mx_sz_val=-1e9, mx_sz_v=-1;
-        for (const auto &x : sm[v]) if (x != p) {
-            f(f, x, v);
-            sz[v] += sz[x];
-            if (sz[x] > mx_sz_val) {
-                mx_sz_v = x;
-                mx_sz_val = sz[x];
-            }
+    }
+    ll max_profit = 0;
+    if (cheapest_on_prefix.size() == k) max_profit = max(max_profit, alice_profit);
+    for (ll i = 0; i < n; i += 1) {
+        cheapest_on_prefix.insert(shit[i].first);
+        alice_profit -= shit[i].first;
+        if (cheapest_on_prefix.size() > k) {
+            alice_profit += *cheapest_on_prefix.rbegin();
+            cheapest_on_prefix.erase(--cheapest_on_prefix.end());
         }
-        if (mx_sz_v != -1) {
-            swap(mp_by_v[mx_sz_v], mp_by_v[v]);
-            mx_kol[v] = mx_kol[mx_sz_v];
-            mx_sum[v] = mx_sum[mx_sz_v];
-            for (const auto &another : sm[v]) if (another != mx_sz_v && another != p) {
-                for (const auto &[key, value] : mp_by_v[another]) {
-                    mp_by_v[v][key] += value;
-                    upd(v, key);
-                }
-            }
+        if (shit[i].second > shit[i].first) {
+            alice_profit -= shit[i].second - shit[i].first;
         }
-        mp_by_v[v][a[v]] += 1;
-        upd(v, a[v]);
-    };
-    dfs(dfs, 0, -1);
-    print(mx_sum);
+        if (cheapest_on_prefix.size() == k) max_profit = max(max_profit, alice_profit);
+    }
+    cout << max_profit << endl;
 }
 
-sigma male(int32_t argc, char* argv[]) {
+int32_t main(int32_t argc, char* argv[]) {
 //    ifstream cin("distance.in");
 //    ofstream cout("distance.out");
     cout << fixed << setprecision(17);
@@ -219,7 +205,7 @@ sigma male(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-//    cin >> tt;
+    cin >> tt;
 
     while (tt--) {
         solve();
