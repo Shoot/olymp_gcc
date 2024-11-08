@@ -148,46 +148,33 @@ void copy_this () {
     vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
 }
 */
+
 void solve() {
-    ll n, k; cin >> n >> k;
-    k = min(k, n-1);
-    vll a(n);
-    for (auto &x : a) cin >> x;
-    a.push_back(1e18);
-    a.push_back(1e18);
-    a.push_back(1e18);
-    a.push_back(1e18);
-    a.push_back(1e18);
-    a.push_back(1e18);
-    a.push_back(1e18);
-    a.push_back(1e18);
-    a.push_back(1e18);
-    a.push_back(1e18);
-    a.push_back(1e18);
-    a.push_back(1e18);
-    // dp[pref][ops]
-    vvll dp(n+12, vll(k+12, 1e18));
+    ll n; cin >> n;
+    ld sux = 0;
+    ld suy = 0;
     for (ll i = 0; i < n; i += 1) {
-        dp[i][0] = a[i];
-        if (i) dp[i][0] += dp[i-1][0];
+        ll x, y;
+        cin >> x >> y;
+        sux += x;
+        suy += y;
     }
-    for (ll pref = 0; pref < n; pref += 1){
-        for (ll ops = 0; ops <= k; ops += 1) {
-            ll b4;
-            if (pref == 0) b4 = 0;
-            else b4 = dp[pref-1][ops];
-            ll mini = 1e18;
-            for (ll d = 1; d <= k+1; d += 1) {
-                mini = min(mini, a[pref+d-1]);
-                dp[pref+d-1][ops+d-1] = min(dp[pref+d-1][ops+d-1], b4+(d)*mini);
-            }
-        }
+    sux /= ld(n);
+    suy /= ld(n);
+    ll m; cin >> m;
+    ld su2x = 0;
+    ld su2y = 0;
+    for (ll i = 0; i < m; i += 1) {
+        ll x, y;
+        cin >> x >> y;
+        su2x += x;
+        su2y += y;
     }
-    ll ans = 1e18;
-    for (ll i = 0; i <= k; i += 1) {
-        ans = min(ans, dp[n-1][i]);
-    }
-    cout << ans << endl;
+    su2x /= ld(m);
+    su2y /= ld(m);
+    cout << sux << " " << suy << endl;
+    cout << su2x << " " << su2y << endl;
+    cout << su2x-sux << " " << su2y-suy << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
@@ -210,7 +197,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-    cin >> tt;
+//    cin >> tt;
 
     while (tt--) {
         solve();
