@@ -150,31 +150,35 @@ void copy_this () {
 */
 
 void solve() {
-    ll n; cin >> n;
-    ld sux = 0;
-    ld suy = 0;
+    ll n, k; cin >> n >> k;
+    vll su(k);
+    map<ll, set<ll>> mp; //
+    for (ll i = 0; i < k; i += 1) {
+        mp[0].insert(i+1);
+    }
     for (ll i = 0; i < n; i += 1) {
-        ll x, y;
-        cin >> x >> y;
-        sux += x;
-        suy += y;
+        ll x; cin >> x;
+        if (x == 1) {
+            auto it = mp.begin();
+            ll val = it->first;
+            ll mnozh = *(it->second.begin());
+            assert(it->second.size());
+            it->second.erase(it->second.begin());
+            if (it->second.empty()) mp.erase(it);
+            mp[max(val+1, 0ll)].insert(mnozh);
+            cout << mnozh << ' ';
+        } else {
+            auto it = --mp.end();
+            ll val = it->first;
+            ll mnozh = *(it->second.begin());
+            assert(it->second.size());
+            it->second.erase(it->second.begin());
+            if (it->second.empty()) mp.erase(it);
+            mp[max(val-1, 0ll)].insert(mnozh);
+            cout << mnozh << ' ';
+        }
     }
-    sux /= ld(n);
-    suy /= ld(n);
-    ll m; cin >> m;
-    ld su2x = 0;
-    ld su2y = 0;
-    for (ll i = 0; i < m; i += 1) {
-        ll x, y;
-        cin >> x >> y;
-        su2x += x;
-        su2y += y;
-    }
-    su2x /= ld(m);
-    su2y /= ld(m);
-    cout << sux << " " << suy << endl;
-    cout << su2x << " " << su2y << endl;
-    cout << su2x-sux << " " << su2y-suy << endl;
+    cout << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
@@ -197,7 +201,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-//    cin >> tt;
+    cin >> tt;
 
     while (tt--) {
         solve();
