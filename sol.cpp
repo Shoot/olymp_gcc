@@ -21,8 +21,8 @@ template <typename T> using ordered_set = tree<T, null_type, less<T>, rb_tree_ta
 //}
 #define all(xxx) xxx.begin(), xxx.end()
 #define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl;
-template <class T, class S> inline bool chmax(T &a, const S &b) { return (a < b ? a = b, 1 : 0); }
-template <class T, class S> inline bool chmin(T &a, const S &b) { return (a > b ? a = b, 1 : 0); }
+template <class T, class S> inline bool chmax(T &best, const S &b) { return (best < b ? best = b, 1 : 0); }
+template <class T, class S> inline bool chmin(T &best, const S &b) { return (best > b ? best = b, 1 : 0); }
 template <typename T, typename U>
 ostream& operator<<(ostream& os, const pair<T, U>& A) {
     os << A.fi << " " << A.se;
@@ -36,14 +36,14 @@ ostream& operator<<(ostream& os, const vector<T>& A) {
     }
     return os;
 }
-void scan(ll &a) { cin >> a; }
-void scan(char &a) { cin >> a; }
-void scan(double &a) { cin >> a; }
-void scan(long double &a) { cin >> a; }
-void scan(string &a) { cin >> a; }
+void scan(ll &best) { cin >> best; }
+void scan(char &best) { cin >> best; }
+void scan(double &best) { cin >> best; }
+void scan(long double &best) { cin >> best; }
+void scan(string &best) { cin >> best; }
 template <class T, class S> void scan(pair<T, S> &p) { scan(p.first), scan(p.second); }
-template <class T> void scan(vector<T> &a) {for(auto &i : a) scan(i);}
-template <class T> void scan(T &a) { cin >> a; }
+template <class T> void scan(vector<T> &best) {for(auto &i : best) scan(i);}
+template <class T> void scan(T &best) { cin >> best; }
 void IN() {}
 template <class Head, class... Tail> void IN(Head &head, Tail &...tail) {
     scan(head);
@@ -68,117 +68,137 @@ mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 uniform_int_distribution<ll> distrib(0ll, 10ll);
 //constexpr ll MOD = 1e9+7;
 constexpr ll MOD = 1e9+7;
-void in(vector<ll> & a) {
-    for (auto & zero_leaf : a) cin >> zero_leaf;
+void in(vector<ll> & best) {
+    for (auto & zero_leaf : best) cin >> zero_leaf;
 }
-void in(vector<ll> & a, ll l, ll r) {
+void in(vector<ll> & best, ll l, ll r) {
     for (ll i=l; i < r; i+=1) {
-        cin >> a[i];
+        cin >> best[i];
     }
 }
-void inn(vector<ll> & a, ll l, ll rr) {
+void inn(vector<ll> & best, ll l, ll rr) {
     for (ll i=l; i <= rr; i+=1) {
-        cin >> a[i];
+        cin >> best[i];
     }
 }
-ll powm(ll a, ll b) {
+ll powm(ll best, ll b) {
     assert(b >= 0);
     ll d = 1;
     while (b) {
-        if (b&1) d = (d*a) % MOD;
+        if (b&1) d = (d*best) % MOD;
         b >>= 1;
-        a = (a*a) % MOD;
+        best = (best*best) % MOD;
     }
     return d;
 }
-ll powm(ll a, ll b, ll MODD) {
+ll powm(ll best, ll b, ll MODD) {
     assert(b >= 0);
     ll d = 1;
     while (b) {
-        if (b&1) d = (d*a) % MODD;
+        if (b&1) d = (d*best) % MODD;
         b >>= 1;
-        a = (a*a) % MODD;
+        best = (best*best) % MODD;
     }
     return d;
 }
-ll poww(ll a, ll b) {
+ll poww(ll best, ll b) {
     assert(b >= 0);
     ll d = 1;
     while (b) {
-        if (b&1) d = (d*a);
+        if (b&1) d = (d*best);
         b >>= 1;
-        a = (a*a);
+        best = (best*best);
     }
     return d;
 }
-ld poww(ld a, ll b) {
+ld poww(ld best, ll b) {
     assert(b >= 0);
     ld d = 1;
     while (b) {
-        if (b&1) d = (d*a);
+        if (b&1) d = (d*best);
         b >>= 1;
-        a = (a*a);
+        best = (best*best);
     }
     return d;
 }
-ll mul(ll a, ll b) {
-    return (a*b)%MOD;
+ll mul(ll best, ll b) {
+    return (best*b)%MOD;
 }
-ll mul(ll a, ll b, ll MODD) {
-    return (a*b)%MODD;
+ll mul(ll best, ll b, ll MODD) {
+    return (best*b)%MODD;
 }
-ll sum(ll a, ll b) {
-    return (a+b)%MOD;
+ll sum(ll best, ll b) {
+    return (best+b)%MOD;
 }
-ll sum(ll a, ll b, ll MODD) {
-    return (a+b)%MODD;
+ll sum(ll best, ll b, ll MODD) {
+    return (best+b)%MODD;
 }
-ll sub(ll a, ll b) {
-    return (a-(b%MOD)+MOD)%MOD;
+ll sub(ll best, ll b) {
+    return (best-(b%MOD)+MOD)%MOD;
 }
-ll sub(ll a, ll b, ll MODD) {
-    return (a-(b%MODD)+MODD)%MODD;
+ll sub(ll best, ll b, ll MODD) {
+    return (best-(b%MODD)+MODD)%MODD;
 }
 /*
 void copy_this () {
     ll n; cin >> n;
     ll n, k; cin >> n >> k;
     ll n, q; cin >> n >> q;
-    ll a[n]; for (ll i=0; i < n; i+=1) cin >> a[i];
-    vector<ll> a(n); for (ll i=0; i < n; i+=1) cin >> a[i];
+    ll best[n]; for (ll i=0; i < n; i+=1) cin >> best[i];
+    vector<ll> best(n); for (ll i=0; i < n; i+=1) cin >> best[i];
 }
 */
 
 void solve() {
-    ll n, k; cin >> n >> k;
-    vll su(k);
-    map<ll, set<ll>> mp; //
-    for (ll i = 0; i < k; i += 1) {
-        mp[0].insert(i+1);
-    }
-    for (ll i = 0; i < n; i += 1) {
-        ll x; cin >> x;
-        if (x == 1) {
-            auto it = mp.begin();
-            ll val = it->first;
-            ll mnozh = *(it->second.begin());
-            assert(it->second.size());
-            it->second.erase(it->second.begin());
-            if (it->second.empty()) mp.erase(it);
-            mp[max(val+1, 0ll)].insert(mnozh);
-            cout << mnozh << ' ';
-        } else {
-            auto it = --mp.end();
-            ll val = it->first;
-            ll mnozh = *(it->second.begin());
-            assert(it->second.size());
-            it->second.erase(it->second.begin());
-            if (it->second.empty()) mp.erase(it);
-            mp[max(val-1, 0ll)].insert(mnozh);
-            cout << mnozh << ' ';
+//    ll n; cin >> n;
+//    vll best(n);
+//    for (auto &x : best) cin >> x;
+//    auto xo = [&] (ll X) {
+//        for (auto &x : best) x ^= X;
+//    };
+//    for (ll X = 0; X < n; X += 1) {
+//        watch(X);
+//        xo(X);
+//        print(best);
+//        xo(X);
+//    }
+    vll fenw(1e6);
+    auto get = [&] (ll r) -> ll {
+        ll su = 0;
+        while (r > 0) {
+            su += fenw[r];
+            r -= r & -r;
         }
+        return su;
+    };
+    auto add = [&] (ll idx, ll val) {
+        while (idx < fenw.size()) {
+            fenw[idx] += val;
+            idx += idx & -idx;
+        }
+    };
+    ll n; cin >> n;
+    vll a(n);
+    for (auto &x : a) cin >> x;
+    vll best = a;
+    auto count_inv = [&] (vll &arr) -> ll {
+        fill(all(fenw), 0);
+        ll INV = 0;
+        for (auto const &x : arr) {
+            INV += get(fenw.size()-1+10)-get(x+10);
+            add(x+10, 1);
+        }
+        return INV;
+    };
+    ll ops = 0;
+    for (ll i = 0; i < 20; i += 1) {
+        vll temp = best;
+        ll val = 1ll << i;
+        if (val > n) break;
+        for (auto &x : temp) x ^= val;
+        if (count_inv(temp) < count_inv(best)) best = temp;
     }
-    cout << endl;
+    cout << min(count_inv(a), count_inv(best)+1) << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
@@ -201,7 +221,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-    cin >> tt;
+//    cin >> tt;
 
     while (tt--) {
         solve();
