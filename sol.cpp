@@ -150,55 +150,103 @@ void copy_this () {
 */
 
 void solve() {
-//    ll n; cin >> n;
-//    vll best(n);
-//    for (auto &x : best) cin >> x;
-//    auto xo = [&] (ll X) {
-//        for (auto &x : best) x ^= X;
-//    };
-//    for (ll X = 0; X < n; X += 1) {
-//        watch(X);
-//        xo(X);
-//        print(best);
-//        xo(X);
-//    }
-    vll fenw(1e6);
-    auto get = [&] (ll r) -> ll {
-        ll su = 0;
-        while (r > 0) {
-            su += fenw[r];
-            r -= r & -r;
-        }
-        return su;
-    };
-    auto add = [&] (ll idx, ll val) {
-        while (idx < fenw.size()) {
-            fenw[idx] += val;
-            idx += idx & -idx;
-        }
-    };
-    ll n; cin >> n;
+    ll n, m;
+    cin >> n >> m;
     vll a(n);
-    for (auto &x : a) cin >> x;
-    vll best = a;
-    auto count_inv = [&] (vll &arr) -> ll {
-        fill(all(fenw), 0);
-        ll INV = 0;
-        for (auto const &x : arr) {
-            INV += get(fenw.size()-1+10)-get(x+10);
-            add(x+10, 1);
-        }
-        return INV;
-    };
-    ll ops = 0;
-    for (ll i = 0; i < 20; i += 1) {
-        vll temp = best;
-        ll val = 1ll << i;
-        if (val > n) break;
-        for (auto &x : temp) x ^= val;
-        if (count_inv(temp) < count_inv(best)) best = temp;
+    vll b(n);
+    for (ll i = 0; i < n; i += 1) {
+        cin >> a[i] >> b[i];
     }
-    cout << min(count_inv(a), count_inv(best)+1) << endl;
+    vvll sm(n);
+    vpll edges;
+    for (ll i = 0; i < m; i += 1) {
+        ll u, v;
+        cin >> u >> v;
+        u -= 1; v -= 1;
+        sm[u].push_back(v);
+        sm[v].push_back(u);
+        edges.push_back(pll(u,v));
+    }
+    sort(all(sm[0]));
+    vll d(n, 1e18);
+    d[0] = 0;
+    bitset<1'000'000> seen;
+    queue<ll> q;
+    q.push(0);
+    while (!q.empty()) {
+        ll tp = q.front(); q.pop();
+        seen[tp] = true;
+        for (const auto &x : sm[tp]) if (!seen[x]) {
+            seen[x] = true;
+            d[x] = d[tp]+1;
+            q.push(x);
+        }
+    }
+    vll ans(n);
+    vpll nvm_sorted(n);
+    for (ll i = 0; i < n; i += 1) {
+        nvm_sorted[i].first = a[i]-b[i]*(d[i]+1);
+        nvm_sorted[i].second = i;
+    }
+    sort(all(nvm_sorted), greater<>());
+    fill(all(ans), nvm_sorted[0].first);
+    ans[nvm_sorted[0].second] = nvm_sorted[1].first;
+    vvll forward_sm(n), same_d(n);
+    for(auto &layer_arr:edges)
+    {
+        if(d[layer_arr.first]-1==d[layer_arr.second])forward_sm[layer_arr.first].push_back(layer_arr.second);
+        if(d[layer_arr.second]-1==d[layer_arr.first])forward_sm[layer_arr.second].push_back(layer_arr.first);
+        if(d[layer_arr.first]==d[layer_arr.second]){
+            same_d[layer_arr.first].push_back(layer_arr.second);
+            same_d[layer_arr.second].push_back(layer_arr.first);
+        }
+    }
+    vvll deepest_first(n);
+    for(ll i=0;i<n;i++) deepest_first[d[i]].push_back(i);
+    reverse(all(deepest_first));
+    // нам осталось обновить d(1,u) == d(v,u) и d(1,u) + 1 == d(u,v)
+    // Первый случай
+    vvll dp(2, vll(n, -1e18));
+    // dp[used_same_layer_edge][v] = max val for this vertex
+    for (auto const & layer_vs : deepest_first) {
+        // init
+        for (const auto &v : layer_vs) {
+            dp[0][v] = max(dp[0][v], a[v]-b[v]*d[v]);
+        }
+        // inter-layer-shit
+        for (const auto &v : layer_vs) {
+            for (const auto &same_depth_vertex : same_d[v]) {
+                dp[1][same_depth_vertex] = max(dp[1][same_depth_vertex], dp[0][v]);
+            }
+        }
+        for (const auto &v : layer_vs) {
+            ans[v] = max(ans[v], dp[1][v]);
+        }
+        for (const auto &v : layer_vs) {
+            for (const auto &up : forward_sm[v]) {
+                for (ll i = 0; i < 2; i += 1) {
+                    dp[i][up] = max(dp[i][up], dp[i][v]);
+                }
+            }
+        }
+    }
+    dp.assign(2, vll(n, -1e18));
+    for (auto const & layer_vs : deepest_first) {
+        for (const auto &v : layer_vs) {
+            ans[v] = max(ans[v], dp[0][v]);
+        }
+        // init
+        for (const auto &v : layer_vs) {
+            dp[0][v] = max(dp[0][v], a[v]-b[v]*(d[v]-1));
+        }
+
+        for (const auto &v : layer_vs) {
+            for (const auto &up : forward_sm[v]) {
+                dp[0][up] = max(dp[0][up], dp[0][v]);
+            }
+        }
+    }
+    for(const auto &layer_arr : sm[0]) cout << ans[layer_arr] << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
