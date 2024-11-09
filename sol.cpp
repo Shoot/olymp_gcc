@@ -19,8 +19,8 @@ template <typename T> using ordered_set = tree<T, null_type, less<T>, rb_tree_ta
 //ostream& endl(ostream& os) {
 //    return os << '\n';
 //}
-#define all(xxx) xxx.begin(), xxx.end()
-#define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl;
+//define all(xxx) xxx.begin(), xxx.end()
+//define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl;
 template <class T, class S> inline bool chmax(T &best, const S &b) { return (best < b ? best = b, 1 : 0); }
 template <class T, class S> inline bool chmin(T &best, const S &b) { return (best > b ? best = b, 1 : 0); }
 template <typename T, typename U>
@@ -65,8 +65,8 @@ void print(Head&& head, Tail&&... tail) {
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 #endif
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-uniform_int_distribution<ll> distrib(0ll, 10ll);
-//constexpr ll MOD = 1e9+7;
+uniform_int_distribution<ll> distrib(1ll, 10ll);
+//constexpr ll MOD = 819356875157278019ll;
 constexpr ll MOD = 1e9+7;
 void in(vector<ll> & best) {
     for (auto & zero_leaf : best) cin >> zero_leaf;
@@ -148,105 +148,77 @@ void copy_this () {
     vector<ll> best(n); for (ll i=0; i < n; i+=1) cin >> best[i];
 }
 */
-
+const ll RANDOM = chrono::high_resolution_clock::now().time_since_epoch().count();
 void solve() {
-    ll n, m;
-    cin >> n >> m;
-    vll a(n);
-    vll b(n);
+    struct hasher {
+        ll operator() (ll x) const {
+            return x ^ RANDOM;
+        }
+    };
+    ll base = 31;
+    ll N = 1e5+1;
+    vector<ll> basepow(N);
+    vector<ll> baseipow(N);
+    basepow.front() = 1;
+    for (ll i = 1; i < N; i += 1) basepow[i] = mul(basepow[i-1], base);
+    baseipow.back() = powm(basepow.back(), MOD-2);
+    for (ll i = N-2; i >= 0; i -= 1) baseipow[i] = mul(baseipow[i+1], base);
+    string s; cin >> s;
+    ll n = ll(s.size());
+    ll q; cin >> q;
+    set<ll> lengths;
+    vector<ll> ASKED_HASH(q);
+    vll ASKED_KOL(q);
+    vll ASKED_LEN(q);
+    vvll queries_by_sz(n+1);
+    vll ans(q, n);
+    vll pref_hash(n);
     for (ll i = 0; i < n; i += 1) {
-        cin >> a[i] >> b[i];
+        if (i) pref_hash[i] = pref_hash[i-1];
+        pref_hash[i] = sum(pref_hash[i], mul(s[i]-'a'+1, basepow[i]));
     }
-    vvll sm(n);
-    vpll edges;
-    for (ll i = 0; i < m; i += 1) {
-        ll u, v;
-        cin >> u >> v;
-        u -= 1; v -= 1;
-        sm[u].push_back(v);
-        sm[v].push_back(u);
-        edges.push_back(pll(u,v));
+    auto get = [&] (ll l, ll r) {
+        if (l == 0) return pref_hash[r];
+        return mul(sub(pref_hash[r], pref_hash[l-1]), baseipow[l]);
+    };
+    for (ll i = 0; i < q; i += 1) {
+        cin >> ASKED_KOL[i];
+        string sq; cin >> sq;
+        ll lq = ll(sq.size());
+        if (lq > n) {
+            ans[i] = -1;
+            continue;
+        }
+        lengths.insert(lq);
+        ASKED_LEN[i] = lq;
+        for (ll j = 0; j < lq; j += 1) ASKED_HASH[i] = sum(ASKED_HASH[i], mul(sq[j]-'a'+1, basepow[j]));
+        queries_by_sz[lq].push_back(i);
     }
-    sort(all(sm[0]));
-    vll d(n, 1e18);
-    d[0] = 0;
-    bitset<1'000'000> seen;
-    queue<ll> q;
-    q.push(0);
-    while (!q.empty()) {
-        ll tp = q.front(); q.pop();
-        seen[tp] = true;
-        for (const auto &x : sm[tp]) if (!seen[x]) {
-            seen[x] = true;
-            d[x] = d[tp]+1;
-            q.push(x);
+    vvll indices(q);
+    for (const auto &L : lengths) {
+        gp_hash_table<ll, ll, hasher> idx_by_hash;
+        for (const auto &i : queries_by_sz[L]) idx_by_hash[ASKED_HASH[i]] = i;
+        for (ll i = 0; i < n; i += 1) {
+            if (i+L-1 >= n) break;
+            ll curr = get(i, i+L-1);
+            if (idx_by_hash.find(curr) != idx_by_hash.end()) indices[idx_by_hash[curr]].push_back(i);
         }
-    }
-    vll ans(n);
-    vpll nvm_sorted(n);
-    for (ll i = 0; i < n; i += 1) {
-        nvm_sorted[i].first = a[i]-b[i]*(d[i]+1);
-        nvm_sorted[i].second = i;
-    }
-    sort(all(nvm_sorted), greater<>());
-    fill(all(ans), nvm_sorted[0].first);
-    ans[nvm_sorted[0].second] = nvm_sorted[1].first;
-    vvll forward_sm(n), same_d(n);
-    for(auto &layer_arr:edges)
-    {
-        if(d[layer_arr.first]-1==d[layer_arr.second])forward_sm[layer_arr.first].push_back(layer_arr.second);
-        if(d[layer_arr.second]-1==d[layer_arr.first])forward_sm[layer_arr.second].push_back(layer_arr.first);
-        if(d[layer_arr.first]==d[layer_arr.second]){
-            same_d[layer_arr.first].push_back(layer_arr.second);
-            same_d[layer_arr.second].push_back(layer_arr.first);
-        }
-    }
-    vvll deepest_first(n);
-    for(ll i=0;i<n;i++) deepest_first[d[i]].push_back(i);
-    reverse(all(deepest_first));
-    // нам осталось обновить d(1,u) == d(v,u) и d(1,u) + 1 == d(u,v)
-    // Первый случай
-    vvll dp(2, vll(n, -1e18));
-    // dp[used_same_layer_edge][v] = max val for this vertex
-    for (auto const & layer_vs : deepest_first) {
-        // init
-        for (const auto &v : layer_vs) {
-            dp[0][v] = max(dp[0][v], a[v]-b[v]*d[v]);
-        }
-        // inter-layer-shit
-        for (const auto &v : layer_vs) {
-            for (const auto &same_depth_vertex : same_d[v]) {
-                dp[1][same_depth_vertex] = max(dp[1][same_depth_vertex], dp[0][v]);
-            }
-        }
-        for (const auto &v : layer_vs) {
-            ans[v] = max(ans[v], dp[1][v]);
-        }
-        for (const auto &v : layer_vs) {
-            for (const auto &up : forward_sm[v]) {
-                for (ll i = 0; i < 2; i += 1) {
-                    dp[i][up] = max(dp[i][up], dp[i][v]);
+        for (const auto &i : queries_by_sz[L]) {
+            ll sz = indices[i].size();
+            if (sz < ASKED_KOL[i]) {
+                ans[i] = -1;
+            } else {
+                for (ll j = 0; j < sz; j += 1) {
+                    if (j+ASKED_KOL[i]-1 >= sz) break;
+                    ll segment_size = indices[i][j+ASKED_KOL[i]-1]-(indices[i][j]-ASKED_LEN[i]+1)+1;
+                    ans[i] = min(ans[i], segment_size);
                 }
             }
         }
     }
-    dp.assign(2, vll(n, -1e18));
-    for (auto const & layer_vs : deepest_first) {
-        for (const auto &v : layer_vs) {
-            ans[v] = max(ans[v], dp[0][v]);
-        }
-        // init
-        for (const auto &v : layer_vs) {
-            dp[0][v] = max(dp[0][v], a[v]-b[v]*(d[v]-1));
-        }
-
-        for (const auto &v : layer_vs) {
-            for (const auto &up : forward_sm[v]) {
-                dp[0][up] = max(dp[0][up], dp[0][v]);
-            }
-        }
+    for (const auto &x : ans) {
+        cout << x << endl;
     }
-    for(const auto &layer_arr : sm[0]) cout << ans[layer_arr] << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
