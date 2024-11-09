@@ -19,8 +19,8 @@ template <typename T> using ordered_set = tree<T, null_type, less<T>, rb_tree_ta
 //ostream& endl(ostream& os) {
 //    return os << '\n';
 //}
-//define all(xxx) xxx.begin(), xxx.end()
-//define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl;
+#define all(xxx) xxx.begin(), xxx.end()
+#define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl;
 template <class T, class S> inline bool chmax(T &best, const S &b) { return (best < b ? best = b, 1 : 0); }
 template <class T, class S> inline bool chmin(T &best, const S &b) { return (best > b ? best = b, 1 : 0); }
 template <typename T, typename U>
@@ -148,77 +148,33 @@ void copy_this () {
     vector<ll> best(n); for (ll i=0; i < n; i+=1) cin >> best[i];
 }
 */
-const ll RANDOM = chrono::high_resolution_clock::now().time_since_epoch().count();
 void solve() {
-    struct hasher {
-        ll operator() (ll x) const {
-            return x ^ RANDOM;
-        }
-    };
-    ll base = 31;
-    ll N = 1e5+1;
-    vector<ll> basepow(N);
-    vector<ll> baseipow(N);
-    basepow.front() = 1;
-    for (ll i = 1; i < N; i += 1) basepow[i] = mul(basepow[i-1], base);
-    baseipow.back() = powm(basepow.back(), MOD-2);
-    for (ll i = N-2; i >= 0; i -= 1) baseipow[i] = mul(baseipow[i+1], base);
-    string s; cin >> s;
-    ll n = ll(s.size());
-    ll q; cin >> q;
-    set<ll> lengths;
-    vector<ll> ASKED_HASH(q);
-    vll ASKED_KOL(q);
-    vll ASKED_LEN(q);
-    vvll queries_by_sz(n+1);
-    vll ans(q, n);
-    vll pref_hash(n);
+    ll n; cin >> n;
+    vll a(n);
+    for (auto &x : a) cin >> x;
+    vvll dp(3, vll(n+1, -1e18));
+    // dp[skipped_alr=2, skipping=1, havent skipped=0][idx]
+    dp[0][0] = 0;
     for (ll i = 0; i < n; i += 1) {
-        if (i) pref_hash[i] = pref_hash[i-1];
-        pref_hash[i] = sum(pref_hash[i], mul(s[i]-'a'+1, basepow[i]));
+//         watch(i);
+//         watch(dp[0][i]);
+//         watch(dp[1][i]);
+//         watch(dp[2][i]);
+        // clean
+        if (dp[0][i] > a[i]) dp[0][i+1] = max(dp[0][i+1], dp[0][i]-1);
+        if (dp[0][i] == a[i]) dp[0][i+1] = max(dp[0][i+1], dp[0][i]);
+        if (dp[0][i] < a[i]) dp[0][i+1] = max(dp[0][i+1], dp[0][i]+1);
+        // in process
+        dp[1][i+1] = max({dp[1][i+1], dp[1][i], dp[0][i]});
+        // ended
+        if (dp[1][i] > a[i]) dp[2][i+1] = max(dp[2][i+1], dp[1][i]-1);
+        if (dp[1][i] == a[i]) dp[2][i+1] = max(dp[2][i+1], dp[1][i]);
+        if (dp[1][i] < a[i]) dp[2][i+1] = max(dp[2][i+1], dp[1][i]+1);
+        if (dp[2][i] > a[i]) dp[2][i+1] = max(dp[2][i+1], dp[2][i]-1);
+        if (dp[2][i] == a[i]) dp[2][i+1] = max(dp[2][i+1], dp[2][i]);
+        if (dp[2][i] < a[i]) dp[2][i+1] = max(dp[2][i+1], dp[2][i]+1);
     }
-    auto get = [&] (ll l, ll r) {
-        if (l == 0) return pref_hash[r];
-        return mul(sub(pref_hash[r], pref_hash[l-1]), baseipow[l]);
-    };
-    for (ll i = 0; i < q; i += 1) {
-        cin >> ASKED_KOL[i];
-        string sq; cin >> sq;
-        ll lq = ll(sq.size());
-        if (lq > n) {
-            ans[i] = -1;
-            continue;
-        }
-        lengths.insert(lq);
-        ASKED_LEN[i] = lq;
-        for (ll j = 0; j < lq; j += 1) ASKED_HASH[i] = sum(ASKED_HASH[i], mul(sq[j]-'a'+1, basepow[j]));
-        queries_by_sz[lq].push_back(i);
-    }
-    vvll indices(q);
-    for (const auto &L : lengths) {
-        gp_hash_table<ll, ll, hasher> idx_by_hash;
-        for (const auto &i : queries_by_sz[L]) idx_by_hash[ASKED_HASH[i]] = i;
-        for (ll i = 0; i < n; i += 1) {
-            if (i+L-1 >= n) break;
-            ll curr = get(i, i+L-1);
-            if (idx_by_hash.find(curr) != idx_by_hash.end()) indices[idx_by_hash[curr]].push_back(i);
-        }
-        for (const auto &i : queries_by_sz[L]) {
-            ll sz = indices[i].size();
-            if (sz < ASKED_KOL[i]) {
-                ans[i] = -1;
-            } else {
-                for (ll j = 0; j < sz; j += 1) {
-                    if (j+ASKED_KOL[i]-1 >= sz) break;
-                    ll segment_size = indices[i][j+ASKED_KOL[i]-1]-(indices[i][j]-ASKED_LEN[i]+1)+1;
-                    ans[i] = min(ans[i], segment_size);
-                }
-            }
-        }
-    }
-    for (const auto &x : ans) {
-        cout << x << endl;
-    }
+    cout << max({dp[1][n], dp[2][n]}) << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
@@ -241,7 +197,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-//    cin >> tt;
+    cin >> tt;
 
     while (tt--) {
         solve();
