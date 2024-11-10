@@ -59,12 +59,8 @@ void print(Head&& head, Tail&&... tail) {
     if (sizeof...(Tail)) cout << " ";
     print(forward<Tail>(tail)...);
 }
-#ifdef LOCAL
-#include <algo/debug.h>
-#else
 //#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math,trapv")
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
-#endif
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 uniform_int_distribution<ll> distrib(1ll, 10ll);
 //constexpr ll MOD = 819356875157278019ll;
@@ -140,56 +136,42 @@ ll sub(ll best, ll b) {
 ll sub(ll best, ll b, ll MODD) {
     return (best-(b%MODD)+MODD)%MODD;
 }
-/*
-void copy_this () {
-    ll n; cin >> n;
-    ll n, k; cin >> n >> k;
-    ll n, q; cin >> n >> q;
-    ll best[n]; for (ll i=0; i < n; i+=1) cin >> best[i];
-    vector<ll> best(n); for (ll i=0; i < n; i+=1) cin >> best[i];
-}
-*/
+
 void solve() {
     ll n; cin >> n;
-    vll a(n); for (auto &x : a) cin >> x;
-    vll before_start(n);
-    vector<set<ll>> i_can_make_free(n);
-    vector<set<ll>> i_depend_on(n);
-    for (ll i = 0; i < n; i += 1) {
-        string s; cin >> s;
-        for (ll j = 0; j < n; j += 1) {
-            if (s[j] == 'Y') {
-                i_depend_on[i].insert(j);
-                i_can_make_free[j].insert(i);
-            }
+    vll a(n);
+    for (auto &x : a) cin >> x;
+    a.insert(a.begin(), 0ll);
+//    struct shit {
+//        ll SUM;
+//        ll FIRST;
+//        ll SECOND;
+//        auto operator<=>(const shit& other) const = default;
+//    };
+    map<pll, ll> current_states;
+    current_states[pll(0,0)] = 0;
+    for (ll i = 1; i <= n; i += 1) {
+//        watch(i);
+        // introducing new place
+        map<pll, ll> new_states;
+        for (const auto &[xx, su] : current_states) {
+            ll fi = xx.first;
+            ll se = xx.second;
+            pll to_se = pll(fi, i);
+            if (new_states.find(to_se) != new_states.end()) new_states[to_se] = min(new_states[to_se], su+abs(a[se]-a[i]));
+            else new_states[to_se] = su+abs(a[se]-a[i]);
+            pll to_fi = pll(i, se);
+            if (new_states.find(to_fi) != new_states.end()) new_states[to_fi] = min(new_states[to_fi], su+abs(a[fi]-a[i]));
+            else new_states[to_fi] = su+abs(a[fi]-a[i]);
         }
+        swap(new_states, current_states);
+//        for (auto &[x,xx] : current_states) {
+//            cout << x.first << ' ' << x.second << ": " << xx << endl;
+//        }
     }
-    bitset<1001> free;
-    for (ll nvm = 0; nvm < n; nvm += 1) {
-        vll became_free;
-        for (ll i = 0; i < n; i += 1) if (!free[i]) {
-            if (i_depend_on[i].empty()) {
-                became_free.push_back(i);
-            }
-        }
-        if (became_free.empty()) {
-            break;
-        }
-        for (const auto &x : became_free) {
-            free[x] = true;
-            for (const auto &y : i_can_make_free[x]) {
-                i_depend_on[y].erase(x);
-                before_start[y] = max(before_start[y], before_start[x]+a[x]);
-            }
-        }
-    }
-    if (free.count() == n) {
-        ll maxi = 0;
-        for (ll i = 0; i < n; i += 1) maxi = max(maxi, a[i]+before_start[i]);
-        cout << maxi << endl;
-    } else {
-        cout << -1 << endl;
-    }
+    ll mini = 1e18;
+    for (const auto &[i,j] : current_states) mini = min(mini, j);
+    cout << mini << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
