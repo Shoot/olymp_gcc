@@ -139,40 +139,73 @@ ll sub(ll best, ll b, ll MODD) {
 
 void solve() {
     ll n; cin >> n;
-    vll a(n);
-    for (auto &x : a) cin >> x;
-    a.insert(a.begin(), 0ll);
-//    struct shit {
-//        ll SUM;
-//        ll FIRST;
-//        ll SECOND;
-//        auto operator<=>(const shit& other) const = default;
-//    };
-    map<pll, ll> current_states;
-    current_states[pll(0,0)] = 0;
-    for (ll i = 1; i <= n; i += 1) {
-//        watch(i);
-        // introducing new place
-        map<pll, ll> new_states;
-        for (const auto &[xx, su] : current_states) {
-            ll fi = xx.first;
-            ll se = xx.second;
-            pll to_se = pll(fi, i);
-            if (new_states.find(to_se) != new_states.end()) new_states[to_se] = min(new_states[to_se], su+abs(a[se]-a[i]));
-            else new_states[to_se] = su+abs(a[se]-a[i]);
-            pll to_fi = pll(i, se);
-            if (new_states.find(to_fi) != new_states.end()) new_states[to_fi] = min(new_states[to_fi], su+abs(a[fi]-a[i]));
-            else new_states[to_fi] = su+abs(a[fi]-a[i]);
-        }
-        swap(new_states, current_states);
-//        for (auto &[x,xx] : current_states) {
-//            cout << x.first << ' ' << x.second << ": " << xx << endl;
-//        }
+    vpll NEW(n);
+    for (ll i = 0; i < n; i += 1) {
+        cin >> NEW[i].first >> NEW[i].second;
     }
-    ll mini = 1e18;
-    for (const auto &[i,j] : current_states) mini = min(mini, j);
-    cout << mini << endl;
+    ll PLACES; cin >> PLACES;
+    vll poses(PLACES); for (auto &x : poses) cin >> x;
+    unordered_map<ll, vpll> tasks_by_t_appeared;
+    set<ll> key_points;
+    ll maxi = 0;
+    map<pair<ll, pll>, pll> id_by_shit;
+    for (ll i = 0; i < n; i += 1) {
+        for (ll place = 0; place < PLACES; place += 1) {
+            ll t=poses[place]-NEW[i].first+1, need_t=(poses[place]+NEW[i].second-1)-(poses[place]-NEW[i].first+1)+1, profit=1;
+            watch(need_t);
+            tasks_by_t_appeared[t].push_back(pll(need_t, profit));
+            key_points.insert(t);
+            maxi = max(maxi, t);
+            id_by_shit[make_pair(t, make_pair(need_t, profit))] = pll(place+1, i+1);
+        }
+    }
+    map<ll, ll> dp;
+    map<ll, ll> prev_t;
+    map<ll, pll> id_used_to_get_here;
+    ll previous = 0;
+    for (auto const &t : key_points) {
+        if (dp[t] < dp[previous]) {
+            dp[t] = dp[previous];
+            prev_t[t] = prev_t[previous];
+            id_used_to_get_here[t] = id_used_to_get_here[previous];
+        }
+        for (auto const &[need_t, profit] : tasks_by_t_appeared[t]) {
+            pll id = id_by_shit[make_pair(t, make_pair(need_t, profit))];
+            auto val = profit+dp[t];
+            if (t+need_t > maxi) {
+                if (dp[1ll<<50] < val) {
+                    dp[1ll<<50] = val;
+                    prev_t[1ll<<50] = t;
+                    id_used_to_get_here[1ll<<50] = id;
+                }
+                continue;
+            }
+            auto to = *key_points.lower_bound(t+need_t);
+            if (dp[to] < val) {
+                dp[to] = val;
+                prev_t[to] = t;
+                id_used_to_get_here[to] = id;
+            }
+        }
+        previous = t;
+    }
+    ll END = 1ll << 50;
+    ll shit = END;
+    vpll ans;
+    cout << dp[END] << endl;
+    while (true) {
+        if (id_used_to_get_here.find(shit) == id_used_to_get_here.end()) break;
+        pll id = id_used_to_get_here[shit];
+        shit = prev_t[shit];
+        ans.push_back(id);
+    }
+    reverse(all(ans));
+    for (const auto &x : ans) {
+        cout << x.first << ' ' << x.second << endl;
+    }
+    cout << endl;
 }
+
 
 int32_t main(int32_t argc, char* argv[]) {
 //    ifstream cin("distance.in");
