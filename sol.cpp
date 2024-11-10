@@ -151,69 +151,45 @@ void copy_this () {
 */
 void solve() {
     ll n; cin >> n;
-    struct shit {
-        ll T;
-        char TYPE;
-    };
-    vector<shit> a(n+1); // nvm n+1
+    vll a(n); for (auto &x : a) cin >> x;
+    vll before_start(n);
+    vector<set<ll>> i_can_make_free(n);
+    vector<set<ll>> i_depend_on(n);
     for (ll i = 0; i < n; i += 1) {
         string s; cin >> s;
-        ll h1 = s[0]-'0';
-        ll h2 = s[1]-'0';
-        
-        ll m1 = s[3]-'0';
-        ll m2 = s[4]-'0';
-
-        ll sec1 = s[6]-'0';
-        ll sec2 = s[7]-'0';
-
-        ll mil1 = s[9]-'0';
-        ll mil2 = s[10]-'0';
-        ll mil3 = s[11]-'0';
-
-        ll h = h1*10+h2;
-        ll m = m1*10+m2;
-        ll sec = sec1*10+sec2;
-        ll mil = mil1*100+mil2*10+mil3;
-//        cout << h << " " << m << " " << sec << " " << mil << endl;
-        m += h*60;
-        sec += m*60;
-        mil += sec*1000;
-        a[i].T = mil;
-        cin >> a[i].TYPE;
-    }
-    vvpll dp(2, vpll(n+1, pll(1e18, -1e18)));
-    // dp[prev_sign][idx] = (time, -last_start)
-    // < = # = 0
-    // > = 1
-    // чем больше last_start тем лучше
-    dp[1][0] = pll(0, 666666);
-    for (ll i = 0; i < n; i += 1) {
-        if (a[i].TYPE == '?' || a[i].TYPE == '<') if (dp[1][i].first < 1e17) { // starting
-            ll time = dp[1][i].first;
-            dp[0][i+1] = min(dp[0][i+1], pll(time, -a[i].T));
-        }
-        if (a[i].TYPE == '?' || a[i].TYPE == '#') if (dp[0][i].first < 1e17) { // continuing
-            ll time = dp[0][i].first;
-            time += a[i].T-a[i-1].T;
-            dp[0][i+1] = min(dp[0][i+1], pll(time, dp[0][i].second));
-        }
-        if (a[i].TYPE == '?' || a[i].TYPE == '>') if (dp[0][i].first < 1e17) { // ending
-            ll time = dp[0][i].first;
-            time += a[i].T-a[i-1].T;
-            dp[1][i+1] = min(dp[1][i+1], pll(time, 666));
+        for (ll j = 0; j < n; j += 1) {
+            if (s[j] == 'Y') {
+                i_depend_on[i].insert(j);
+                i_can_make_free[j].insert(i);
+            }
         }
     }
-    ll ans = dp[1][n].first;
-    string MIL = to_string(ans%1000); ans /= 1000;
-    string SEC = to_string(ans%60); ans /= 60;
-    string MIN = to_string(ans%60); ans /= 60;
-    string HRS = to_string(ans);
-    while (MIL.size() < 3) MIL.insert(0, "0");
-    while (SEC.size() < 2) SEC.insert(0, "0");
-    while (MIN.size() < 2) MIN.insert(0, "0");
-    while (HRS.size() < 2) HRS.insert(0, "0");
-    cout << HRS << ":" << MIN << ":" << SEC << ":" << MIL << endl;
+    bitset<1001> free;
+    for (ll nvm = 0; nvm < n; nvm += 1) {
+        vll became_free;
+        for (ll i = 0; i < n; i += 1) if (!free[i]) {
+            if (i_depend_on[i].empty()) {
+                became_free.push_back(i);
+            }
+        }
+        if (became_free.empty()) {
+            break;
+        }
+        for (const auto &x : became_free) {
+            free[x] = true;
+            for (const auto &y : i_can_make_free[x]) {
+                i_depend_on[y].erase(x);
+                before_start[y] = max(before_start[y], before_start[x]+a[x]);
+            }
+        }
+    }
+    if (free.count() == n) {
+        ll maxi = 0;
+        for (ll i = 0; i < n; i += 1) maxi = max(maxi, a[i]+before_start[i]);
+        cout << maxi << endl;
+    } else {
+        cout << -1 << endl;
+    }
 }
 
 int32_t main(int32_t argc, char* argv[]) {
