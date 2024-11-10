@@ -8,6 +8,7 @@ using ld = long double;
 using qll = queue<ll>;
 using vll = vector<ll>;
 using vvll = vector<vector<ll>>;
+using vvpll = vector<vector<pll>>;
 using qld = queue<ld>;
 using vld = vector<ld>;
 using qpll = queue<pll>;
@@ -149,77 +150,70 @@ void copy_this () {
 }
 */
 void solve() {
-    ll n, m; cin >> n >> m;
-    vector<set<ll>> sms(n+1);
-    for (ll i = 0; i < m; i += 1) {
-        ll u, v; cin >> u >> v;
-        sms[u].insert(v);
-        sms[v].insert(u);
-    }
+    ll n; cin >> n;
     struct shit {
-        ll A;
-        ll B;
-        ll C;
+        ll T;
+        char TYPE;
     };
-    vector<shit> ans;
-    for (ll v = 1; v <= n; v += 1) {
-        if (sms[v].size() < 2) continue;
-        auto it = sms[v].begin();
-        ll save = -1;
-        if (sms[v].size()%2==1) {
-            save = *it;
-            it = next(it);
-        }
-        for (ll i = save != -1; i+1 < sms[v].size(); i += 2) {
-            ll one = *it;
-            ll another = *next(it);
-            ans.push_back(shit(v,one,another));
-            sms[one].erase(v);
-            sms[another].erase(v);
-            if (sms[one].contains(another)) {
-                sms[one].erase(another);
-                sms[another].erase(one);
-            } else {
-                sms[one].insert(another);
-                sms[another].insert(one);
-            };
-            if (i+2+1<sms[v].size()) it = next(next(it));
-        }
-        sms[v].clear();
-        if (save != -1) sms[v].insert(save);
+    vector<shit> a(n+1); // nvm n+1
+    for (ll i = 0; i < n; i += 1) {
+        string s; cin >> s;
+        ll h1 = s[0]-'0';
+        ll h2 = s[1]-'0';
+        
+        ll m1 = s[3]-'0';
+        ll m2 = s[4]-'0';
+
+        ll sec1 = s[6]-'0';
+        ll sec2 = s[7]-'0';
+
+        ll mil1 = s[9]-'0';
+        ll mil2 = s[10]-'0';
+        ll mil3 = s[11]-'0';
+
+        ll h = h1*10+h2;
+        ll m = m1*10+m2;
+        ll sec = sec1*10+sec2;
+        ll mil = mil1*100+mil2*10+mil3;
+//        cout << h << " " << m << " " << sec << " " << mil << endl;
+        m += h*60;
+        sec += m*60;
+        mil += sec*1000;
+        a[i].T = mil;
+        cin >> a[i].TYPE;
     }
-    ll U = -1, V = -1;
-    for (ll v = 1; v <= n; v += 1) {
-        if (!sms[v].empty()) {
-            V = v;
-            U = *sms[v].begin();
-            break;
+    vvpll dp(2, vpll(n+1, pll(1e18, -1e18)));
+    // dp[prev_sign][idx] = (time, -last_start)
+    // < = # = 0
+    // > = 1
+    // чем больше last_start тем лучше
+    dp[1][0] = pll(0, 666666);
+    for (ll i = 0; i < n; i += 1) {
+        if (a[i].TYPE == '?' || a[i].TYPE == '<') if (dp[1][i].first < 1e17) { // starting
+            ll time = dp[1][i].first;
+            dp[0][i+1] = min(dp[0][i+1], pll(time, -a[i].T));
         }
-    }
-    if (U == -1) {
-        cout << ans.size() << endl;
-        for (const auto &[i,j,k] : ans) {
-            cout << i << " " << j << " " << k << endl;
+        if (a[i].TYPE == '?' || a[i].TYPE == '#') if (dp[0][i].first < 1e17) { // continuing
+            ll time = dp[0][i].first;
+            time += a[i].T-a[i-1].T;
+            dp[0][i+1] = min(dp[0][i+1], pll(time, dp[0][i].second));
         }
-        return;
-    }
-    set<ll> comp;
-    comp.insert(U);
-    comp.insert(V);
-    for (const auto &x : sms[U]) comp.insert(x);
-    for (const auto &x : sms[V]) comp.insert(x);
-    for (ll i = 1; i <= n; i += 1) {
-        if (!comp.contains(i)) {
-            ans.push_back(shit(i,U,V));
-            V = i;
-            for (const auto &x : sms[i]) comp.insert(x);
-            comp.insert(i);
+        if (a[i].TYPE == '?' || a[i].TYPE == '>') if (dp[0][i].first < 1e17) { // ending
+            ll time = dp[0][i].first;
+            time += a[i].T-a[i-1].T;
+            dp[1][i+1] = min(dp[1][i+1], pll(time, 666));
         }
     }
-    cout << ans.size() << endl;
-    for (const auto &[i,j,k] : ans) {
-        cout << i << " " << j << " " << k << endl;
-    }
+    ll ans = dp[1][n].first;
+    string MIL = to_string(ans%1000); ans /= 1000;
+    string SEC = to_string(ans%60); ans /= 60;
+    string MIN = to_string(ans%60); ans /= 60;
+    string HRS = to_string(ans);
+    while (MIL.size() < 3) MIL.insert(0, "0");
+    while (SEC.size() < 2) SEC.insert(0, "0");
+    while (MIN.size() < 2) MIN.insert(0, "0");
+    while (HRS.size() < 2) HRS.insert(0, "0");
+    cout << HRS << ":" << MIN << ":" << SEC << ":" << MIL << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
@@ -242,7 +236,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-    cin >> tt;
+//    cin >> tt;
 
     while (tt--) {
         solve();
