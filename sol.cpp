@@ -136,78 +136,109 @@ ll sub(ll best, ll b) {
 ll sub(ll best, ll b, ll MODD) {
     return (best-(b%MODD)+MODD)%MODD;
 }
-
+char idx_to_name[3];
 void solve() {
     ll n; cin >> n;
-    vpll NEW(n);
-    for (ll i = 0; i < n; i += 1) {
-        cin >> NEW[i].first >> NEW[i].second;
+    vvll A(3, vll(n));
+    vvll VAL_BY_PR(3, vll(n));
+    for (ll i = 0; i < 3; i += 1) for (ll j = 0; j < n; j += 1) {
+        ll pr;
+        cin >> pr;
+        pr -= 1;
+        A[i][j] = pr;
+        VAL_BY_PR[i][pr] = j;
     }
-    ll PLACES; cin >> PLACES;
-    vll poses(PLACES); for (auto &x : poses) cin >> x;
-    unordered_map<ll, vpll> tasks_by_t_appeared;
-    set<ll> key_points;
-    ll maxi = 0;
-    map<pair<ll, pll>, pll> id_by_shit;
-    for (ll i = 0; i < n; i += 1) {
-        for (ll place = 0; place < PLACES; place += 1) {
-            ll t=poses[place]-NEW[i].first+1, need_t=(poses[place]+NEW[i].second-1)-(poses[place]-NEW[i].first+1)+1, profit=1;
-            watch(need_t);
-            tasks_by_t_appeared[t].push_back(pll(need_t, profit));
-            key_points.insert(t);
-            maxi = max(maxi, t);
-            id_by_shit[make_pair(t, make_pair(need_t, profit))] = pll(place+1, i+1);
+    vpll path;
+    vvll ST(3, vll(4*n+10));
+    auto merge = [&] (ll cv1, ll cv2, vll& a) {
+        if (cv1 == -1) return cv2;
+        if (cv2 == -1) return cv1;
+        if (a[cv1] >= a[cv2]) return cv1;
+        return cv2;
+    };
+    auto build = [&] (auto f, vll&a, vll& tree, ll v, ll tl, ll tr) -> void {
+        if (tl == tr) {
+            tree[v] = tl;
+            return;
         }
-    }
-    map<ll, ll> dp;
-    map<ll, ll> prev_t;
-    map<ll, pll> id_used_to_get_here;
-    ll previous = 0;
-    for (auto const &t : key_points) {
-        if (dp[t] < dp[previous]) {
-            dp[t] = dp[previous];
-            prev_t[t] = prev_t[previous];
-            id_used_to_get_here[t] = id_used_to_get_here[previous];
+        ll tm = (tl+tr) >> 1;
+        f(f, a, tree, 2*v+1, tl, tm);
+        f(f, a, tree, 2*v+2, tm+1, tr);
+        tree[v] = merge(tree[2*v+1], tree[2*v+2], a);
+    };
+    for (ll i = 0; i < 3; i += 1) build(build, VAL_BY_PR[i], ST[i], 0, 0, n-1);
+    auto set_point = [&] (auto f, vll& a, vll& tree, ll v, ll tl, ll tr, ll pos, ll val) -> void {
+        if (tl == tr) {
+            a[pos] = val;
+            return ;
         }
-        for (auto const &[need_t, profit] : tasks_by_t_appeared[t]) {
-            pll id = id_by_shit[make_pair(t, make_pair(need_t, profit))];
-            auto val = profit+dp[t];
-            if (t+need_t > maxi) {
-                if (dp[1ll<<50] < val) {
-                    dp[1ll<<50] = val;
-                    prev_t[1ll<<50] = t;
-                    id_used_to_get_here[1ll<<50] = id;
+        ll tm = (tl+tr) >> 1;
+        if (pos <= tm) {
+            f(f, a, tree, 2*v+1, tl, tm, pos, val);
+        } else {
+            f(f, a, tree, 2*v+2, tm+1, tr, pos, val);
+        }
+        tree[v] = merge(tree[2*v+1], tree[2*v+2], a);
+    };
+    auto get_max_on_segment = [&] (auto f, vll& a, vll& tree, ll v, ll tl, ll tr, ll l, ll r) -> ll {
+        if (tl == l && tr == r) {
+            return tree[v];
+        }
+        ll tm = (tl+tr) >> 1;
+        ll left = -1;
+        ll right = -1;
+        if (l <= tm) {
+            left = f(f, a, tree, 2*v+1, tl, tm, l, min(r, tm));
+        }
+        if (r >= tm+1) {
+            right = f(f, a, tree, 2*v+2, tm+1, tr, max(l, tm+1), r);
+        }
+        return merge(left, right, a);
+    };
+    bool found = false;
+    auto dfs = [&] (auto f, ll v) -> void {
+        if (v == n-1) {
+            found = true;
+            return;
+        }
+//        cout << v << endl;
+        for (ll i = 0; i < 3; i += 1) set_point(set_point, VAL_BY_PR[i], ST[i], 0, 0, n-1, A[i][v], -1);
+        for (ll i = 0; i < 3; i += 1) {
+            bool nvm = false;
+            while (!nvm) {
+                // максимальное с меньшим приоритетом
+                ll nxt = get_max_on_segment(get_max_on_segment, VAL_BY_PR[i], ST[i], 0, 0, n-1, 0, A[i][v]);
+//                    watch(VAL_BY_PR[i][nxt]);
+                if (VAL_BY_PR[i][nxt] > v) {
+//                watch(VAL_BY_PR[i][nxt]);
+                    // can get smth better off ith guy
+                    path.push_back(pll(i, VAL_BY_PR[i][nxt]));
+                    f(f, VAL_BY_PR[i][nxt]);
+                    if (found) return;
+                    path.pop_back();
+                } else {
+                    nvm = true;
                 }
-                continue;
-            }
-            auto to = *key_points.lower_bound(t+need_t);
-            if (dp[to] < val) {
-                dp[to] = val;
-                prev_t[to] = t;
-                id_used_to_get_here[to] = id;
             }
         }
-        previous = t;
+    };
+    dfs(dfs, 0);
+    if (!found) {
+        cout << "NO" << endl;
+    } else {
+        cout << "YES" << endl;
+        cout << path.size() << endl;
+        for (const auto &[i, j] : path) {
+            cout << idx_to_name[i] << " " << j+1 << endl;
+        }
     }
-    ll END = 1ll << 50;
-    ll shit = END;
-    vpll ans;
-    cout << dp[END] << endl;
-    while (true) {
-        if (id_used_to_get_here.find(shit) == id_used_to_get_here.end()) break;
-        pll id = id_used_to_get_here[shit];
-        shit = prev_t[shit];
-        ans.push_back(id);
-    }
-    reverse(all(ans));
-    for (const auto &x : ans) {
-        cout << x.first << ' ' << x.second << endl;
-    }
-    cout << endl;
 }
 
 
 int32_t main(int32_t argc, char* argv[]) {
+    idx_to_name[0] = 'q';
+    idx_to_name[1] = 'k';
+    idx_to_name[2] = 'j';
 //    ifstream cin("distance.in");
 //    ofstream cout("distance.out");
     cout << fixed << setprecision(17);
@@ -227,7 +258,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-//    cin >> tt;
+    cin >> tt;
 
     while (tt--) {
         solve();
