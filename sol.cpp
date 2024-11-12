@@ -136,109 +136,151 @@ ll sub(ll best, ll b) {
 ll sub(ll best, ll b, ll MODD) {
     return (best-(b%MODD)+MODD)%MODD;
 }
-char idx_to_name[3];
 void solve() {
     ll n; cin >> n;
-    vvll A(3, vll(n));
-    vvll VAL_BY_PR(3, vll(n));
-    for (ll i = 0; i < 3; i += 1) for (ll j = 0; j < n; j += 1) {
-        ll pr;
-        cin >> pr;
-        pr -= 1;
-        A[i][j] = pr;
-        VAL_BY_PR[i][pr] = j;
-    }
-    vpll path;
-    vvll ST(3, vll(4*n+10));
-    auto merge = [&] (ll cv1, ll cv2, vll& a) {
-        if (cv1 == -1) return cv2;
-        if (cv2 == -1) return cv1;
-        if (a[cv1] >= a[cv2]) return cv1;
-        return cv2;
+    vll a(n); for (auto &x : a) cin >> x;
+    a.insert(a.begin(), 0ll);
+    struct shit {
+        ll val;
+        ll pos;
+        auto operator<(const shit& other) {
+            return val < other.val;
+        };
     };
-    auto build = [&] (auto f, vll&a, vll& tree, ll v, ll tl, ll tr) -> void {
+    vector<shit> positions(n+1);
+    for (ll i = 0; i <= n; i += 1) {
+        positions[i].val = a[i];
+        positions[i].pos = i;
+    }
+    sort(all(positions));
+    vll idx_by_order(n+1);
+    for (ll i = 0; i <= n; i += 1) {
+        idx_by_order[positions[i].pos] = i;
+    }
+    vll dp(n+1, 1e18);
+    vll simple_sorted_for_ub;
+    for (ll i = 0; i <= n; i += 1) simple_sorted_for_ub.push_back(positions[i].val);
+    struct node {
+        ll val=1e18;
+        ll push=0;
+    };
+    vector<node> ST_plus_val(4*n+10);
+    vector<node> ST_minus_val(4*n+10);
+    vector<node> BASIC(4*n+10);
+    auto merge = [&] (ll v, vector<node>& tree) {
+        assert(tree[v].push == 0);
+        tree[v].val = min(tree[2*v+1].val, tree[2*v+2].val);
+    };
+    auto push = [&] (ll v, vector<node>& tree) {
+        tree[2*v+1].val += tree[v].push;
+        tree[2*v+1].push += tree[v].push;
+        tree[2*v+2].val += tree[v].push;
+        tree[2*v+2].push += tree[v].push;
+        tree[v].push = 0;
+    };
+    auto set_point = [&] (auto f, ll v, ll tl, ll tr, ll pos, ll val, vector<node>& tree) -> void {
         if (tl == tr) {
-            tree[v] = tl;
+            tree[v].val = val;
             return;
         }
-        ll tm = (tl+tr) >> 1;
-        f(f, a, tree, 2*v+1, tl, tm);
-        f(f, a, tree, 2*v+2, tm+1, tr);
-        tree[v] = merge(tree[2*v+1], tree[2*v+2], a);
-    };
-    for (ll i = 0; i < 3; i += 1) build(build, VAL_BY_PR[i], ST[i], 0, 0, n-1);
-    auto set_point = [&] (auto f, vll& a, vll& tree, ll v, ll tl, ll tr, ll pos, ll val) -> void {
-        if (tl == tr) {
-            a[pos] = val;
-            return ;
-        }
+        push(v, tree);
         ll tm = (tl+tr) >> 1;
         if (pos <= tm) {
-            f(f, a, tree, 2*v+1, tl, tm, pos, val);
+            f(f, 2*v+1, tl, tm, pos, val, tree);
         } else {
-            f(f, a, tree, 2*v+2, tm+1, tr, pos, val);
+            f(f, 2*v+2, tm+1, tr, pos, val, tree);
         }
-        tree[v] = merge(tree[2*v+1], tree[2*v+2], a);
+        merge(v, tree);
     };
-    auto get_max_on_segment = [&] (auto f, vll& a, vll& tree, ll v, ll tl, ll tr, ll l, ll r) -> ll {
+    auto add_on_segment = [&] (auto f, ll v, ll tl, ll tr, ll l, ll r, ll inc, vector<node>& tree)  -> void {
         if (tl == l && tr == r) {
-            return tree[v];
-        }
-        ll tm = (tl+tr) >> 1;
-        ll left = -1;
-        ll right = -1;
-        if (l <= tm) {
-            left = f(f, a, tree, 2*v+1, tl, tm, l, min(r, tm));
-        }
-        if (r >= tm+1) {
-            right = f(f, a, tree, 2*v+2, tm+1, tr, max(l, tm+1), r);
-        }
-        return merge(left, right, a);
-    };
-    bool found = false;
-    auto dfs = [&] (auto f, ll v) -> void {
-        if (v == n-1) {
-            found = true;
+            tree[v].val += inc;
+            tree[v].push = inc;
             return;
         }
-//        cout << v << endl;
-        for (ll i = 0; i < 3; i += 1) set_point(set_point, VAL_BY_PR[i], ST[i], 0, 0, n-1, A[i][v], -1);
-        for (ll i = 0; i < 3; i += 1) {
-            bool nvm = false;
-            while (!nvm) {
-                // максимальное с меньшим приоритетом
-                ll nxt = get_max_on_segment(get_max_on_segment, VAL_BY_PR[i], ST[i], 0, 0, n-1, 0, A[i][v]);
-//                    watch(VAL_BY_PR[i][nxt]);
-                if (VAL_BY_PR[i][nxt] > v) {
-//                watch(VAL_BY_PR[i][nxt]);
-                    // can get smth better off ith guy
-                    path.push_back(pll(i, VAL_BY_PR[i][nxt]));
-                    f(f, VAL_BY_PR[i][nxt]);
-                    if (found) return;
-                    path.pop_back();
-                } else {
-                    nvm = true;
-                }
-            }
+        push(v, tree);
+        ll tm = (tl+tr) >> 1;
+        if (l <= tm) {
+            f(f, 2*v+1, tl, tm, l, min(r, tm), inc, tree);
         }
+        if (r >= tm+1) {
+            f(f, 2*v+2, tm+1, tr, max(tm+1, l), r, inc, tree);
+        }
+        merge(v, tree);
     };
-    dfs(dfs, 0);
-    if (!found) {
-        cout << "NO" << endl;
-    } else {
-        cout << "YES" << endl;
-        cout << path.size() << endl;
-        for (const auto &[i, j] : path) {
-            cout << idx_to_name[i] << " " << j+1 << endl;
+    auto get_minimum = [&] (auto f, ll v, ll tl, ll tr, ll l, ll r, vector<node>& tree) -> ll {
+        if (l > r) return 1e18;
+        if (tl == l && tr == r) {
+//            cout << tl << " " << tr << ": " << tree[v].val << endl;
+            return tree[v].val;
         }
+        push(v, tree);
+        ll tm = (tl+tr) >> 1;
+        ll x = 1e18;
+        if (l <= tm) {
+            x = min(x, f(f, 2*v+1, tl, tm, l, min(r, tm), tree));
+        }
+        if (r >= tm+1) {
+            x = min(x, f(f, 2*v+2, tm+1, tr, max(tm+1, l), r, tree));
+        }
+        return x;
+    };
+    dp[idx_by_order[0]] = 0;
+    auto print = [&] (vector<node>& tree) {
+        for (ll i = 0; i <= n; i += 1) {
+            set_point(set_point, 0, 0, n, idx_by_order[0], 0, BASIC);
+            cout << get_minimum(get_minimum, 0, 0, n, i, i, tree) << ' ';
+        }
+        cout << " (printed)" << endl;
+    };
+    set_point(set_point, 0, 0, n, idx_by_order[0], 0-positions[idx_by_order[0]].val, ST_minus_val);
+    set_point(set_point, 0, 0, n, idx_by_order[0], 0+positions[idx_by_order[0]].val, ST_plus_val);
+    set_point(set_point, 0, 0, n, idx_by_order[0], 0, BASIC);
+    print(ST_minus_val);
+    print(ST_plus_val);
+    print(BASIC);
+    for (ll i = 1; i <= n; i += 1) {
+        watch(i);
+        ll X = 1e18;
+        ll THIS = positions[idx_by_order[i]].val;
+        watch(THIS);
+        ll first_minus = upper_bound(all(simple_sorted_for_ub), THIS)-simple_sorted_for_ub.begin();
+        ll unsure_X = 1e18;
+        for (ll j = 0; j <= first_minus-1; j += 1) {
+            ll wait = dp[j]-positions[j].val;
+            watch(wait);
+            X = min(X, wait+THIS);
+        }
+        ll temp = get_minimum(get_minimum,0,0,n,0,first_minus-1,ST_minus_val);
+        unsure_X = min(unsure_X, temp+THIS);
+        for (ll j = first_minus; j <= n; j += 1) {
+            ll waitm = dp[j]+positions[j].val;
+            watch(waitm);
+            X = min(X, waitm-THIS);
+        }
+        unsure_X = min(unsure_X, get_minimum(get_minimum,0,0,n,first_minus,n,ST_plus_val)-THIS);
+        watch(X);
+        watch(unsure_X);
+        assert(X == unsure_X);
+        ll VAL = abs(positions[idx_by_order[i]].val-positions[idx_by_order[i-1]].val);
+        for (ll prev = 0; prev <= n; prev += 1) {
+            dp[prev] += VAL; // bro is still resting
+        }
+        add_on_segment(add_on_segment, 0, 0, n, 0, n, VAL, ST_minus_val);
+        add_on_segment(add_on_segment, 0, 0, n, 0, n, VAL, ST_plus_val);
+        add_on_segment(add_on_segment, 0, 0, n, 0, n, VAL, BASIC);
+        dp[idx_by_order[i-1]] = min(dp[idx_by_order[i-1]], X);
+        ll SHIT = min(get_minimum(get_minimum,0,0,n,idx_by_order[i-1],idx_by_order[i-1],BASIC), unsure_X);
+        set_point(set_point, 0, 0, n, idx_by_order[i-1], SHIT-positions[idx_by_order[i-1]].val, ST_minus_val);
+        set_point(set_point, 0, 0, n, idx_by_order[i-1], SHIT+positions[idx_by_order[i-1]].val, ST_plus_val);
+        set_point(set_point, 0, 0, n, idx_by_order[i-1], SHIT, BASIC);
     }
+    cout << get_minimum(get_minimum,0,0,n,0,n,BASIC) << endl;
 }
 
 
+
 int32_t main(int32_t argc, char* argv[]) {
-    idx_to_name[0] = 'q';
-    idx_to_name[1] = 'k';
-    idx_to_name[2] = 'j';
 //    ifstream cin("distance.in");
 //    ofstream cout("distance.out");
     cout << fixed << setprecision(17);
@@ -258,7 +300,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-    cin >> tt;
+//    cin >> tt;
 
     while (tt--) {
         solve();
