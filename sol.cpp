@@ -157,7 +157,6 @@ void solve() {
     for (ll i = 0; i <= n; i += 1) {
         idx_by_order[positions[i].pos] = i;
     }
-    vll dp(n+1, 1e18);
     vll simple_sorted_for_ub;
     for (ll i = 0; i <= n; i += 1) simple_sorted_for_ub.push_back(positions[i].val);
     struct node {
@@ -168,7 +167,6 @@ void solve() {
     vector<node> ST_minus_val(4*n+10);
     vector<node> BASIC(4*n+10);
     auto merge = [&] (ll v, vector<node>& tree) {
-        assert(tree[v].push == 0);
         tree[v].val = min(tree[2*v+1].val, tree[2*v+2].val);
     };
     auto push = [&] (ll v, vector<node>& tree) {
@@ -211,7 +209,6 @@ void solve() {
     auto get_minimum = [&] (auto f, ll v, ll tl, ll tr, ll l, ll r, vector<node>& tree) -> ll {
         if (l > r) return 1e18;
         if (tl == l && tr == r) {
-//            cout << tl << " " << tr << ": " << tree[v].val << endl;
             return tree[v].val;
         }
         push(v, tree);
@@ -225,52 +222,20 @@ void solve() {
         }
         return x;
     };
-    dp[idx_by_order[0]] = 0;
-    auto print = [&] (vector<node>& tree) {
-        for (ll i = 0; i <= n; i += 1) {
-            set_point(set_point, 0, 0, n, idx_by_order[0], 0, BASIC);
-            cout << get_minimum(get_minimum, 0, 0, n, i, i, tree) << ' ';
-        }
-        cout << " (printed)" << endl;
-    };
     set_point(set_point, 0, 0, n, idx_by_order[0], 0-positions[idx_by_order[0]].val, ST_minus_val);
     set_point(set_point, 0, 0, n, idx_by_order[0], 0+positions[idx_by_order[0]].val, ST_plus_val);
     set_point(set_point, 0, 0, n, idx_by_order[0], 0, BASIC);
-    print(ST_minus_val);
-    print(ST_plus_val);
-    print(BASIC);
     for (ll i = 1; i <= n; i += 1) {
-        watch(i);
-        ll X = 1e18;
         ll THIS = positions[idx_by_order[i]].val;
-        watch(THIS);
         ll first_minus = upper_bound(all(simple_sorted_for_ub), THIS)-simple_sorted_for_ub.begin();
-        ll unsure_X = 1e18;
-        for (ll j = 0; j <= first_minus-1; j += 1) {
-            ll wait = dp[j]-positions[j].val;
-            watch(wait);
-            X = min(X, wait+THIS);
-        }
-        ll temp = get_minimum(get_minimum,0,0,n,0,first_minus-1,ST_minus_val);
-        unsure_X = min(unsure_X, temp+THIS);
-        for (ll j = first_minus; j <= n; j += 1) {
-            ll waitm = dp[j]+positions[j].val;
-            watch(waitm);
-            X = min(X, waitm-THIS);
-        }
-        unsure_X = min(unsure_X, get_minimum(get_minimum,0,0,n,first_minus,n,ST_plus_val)-THIS);
-        watch(X);
-        watch(unsure_X);
-        assert(X == unsure_X);
+        ll old_goes_now = 1e18;
+        old_goes_now = min(old_goes_now, get_minimum(get_minimum,0,0,n,0,first_minus-1,ST_minus_val)+THIS);
+        old_goes_now = min(old_goes_now, get_minimum(get_minimum,0,0,n,first_minus,n,ST_plus_val)-THIS);
         ll VAL = abs(positions[idx_by_order[i]].val-positions[idx_by_order[i-1]].val);
-        for (ll prev = 0; prev <= n; prev += 1) {
-            dp[prev] += VAL; // bro is still resting
-        }
         add_on_segment(add_on_segment, 0, 0, n, 0, n, VAL, ST_minus_val);
         add_on_segment(add_on_segment, 0, 0, n, 0, n, VAL, ST_plus_val);
         add_on_segment(add_on_segment, 0, 0, n, 0, n, VAL, BASIC);
-        dp[idx_by_order[i-1]] = min(dp[idx_by_order[i-1]], X);
-        ll SHIT = min(get_minimum(get_minimum,0,0,n,idx_by_order[i-1],idx_by_order[i-1],BASIC), unsure_X);
+        ll SHIT = min(get_minimum(get_minimum,0,0,n,idx_by_order[i-1],idx_by_order[i-1],BASIC), old_goes_now);
         set_point(set_point, 0, 0, n, idx_by_order[i-1], SHIT-positions[idx_by_order[i-1]].val, ST_minus_val);
         set_point(set_point, 0, 0, n, idx_by_order[i-1], SHIT+positions[idx_by_order[i-1]].val, ST_plus_val);
         set_point(set_point, 0, 0, n, idx_by_order[i-1], SHIT, BASIC);
