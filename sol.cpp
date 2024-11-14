@@ -62,7 +62,7 @@ void print(Head&& head, Tail&&... tail) {
 //#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math,trapv")
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-uniform_int_distribution<ll> distrib(1ll, 10ll);
+uniform_int_distribution<ll> distrib(0ll, 10ll);
 //constexpr ll MOD = 819356875157278019ll;
 constexpr ll MOD = 1e9+7;
 void in(vector<ll> & best) {
@@ -140,12 +140,14 @@ ll sub(ll best, ll b, ll MODD) {
 void solve() {
     ll n, m;
     cin >> n >> m;
-    vector<string> a(n);
+    vector<string> a(n, string(m, '.'));
     vll leftmost_snizu(n);
     vll leftmost_sverhu(n);
     vll rightmost_snizu(n);
     vll rightmost_sverhu(n);
-    for (ll i = 0; i < n; i += 1) cin >> a[i];
+    for (ll i = 0; i < n; i += 1) {
+        cin >> a[i];
+    }
     vvll points(n);
     for (ll i = 0; i < n; i += 1) {
         for (ll j = 0; j < m; j += 1) {
@@ -187,48 +189,59 @@ void solve() {
             if (vpravo && vlevo) {
                 continue;
             }
-            watch(i);
-            watch(vpravo);
-            watch(vlevo);
-            watch(best_used);
-            ll VPRAVO = 0;
             vpll my;
-            for (ll j = 0; j < i; j += 1) {
-                my.push_back(pll(leftmost_sverhu[j], rightmost_sverhu[j]));
-                VPRAVO += rightmost_sverhu[j]-leftmost_sverhu[j]+1;
+            if (vpravo || (!vpravo && !vlevo)) {
+                ll VPRAVO = 0;
+                for (ll j = 0; j < i; j += 1) {
+                    my.push_back(pll(leftmost_sverhu[j], rightmost_sverhu[j]));
+                    VPRAVO += rightmost_sverhu[j] - leftmost_sverhu[j] + 1;
+                }
+                my.push_back(pll(l, r));
+                VPRAVO += r - l + 1;
+                ll curr_r_1 = r;
+                ll PREV_R = r;
+                for (ll j = i + 1; j < n; j += 1) {
+                    if (PREV_R < -1e17) {
+                        my.push_back(pll(0,-1));
+                        continue;
+                    }
+                    ll curr_l_1 = min(PREV_R, leftmost_snizu[j]);
+                    if (!points[j].empty()) curr_r_1 = max(curr_r_1, points[j].back());
+                    curr_r_1 = min(curr_r_1, rightmost_snizu[j]);
+                    my.push_back(pll(curr_l_1, curr_r_1));
+                    VPRAVO += curr_r_1 - curr_l_1 + 1;
+                    PREV_R = curr_r_1;
+                }
+                if (VPRAVO < best_used) shit = my, best_used = VPRAVO;
             }
-            my.push_back(pll(l,r));
-            VPRAVO += r-l+1;
-            ll curr_r_1 = r;
-            for (ll j = i+1; j < n; j += 1) {
-                ll curr_l_1 = leftmost_snizu[j];
-                if (!points[j].empty()) curr_r_1 = max(curr_r_1, points[j].back());
-                curr_r_1 = min(curr_r_1, rightmost_snizu[j]);
-                my.push_back(pll(curr_l_1, curr_r_1));
-                watch(curr_r_1);
-                VPRAVO += curr_r_1-curr_l_1+1;
-            }
-            if (VPRAVO < best_used) shit = my, best_used=VPRAVO;
 //            for (const auto &[left,right] : my) {
 //                cout << left << " " << right << endl;
 //            }
-            ll VLEVO = 0;
             my.clear();
-            for (ll j = 0; j < i; j += 1) {
-                my.push_back(pll(leftmost_sverhu[j], rightmost_sverhu[j]));
-                VLEVO += rightmost_sverhu[j]-leftmost_sverhu[j]+1;
+            if (vlevo || (!vpravo && !vlevo)) {
+                ll VLEVO = 0;
+                for (ll j = 0; j < i; j += 1) {
+                    my.push_back(pll(leftmost_sverhu[j], rightmost_sverhu[j]));
+                    VLEVO += rightmost_sverhu[j] - leftmost_sverhu[j] + 1;
+                }
+                my.push_back(pll(l, r));
+                VLEVO += r - l + 1;
+                ll curr_l_2 = l;
+                ll PREV_L = l;
+                for (ll j = i + 1; j < n; j += 1) {
+                    if (PREV_L > 1e17) {
+                        my.push_back(pll(0,-1));
+                        continue;
+                    }
+                    ll curr_r_2 = max(PREV_L, rightmost_snizu[j]);
+                    if (!points[j].empty()) curr_l_2 = min(curr_l_2, points[j].front());
+                    curr_l_2 = max(curr_l_2, leftmost_snizu[j]);
+                    my.push_back(pll(curr_l_2, curr_r_2));
+                    VLEVO += curr_r_2 - curr_l_2 + 1;
+                    PREV_L = curr_l_2;
+                }
+                if (VLEVO < best_used) shit = my, best_used = VLEVO;
             }
-            my.push_back(pll(l,r));
-            VLEVO += r-l+1;
-            ll curr_l_2 = l;
-            for (ll j = i+1; j < n; j += 1) {
-                ll curr_r_2 = rightmost_snizu[j];
-                if (!points[j].empty()) curr_l_2 = min(curr_l_2, points[j].front());
-                curr_l_2 = max(curr_l_2, leftmost_snizu[j]);
-                my.push_back(pll(curr_l_2, curr_r_2));
-                VPRAVO += curr_r_2-curr_l_2+1;
-            }
-            if (VLEVO < best_used) shit = my, best_used=VLEVO;
         }
     }
     vector<string> ans(n);
@@ -237,8 +250,7 @@ void solve() {
     }
     if (!shit.empty()) {
         for (ll i = 0; i < n; i += 1) {
-            ans[i].assign(m, '.');
-            cout << shit[i].first << " " << shit[i].second << endl;
+//            cout << shit[i].first << " " << shit[i].second << endl;
             for (ll j = shit[i].first; j <= shit[i].second; j += 1) {
                 ans[i][j] = '*';
             }
