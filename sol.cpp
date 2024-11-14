@@ -138,126 +138,70 @@ ll sub(ll best, ll b, ll MODD) {
 }
 
 void solve() {
-    ll n, m;
-    cin >> n >> m;
-    vector<string> a(n, string(m, '.'));
-    vll leftmost_snizu(n);
-    vll leftmost_sverhu(n);
-    vll rightmost_snizu(n);
-    vll rightmost_sverhu(n);
-    for (ll i = 0; i < n; i += 1) {
-        cin >> a[i];
+    ll n; cin >> n;
+    bitset<1'000'000> seen;
+    vvll sm(n);
+    struct shit {
+        ll h;
+        ll v;
+        auto operator<=>(const shit& other) const = default;
+    };
+    for (ll i = 0; i < n-1; i += 1) {
+        ll u, v;
+        cin >> u >> v;
+        u -= 1; v -= 1;
+        sm[u].push_back(v);
+        sm[v].push_back(u);
     }
-    vvll points(n);
-    for (ll i = 0; i < n; i += 1) {
-        for (ll j = 0; j < m; j += 1) {
-            if (a[i][j] == '*') points[i].push_back(j);
+    vector<vector<shit>> binup(20, vector<shit>(n));
+    vll d(n);
+    auto dfs_h = [&] (auto f, ll v, ll h) -> void {
+        d[v] = h;
+        seen[v] = true;
+        for (const auto &x : sm[v]) if (!seen[x]) {
+            seen[x] = true;
+            f(f, x, h+1);
         }
-//        if (points[i].empty() && i > 0 && !points[i-1].empty()) {
-//            points[i].push_back(points[i-1].front());
-//        }
+    };
+    dfs_h(dfs_h, 0, 0);
+    seen.reset();
+    ll m; cin >> m;
+    vvll sm_up(n);
+    for (ll i = 0; i < m; i += 1) {
+        ll u, v; cin >> u >> v;
+        u -= 1; v -= 1;
+        sm_up[u].push_back(v);
     }
-    ll curr_leftmost = 1e18;
-    ll curr_rightmost = -1e18;
-    for (ll i = 0; i < n; i += 1) {
-        for (ll j = 0; j < m; j += 1) if (a[i][j] == '*') {
-            curr_leftmost = min(curr_leftmost, j);
-            curr_rightmost = max(curr_rightmost, j);
+    auto dfs = [&] (auto f, ll v) -> void {
+        seen[v] = true;
+        binup[0][v].h = d[v];
+        binup[0][v].v = v;
+        for (const auto &x : sm_up[v]) {
+            shit can;
+            can.h = d[x];
+            can.v = x;
+            binup[0][v] = min(binup[0][v], can);
         }
-        leftmost_sverhu[i] = curr_leftmost;
-        rightmost_sverhu[i] = curr_rightmost;
-    }
-    curr_leftmost = 1e18;
-    curr_rightmost = -1e18;
-    for (ll i = n-1; i >= 0; i -= 1) {
-        for (ll j = 0; j < m; j += 1) if (a[i][j] == '*') {
-            curr_leftmost = min(curr_leftmost, j);
-            curr_rightmost = max(curr_rightmost, j);
+        for (const auto &x : sm[v]) if (!seen[x]) {
+            seen[x] = true;
+            f(f, x);
+            binup[0][v] = min(binup[0][v], binup[0][x]);
         }
-        leftmost_snizu[i] = curr_leftmost;
-        rightmost_snizu[i] = curr_rightmost;
-    }
-    vpll shit;
-    ll best_used = 1e18;
-    for (ll i = 0; i < n; i += 1) if (!points[i].empty()) {
-        ll l = points[i].front();
-        ll r = points[i].back();
-        if (leftmost_sverhu[i] >= l && rightmost_sverhu[i] <= r) {
-            // сверху втупую включаем все
-            bool vpravo = rightmost_snizu[i] > r;
-            bool vlevo = leftmost_snizu[i] < l;
-            if (vpravo && vlevo) {
-                continue;
-            }
-            vpll my;
-            if (vpravo || (!vpravo && !vlevo)) {
-                ll VPRAVO = 0;
-                for (ll j = 0; j < i; j += 1) {
-                    my.push_back(pll(leftmost_sverhu[j], rightmost_sverhu[j]));
-                    VPRAVO += rightmost_sverhu[j] - leftmost_sverhu[j] + 1;
-                }
-                my.push_back(pll(l, r));
-                VPRAVO += r - l + 1;
-                ll curr_r_1 = r;
-                ll PREV_R = r;
-                for (ll j = i + 1; j < n; j += 1) {
-                    if (PREV_R < -1e17) {
-                        my.push_back(pll(0,-1));
-                        continue;
-                    }
-                    ll curr_l_1 = min(PREV_R, leftmost_snizu[j]);
-                    if (!points[j].empty()) curr_r_1 = max(curr_r_1, points[j].back());
-                    curr_r_1 = min(curr_r_1, rightmost_snizu[j]);
-                    my.push_back(pll(curr_l_1, curr_r_1));
-                    VPRAVO += curr_r_1 - curr_l_1 + 1;
-                    PREV_R = curr_r_1;
-                }
-                if (VPRAVO < best_used) shit = my, best_used = VPRAVO;
-            }
-//            for (const auto &[left,right] : my) {
-//                cout << left << " " << right << endl;
-//            }
-            my.clear();
-            if (vlevo || (!vpravo && !vlevo)) {
-                ll VLEVO = 0;
-                for (ll j = 0; j < i; j += 1) {
-                    my.push_back(pll(leftmost_sverhu[j], rightmost_sverhu[j]));
-                    VLEVO += rightmost_sverhu[j] - leftmost_sverhu[j] + 1;
-                }
-                my.push_back(pll(l, r));
-                VLEVO += r - l + 1;
-                ll curr_l_2 = l;
-                ll PREV_L = l;
-                for (ll j = i + 1; j < n; j += 1) {
-                    if (PREV_L > 1e17) {
-                        my.push_back(pll(0,-1));
-                        continue;
-                    }
-                    ll curr_r_2 = max(PREV_L, rightmost_snizu[j]);
-                    if (!points[j].empty()) curr_l_2 = min(curr_l_2, points[j].front());
-                    curr_l_2 = max(curr_l_2, leftmost_snizu[j]);
-                    my.push_back(pll(curr_l_2, curr_r_2));
-                    VLEVO += curr_r_2 - curr_l_2 + 1;
-                    PREV_L = curr_l_2;
-                }
-                if (VLEVO < best_used) shit = my, best_used = VLEVO;
-            }
+    };
+    dfs(dfs, 0);
+    for (ll i = 1; i < 20; i += 1) {
+        for (ll v = 0; v < n; v += 1) {
+            binup[i][v] = binup[i-1][binup[i-1][v].v];
         }
     }
-    vector<string> ans(n);
-    for (ll i = 0; i < n; i += 1) {
-        ans[i].assign(m, '.');
-    }
-    if (!shit.empty()) {
-        for (ll i = 0; i < n; i += 1) {
-//            cout << shit[i].first << " " << shit[i].second << endl;
-            for (ll j = shit[i].first; j <= shit[i].second; j += 1) {
-                ans[i][j] = '*';
-            }
+    ll q; cin >> q;
+    for (ll i = 0; i < q; i += 1) {
+        ll v; cin >> v; v -= 1;
+        ll k; cin >> k;
+        for (ll bit = 0; bit < 20; bit += 1) {
+            if ((1ll<<bit)&k) v = binup[bit][v].v;
         }
-    }
-    for (const auto &x : ans) {
-        cout << x << endl;
+        cout << v+1 << endl;
     }
 }
 
