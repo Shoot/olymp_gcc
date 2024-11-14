@@ -137,29 +137,28 @@ ll sub(ll best, ll b, ll MODD) {
     return (best-(b%MODD)+MODD)%MODD;
 }
 void solve() {
-    string s;
-    getline(cin, s);
-    auto stream1 = stringstream(s);
-    vll first;
-    vll second;
-    while (!stream1.eof()) {
-        ll x; stream1 >> x;
-        first.push_back(x);
+    ll n; cin >> n;
+    multiset<ll> st;
+    for (ll i = 0; i < n; i += 1) {
+        ll x; cin >> x;
+        st.insert(x);
+
     }
-    getline(cin, s);
-    auto stream2 = stringstream(s);
-    while (!stream2.eof()) {
-        ll x; stream2 >> x;
-        second.push_back(x);
+    ld ans = 0;
+    while (st.size() != 1) {
+        ll nw = *st.begin()+*next(st.begin());
+        st.erase(st.begin());
+        st.erase(st.begin());
+        st.insert(nw);
+        ans += 0.05l*ld(nw);
     }
+    cout << ans << endl;
 }
-
-
 
 int32_t main(int32_t argc, char* argv[]) {
 //    ifstream cin("distance.in");
 //    ofstream cout("distance.out");
-    cout << fixed << setprecision(17);
+    cout << fixed << setprecision(2);
     bool use_fast_io = true;
     for (int32_t i = 1; i < argc; ++i) {
         if (string(argv[i]) == "-local-no-fast-io") {
