@@ -138,47 +138,49 @@ ll sub(ll best, ll b, ll MODD) {
 }
 
 void solve() {
+    string x; cin >> x;
+    ll k; cin >> k;
     ll n; cin >> n;
-    vvpll sm(n);
-    for (ll i = 0; i < n; i += 1) {
-        for (ll j = 0; j < n; j += 1) {
-            ll x; cin >> x;
-            if (x != -1) {
-                sm[i].push_back(pll(x, j));
+    vector<char> a(n); for (auto &y : a) cin >> y;
+    sort(all(a));
+    ll ost = 0;
+    for (const auto &c : x) {
+        ost = (ost*10+(c-'0'))%k;
+    }
+    vll len_by_ost(k, -1);
+    vvll fucked_edges(k);
+    for (ll i = 0; i < k; i += 1) {
+        for (const auto &c : a) {
+            ll nxt = (i*10+(c-'0'))%k;
+            fucked_edges[nxt].push_back(i);
+        }
+    }
+    queue<ll> q;
+    len_by_ost[0] = 0;
+    q.push(0);
+    while (!q.empty()) {
+        ll tp = q.front();
+        q.pop();
+        for (const auto &to : fucked_edges[tp]) {
+            if (len_by_ost[to] == -1) len_by_ost[to] = len_by_ost[tp] + 1, q.push(to);
+        }
+    }
+    if (len_by_ost[ost] == -1) {
+        cout << -1 << endl;
+        return;
+    }
+    cout << x;
+    while (ost != 0) {
+        for (const auto &c : a) {
+            ll nxt = (ost*10+(c-'0'))%k;
+            if (len_by_ost[nxt] == len_by_ost[ost] - 1) {
+                ost = nxt;
+                cout << c;
+                break;
             }
         }
     }
-    ll maxi = -1e18;
-    ll mini = 1e18;
-    bitset<100> seen;
-    for (ll i = 0; i < n; i += 1) {
-        seen.reset();
-        set<pll> st;
-        vll d(n, 1e18);
-        d[i] = 0;
-        st.insert(pll(0,i));
-        while (!st.empty()) {
-            pll tp = *st.begin();
-            st.erase(st.begin());
-            if (seen[tp.second]) continue;
-            seen[tp.second] = true;
-            for (const auto &[w, to] : sm[tp.second]) {
-                if (d[to] > d[tp.second]+w) {
-                    d[to] = d[tp.second]+w;
-                    st.insert(pll(d[to], to));
-                }
-            }
-        }
-        for (const auto &x : d) {
-            if (x != 1e18) {
-                maxi = max(maxi, *max_element(all(d)));
-                mini = min(mini, *max_element(all(d)));
-            }
-        }
-
-    }
-    cout << maxi << endl;
-    cout << mini << endl;
+    cout << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
