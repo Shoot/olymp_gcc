@@ -136,23 +136,29 @@ ll sub(ll best, ll b) {
 ll sub(ll best, ll b, ll MODD) {
     return (best-(b%MODD)+MODD)%MODD;
 }
-void solve() {
-    ll n; cin >> n;
-    multiset<ll> st;
-    for (ll i = 0; i < n; i += 1) {
-        ll x; cin >> x;
-        st.insert(x);
 
+void solve() {
+    ll nvm; cin >> nvm;
+    ll n; cin >> n;
+    ll curr = 0;
+    multiset<pair<ll,ll>> segments;
+    for (ll i = 0; i < n; i += 1) {
+        ll l, r; cin >> l >> r;
+        // удаляем те у которых l принадлежит [l,r]
+        while (1) {
+            auto it = segments.lower_bound(pll(l,-1e18)); // что угодно что начинается позже или в l
+            if (it == segments.end() || it->first > r) break;
+            segments.erase(it);
+        }
+        // остался максимум 1 который начинается раньше l
+        auto it = segments.lower_bound(pll(l,-1e18));
+        if (it != segments.begin()) {
+            it = prev(it);
+            if (it->second >= l) segments.erase(it);
+        }
+        segments.insert(pll(l,r));
     }
-    ld ans = 0;
-    while (st.size() != 1) {
-        ll nw = *st.begin()+*next(st.begin());
-        st.erase(st.begin());
-        st.erase(st.begin());
-        st.insert(nw);
-        ans += 0.05l*ld(nw);
-    }
-    cout << ans << endl;
+    cout << segments.size() << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
