@@ -138,55 +138,61 @@ ll sub(ll best, ll b, ll MODD) {
 }
 
 void solve() {
-    string x; cin >> x;
-    ll k; cin >> k;
-    ll n; cin >> n;
-    vector<char> a(n); for (auto &y : a) cin >> y;
-    sort(all(a));
-    ll ost = 0;
-    for (const auto &c : x) {
-        ost = (ost*10+(c-'0'))%k;
+    ll n, m; cin >> n >> m;
+    string s; cin >> s;
+    vvll sm(n);
+    for (ll i = 0; i < m; i += 1) {
+        ll u, v; cin >> u >> v;
+        u -= 1; v -= 1;
+        sm[v].push_back(u);
+        sm[u].push_back(v);
     }
-    vll len_by_ost(k, -1);
-    vvll fucked_edges(k);
-    for (ll i = 0; i < k; i += 1) {
-        for (const auto &c : a) {
-            ll nxt = (i*10+(c-'0'))%k;
-            fucked_edges[nxt].push_back(i);
-        }
-    }
-    queue<ll> q;
-    len_by_ost[0] = 0;
-    q.push(0);
-    while (!q.empty()) {
-        ll tp = q.front();
-        q.pop();
-        for (const auto &to : fucked_edges[tp]) {
-            if (len_by_ost[to] == -1) len_by_ost[to] = len_by_ost[tp] + 1, q.push(to);
-        }
-    }
-    if (len_by_ost[ost] == -1) {
-        cout << -1 << endl;
-        return;
-    }
-    cout << x;
-    while (ost != 0) {
-        for (const auto &c : a) {
-            ll nxt = (ost*10+(c-'0'))%k;
-            if (len_by_ost[nxt] == len_by_ost[ost] - 1) {
-                ost = nxt;
-                cout << c;
-                break;
+    bitset<1000> seen;
+    ll cnt = 0;
+    ll su = 0;
+    map<pll,ll> cost;
+    for (ll i = 0; i < n; i += 1) {
+        vector<queue<ll>> q(10);
+        vll d(n);
+        seen.reset();
+        fill(all(d), 1e18);
+        q[0].push(i);
+        d[i] = 0;
+        ll pos = 0, sz = 1;
+        while (sz > 0) {
+            while (q[pos%10].empty()) {
+                pos += 1;
+            }
+            ll from = q[pos%10].front();
+            q[pos%10].pop();
+            sz -= 1;
+            if (seen[from]) continue;
+            seen[from] = true;
+            for (const auto &to : sm[from]) {
+                ll w = 1;
+                if (s[to] != s[i]) w += 3;
+                if (d[to] > w+d[from]) {
+                    d[to] = w+d[from];
+                    q[d[to]%10].push(to);
+                    sz += 1;
+                }
             }
         }
+        for (ll j = 0; j < n; j += 1) {
+            if (s[j] == s[i]) cost[pll(min(i,j), max(i,j))] = d[j];
+        }
     }
-    cout << endl;
+    for (const auto &[i,j] : cost) {
+        su += j;
+        cnt += 1;
+    }
+    cout << ld(su)/ld(cnt-n) << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
 //    ifstream cin("distance.in");
 //    ofstream cout("distance.out");
-    cout << fixed << setprecision(2);
+    cout << fixed << setprecision(17);
     bool use_fast_io = true;
     for (int32_t i = 1; i < argc; ++i) {
         if (string(argv[i]) == "-local-no-fast-io") {
