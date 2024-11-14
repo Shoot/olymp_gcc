@@ -139,70 +139,46 @@ ll sub(ll best, ll b, ll MODD) {
 
 void solve() {
     ll n; cin >> n;
-    bitset<1'000'000> seen;
-    vvll sm(n);
-    struct shit {
-        ll h;
-        ll v;
-        auto operator<=>(const shit& other) const = default;
-    };
-    for (ll i = 0; i < n-1; i += 1) {
-        ll u, v;
-        cin >> u >> v;
-        u -= 1; v -= 1;
-        sm[u].push_back(v);
-        sm[v].push_back(u);
-    }
-    vector<vector<shit>> binup(20, vector<shit>(n));
-    vll d(n);
-    auto dfs_h = [&] (auto f, ll v, ll h) -> void {
-        d[v] = h;
-        seen[v] = true;
-        for (const auto &x : sm[v]) if (!seen[x]) {
-            seen[x] = true;
-            f(f, x, h+1);
-        }
-    };
-    dfs_h(dfs_h, 0, 0);
-    seen.reset();
-    ll m; cin >> m;
-    vvll sm_up(n);
-    for (ll i = 0; i < m; i += 1) {
-        ll u, v; cin >> u >> v;
-        u -= 1; v -= 1;
-        sm_up[u].push_back(v);
-    }
-    auto dfs = [&] (auto f, ll v) -> void {
-        seen[v] = true;
-        binup[0][v].h = d[v];
-        binup[0][v].v = v;
-        for (const auto &x : sm_up[v]) {
-            shit can;
-            can.h = d[x];
-            can.v = x;
-            binup[0][v] = min(binup[0][v], can);
-        }
-        for (const auto &x : sm[v]) if (!seen[x]) {
-            seen[x] = true;
-            f(f, x);
-            binup[0][v] = min(binup[0][v], binup[0][x]);
-        }
-    };
-    dfs(dfs, 0);
-    for (ll i = 1; i < 20; i += 1) {
-        for (ll v = 0; v < n; v += 1) {
-            binup[i][v] = binup[i-1][binup[i-1][v].v];
+    vvpll sm(n);
+    for (ll i = 0; i < n; i += 1) {
+        for (ll j = 0; j < n; j += 1) {
+            ll x; cin >> x;
+            if (x != -1) {
+                sm[i].push_back(pll(x, j));
+            }
         }
     }
-    ll q; cin >> q;
-    for (ll i = 0; i < q; i += 1) {
-        ll v; cin >> v; v -= 1;
-        ll k; cin >> k;
-        for (ll bit = 0; bit < 20; bit += 1) {
-            if ((1ll<<bit)&k) v = binup[bit][v].v;
+    ll maxi = -1e18;
+    ll mini = 1e18;
+    bitset<100> seen;
+    for (ll i = 0; i < n; i += 1) {
+        seen.reset();
+        set<pll> st;
+        vll d(n, 1e18);
+        d[i] = 0;
+        st.insert(pll(0,i));
+        while (!st.empty()) {
+            pll tp = *st.begin();
+            st.erase(st.begin());
+            if (seen[tp.second]) continue;
+            seen[tp.second] = true;
+            for (const auto &[w, to] : sm[tp.second]) {
+                if (d[to] > d[tp.second]+w) {
+                    d[to] = d[tp.second]+w;
+                    st.insert(pll(d[to], to));
+                }
+            }
         }
-        cout << v+1 << endl;
+        for (const auto &x : d) {
+            if (x != 1e18) {
+                maxi = max(maxi, *max_element(all(d)));
+                mini = min(mini, *max_element(all(d)));
+            }
+        }
+
     }
+    cout << maxi << endl;
+    cout << mini << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
