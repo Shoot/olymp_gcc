@@ -20,8 +20,8 @@ template <typename T> using ordered_set = tree<T, null_type, less<T>, rb_tree_ta
 //ostream& endl(ostream& os) {
 //    return os << '\n';
 //}
-#define all(xxx) xxx.begin(), xxx.end()
-#define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl
+//define all(xxx) xxx.begin(), xxx.end()
+//define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl
 template <class T, class S> inline bool chmax(T &best, const S &b) { return (best < b ? best = b, 1 : 0); }
 template <class T, class S> inline bool chmin(T &best, const S &b) { return (best > b ? best = b, 1 : 0); }
 template <typename T, typename U>
@@ -136,56 +136,65 @@ ll sub(ll best, ll b) {
 ll sub(ll best, ll b, ll MODD) {
     return (best-(b%MODD)+MODD)%MODD;
 }
+ll n, q;
 void solve() {
-    ll n; cin >> n;
     vvll sm(n+1);
+    vvll binup(20, vll(n+1));
+    binup[0][1] = 1;
     for (ll i = 0; i < n-1; i += 1) {
         ll u, v; cin >> u >> v;
         sm[u].push_back(v);
         sm[v].push_back(u);
     }
-    vll sz(n+1, -666);
-    bitset<1'000'001> is_centr;
-    auto szs = [&] (auto f, ll v, ll par) -> void {
-        sz[v] = 1;
+    vll d(n+1);
+    bitset<1'000'000> seen;
+    auto compute_d = [&] (auto f, ll v, ll h) -> void {
+        d[v] = h;
+        seen[v] = true;
         for (const auto &x : sm[v]) {
-            if (x != par && !is_centr[x]) {
-                f(f, x, v);
-                sz[v] += sz[x];
+            if (!seen[x]) {
+                seen[x] = true;
+                binup[0][x] = v;
+                f(f, x, h+1);
             }
         }
     };
-    szs(szs, 1, -1);
-    vll sign(n+1, -1);
-    auto centroid = [&] (auto f, ll v, ll total, ll par) -> ll {
-        for (const auto &x : sm[v]) {
-            if (x != par && !is_centr[x]) {
-                if (sz[x] > total/2) {
-                    return f(f, x, total, v);
-                }
-            }
+    compute_d(compute_d, 1, 0);
+    for (ll i = 1; i < 20; i += 1) {
+        for (ll v = 1; v <= n; v += 1) {
+            binup[i][v] = binup[i-1][binup[i-1][v]];
         }
-        return v;
-    };
-    auto mark = [&] (auto f, ll centr, ll val) -> void {
-        szs(szs, centr, -1);
-        sign[centr] = val;
-        is_centr[centr] = true;
-        for (const auto &x : sm[centr]) {
-            if (!is_centr[x]) {
-                ll c = centroid(centroid, x, sz[x], -1);
-                is_centr[c] = true;
-                f(f, c, val+1);
-            }
-        }
-    };
-    mark(mark, centroid(centroid, 1, sz[1], -1), 0);
-    if (*max_element(all(sign)) >= 26) {
-        cout << "Impossible!" << endl;
-        return;
     }
-    for (ll i = 1; i <= n; i += 1) {
-        cout << char('A'+sign[i]) << " \n"[i == n];
+    auto LCA = [&] (ll u, ll v) -> ll {
+        if (d[u] > d[v]) swap(u, v);
+        ll diff = d[v]-d[u];
+//        assert(diff >= 0);
+        for (ll i = 19; i >= 0; i -= 1) {
+            if ((1ll << i)&diff) v = binup[i][v];
+        }
+        if (u == v) {
+            return u;
+        }
+        for (ll i = 19; i >= 0; i -= 1) {
+            if (binup[i][v] != binup[i][u]) {
+                v = binup[i][v];
+                u = binup[i][u];
+            }
+        }
+//        assert(v != u);
+//        assert(binup[0][v] == binup[0][u]);
+        return binup[0][v];
+    };
+    cin >> q;
+    ll root = 1;
+    while (q--) {
+        char type; cin >> type;
+        if (type == '?') {
+            ll U, V; cin >> U >> V;
+            cout << (LCA(U, V)^LCA(U, root)^LCA(V, root)) << endl;
+        } else {
+            cin >> root;
+        }
     }
 }
 
@@ -211,7 +220,9 @@ int32_t main(int32_t argc, char* argv[]) {
     ll tt = 1;
 //    cin >> tt;
 
-    while (tt--) {
+    while (1) {
+        cin >> n;
+        if (n == 0) break;
         solve();
     }
     return 0;
