@@ -136,57 +136,57 @@ ll sub(ll best, ll b) {
 ll sub(ll best, ll b, ll MODD) {
     return (best-(b%MODD)+MODD)%MODD;
 }
-
 void solve() {
-    ll n, m; cin >> n >> m;
-    string s; cin >> s;
-    vvll sm(n);
-    for (ll i = 0; i < m; i += 1) {
+    ll n; cin >> n;
+    vvll sm(n+1);
+    for (ll i = 0; i < n-1; i += 1) {
         ll u, v; cin >> u >> v;
-        u -= 1; v -= 1;
-        sm[v].push_back(u);
         sm[u].push_back(v);
+        sm[v].push_back(u);
     }
-    bitset<1000> seen;
-    ll cnt = 0;
-    ll su = 0;
-    map<pll,ll> cost;
-    for (ll i = 0; i < n; i += 1) {
-        vector<queue<ll>> q(10);
-        vll d(n);
-        seen.reset();
-        fill(all(d), 1e18);
-        q[0].push(i);
-        d[i] = 0;
-        ll pos = 0, sz = 1;
-        while (sz > 0) {
-            while (q[pos%10].empty()) {
-                pos += 1;
+    vll sz(n+1, -666);
+    bitset<1'000'001> is_centr;
+    auto szs = [&] (auto f, ll v, ll par) -> void {
+        sz[v] = 1;
+        for (const auto &x : sm[v]) {
+            if (x != par && !is_centr[x]) {
+                f(f, x, v);
+                sz[v] += sz[x];
             }
-            ll from = q[pos%10].front();
-            q[pos%10].pop();
-            sz -= 1;
-            if (seen[from]) continue;
-            seen[from] = true;
-            for (const auto &to : sm[from]) {
-                ll w = 1;
-                if (s[to] != s[i]) w += 3;
-                if (d[to] > w+d[from]) {
-                    d[to] = w+d[from];
-                    q[d[to]%10].push(to);
-                    sz += 1;
+        }
+    };
+    szs(szs, 1, -1);
+    vll sign(n+1, -1);
+    auto centroid = [&] (auto f, ll v, ll total, ll par) -> ll {
+        for (const auto &x : sm[v]) {
+            if (x != par && !is_centr[x]) {
+                if (sz[x] > total/2) {
+                    return f(f, x, total, v);
                 }
             }
         }
-        for (ll j = 0; j < n; j += 1) {
-            if (s[j] == s[i]) cost[pll(min(i,j), max(i,j))] = d[j];
+        return v;
+    };
+    auto mark = [&] (auto f, ll centr, ll val) -> void {
+        szs(szs, centr, -1);
+        sign[centr] = val;
+        is_centr[centr] = true;
+        for (const auto &x : sm[centr]) {
+            if (!is_centr[x]) {
+                ll c = centroid(centroid, x, sz[x], -1);
+                is_centr[c] = true;
+                f(f, c, val+1);
+            }
         }
+    };
+    mark(mark, centroid(centroid, 1, sz[1], -1), 0);
+    if (*max_element(all(sign)) >= 26) {
+        cout << "Impossible!" << endl;
+        return;
     }
-    for (const auto &[i,j] : cost) {
-        su += j;
-        cnt += 1;
+    for (ll i = 1; i <= n; i += 1) {
+        cout << char('A'+sign[i]) << " \n"[i == n];
     }
-    cout << ld(su)/ld(cnt-n) << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
