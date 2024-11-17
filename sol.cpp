@@ -182,6 +182,13 @@ void solve() {
         if (way[v] == -1) {
             ladder.emplace_back();
             way[v] = ladder.size()-1;
+            ll length = deepest[v]-h[v];
+            ll temp = v;
+            for (ll i = 0; i < length; i += 1) {
+                temp = binup[0][temp];
+                ladder[way[v]].push_back(temp);
+            }
+            reverse(ladder[way[v]].begin(), ladder[way[v]].end());
         }
         ladder[way[v]].push_back(v);
         order[v] = ladder[way[v]].size()-1;
@@ -213,20 +220,11 @@ void solve() {
     auto get_ans = [&] (ll v, ll k) -> ll {
         if (k == 0) return v;
         if (k >= h[v]) return 0ll;
-//        watch(k);
         ll i = 63-__builtin_clzl(k);
         ll go = 1ll << i;
         v = binup[i][v];
         ll rest = k-go;
-//        cout << "rest = " << rest << endl;
-        while (rest) {
-            ll can_do = max(0ll, order[v]-rest);
-            rest -= order[v]-can_do;
-            v = ladder[way[v]][can_do];
-            if (rest == 0) break;
-            v = binup[0][v];
-            rest -= 1;
-        }
+        v = ladder[way[v]][order[v]-rest];
         return v;
     };
     for (ll i = 1; i <= q; i += 1) {
@@ -239,7 +237,6 @@ void solve() {
 //        }
         su += MY_ANS;
         prev_ans = MY_ANS;
-//        assert(MY_ANS == u);
     }
     cout << su << endl;
 }
