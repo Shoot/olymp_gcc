@@ -17,11 +17,11 @@ using vpll = vector<pll>;
 #include <ext/pb_ds/tree_policy.hpp>
 using namespace __gnu_pbds;
 template <typename T> using ordered_set = tree<T, null_type, less<T>, rb_tree_tag, tree_order_statistics_node_update>;
-//ostream& endl(ostream& os) {
-//    return os << '\n';
-//}
-//define all(xxx) xxx.begin(), xxx.end()
-//define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl
+ostream& endl(ostream& os) {
+    return os << '\n';
+}
+#define all(xxx) xxx.begin(), xxx.end()
+#define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl
 template <class T, class S> inline bool chmax(T &best, const S &b) { return (best < b ? best = b, 1 : 0); }
 template <class T, class S> inline bool chmin(T &best, const S &b) { return (best > b ? best = b, 1 : 0); }
 template <typename T, typename U>
@@ -64,7 +64,8 @@ void print(Head&& head, Tail&&... tail) {
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 uniform_int_distribution<ll> distrib(0ll, 10ll);
 //constexpr ll MOD = 819356875157278019ll;
-constexpr ll MOD = 1e9+7;
+//constexpr ll MOD = 1e9+7;
+constexpr ll MOD = 998'244'353;
 void in(vector<ll> & best) {
     for (auto & zero_leaf : best) cin >> zero_leaf;
 }
@@ -137,108 +138,64 @@ ll sub(ll best, ll b, ll MODD) {
     return (best-(b%MODD)+MODD)%MODD;
 }
 void solve() {
-    ll n, q; cin >> n >> q;
-    vvll binup(20, vll(n));
-    vvll sm(n);
-    for (ll i = 1; i < n; i += 1) {
-        ll x; cin >> x;
-        binup[0][i] = x;
-        sm[x].push_back(i);
-    }
-    binup[0][0] = 0;
-    for (ll i = 1; i < 20; i += 1) {
-        for (ll v = 0; v < n; v += 1) {
-            binup[i][v] = binup[i-1][binup[i-1][v]];
+    ll n, m, k;
+    cin >> n >> m >> k;
+    vll hp(n);
+    for (auto &x : hp) cin >> x;
+    vll pos(n);
+    for (auto &x : pos) cin >> x;
+    auto can = [&] (ll hits) -> bool {
+//        watch(hits);
+        // точка покрытая >= k отрезками!
+        multiset<ll> starts;
+        multiset<ll> ends;
+        for (ll i = 0; i < n; i += 1) {
+//            watch(i);
+            ll each = (hp[i]+hits-1)/hits;
+            if (each > m) continue;
+            ll free = m-each;
+            ll left = pos[i]-free;
+            ll right = pos[i]+free;
+            starts.insert(left);
+            ends.insert(right);
+//            watch(left);
+//            watch(right);
         }
-    }
-    vll ask(2*q+1);
-    cin >> ask[1];
-    cin >> ask[2];
-    ll x, y, z;
-    cin >> x >> y >> z;
-    for (ll i = 3; i <= 2*q; i += 1) {
-        ask[i] = x*ask[i-2]+y*ask[i-1]+z;
-        if (ask[i] >= n) ask[i] %= n;
-    }
-    ll prev_ans = 0;
-    ll su = 0;
-    vvll ladder;
-    vll way(n, -1);
-    vll order(n, -1);
-    vll deepest(n);
-    vll h(n);
-    auto find_deepest = [&] (auto f, ll v, ll par, ll d) -> void {
-        deepest[v] = d;
-        h[v] = d;
-        for (const auto &x : sm[v]) {
-            if (x != par) {
-                f(f, x, v, d+1);
-                deepest[v] = max(deepest[v], deepest[x]);
+        ll balance = 0;
+        ll maxi = 0;
+        while (1) {
+            bool active = false;
+            while (!starts.empty() && *starts.begin() <= *ends.begin()) {
+                balance += 1;
+                starts.erase(starts.find(*starts.begin()));
+                active = true;
             }
-        }
-    };
-    find_deepest(find_deepest, 0, -1, 0);
-    auto make_ladders = [&] (auto f, ll v, ll par) -> void {
-        if (way[v] == -1) {
-            ladder.emplace_back();
-            way[v] = ladder.size()-1;
-            ll length = deepest[v]-h[v];
-            ll temp = v;
-            for (ll i = 0; i < length; i += 1) {
-                temp = binup[0][temp];
-                ladder[way[v]].push_back(temp);
+            maxi = max(maxi, balance);
+            while (!ends.empty() && (starts.empty() || *ends.begin() < *starts.begin())) {
+                active = true;
+                balance -= 1;
+                ends.erase(ends.find(*ends.begin()));
             }
-            reverse(ladder[way[v]].begin(), ladder[way[v]].end());
-        }
-        ladder[way[v]].push_back(v);
-        order[v] = ladder[way[v]].size()-1;
-        ll deepest_child = 0;
-        for (const auto &x : sm[v]) {
-            if (x != par) {
-                deepest_child = max(deepest_child, deepest[x]);
-            }
-        }
-        ll chosen = -1;
-        for (const auto &x : sm[v]) {
-            if (x != par && deepest[x] == deepest_child) {
-                chosen = x;
-                way[x] = way[v];
-                f(f, x, v);
+            if (!active) {
+                assert(starts.empty());
+                assert(ends.empty());
                 break;
             }
         }
-        for (const auto &x : sm[v]) {
-            if (x != par && x != chosen) {
-                f(f, x, v);
-            }
+        return maxi >= k;
+    };
+    ll l=1, r=1e9+1;
+    ll good = -1;
+    while (l <= r) {
+        ll mid = (l+r) >> 1;
+        if (can(mid)) {
+            good = mid;
+            r = mid-1;
+        } else {
+            l = mid+1;
         }
-    };
-    make_ladders(make_ladders, 0, -1);
-//    for (const auto &l : ladder) {
-//        cout << l << "!" << endl;
-//    }
-    auto get_ans = [&] (ll v, ll k) -> ll {
-        if (k == 0) return v;
-        if (k >= h[v]) return 0ll;
-        ll i = 63-__builtin_clzl(k);
-        ll go = 1ll << i;
-        v = binup[i][v];
-        ll rest = k-go;
-        v = ladder[way[v]][order[v]-rest];
-        return v;
-    };
-    for (ll i = 1; i <= q; i += 1) {
-        ll u = ask[2*i-1]+prev_ans;
-        if (u >= n) u %= n;
-        ll MY_ANS = get_ans(u, ask[2*i]);
-//        cout << u << ", dist = " << dist << endl;
-//        for (ll bit = 0; bit < 17; bit += 1) {
-//            if ((1ll << bit)&ask[2*i]) u = binup[bit][u];
-//        }
-        su += MY_ANS;
-        prev_ans = MY_ANS;
     }
-    cout << su << endl;
+    cout << good << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
@@ -261,7 +218,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-//    cin >> tt;
+    cin >> tt;
 
     while (tt--) {
         solve();
