@@ -136,66 +136,112 @@ ll sub(ll best, ll b) {
 ll sub(ll best, ll b, ll MODD) {
     return (best-(b%MODD)+MODD)%MODD;
 }
-ll n, q;
 void solve() {
-    vvll sm(n+1);
-    vvll binup(20, vll(n+1));
-    binup[0][1] = 1;
-    for (ll i = 0; i < n-1; i += 1) {
-        ll u, v; cin >> u >> v;
-        sm[u].push_back(v);
-        sm[v].push_back(u);
+    ll n, q; cin >> n >> q;
+    vvll binup(20, vll(n));
+    vvll sm(n);
+    for (ll i = 1; i < n; i += 1) {
+        ll x; cin >> x;
+        binup[0][i] = x;
+        sm[x].push_back(i);
     }
-    vll d(n+1);
-    bitset<1'000'000> seen;
-    auto compute_d = [&] (auto f, ll v, ll h) -> void {
-        d[v] = h;
-        seen[v] = true;
-        for (const auto &x : sm[v]) {
-            if (!seen[x]) {
-                seen[x] = true;
-                binup[0][x] = v;
-                f(f, x, h+1);
-            }
-        }
-    };
-    compute_d(compute_d, 1, 0);
+    binup[0][0] = 0;
     for (ll i = 1; i < 20; i += 1) {
-        for (ll v = 1; v <= n; v += 1) {
+        for (ll v = 0; v < n; v += 1) {
             binup[i][v] = binup[i-1][binup[i-1][v]];
         }
     }
-    auto LCA = [&] (ll u, ll v) -> ll {
-        if (d[u] > d[v]) swap(u, v);
-        ll diff = d[v]-d[u];
-//        assert(diff >= 0);
-        for (ll i = 19; i >= 0; i -= 1) {
-            if ((1ll << i)&diff) v = binup[i][v];
-        }
-        if (u == v) {
-            return u;
-        }
-        for (ll i = 19; i >= 0; i -= 1) {
-            if (binup[i][v] != binup[i][u]) {
-                v = binup[i][v];
-                u = binup[i][u];
+    vll ask(2*q+1);
+    cin >> ask[1];
+    cin >> ask[2];
+    ll x, y, z;
+    cin >> x >> y >> z;
+    for (ll i = 3; i <= 2*q; i += 1) {
+        ask[i] = x*ask[i-2]+y*ask[i-1]+z;
+        if (ask[i] >= n) ask[i] %= n;
+    }
+    ll prev_ans = 0;
+    ll su = 0;
+    vvll ladder;
+    vll way(n, -1);
+    vll order(n, -1);
+    vll deepest(n);
+    vll h(n);
+    auto find_deepest = [&] (auto f, ll v, ll par, ll d) -> void {
+        deepest[v] = d;
+        h[v] = d;
+        for (const auto &x : sm[v]) {
+            if (x != par) {
+                f(f, x, v, d+1);
+                deepest[v] = max(deepest[v], deepest[x]);
             }
         }
-//        assert(v != u);
-//        assert(binup[0][v] == binup[0][u]);
-        return binup[0][v];
     };
-    cin >> q;
-    ll root = 1;
-    while (q--) {
-        char type; cin >> type;
-        if (type == '?') {
-            ll U, V; cin >> U >> V;
-            cout << (LCA(U, V)^LCA(U, root)^LCA(V, root)) << endl;
-        } else {
-            cin >> root;
+    find_deepest(find_deepest, 0, -1, 0);
+    auto make_ladders = [&] (auto f, ll v, ll par) -> void {
+        if (way[v] == -1) {
+            ladder.emplace_back();
+            way[v] = ladder.size()-1;
         }
+        ladder[way[v]].push_back(v);
+        order[v] = ladder[way[v]].size()-1;
+        ll deepest_child = 0;
+        for (const auto &x : sm[v]) {
+            if (x != par) {
+                deepest_child = max(deepest_child, deepest[x]);
+            }
+        }
+        ll chosen = -1;
+        for (const auto &x : sm[v]) {
+            if (x != par && deepest[x] == deepest_child) {
+                chosen = x;
+                way[x] = way[v];
+                f(f, x, v);
+                break;
+            }
+        }
+        for (const auto &x : sm[v]) {
+            if (x != par && x != chosen) {
+                f(f, x, v);
+            }
+        }
+    };
+    make_ladders(make_ladders, 0, -1);
+//    for (const auto &l : ladder) {
+//        cout << l << "!" << endl;
+//    }
+    auto get_ans = [&] (ll v, ll k) -> ll {
+        if (k == 0) return v;
+        if (k >= h[v]) return 0ll;
+//        watch(k);
+        ll i = 63-__builtin_clzl(k);
+        ll go = 1ll << i;
+        v = binup[i][v];
+        ll rest = k-go;
+//        cout << "rest = " << rest << endl;
+        while (rest) {
+            ll can_do = max(0ll, order[v]-rest);
+            rest -= order[v]-can_do;
+            v = ladder[way[v]][can_do];
+            if (rest == 0) break;
+            v = binup[0][v];
+            rest -= 1;
+        }
+        return v;
+    };
+    for (ll i = 1; i <= q; i += 1) {
+        ll u = ask[2*i-1]+prev_ans;
+        if (u >= n) u %= n;
+        ll MY_ANS = get_ans(u, ask[2*i]);
+//        cout << u << ", dist = " << dist << endl;
+//        for (ll bit = 0; bit < 17; bit += 1) {
+//            if ((1ll << bit)&ask[2*i]) u = binup[bit][u];
+//        }
+        su += MY_ANS;
+        prev_ans = MY_ANS;
+//        assert(MY_ANS == u);
     }
+    cout << su << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
@@ -220,9 +266,7 @@ int32_t main(int32_t argc, char* argv[]) {
     ll tt = 1;
 //    cin >> tt;
 
-    while (1) {
-        cin >> n;
-        if (n == 0) break;
+    while (tt--) {
         solve();
     }
     return 0;
