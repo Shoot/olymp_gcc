@@ -20,8 +20,8 @@ template <typename T> using ordered_set = tree<T, null_type, less<T>, rb_tree_ta
 //ostream& endl(ostream& os) {
 //    return os << '\n';
 //}
-#define all(xxx) xxx.begin(), xxx.end()
-#define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl
+//define all(xxx) xxx.begin(), xxx.end()
+//define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl
 template <class T, class S> inline bool chmax(T &best, const S &b) { return (best < b ? best = b, 1 : 0); }
 template <class T, class S> inline bool chmin(T &best, const S &b) { return (best > b ? best = b, 1 : 0); }
 template <typename T, typename U>
@@ -136,91 +136,48 @@ ll sub(ll best, ll b) {
 ll sub(ll best, ll b, ll MODD) {
     return (best-(b%MODD)+MODD)%MODD;
 }
+vll p(2e5+20);
+vll sz(2e5+20, 1);
+vll value(2e5+20);
+vvll shit(2e5+20);
+vll lazy(2e5+20);
+ll get_parent(ll x) {
+    if (p[x] == x) {
+        return x;
+    }
+    ll real = get_parent(p[x]);
+    return p[x] = real;
+}
 
+void unite(ll x, ll y) {
+    x = get_parent(x);
+    y = get_parent(y);
+    if (x == y) return;
+    if (sz[x] > sz[y]) swap(x, y);
+    p[x] = y;
+    sz[y] += sz[x];
+    for (auto &i : shit[x]) value[i] += lazy[x] - lazy[y];
+    for (const auto &i : shit[x]) shit[y].push_back(i);
+    shit[x].clear();
+}
 void solve() {
-    ll n, m; cin >> n >> m;
-    vvpll sm(n+1);
-    vvpll smrev(n+1);
-    vvll cnt_by_v(n+1, vll(2));
-    vvll cnt_by_v_rev(n+1, vll(2));
-    for (ll i = 0; i < m; i += 1) {
-        ll u, v; char c;
-        cin >> u >> v >> c;
-        sm[u].push_back(make_pair(v, c-'a'));
-        smrev[v].push_back(make_pair(u, c-'a'));
-        cnt_by_v[u][c-'a'] += 1;
-        cnt_by_v_rev[v][c-'a'] += 1;
+    for (ll i = 0; i < 2e5+20; i += 1) {
+        shit[i].push_back(i);
     }
-    bitset<1'000'000> seen;
-    bool FOUND = false;
-    auto find_aa_bb = [&] (auto f, ll v) -> void {
-        if (FOUND) return;
-        if (cnt_by_v[v][0] && cnt_by_v_rev[v][0]) {
-            ll one = -1, another = -1;
-            for (const auto &[u, c] : sm[v]) {
-                if (one != -1) break;
-                if (c == 0) {
-                    one = u;
-                }
-            }
-            for (const auto &[u, c] : smrev[v]) {
-                if (another != -1) break;
-                if (c == 0) {
-                    another = u;
-                }
-            }
-            FOUND = true;
-            cout << 3 << endl;
-            cout << another << " " << v << " " << one << endl;
-            // aa
-        } else if (cnt_by_v[v][1] && cnt_by_v_rev[v][1]) {
-            // bb
-            ll one = -1, another = -1;
-            for (const auto &[u, c] : sm[v]) {
-                if (one != -1) break;
-                if (c == 1) {
-                    one = u;
-                }
-            }
-            for (const auto &[u, c] : smrev[v]) {
-                if (another != -1) break;
-                if (c == 1) {
-                    another = u;
-                }
-            }
-            FOUND = true;
-            cout << 3 << endl;
-            cout << another << " " << v << " " << one << endl;
-        }
-    };
-    for (ll i = 1; i <= n; i += 1) find_aa_bb(find_aa_bb, i);
-    if (FOUND) return;
-    // abab
-    set<ll> sequence;
-    vll ans;
-    auto find_four = [&] (auto f, ll v) -> void {
-        sequence.insert(v);
-        ans.push_back(v);
-        if (sequence.size() == 5) {
-            FOUND = true;
-            return;
-        }
-        for (const auto &[u, c] : sm[v]) if (sequence.find(u) == sequence.end()) {
-            f(f, u);
-            if (!FOUND) ans.pop_back(), sequence.erase(u);
-        }
-    };
-    for (ll i = 1; i <= n; i += 1) {
-        sequence.clear();
-        ans.clear();
-        find_four(find_four, i);
-        if (sequence.size() == 5) {
-            cout << 5 << endl;
-            cout << ans << endl;
-            return;
+    iota(p.begin(), p.end(), 0);
+    ll n, q; cin >> n >> q;
+    for (ll i = 0; i < q; i += 1) {
+        string type; ll X; cin >> type >> X;
+        if (type == "add") {
+            ll Y; cin >> Y;
+            lazy[get_parent(X)] += Y;
+        } else if (type == "get") {
+            cout << lazy[get_parent(X)]+value[X] << endl;
+        } else {
+            ll Y; cin >> Y;
+            unite(X, Y);
         }
     }
-    cout << -1 << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
