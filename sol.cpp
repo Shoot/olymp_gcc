@@ -20,8 +20,8 @@ template <typename T> using ordered_set = tree<T, null_type, less<T>, rb_tree_ta
 //ostream& endl(ostream& os) {
 //    return os << '\n';
 //}
-//define all(xxx) xxx.begin(), xxx.end()
-//define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl
+#define all(xxx) xxx.begin(), xxx.end()
+#define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl
 template <class T, class S> inline bool chmax(T &best, const S &b) { return (best < b ? best = b, 1 : 0); }
 template <class T, class S> inline bool chmin(T &best, const S &b) { return (best > b ? best = b, 1 : 0); }
 template <typename T, typename U>
@@ -137,35 +137,65 @@ ll sub(ll best, ll b, ll MODD) {
     return (best-(b%MODD)+MODD)%MODD;
 }
 void solve() {
-    ull n; cin >> n;
-    vector<vector<ull>> kol_by_sz_and_first_sign;
-    kol_by_sz_and_first_sign.resize(100, vector<ull>(10));
-    fill(kol_by_sz_and_first_sign[1].begin() + 1, kol_by_sz_and_first_sign[1].end(), 1);
-    for (ll i = 2; i < 100; i += 1)
-        for (ll j = 1; j < 10; j += 1)
-            kol_by_sz_and_first_sign[i][j] = accumulate(kol_by_sz_and_first_sign[i - 1].begin() + j,
-                                                        kol_by_sz_and_first_sign[i - 1].end(), 0ull);
-    vector<ll> FOUND;
-    ull order_prev = 0, order_curr = 0, curr_sz = 1, last_sign = 1;
-    while (curr_sz) {
-        for (ll i = curr_sz; i < 100; i += 1) {
-            for (ll j = last_sign; j < 10; j += 1) {
-                order_prev = order_curr;
-                order_curr += kol_by_sz_and_first_sign[i][j];
-                if (order_prev < n && order_curr >= n) {
-                    order_curr -= kol_by_sz_and_first_sign[i][j];
-                    FOUND.push_back(j);
-                    curr_sz = i - 1;
-                    last_sign = j;
-                    goto cont;
-                }
-            }
+    ll n; cin >> n;
+    struct Line {
+        __int128 k;
+        __int128 b;
+        __int128 operator() (ll x) const {
+            return k*x+b;
         }
-        assert(false);
-        cont: {}
+    };
+    struct shit {
+        ll x;
+        ll y;
+        ll val;
+    };
+    deque<Line> lines;
+    auto divide = [&] (ll a, ll b) -> __int128 {
+//        assert(b != 0);
+        __int128 res = a/b;
+//        if (((a > 0 && b > 0) || (a < 0 && b < 0)) && a%b != 0) res += 1;
+        return res;
+    };
+    auto cross = [&] (Line l1, Line l2) -> __int128 {
+        return divide(l2.b-l1.b, l1.k-l2.k);
+    };
+    auto get = [&] (ll x) -> Line { // прямоугольники не включают друг друга так что за O(1) (амортизировано)
+        while(lines.size() >= 2 && cross(lines[0], lines[1]) >= x) {
+            lines.pop_front();
+            // нам нужно получить точку левее
+        }
+        assert(!lines.empty());
+        return lines[0];
+    };
+    auto upd = [&] (Line line) -> void {
+        while (lines.size() >= 2 &&
+        cross(lines[lines.size() - 1], lines[lines.size() - 2]) <=
+        cross(lines[lines.size() - 1], line)) {
+            lines.pop_back();
+            // банально наша ЛУЧШЕ последней
+        }
+        lines.push_back(line);
+    };
+    vector<shit> a(n);
+    for (ll i = 0; i < n; i += 1) {
+        cin >> a[i].x >> a[i].y >> a[i].val;
     }
-    for (const auto &x : FOUND) cout << x;
-    cout << endl;
+    sort(a.begin(), a.end(), [&] (shit a, shit b) {
+        return a.x < b.x;
+    });
+    ll maxi = 0;
+    vector<ll> dp(n);
+    upd(Line(0, 0)); // neutral bc we can always get f(x) = 0
+    for (ll i = 0; i < n; i += 1) {
+        ll x = a[i].x;
+        ll y = a[i].y;
+        ll val = a[i].val;
+        assert(get(y)(y) >= 0);
+        dp[i] = x*y+get(y)(y)-val;
+        upd(Line(-x, dp[i]));
+    }
+    cout << *max_element(all(dp)) << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
