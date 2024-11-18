@@ -138,20 +138,89 @@ ll sub(ll best, ll b, ll MODD) {
 }
 
 void solve() {
-    ll konf, max_rest, sz;
-    cin >> konf >> max_rest >> sz;
-    vll a(sz);
-    for (ll i = 0; i < sz; i += 1) {
-        cin >> a[i];
+    ll n, m; cin >> n >> m;
+    vvpll sm(n+1);
+    vvpll smrev(n+1);
+    vvll cnt_by_v(n+1, vll(2));
+    vvll cnt_by_v_rev(n+1, vll(2));
+    for (ll i = 0; i < m; i += 1) {
+        ll u, v; char c;
+        cin >> u >> v >> c;
+        sm[u].push_back(make_pair(v, c-'a'));
+        smrev[v].push_back(make_pair(u, c-'a'));
+        cnt_by_v[u][c-'a'] += 1;
+        cnt_by_v_rev[v][c-'a'] += 1;
     }
-    if (max_rest > konf) {
-        cout << konf << endl;
-        return;
+    bitset<1'000'000> seen;
+    bool FOUND = false;
+    auto find_aa_bb = [&] (auto f, ll v) -> void {
+        if (FOUND) return;
+        if (cnt_by_v[v][0] && cnt_by_v_rev[v][0]) {
+            ll one = -1, another = -1;
+            for (const auto &[u, c] : sm[v]) {
+                if (one != -1) break;
+                if (c == 0) {
+                    one = u;
+                }
+            }
+            for (const auto &[u, c] : smrev[v]) {
+                if (another != -1) break;
+                if (c == 0) {
+                    another = u;
+                }
+            }
+            FOUND = true;
+            cout << 3 << endl;
+            cout << another << " " << v << " " << one << endl;
+            // aa
+        } else if (cnt_by_v[v][1] && cnt_by_v_rev[v][1]) {
+            // bb
+            ll one = -1, another = -1;
+            for (const auto &[u, c] : sm[v]) {
+                if (one != -1) break;
+                if (c == 1) {
+                    one = u;
+                }
+            }
+            for (const auto &[u, c] : smrev[v]) {
+                if (another != -1) break;
+                if (c == 1) {
+                    another = u;
+                }
+            }
+            FOUND = true;
+            cout << 3 << endl;
+            cout << another << " " << v << " " << one << endl;
+        }
+    };
+    for (ll i = 1; i <= n; i += 1) find_aa_bb(find_aa_bb, i);
+    if (FOUND) return;
+    // abab
+    set<ll> sequence;
+    vll ans;
+    auto find_four = [&] (auto f, ll v) -> void {
+        sequence.insert(v);
+        ans.push_back(v);
+        if (sequence.size() == 5) {
+            FOUND = true;
+            return;
+        }
+        for (const auto &[u, c] : sm[v]) if (sequence.find(u) == sequence.end()) {
+            f(f, u);
+            if (!FOUND) ans.pop_back(), sequence.erase(u);
+        }
+    };
+    for (ll i = 1; i <= n; i += 1) {
+        sequence.clear();
+        ans.clear();
+        find_four(find_four, i);
+        if (sequence.size() == 5) {
+            cout << 5 << endl;
+            cout << ans << endl;
+            return;
+        }
     }
-    ll best = *min_element(all(a));
-    ll one = konf-konf/best;
-    ll maybe = max(max_rest, best)-max(max_rest, best)/best;
-    cout << min(one, maybe) << endl;
+    cout << -1 << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
