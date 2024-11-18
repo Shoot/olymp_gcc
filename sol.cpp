@@ -136,48 +136,36 @@ ll sub(ll best, ll b) {
 ll sub(ll best, ll b, ll MODD) {
     return (best-(b%MODD)+MODD)%MODD;
 }
-vll p(2e5+20);
-vll sz(2e5+20, 1);
-vll value(2e5+20);
-vvll shit(2e5+20);
-vll lazy(2e5+20);
-ll get_parent(ll x) {
-    if (p[x] == x) {
-        return x;
-    }
-    ll real = get_parent(p[x]);
-    return p[x] = real;
-}
-
-void unite(ll x, ll y) {
-    x = get_parent(x);
-    y = get_parent(y);
-    if (x == y) return;
-    if (sz[x] > sz[y]) swap(x, y);
-    p[x] = y;
-    sz[y] += sz[x];
-    for (auto &i : shit[x]) value[i] += lazy[x] - lazy[y];
-    for (const auto &i : shit[x]) shit[y].push_back(i);
-    shit[x].clear();
-}
 void solve() {
-    for (ll i = 0; i < 2e5+20; i += 1) {
-        shit[i].push_back(i);
-    }
-    iota(p.begin(), p.end(), 0);
-    ll n, q; cin >> n >> q;
-    for (ll i = 0; i < q; i += 1) {
-        string type; ll X; cin >> type >> X;
-        if (type == "add") {
-            ll Y; cin >> Y;
-            lazy[get_parent(X)] += Y;
-        } else if (type == "get") {
-            cout << lazy[get_parent(X)]+value[X] << endl;
-        } else {
-            ll Y; cin >> Y;
-            unite(X, Y);
+    ull n; cin >> n;
+    vector<vector<ull>> kol_by_sz_and_first_sign;
+    kol_by_sz_and_first_sign.resize(100, vector<ull>(10));
+    fill(kol_by_sz_and_first_sign[1].begin() + 1, kol_by_sz_and_first_sign[1].end(), 1);
+    for (ll i = 2; i < 100; i += 1)
+        for (ll j = 1; j < 10; j += 1)
+            kol_by_sz_and_first_sign[i][j] = accumulate(kol_by_sz_and_first_sign[i - 1].begin() + j,
+                                                        kol_by_sz_and_first_sign[i - 1].end(), 0ull);
+    vector<ll> FOUND;
+    ull order_prev = 0, order_curr = 0, curr_sz = 1, last_sign = 1;
+    while (curr_sz) {
+        for (ll i = curr_sz; i < 100; i += 1) {
+            for (ll j = last_sign; j < 10; j += 1) {
+                order_prev = order_curr;
+                order_curr += kol_by_sz_and_first_sign[i][j];
+                if (order_prev < n && order_curr >= n) {
+                    order_curr -= kol_by_sz_and_first_sign[i][j];
+                    FOUND.push_back(j);
+                    curr_sz = i - 1;
+                    last_sign = j;
+                    goto cont;
+                }
+            }
         }
+        assert(false);
+        cont: {}
     }
+    for (const auto &x : FOUND) cout << x;
+    cout << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
