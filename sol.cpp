@@ -17,9 +17,9 @@ using vpll = vector<pll>;
 #include <ext/pb_ds/tree_policy.hpp>
 using namespace __gnu_pbds;
 template <typename T> using ordered_set = tree<T, null_type, less<T>, rb_tree_tag, tree_order_statistics_node_update>;
-ostream& endl(ostream& os) {
-    return os << '\n';
-}
+//ostream& endl(ostream& os) {
+//    return os << '\n';
+//}
 #define all(xxx) xxx.begin(), xxx.end()
 #define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl
 template <class T, class S> inline bool chmax(T &best, const S &b) { return (best < b ? best = b, 1 : 0); }
@@ -64,8 +64,7 @@ void print(Head&& head, Tail&&... tail) {
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 uniform_int_distribution<ll> distrib(0ll, 10ll);
 //constexpr ll MOD = 819356875157278019ll;
-//constexpr ll MOD = 1e9+7;
-constexpr ll MOD = 998'244'353;
+constexpr ll MOD = 1e9+7;
 void in(vector<ll> & best) {
     for (auto & zero_leaf : best) cin >> zero_leaf;
 }
@@ -137,65 +136,22 @@ ll sub(ll best, ll b) {
 ll sub(ll best, ll b, ll MODD) {
     return (best-(b%MODD)+MODD)%MODD;
 }
+
 void solve() {
-    ll n, m, k;
-    cin >> n >> m >> k;
-    vll hp(n);
-    for (auto &x : hp) cin >> x;
-    vll pos(n);
-    for (auto &x : pos) cin >> x;
-    auto can = [&] (ll hits) -> bool {
-//        watch(hits);
-        // точка покрытая >= k отрезками!
-        multiset<ll> starts;
-        multiset<ll> ends;
-        for (ll i = 0; i < n; i += 1) {
-//            watch(i);
-            ll each = (hp[i]+hits-1)/hits;
-            if (each > m) continue;
-            ll free = m-each;
-            ll left = pos[i]-free;
-            ll right = pos[i]+free;
-            starts.insert(left);
-            ends.insert(right);
-//            watch(left);
-//            watch(right);
-        }
-        ll balance = 0;
-        ll maxi = 0;
-        while (1) {
-            bool active = false;
-            while (!starts.empty() && *starts.begin() <= *ends.begin()) {
-                balance += 1;
-                starts.erase(starts.find(*starts.begin()));
-                active = true;
-            }
-            maxi = max(maxi, balance);
-            while (!ends.empty() && (starts.empty() || *ends.begin() < *starts.begin())) {
-                active = true;
-                balance -= 1;
-                ends.erase(ends.find(*ends.begin()));
-            }
-            if (!active) {
-                assert(starts.empty());
-                assert(ends.empty());
-                break;
-            }
-        }
-        return maxi >= k;
-    };
-    ll l=1, r=1e9+1;
-    ll good = -1;
-    while (l <= r) {
-        ll mid = (l+r) >> 1;
-        if (can(mid)) {
-            good = mid;
-            r = mid-1;
-        } else {
-            l = mid+1;
-        }
+    ll konf, max_rest, sz;
+    cin >> konf >> max_rest >> sz;
+    vll a(sz);
+    for (ll i = 0; i < sz; i += 1) {
+        cin >> a[i];
     }
-    cout << good << endl;
+    if (max_rest > konf) {
+        cout << konf << endl;
+        return;
+    }
+    ll best = *min_element(all(a));
+    ll one = konf-konf/best;
+    ll maybe = max(max_rest, best)-max(max_rest, best)/best;
+    cout << min(one, maybe) << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
@@ -218,7 +174,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-    cin >> tt;
+//    cin >> tt;
 
     while (tt--) {
         solve();
