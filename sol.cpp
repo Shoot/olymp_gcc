@@ -154,13 +154,20 @@ void solve() {
     auto divide = [&] (ll a, ll b) -> __int128 {
 //        assert(b != 0);
         __int128 res = a/b;
-//        if (((a > 0 && b > 0) || (a < 0 && b < 0)) && a%b != 0) res += 1;
+        if ((a > 0 && b < 0) || (a < 0 && b > 0)) res = a/b-bool(a%b);
         return res;
     };
     auto cross = [&] (Line l1, Line l2) -> __int128 {
-        return divide(l2.b-l1.b, l1.k-l2.k);
+//        cout << ll(l1.k) << "x +" << ll(l1.b) << endl;
+//        cout << ll(l2.k) << "x +" << ll(l2.b) << endl;
+        __int128 res1 = divide(l1.b-l2.b, l2.k-l1.k);
+        __int128 res2 = divide(l2.b-l1.b, l1.k-l2.k);
+//        watch(ll(res1));
+        assert(res1 == res2);
+        return res1;
     };
     auto get = [&] (ll x) -> Line { // прямоугольники не включают друг друга так что за O(1) (амортизировано)
+        // запросы по убыванию
         while(lines.size() >= 2 && cross(lines[0], lines[1]) >= x) {
             lines.pop_front();
             // нам нужно получить точку левее
@@ -184,7 +191,6 @@ void solve() {
     sort(a.begin(), a.end(), [&] (shit a, shit b) {
         return a.x < b.x;
     });
-    ll maxi = 0;
     vector<ll> dp(n);
     upd(Line(0, 0)); // neutral bc we can always get f(x) = 0
     for (ll i = 0; i < n; i += 1) {
@@ -194,6 +200,9 @@ void solve() {
         assert(get(y)(y) >= 0);
         dp[i] = x*y+get(y)(y)-val;
         upd(Line(-x, dp[i]));
+//        for (ll test = 0; test < lines.size()-1; test += 1) {
+//            cout << ll(cross(lines[test], lines[test+1])) << ' ';
+//        }cout << endl;
     }
     cout << *max_element(all(dp)) << endl;
 }
