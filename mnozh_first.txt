@@ -138,37 +138,34 @@ ll sub(ll best, ll b, ll MODD) {
 }
 void solve() {
     ll n; cin >> n;
-    ll m; cin >> m;
-    vvll sm(n+1);
-    set<pll> st;
-    bool drevo = true;
-    for (ll i = 0; i < m; i += 1) {
-        ll u, v;
-        cin >> u >> v;
-        sm[u].push_back(v);
-        sm[v].push_back(u);
-        pll shit;
-        shit.first = min(u, v);
-        shit.second = max(u, v);
-        drevo &= st.find(shit) == st.end();
-        st.insert(shit);
-    }
+	ll m; cin >> m;
+	vvll sm(n+1);
+	set<pll> st;
+	bool drevo = true;
+	for (ll i = 0; i < m; i += 1) {
+	ll u, v;
+	cin >> u >> v;
+	sm[u].push_back(v);
+	sm[v].push_back(u);
+	pll shit;
+	shit.first = min(u, v);
+	shit.second = max(u, v);
+	drevo &= st.find(shit) == st.end();
+	st.insert(shit);
+	}
 
-    bitset<1'000'000> seen;
-    auto dfs = [&] (auto f, ll v, ll par) -> void {
-        seen[v] = true;
-        cout << "v = " << v << endl;
-        for (const auto &x : sm[v]) if (x != par) {
-                cout << "x = " << x << endl;
-                drevo &= !seen[x];
-                cout << drevo << endl;
-                if (!seen[x]) seen[x] = true, f(f, x, v);
-            }
+	bitset<1'000'000> seen;
+	auto dfs = [&] (auto f, ll v, ll par) -> void {
+	seen[v] = true;
+	for (const auto &x : sm[v]) if (x != par) {
+	drevo &= !seen[x];
+	if (!seen[x]) seen[x] = true, f(f, x, v);
+	}
 
-    };
-    dfs(dfs, 1, -1);
-    for (ll i = 1; i <= n; i += 1) drevo &= seen[i];
-    cout << (drevo?"YES":"NO") << endl;
+	};
+	dfs(dfs, 1, -1);
+	for (ll i = 1; i <= n; i += 1) drevo &= seen[i];
+	cout << (drevo?"YES":"NO") << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
