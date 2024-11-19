@@ -137,53 +137,95 @@ ll sub(ll best, ll b, ll MODD) {
     return (best-(b%MODD)+MODD)%MODD;
 }
 void solve() {
-    ll V; cin >> V; ll n; cin >> n;
+    ll n, d; cin >> n >> d;
     vll a(n); for (auto &x : a) cin >> x;
-    vbo is_last(n);
-    vbo seen(301);
-    for (ll i = n-1; i >= 0; i -= 1) {
-        if (!seen[a[i]]) is_last[i] = true;
-        seen[a[i]] = true;
-    }
-    vll stack;
-    vvll sm(n+1);
-    fill(all(seen), false);
+    vll b = a;
+    sort(all(b));
+    vpll shit(n);
     for (ll i = 0; i < n; i += 1) {
-        if (seen[a[i]]) {
-            while (!stack.empty() && stack.back() != a[i]) stack.pop_back();
-            if (is_last[i] && !stack.empty()) stack.pop_back();
-            continue;
-        }
-        seen[a[i]] = true;
-        if (!stack.empty()) sm[stack.back()].push_back(a[i]);
-        if (!is_last[i]) stack.push_back(a[i]);
+        shit[i].first = a[i];
+        shit[i].second = i;
     }
-    vll GOT;
-    auto dfs = [&] (auto f, ll v, ll more_than) -> void {
-        if (v > more_than) GOT.push_back(v);
-        for (const auto &x : sm[v]) {
-            f(f, x, more_than);
-        }
+    sort(all(shit));
+    vll rel_by_ind(n);
+    for (ll i = 0; i < n; i += 1) {
+        rel_by_ind[shit[i].second] = i;
+    }
+    vll to(n, -1);
+    struct Node {
+        ll val=-1e18;
+        ll ind=-1;
+        auto operator<=>(const Node& other) const = default;
     };
-    set<pll> st;
-    for (ll i = 1; i <= V; i += 1) {
-//        watch(i);
-        for (const auto &x : sm[i]) {
-//            watch(x);
-            st.insert(pll(min(i, x), max(i, x)));
-            ll more_than_this = x;
-            GOT.clear();
-            dfs(dfs, x, more_than_this);
-//            cout << GOT << endl;
-            for (const auto &y : GOT) {
-                st.insert(pll(min(i, y), max(i, y)));
-            }
+    vector<Node> tree(4*n+10);
+    auto merge = [&] (Node a, Node b) -> Node {
+        if (a.val >= b.val) return a;
+        return b;
+    };
+    auto set_point = [&] (auto f, ll v, ll tl, ll tr, ll pos, ll val) -> void {
+        if (tl == tr) {
+            tree[v].val = val;
+            tree[v].ind = pos;
+            return;
         }
+        ll tm = (tl+tr) >> 1;
+        if (pos <= tm) {
+            f(f, 2*v+1, tl, tm, pos, val);
+        } else {
+            f(f, 2*v+2, tm+1, tr, pos, val);
+        }
+        tree[v] = merge(tree[2*v+1], tree[2*v+2]);
+    };
+    auto get_segment = [&] (auto f, ll v, ll tl, ll tr, ll l, ll r) -> Node {
+        if (tl == l && tr == r) {
+            return tree[v];
+        }
+        ll tm = (tl+tr) >> 1;
+        Node ans;
+        if (l <= tm) {
+            ans = merge(ans,
+            f(f, 2*v+1, tl, tm, l, min(tm, r)));
+        }
+        if (r >= tm+1) {
+            ans = merge(ans,
+            f(f, 2*v+2, tm+1, tr, max(tm+1, l), r));
+        }
+        return ans;
+    };
+    for (ll i = n-1; i >= 0; i -= 1) {
+        ll x = a[i];
+        ll rel_x = rel_by_ind[i];
+        ll from_less_or_eq = upper_bound(all(b), x-d)-b.begin()-1;
+        ll start = 0;
+        ll from_more_or_eq = lower_bound(all(b), x+d)-b.begin();
+        ll finish = b.size()-1;
+//        for (ll j = start; j <= from_less_or_eq; j += 1) {
+//            if (val[j]+1 > val[rel_x]) {
+//                val[rel_x] = val[j]+1;
+//                to[i] = shit[j].second;
+//            }
+//        }
+//        for (ll j = from_more_or_eq; j <= finish; j += 1) {
+//            if (val[j]+1 > val[rel_x]) {
+//                val[rel_x] = val[j]+1;
+//                to[i] = shit[j].second;
+//            }
+//        }
+        Node res(0, -1);
+        if (start <= from_less_or_eq) res = merge(res, get_segment(get_segment, 0, 0, n-1, start, from_less_or_eq));
+        if (from_more_or_eq <= finish) res = merge(res, get_segment(get_segment, 0, 0, n-1, from_more_or_eq, finish));
+        to[i] = shit[res.ind].second;
+        set_point(set_point, 0, 0, n-1, rel_x, max(res.val+1, 1ll));
     }
-    cout << st.size() << endl;
-    for (const auto &[i,j] : st) {
-        cout << i << " " << j << endl;
+    Node root = get_segment(get_segment, 0, 0, n-1, 0, n-1);
+    cout << root.val << endl;
+    ll start = shit[root.ind].second;
+    cout << start+1 << ' ';
+    while (root.val-- > 1) {
+        start = to[start];
+        cout << start+1 << ' ';
     }
+    cout << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
