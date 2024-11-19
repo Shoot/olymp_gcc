@@ -17,11 +17,11 @@ using vpll = vector<pll>;
 #include <ext/pb_ds/tree_policy.hpp>
 using namespace __gnu_pbds;
 template <typename T> using ordered_set = tree<T, null_type, less<T>, rb_tree_tag, tree_order_statistics_node_update>;
-//ostream& endl(ostream& os) {
-//    return os << '\n';
-//}
-//define all(xxx) xxx.begin(), xxx.end()
-//define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl
+ostream& endl(ostream& os) {
+    return os << '\n';
+}
+#define all(xxx) xxx.begin(), xxx.end()
+#define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl
 template <class T, class S> inline bool chmax(T &best, const S &b) { return (best < b ? best = b, 1 : 0); }
 template <class T, class S> inline bool chmin(T &best, const S &b) { return (best > b ? best = b, 1 : 0); }
 template <typename T, typename U>
@@ -137,38 +137,53 @@ ll sub(ll best, ll b, ll MODD) {
     return (best-(b%MODD)+MODD)%MODD;
 }
 void solve() {
-    ll n; cin >> n;
-    ll m; cin >> m;
-    vvll sm(n+1);
-    set<pll> st;
-    bool drevo = true;
-    for (ll i = 0; i < m; i += 1) {
-        ll u, v;
-        cin >> u >> v;
-        sm[u].push_back(v);
-        sm[v].push_back(u);
-        pll shit;
-        shit.first = min(u, v);
-        shit.second = max(u, v);
-        drevo &= st.find(shit) == st.end();
-        st.insert(shit);
+    ll V; cin >> V; ll n; cin >> n;
+    vll a(n); for (auto &x : a) cin >> x;
+    vbo is_last(n);
+    vbo seen(301);
+    for (ll i = n-1; i >= 0; i -= 1) {
+        if (!seen[a[i]]) is_last[i] = true;
+        seen[a[i]] = true;
     }
-
-    bitset<1'000'000> seen;
-    auto dfs = [&] (auto f, ll v, ll par) -> void {
-        seen[v] = true;
-        cout << "v = " << v << endl;
-        for (const auto &x : sm[v]) if (x != par) {
-                cout << "x = " << x << endl;
-                drevo &= !seen[x];
-                cout << drevo << endl;
-                if (!seen[x]) seen[x] = true, f(f, x, v);
-            }
-
+    vll stack;
+    vvll sm(n+1);
+    fill(all(seen), false);
+    for (ll i = 0; i < n; i += 1) {
+        if (seen[a[i]]) {
+            while (!stack.empty() && stack.back() != a[i]) stack.pop_back();
+            if (is_last[i] && !stack.empty()) stack.pop_back();
+            continue;
+        }
+        seen[a[i]] = true;
+        if (!stack.empty()) sm[stack.back()].push_back(a[i]);
+        if (!is_last[i]) stack.push_back(a[i]);
+    }
+    vll GOT;
+    auto dfs = [&] (auto f, ll v, ll more_than) -> void {
+        if (v > more_than) GOT.push_back(v);
+        for (const auto &x : sm[v]) {
+            f(f, x, more_than);
+        }
     };
-    dfs(dfs, 1, -1);
-    for (ll i = 1; i <= n; i += 1) drevo &= seen[i];
-    cout << (drevo?"YES":"NO") << endl;
+    set<pll> st;
+    for (ll i = 1; i <= V; i += 1) {
+//        watch(i);
+        for (const auto &x : sm[i]) {
+//            watch(x);
+            st.insert(pll(min(i, x), max(i, x)));
+            ll more_than_this = x;
+            GOT.clear();
+            dfs(dfs, x, more_than_this);
+//            cout << GOT << endl;
+            for (const auto &y : GOT) {
+                st.insert(pll(min(i, y), max(i, y)));
+            }
+        }
+    }
+    cout << st.size() << endl;
+    for (const auto &[i,j] : st) {
+        cout << i << " " << j << endl;
+    }
 }
 
 int32_t main(int32_t argc, char* argv[]) {
