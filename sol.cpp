@@ -145,10 +145,6 @@ void solve() {
             return k*x+b;
         }
     };
-    struct shit {
-        ll x;
-        ll y;
-    };
     deque<Line> lines;
     auto divide = [&] (ll a, ll b) -> __int128 {
         assert(b != 0);
@@ -176,20 +172,34 @@ void solve() {
     };
     auto upd = [&] (Line line) -> void {
         while (lines.size() >= 2 &&
-        cross(lines[lines.size()-1], lines[lines.size()-2]) >=
-        cross(lines[lines.size()-1], line)) {
+               cross(lines[lines.size()-1], lines[lines.size()-2]) >=
+               cross(lines[lines.size()-1], line)) {
             lines.pop_back();
             // банально наша ЛУЧШЕ последней
         }
         lines.push_back(line);
+    };
+    struct shit {
+        ll x;
+        ll y;
     };
     vector<shit> a(n);
     for (ll i = 0; i < n; i += 1) {
         cin >> a[i].x >> a[i].y;
     }
     sort(a.begin(), a.end(), [&] (shit a, shit b) {
-        return a.x < b.x;
+        return a.x > b.x || (a.x == b.x && a.y > b.y);
     });
+    vector<shit> nw;
+    ll max_y = -1;
+    for (ll i = 0; i < n; i += 1) {
+        if (a[i].y <= max_y) continue;
+        max_y = max(max_y, a[i].y);
+        nw.push_back(shit(a[i].x, a[i].y));
+    }
+    a = nw;
+    reverse(a.begin(), a.end());
+    n = a.size();
     vector<ll> dp(n);
     for (ll i = 0; i < n; i += 1) {
         ll x = a[i].x;
