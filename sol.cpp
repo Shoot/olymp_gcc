@@ -20,8 +20,8 @@ template <typename T> using ordered_set = tree<T, null_type, less<T>, rb_tree_ta
 //ostream& endl(ostream& os) {
 //    return os << '\n';
 //}
-#define all(xxx) xxx.begin(), xxx.end()
-#define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl
+//define all(xxx) xxx.begin(), xxx.end()
+//define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl
 template <class T, class S> inline bool chmax(T &best, const S &b) { return (best < b ? best = b, 1 : 0); }
 template <class T, class S> inline bool chmin(T &best, const S &b) { return (best > b ? best = b, 1 : 0); }
 template <typename T, typename U>
@@ -148,11 +148,10 @@ void solve() {
     struct shit {
         ll x;
         ll y;
-        ll val;
     };
     deque<Line> lines;
     auto divide = [&] (ll a, ll b) -> __int128 {
-//        assert(b != 0);
+        assert(b != 0);
         __int128 res = a/b;
         if ((a > 0 && b < 0) || (a < 0 && b > 0)) res = a/b-bool(a%b);
         return res;
@@ -167,18 +166,18 @@ void solve() {
         return res1;
     };
     auto get = [&] (ll x) -> Line { // прямоугольники не включают друг друга так что за O(1) (амортизировано)
-        // запросы по убыванию
-        while(lines.size() >= 2 && cross(lines[0], lines[1]) >= x) {
+        // запросы по возрастанию
+        while (lines.size() >= 2 && cross(lines[0], lines[1]) <= x) {
             lines.pop_front();
             // нам нужно получить точку левее
         }
         assert(!lines.empty());
-        return lines[0];
+        return lines.front();
     };
     auto upd = [&] (Line line) -> void {
         while (lines.size() >= 2 &&
-        cross(lines[lines.size() - 1], lines[lines.size() - 2]) <=
-        cross(lines[lines.size() - 1], line)) {
+        cross(lines[lines.size()-1], lines[lines.size()-2]) >=
+        cross(lines[lines.size()-1], line)) {
             lines.pop_back();
             // банально наша ЛУЧШЕ последней
         }
@@ -186,25 +185,34 @@ void solve() {
     };
     vector<shit> a(n);
     for (ll i = 0; i < n; i += 1) {
-        cin >> a[i].x >> a[i].y >> a[i].val;
+        cin >> a[i].x >> a[i].y;
     }
     sort(a.begin(), a.end(), [&] (shit a, shit b) {
         return a.x < b.x;
     });
     vector<ll> dp(n);
-    upd(Line(0, 0)); // neutral bc we can always get f(x) = 0
     for (ll i = 0; i < n; i += 1) {
         ll x = a[i].x;
         ll y = a[i].y;
-        ll val = a[i].val;
-        assert(get(y)(y) >= 0);
-        dp[i] = x*y+get(y)(y)-val;
-        upd(Line(-x, dp[i]));
+        if (i == 0) {
+            dp[i] = x*y;
+            upd(Line(y, 0));
+            continue;
+        }
+        // обновления по убыванию, запросы по возрастанию
+//        watch(y);
+        upd(Line(y, dp[i-1]));
+//        cout << ll(get(x).k) << "x + " << ll(get(x).b) << " !" << endl;
+        dp[i] = get(x)(x); // гарантированно берем iый
+//        watch(dp[i]);
+//        for (ll test = 0; test < lines.size(); test += 1) {
+//            cout << ll(lines[test].k) << "x + " << ll(lines[test].b) << "   ";
+//        }cout << endl;
 //        for (ll test = 0; test < lines.size()-1; test += 1) {
-//            cout << ll(cross(lines[test], lines[test+1])) << ' ';
+//            cout << ll(cross(lines[test], lines[test+1])) << "***";
 //        }cout << endl;
     }
-    cout << *max_element(all(dp)) << endl;
+    cout << dp.back() << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
