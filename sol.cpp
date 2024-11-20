@@ -138,162 +138,122 @@ ll sub(ll best, ll b, ll MODD) {
 }
 ld EPS = 1e-10;
 void solve() {
-    ll n = 2;
-    cin >> n;
+    ll n; cin >> n;
+    ld S; cin >> S;
     struct Point {
         ld x;
         ld y;
-        auto operator<=> (const Point &other) const = default;
     };
     struct Segment {
-        Point fi;
-        Point se;
-        auto operator<=> (const Segment &other) const = default;
+        Point a;
+        Point b;
     };
-    vector<Segment> segs(n);
+    vector<Point> points(n);
     for (ll i = 0; i < n; i += 1) {
-//        watch(i);
-        cin >> segs[i].fi.x >> segs[i].fi.y >> segs[i].se.x >> segs[i].se.y;
-//        segs[i].fi.x = distrib(rng);
-//        segs[i].fi.y = distrib(rng);
-//        segs[i].se.x = distrib(rng);
-//        segs[i].se.y = distrib(rng);
-//        watch(segs[i].fi.x);
-//        watch(segs[i].fi.y);
-//        watch(segs[i].se.x);
-//        watch(segs[i].se.y);
-        if (segs[i].fi.x > segs[i].se.x) {
-            swap(segs[i].fi, segs[i].se);
-        }
-        if (segs[i].fi.x == segs[i].se.x) {
-            segs[i].se.x += 1e-15;
-        }
+        cin >> points[i].x >> points[i].y;
     }
-    sort(segs.begin(), segs.end(), [&] (Segment a, Segment b) {
-        return a.fi.x < b.fi.x;
+    sort(points.begin(), points.end(), [&] (Point a, Point b) {
+        return a.y < b.y;
     });
-    set<ld> key_points;
-    map<ld, vll> starts;
-    map<ld, vll> ends;
+    struct osn {
+        ld deg;
+        ll i;
+        ll j;
+    };
+    auto get_phi = [&] (Point a, Point b) -> ld {
+        ld dx = b.x-a.x;
+        ld dy = b.y-a.y;
+//        watch(dx);
+//        watch(dy);
+//        assert(abs(dx) > EPS);
+        ld phi = atan2(dy, dx);
+        if (phi < 0) phi += 2.l*M_PI;
+        return phi;
+    };
+    vector<osn> a;
     for (ll i = 0; i < n; i += 1) {
-        Segment S = segs[i];
-        key_points.insert(S.fi.x);
-        key_points.insert(S.se.x);
-        starts[S.fi.x].push_back(i);
-        ends[S.se.x].push_back(i);
-    }
-    struct Line {
-        ld k;
-        ld b;
-        ld operator()(ld arg) {
-            return k*arg+b;
+        for (ll j = i+1; j < n; j += 1) {
+            ld alpha = get_phi(points[i], points[j]);
+            a.push_back(osn(alpha*180.l/M_PI, i, j));
         }
-    };
-    auto seg_to_line = [&] (Segment a) -> Line {
-        ld dx = a.se.x - a.fi.x;
-        ld dy = a.se.y - a.fi.y;
-        ld k = dy/dx;
-        ld b = a.fi.y-k*a.fi.x;
-//        watch(k);
-//        watch(b);
-        return Line(k, b);
-    };
-    auto cross = [&] (Line l1, Line l2) -> ld {
-        ld a = l1.b-l2.b;
-        ld b = l2.k-l1.k;
-        return a/b;
-    };
-    auto get_probable_intersection_x = [&] (Segment a, Segment b) -> ld {
-        Line A = seg_to_line(a);
-        Line B = seg_to_line(b);
-        return cross(A, B);
-    };
-//    bool OG = false;
-//    for (ll i = 0; i < n; i += 1) {
-//        for (ll j = 0; j < n; j += 1) {
-//            if (i == j) continue;
-//            Segment x = segs[i];
-//            Segment y = segs[j];
-//            if (abs(seg_to_line(x).k-seg_to_line(y).k) < EPS && abs(seg_to_line(x).b-seg_to_line(y).b) < EPS) {
-//                if (x.fi.x >= y.fi.x && x.fi.x <= y.se.x) {
-//                    OG = true;
-//                }
-//                if (y.fi.x >= x.fi.x && y.fi.x <= x.se.x) {
-//                    OG = true;
-//                }
-//            } else {
-//                ld need = get_probable_intersection_x(x, y);
-//                if (need > x.fi.x || abs(need-x.fi.x) < EPS) {
-//                    if (need < x.se.x || abs(need-x.se.x) < EPS) {
-//                        if (need > y.fi.x || abs(need-y.fi.x) < EPS) {
-//                            if (need < y.se.x || abs(need-y.se.x) < EPS) {
-//                                OG = true;
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
+    }
+    sort(a.begin(), a.end(), [&] (osn a, osn b) {
+        return a.deg < b.deg;
+    });
+//    for (const auto &[deg, i, j] : a) {
+//        cout << deg << " deg: " << i << " -> " << j << endl;
 //    }
+    vll order_by_idx(n);
+    iota(order_by_idx.begin(), order_by_idx.end(), 0ll);
     bool FOUND = false;
-    ld tp;
-    auto comp = [&] (auto const &a, auto const &b) {
-        return seg_to_line(segs[a])(tp) < seg_to_line(segs[b])(tp);
+    Segment AB;
+    auto toch_toch = [&] (Point a, Point b) -> ld {
+        return sqrtl((a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y));
     };
-    multiset<ll, decltype(comp)> current_starts(comp);
-    auto GODO = [&] (Segment x, Segment y) -> void {
-        if (abs(seg_to_line(x).k-seg_to_line(y).k) < EPS && abs(seg_to_line(x).b-seg_to_line(y).b) < EPS) {
-            if (x.fi.x >= y.fi.x && x.fi.x <= y.se.x) {
+    auto get_len = [&] (Segment a) -> ld {
+        return toch_toch(a.a, a.b);
+    };
+    auto calc_S = [&] (Point a) -> ld {
+        ld first = get_len(Segment(a, AB.a));
+        ld second = get_len(Segment(a, AB.b));
+        ld osn = get_len(AB);
+        ld p = (first+second+osn)*0.5l;
+        ld Sq = sqrtl(p*(p-first)*(p-second)*(p-osn));
+        return Sq;
+    };
+    auto find_tri = [&] (ll l, ll r) -> void {
+        if (FOUND) return;
+        while (l <= r) {
+            ll mid = (l+r) >> 1;
+            ld Sq = calc_S(points[mid]);
+            if (abs(Sq-S) < EPS) {
                 FOUND = true;
-            }
-            if (y.fi.x >= x.fi.x && y.fi.x <= x.se.x) {
-                FOUND = true;
-            }
-        } else if (abs(seg_to_line(x).k - seg_to_line(y).k) > EPS) {
-            ld need = get_probable_intersection_x(x, y);
-            if (need < tp && abs(need-tp) > EPS) {
-                assert(true);
-            } else if ((x.se.x > need || abs(need-x.se.x) < EPS) && (y.se.x > need || abs(y.se.x-need) < EPS)) {
-                FOUND = true;
+                cout << "Yes" << endl;
+                cout << ll(round(AB.a.x)) << " " << ll(round(AB.a.y)) << endl;
+                cout << ll(round(AB.b.x)) << " " << ll(round(AB.b.y)) << endl;
+                cout << ll(round(points[mid].x)) << " " << ll(round(points[mid].y)) << endl;
+                break;
+            } else if (Sq < S) {
+                l = mid + 1;
+            } else {
+                r = mid - 1;
             }
         }
     };
-    vector<multiset<ll>::iterator> where(n);
-    while (!key_points.empty()) {
-        tp = *key_points.begin();
-//        cout << "time point = " << tp << endl;
-        key_points.erase(key_points.begin());
-        for (const auto &ind : starts[tp]) {
-//            cout << "added " << ind << endl;
-            Segment x = segs[ind];
-//            watch(x.fi.x);
-//            watch(x.fi.y);
-            auto it = current_starts.upper_bound(ind);
-            if (it != current_starts.end()) {
-                Segment y = segs[*it];
-                GODO(x, y);
+    auto find_tri_rev = [&] (ll l, ll r) -> void {
+        if (FOUND) return;
+        while (l <= r) {
+            ll mid = (l+r) >> 1;
+            ld Sq = calc_S(points[mid]);
+            if (abs(Sq-S) < EPS) {
+                FOUND = true;
+                cout << "Yes" << endl;
+                cout << ll(round(AB.a.x)) << " " << ll(round(AB.a.y)) << endl;
+                cout << ll(round(AB.b.x)) << " " << ll(round(AB.b.y)) << endl;
+                cout << ll(round(points[mid].x)) << " " << ll(round(points[mid].y)) << endl;
+                break;
+            } else if (Sq < S) {
+                r = mid - 1;
+            } else {
+                l = mid + 1;
             }
-            if (it != current_starts.begin()) {
-                it = prev(it);
-                Segment y = segs[*it];
-                GODO(x, y);
-            }
-            where[ind] = current_starts.insert(ind);
         }
-        for (const auto &ind : ends[tp]) {
-            auto it = where[ind];
-            if (next(it) != current_starts.end() && it != current_starts.begin()) {
-                Segment x = segs[*prev(it)];
-                Segment y = segs[*next(it)];
-                GODO(x, y);
-            }
-            current_starts.erase(where[ind]);
-        }
+    };
+    for (ll i = 0; i < n; i += 1) {
+        osn x = a[i];
+        Point A = points[order_by_idx[x.i]];
+        Point B = points[order_by_idx[x.j]];
+        ll l1 = 0; ll r1 = min(x.i, x.j);
+        ll l2 = max(x.i, x.j); ll r2 = n-1;
+        swap(points[order_by_idx[x.i]], points[order_by_idx[x.j]]);
+        swap(order_by_idx[x.i], order_by_idx[x.j]);
+        AB = Segment(A, B);
+        find_tri_rev(l1, r1);
+        find_tri(l2, r2);
     }
-//    watch(FOUND);
-//    watch(OG);
-//    assert(FOUND == OG);
-    cout << (FOUND?"YES":"NO") << endl;
+    if (!FOUND) {
+        cout << "No" << endl;
+    }
 }
 
 int32_t main(int32_t argc, char* argv[]) {
