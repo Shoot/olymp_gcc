@@ -136,13 +136,10 @@ ll sub(ll best, ll b) {
 ll sub(ll best, ll b, ll MODD) {
     return (best-(b%MODD)+MODD)%MODD;
 }
-ld EPS = 1e-13;
+ld EPS = 0.2l;
 void solve() {
-    cout << "HII" << endl;
-    ll n = 5;
-//    cin >> n;
-    ld S = 2;
-//    cin >> S;
+    ll n; cin >> n;
+    ld S; cin >> S;
     struct Point {
         ld x;
         ld y;
@@ -152,16 +149,8 @@ void solve() {
         Point b;
     };
     vector<Point> points(n);
-    map<ll,ll> yy;
-    map<ll,ll> xx;
     for (ll i = 0; i < n; i += 1) {
-//        cin >> points[i].x >> points[i].y;
-        points[i].x = distrib(rng);
-        points[i].y = distrib(rng);
-        while (xx[points[i].x] == 2) points[i].x = distrib(rng);
-        while (yy[points[i].y] == 2) points[i].y = distrib(rng);
-        xx[points[i].x] += 1;
-        yy[points[i].y] += 1;
+        cin >> points[i].x >> points[i].y;
     }
     sort(points.begin(), points.end(), [&] (Point p1, Point p2) {
         return p1.y < p2.y || (p1.y == p2.y && p1.x < p2.x);
@@ -174,10 +163,7 @@ void solve() {
     auto get_phi = [&] (Point a, Point b) -> ld {
         ld dx = b.x-a.x;
         ld dy = b.y-a.y;
-//        watch(dx);
-//        watch(dy);
-//        assert(abs(dx) > EPS);
-        ld phi = atan2(dy, dx);
+        ld phi = atan2l(dy, dx);
         if (phi < 0) phi += 2.l*M_PI;
         return phi;
     };
@@ -231,9 +217,6 @@ void solve() {
             }
         }
     };
-    for (const auto &[x, y]: points) {
-        cout << x << "," << y << endl;
-    }
     auto find_tri_rev = [&] (ll l, ll r) -> void {
         if (FOUND) return;
         while (l <= r) {
@@ -253,45 +236,23 @@ void solve() {
             }
         }
     };
-    for (ll i = 0; i < a.size(); i += 1) {
+    for (ll i = 0; i < ll(a.size()); i += 1) {
         osn x = a[i];
         Point A = points[order_by_idx[x.i]];
         Point B = points[order_by_idx[x.j]];
-        cout << A.x << " " << A.y << " -> " << B.x << " " << B.y << endl;
-        for (const auto &[X, Y]: points) {
-            cout << X << "(check)" << Y << endl;
-        }
-        ll l1 = 0; ll r1 = min(x.i, x.j);
-        ll l2 = max(x.i, x.j); ll r2 = n-1;
+        ll l1 = 0; ll r1 = min(order_by_idx[x.i], order_by_idx[x.j]);
+        ll l2 = max(order_by_idx[x.i], order_by_idx[x.j]); ll r2 = n-1;
+        assert(r1+1 == l2);
         swap(points[order_by_idx[x.i]], points[order_by_idx[x.j]]);
         swap(order_by_idx[x.i], order_by_idx[x.j]);
         AB = Segment(A, B);
         find_tri_rev(l1, r1);
+        find_tri_rev(l2, r2);
+        find_tri(l1, r1);
         find_tri(l2, r2);
     }
     if (!FOUND) {
         cout << "No" << endl;
-    }
-    bool OG = false;
-    for (ll i = 0; i < n; i += 1) {
-        for (ll j = 0; j < n; j += 1) {
-            for (ll k = 0; k < n; k += 1) if (!OG) {
-                AB = Segment(points[i], points[j]);
-                if (abs(calc_S(points[k])-S) < EPS) {
-//                    cout << i << " " << j << " " << k << endl;
-                    OG = true;
-                    cout << points[i].x << "(a)" << points[i].y << endl;
-                    cout << points[j].x << "(a)" << points[j].y << endl;
-                    cout << points[k].x << "(a)" << points[k].y << endl;
-                }
-            }
-        }
-    }
-    if (FOUND != OG) {
-        for (const auto &[x, y]: points) {
-            cout << x << "!" << y << endl;
-        }
-        assert(false);
     }
 }
 
@@ -314,7 +275,7 @@ int32_t main(int32_t argc, char* argv[]) {
         cerr.tie(nullptr);
         clog.tie(nullptr);
     }
-    ll tt = 1e5;
+    ll tt = 1;
 //    cin >> tt;
 
     while (tt--) {
