@@ -62,7 +62,7 @@ void print(Head&& head, Tail&&... tail) {
 //#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math,trapv")
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-uniform_int_distribution<ll> distrib(0ll, 100ll);
+uniform_int_distribution<ll> distrib(0ll, 5ll);
 //constexpr ll MOD = 819356875157278019ll;
 constexpr ll MOD = 1e9+7;
 void in(vector<ll> & best) {
@@ -136,10 +136,13 @@ ll sub(ll best, ll b) {
 ll sub(ll best, ll b, ll MODD) {
     return (best-(b%MODD)+MODD)%MODD;
 }
-ld EPS = 1e-10;
+ld EPS = 1e-13;
 void solve() {
-    ll n; cin >> n;
-    ld S; cin >> S;
+    cout << "HII" << endl;
+    ll n = 5;
+//    cin >> n;
+    ld S = 2;
+//    cin >> S;
     struct Point {
         ld x;
         ld y;
@@ -149,11 +152,19 @@ void solve() {
         Point b;
     };
     vector<Point> points(n);
+    map<ll,ll> yy;
+    map<ll,ll> xx;
     for (ll i = 0; i < n; i += 1) {
-        cin >> points[i].x >> points[i].y;
+//        cin >> points[i].x >> points[i].y;
+        points[i].x = distrib(rng);
+        points[i].y = distrib(rng);
+        while (xx[points[i].x] == 2) points[i].x = distrib(rng);
+        while (yy[points[i].y] == 2) points[i].y = distrib(rng);
+        xx[points[i].x] += 1;
+        yy[points[i].y] += 1;
     }
-    sort(points.begin(), points.end(), [&] (Point a, Point b) {
-        return a.y < b.y;
+    sort(points.begin(), points.end(), [&] (Point p1, Point p2) {
+        return p1.y < p2.y || (p1.y == p2.y && p1.x < p2.x);
     });
     struct osn {
         ld deg;
@@ -220,6 +231,9 @@ void solve() {
             }
         }
     };
+    for (const auto &[x, y]: points) {
+        cout << x << "," << y << endl;
+    }
     auto find_tri_rev = [&] (ll l, ll r) -> void {
         if (FOUND) return;
         while (l <= r) {
@@ -239,10 +253,14 @@ void solve() {
             }
         }
     };
-    for (ll i = 0; i < n; i += 1) {
+    for (ll i = 0; i < a.size(); i += 1) {
         osn x = a[i];
         Point A = points[order_by_idx[x.i]];
         Point B = points[order_by_idx[x.j]];
+        cout << A.x << " " << A.y << " -> " << B.x << " " << B.y << endl;
+        for (const auto &[X, Y]: points) {
+            cout << X << "(check)" << Y << endl;
+        }
         ll l1 = 0; ll r1 = min(x.i, x.j);
         ll l2 = max(x.i, x.j); ll r2 = n-1;
         swap(points[order_by_idx[x.i]], points[order_by_idx[x.j]]);
@@ -253,6 +271,27 @@ void solve() {
     }
     if (!FOUND) {
         cout << "No" << endl;
+    }
+    bool OG = false;
+    for (ll i = 0; i < n; i += 1) {
+        for (ll j = 0; j < n; j += 1) {
+            for (ll k = 0; k < n; k += 1) if (!OG) {
+                AB = Segment(points[i], points[j]);
+                if (abs(calc_S(points[k])-S) < EPS) {
+//                    cout << i << " " << j << " " << k << endl;
+                    OG = true;
+                    cout << points[i].x << "(a)" << points[i].y << endl;
+                    cout << points[j].x << "(a)" << points[j].y << endl;
+                    cout << points[k].x << "(a)" << points[k].y << endl;
+                }
+            }
+        }
+    }
+    if (FOUND != OG) {
+        for (const auto &[x, y]: points) {
+            cout << x << "!" << y << endl;
+        }
+        assert(false);
     }
 }
 
@@ -275,7 +314,7 @@ int32_t main(int32_t argc, char* argv[]) {
         cerr.tie(nullptr);
         clog.tie(nullptr);
     }
-    ll tt = 1;
+    ll tt = 1e5;
 //    cin >> tt;
 
     while (tt--) {
