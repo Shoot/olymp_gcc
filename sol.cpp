@@ -62,7 +62,7 @@ void print(Head&& head, Tail&&... tail) {
 //#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math,trapv")
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-uniform_int_distribution<ll> distrib(0ll, 10ll);
+uniform_int_distribution<ll> distrib(0ll, 100ll);
 //constexpr ll MOD = 819356875157278019ll;
 constexpr ll MOD = 1e9+7;
 void in(vector<ll> & best) {
@@ -138,7 +138,8 @@ ll sub(ll best, ll b, ll MODD) {
 }
 ld EPS = 1e-10;
 void solve() {
-    ll n; cin >> n;
+    ll n = 2;
+    cin >> n;
     struct Point {
         ld x;
         ld y;
@@ -151,7 +152,16 @@ void solve() {
     };
     vector<Segment> segs(n);
     for (ll i = 0; i < n; i += 1) {
+//        watch(i);
         cin >> segs[i].fi.x >> segs[i].fi.y >> segs[i].se.x >> segs[i].se.y;
+//        segs[i].fi.x = distrib(rng);
+//        segs[i].fi.y = distrib(rng);
+//        segs[i].se.x = distrib(rng);
+//        segs[i].se.y = distrib(rng);
+//        watch(segs[i].fi.x);
+//        watch(segs[i].fi.y);
+//        watch(segs[i].se.x);
+//        watch(segs[i].se.y);
         if (segs[i].fi.x > segs[i].se.x) {
             swap(segs[i].fi, segs[i].se);
         }
@@ -172,10 +182,12 @@ void solve() {
         starts[S.fi.x].push_back(i);
         ends[S.se.x].push_back(i);
     }
-    multiset<pair<ld, ll>> current_starts; // start and index_of_segment
     struct Line {
         ld k;
         ld b;
+        ld operator()(ld arg) {
+            return k*arg+b;
+        }
     };
     auto seg_to_line = [&] (Segment a) -> Line {
         ld dx = a.se.x - a.fi.x;
@@ -196,9 +208,59 @@ void solve() {
         Line B = seg_to_line(b);
         return cross(A, B);
     };
+//    bool OG = false;
+//    for (ll i = 0; i < n; i += 1) {
+//        for (ll j = 0; j < n; j += 1) {
+//            if (i == j) continue;
+//            Segment x = segs[i];
+//            Segment y = segs[j];
+//            if (abs(seg_to_line(x).k-seg_to_line(y).k) < EPS && abs(seg_to_line(x).b-seg_to_line(y).b) < EPS) {
+//                if (x.fi.x >= y.fi.x && x.fi.x <= y.se.x) {
+//                    OG = true;
+//                }
+//                if (y.fi.x >= x.fi.x && y.fi.x <= x.se.x) {
+//                    OG = true;
+//                }
+//            } else {
+//                ld need = get_probable_intersection_x(x, y);
+//                if (need > x.fi.x || abs(need-x.fi.x) < EPS) {
+//                    if (need < x.se.x || abs(need-x.se.x) < EPS) {
+//                        if (need > y.fi.x || abs(need-y.fi.x) < EPS) {
+//                            if (need < y.se.x || abs(need-y.se.x) < EPS) {
+//                                OG = true;
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
     bool FOUND = false;
+    ld tp;
+    auto comp = [&] (auto const &a, auto const &b) {
+        return seg_to_line(segs[a])(tp) < seg_to_line(segs[b])(tp);
+    };
+    multiset<ll, decltype(comp)> current_starts(comp);
+    auto GODO = [&] (Segment x, Segment y) -> void {
+        if (abs(seg_to_line(x).k-seg_to_line(y).k) < EPS && abs(seg_to_line(x).b-seg_to_line(y).b) < EPS) {
+            if (x.fi.x >= y.fi.x && x.fi.x <= y.se.x) {
+                FOUND = true;
+            }
+            if (y.fi.x >= x.fi.x && y.fi.x <= x.se.x) {
+                FOUND = true;
+            }
+        } else if (abs(seg_to_line(x).k - seg_to_line(y).k) > EPS) {
+            ld need = get_probable_intersection_x(x, y);
+            if (need < tp && abs(need-tp) > EPS) {
+                assert(true);
+            } else if ((x.se.x > need || abs(need-x.se.x) < EPS) && (y.se.x > need || abs(y.se.x-need) < EPS)) {
+                FOUND = true;
+            }
+        }
+    };
+    vector<multiset<ll>::iterator> where(n);
     while (!key_points.empty()) {
-        ld tp = *key_points.begin();
+        tp = *key_points.begin();
 //        cout << "time point = " << tp << endl;
         key_points.erase(key_points.begin());
         for (const auto &ind : starts[tp]) {
@@ -206,72 +268,31 @@ void solve() {
             Segment x = segs[ind];
 //            watch(x.fi.x);
 //            watch(x.fi.y);
-            auto val = make_pair(x.fi.y, ind);
-            auto it = current_starts.upper_bound(val);
+            auto it = current_starts.upper_bound(ind);
             if (it != current_starts.end()) {
-                Segment y = segs[it->second];
-                if (abs(seg_to_line(x).k-seg_to_line(y).k) < EPS && abs(seg_to_line(x).b-seg_to_line(y).b) < EPS) {
-                    if (x.fi.x >= y.fi.x && x.fi.x <= y.se.x) {
-                        FOUND = true;
-                    }
-                    if (y.fi.x >= x.fi.x && y.fi.x <= x.se.x) {
-                        FOUND = true;
-                    }
-                } else if (abs(seg_to_line(x).k - seg_to_line(y).k) > EPS) {
-                    ld need = get_probable_intersection_x(x, y);
-                    if (need < tp) {
-                        assert(true);
-                    } else if ((x.se.x > need || abs(need-x.se.x) < EPS) && (y.se.x > need || abs(y.se.x-need) < EPS)) {
-                        FOUND = true;
-                    }
-                }
+                Segment y = segs[*it];
+                GODO(x, y);
             }
             if (it != current_starts.begin()) {
                 it = prev(it);
-                Segment y = segs[it->second];
-                if (abs(seg_to_line(x).k-seg_to_line(y).k) < EPS && abs(seg_to_line(x).b-seg_to_line(y).b) < EPS) {
-                    if (x.fi.x >= y.fi.x && x.fi.x <= y.se.x) {
-                        FOUND = true;
-                    }
-                    if (y.fi.x >= x.fi.x && y.fi.x <= x.se.x) {
-                        FOUND = true;
-                    }
-                } else if (abs(seg_to_line(x).k - seg_to_line(y).k) > EPS) {
-                    ld need = get_probable_intersection_x(x, y);
-                    if (need < tp) {
-                        assert(true);
-                    } else if ((x.se.x > need || abs(need-x.se.x) < EPS) && (y.se.x > need || abs(y.se.x-need) < EPS)) {
-                        FOUND = true;
-                    }
-                }
+                Segment y = segs[*it];
+                GODO(x, y);
             }
-            current_starts.insert(val);
+            where[ind] = current_starts.insert(ind);
         }
         for (const auto &ind : ends[tp]) {
-            auto val = make_pair(segs[ind].fi.y, ind);
-            auto it = current_starts.find(val); assert(*it == val);
+            auto it = where[ind];
             if (next(it) != current_starts.end() && it != current_starts.begin()) {
-                Segment x = segs[prev(it)->second];
-                Segment y = segs[next(it)->second];
-                if (abs(seg_to_line(x).k-seg_to_line(y).k) < EPS && abs(seg_to_line(x).b-seg_to_line(y).b) < EPS) {
-                    if (x.fi.x >= y.fi.x && x.fi.x <= y.se.x) {
-                        FOUND = true;
-                    }
-                    if (y.fi.x >= x.fi.x && y.fi.x <= x.se.x) {
-                        FOUND = true;
-                    }
-                } else if (abs(seg_to_line(x).k - seg_to_line(y).k) > EPS) {
-                    ld need = get_probable_intersection_x(x, y);
-                    if (need < tp) {
-                        assert(true);
-                    } else if ((x.se.x > need || abs(need-x.se.x) < EPS) && (y.se.x > need || abs(y.se.x-need) < EPS)) {
-                        FOUND = true;
-                    }
-                }
+                Segment x = segs[*prev(it)];
+                Segment y = segs[*next(it)];
+                GODO(x, y);
             }
-            current_starts.erase(current_starts.find(val));
+            current_starts.erase(where[ind]);
         }
     }
+//    watch(FOUND);
+//    watch(OG);
+//    assert(FOUND == OG);
     cout << (FOUND?"YES":"NO") << endl;
 }
 
