@@ -137,94 +137,69 @@ ll sub(ll best, ll b, ll MODD) {
     return (best-(b%MODD)+MODD)%MODD;
 }
 void solve() {
-    ll n, d; cin >> n >> d;
-    vll a(n); for (auto &x : a) cin >> x;
-    vll b = a;
-    sort(all(b));
-    vpll shit(n);
-    for (ll i = 0; i < n; i += 1) {
-        shit[i].first = a[i];
-        shit[i].second = i;
-    }
-    sort(all(shit));
-    vll rel_by_ind(n);
-    for (ll i = 0; i < n; i += 1) {
-        rel_by_ind[shit[i].second] = i;
-    }
-    vll to(n, -1);
-    struct Node {
-        ll val=-1e18;
-        ll ind=-1;
-        auto operator<=>(const Node& other) const = default;
+    ll Ax, Ay, Bx, By, Cx, Cy, Dx, Dy;
+    cin >> Ax >> Ay >> Bx >> By >> Cx >> Cy >> Dx >> Dy;
+    struct Point {
+        ll x;
+        ll y;
     };
-    vector<Node> tree(4*n+10);
-    auto merge = [&] (Node a, Node b) -> Node {
-        if (a.val >= b.val) return a;
-        return b;
+    struct Segment {
+        Point fi;
+        Point se;
     };
-    auto set_point = [&] (auto f, ll v, ll tl, ll tr, ll pos, ll val) -> void {
-        if (tl == tr) {
-            tree[v].val = val;
-            tree[v].ind = pos;
-            return;
-        }
-        ll tm = (tl+tr) >> 1;
-        if (pos <= tm) {
-            f(f, 2*v+1, tl, tm, pos, val);
+    auto toch_toch = [&] (Point a, Point b) -> ld {
+        return sqrtl((a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y));
+    };
+    auto get_len = [&] (Segment a) -> ld {
+        return toch_toch(a.fi, a.se);
+    };
+    auto toch_otr = [&] (Point a, Segment b) -> ld {
+        ll dx = b.se.x - b.fi.x;
+        ll dy = b.se.y - b.fi.y;
+        ll px = a.x - b.fi.x;
+        ll py = a.y - b.fi.y;
+        ld dotProduct = px * dx + py * dy;
+        if (dotProduct >= 0) {
+            // перпендикуляр приходит на отрезок
+            ld first = get_len(Segment(a, b.fi));
+            ld second = get_len(Segment(a, b.se));
+            ld osn = get_len(b);
+            ld p = (first+second+osn)*0.5l;
+            ld Sq = sqrtl(p*(p-first)*(p-second)*(p-osn));
+            ld osn_h = 2.0l*Sq/osn;
+            return osn_h;
         } else {
-            f(f, 2*v+2, tm+1, tr, pos, val);
+            return min(toch_toch(a, b.fi), toch_toch(a, b.se));
         }
-        tree[v] = merge(tree[2*v+1], tree[2*v+2]);
     };
-    auto get_segment = [&] (auto f, ll v, ll tl, ll tr, ll l, ll r) -> Node {
-        if (tl == l && tr == r) {
-            return tree[v];
-        }
-        ll tm = (tl+tr) >> 1;
-        Node ans;
-        if (l <= tm) {
-            ans = merge(ans,
-            f(f, 2*v+1, tl, tm, l, min(tm, r)));
-        }
-        if (r >= tm+1) {
-            ans = merge(ans,
-            f(f, 2*v+2, tm+1, tr, max(tm+1, l), r));
-        }
-        return ans;
+    auto toch_pr = [&] (Point a, Segment b) -> ld {
+        ld first = get_len(Segment(a, b.fi));
+        ld second = get_len(Segment(a, b.se));
+        ld osn = get_len(b);
+        ld p = (first+second+osn)*0.5l;
+        ld Sq = sqrtl(p*(p-first)*(p-second)*(p-osn));
+        ld osn_h = 2.0l*Sq/osn;
+        return osn_h;
     };
-    for (ll i = n-1; i >= 0; i -= 1) {
-        ll x = a[i];
-        ll rel_x = rel_by_ind[i];
-        ll from_less_or_eq = upper_bound(all(b), x-d)-b.begin()-1;
-        ll start = 0;
-        ll from_more_or_eq = lower_bound(all(b), x+d)-b.begin();
-        ll finish = b.size()-1;
-//        for (ll j = start; j <= from_less_or_eq; j += 1) {
-//            if (val[j]+1 > val[rel_x]) {
-//                val[rel_x] = val[j]+1;
-//                to[i] = shit[j].second;
-//            }
-//        }
-//        for (ll j = from_more_or_eq; j <= finish; j += 1) {
-//            if (val[j]+1 > val[rel_x]) {
-//                val[rel_x] = val[j]+1;
-//                to[i] = shit[j].second;
-//            }
-//        }
-        Node res(0, -1);
-        if (start <= from_less_or_eq) res = merge(res, get_segment(get_segment, 0, 0, n-1, start, from_less_or_eq));
-        if (from_more_or_eq <= finish) res = merge(res, get_segment(get_segment, 0, 0, n-1, from_more_or_eq, finish));
-        to[i] = shit[res.ind].second;
-        set_point(set_point, 0, 0, n-1, rel_x, max(res.val+1, 1ll));
-    }
-    Node root = get_segment(get_segment, 0, 0, n-1, 0, n-1);
-    cout << root.val << endl;
-    ll start = shit[root.ind].second;
-    cout << start+1 << ' ';
-    while (root.val-- > 1) {
-        start = to[start];
-        cout << start+1 << ' ';
-    }
+    Point a = Point(Ax, Ay);
+    Point b = Point(Bx, By);
+    Point c = Point(Cx, Cy);
+    Point d = Point(Dx, Dy);
+    cout << toch_toch(a, c) << endl;
+    cout << toch_otr(a, Segment(c, d)) << endl;
+    cout << endl;
+    cout << toch_pr(a, Segment(c, d)) << endl;
+    cout << toch_otr(c, Segment(a, b)) << endl;
+    cout << endl;
+    cout << endl;
+    cout << endl;
+    cout << endl;
+    cout << endl;
+    cout << endl;
+    cout << endl;
+    cout << toch_pr(c, Segment(a, b)) << endl;
+    cout << endl;
+    cout << endl;
     cout << endl;
 }
 
