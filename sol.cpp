@@ -20,8 +20,8 @@ template <typename T> using ordered_set = tree<T, null_type, less<T>, rb_tree_ta
 ostream& endl(ostream& os) {
     return os << '\n';
 }
-#define all(xxx) xxx.begin(), xxx.end()
-#define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl
+//define all(xxx) xxx.begin(), xxx.end()
+//define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl
 template <class T, class S> inline bool chmax(T &best, const S &b) { return (best < b ? best = b, 1 : 0); }
 template <class T, class S> inline bool chmin(T &best, const S &b) { return (best > b ? best = b, 1 : 0); }
 template <typename T, typename U>
@@ -136,71 +136,143 @@ ll sub(ll best, ll b) {
 ll sub(ll best, ll b, ll MODD) {
     return (best-(b%MODD)+MODD)%MODD;
 }
+ld EPS = 1e-10;
 void solve() {
-    ll Ax, Ay, Bx, By, Cx, Cy, Dx, Dy;
-    cin >> Ax >> Ay >> Bx >> By >> Cx >> Cy >> Dx >> Dy;
+    ll n; cin >> n;
     struct Point {
-        ll x;
-        ll y;
+        ld x;
+        ld y;
+        auto operator<=> (const Point &other) const = default;
     };
     struct Segment {
         Point fi;
         Point se;
+        auto operator<=> (const Segment &other) const = default;
     };
-    auto toch_toch = [&] (Point a, Point b) -> ld {
-        return sqrtl((a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y));
-    };
-    auto get_len = [&] (Segment a) -> ld {
-        return toch_toch(a.fi, a.se);
-    };
-    auto toch_otr = [&] (Point a, Segment b) -> ld {
-        ll dx = b.se.x - b.fi.x;
-        ll dy = b.se.y - b.fi.y;
-        ll px = a.x - b.fi.x;
-        ll py = a.y - b.fi.y;
-        ld dotProduct = px * dx + py * dy;
-        if (dotProduct >= 0) {
-            // перпендикуляр приходит на отрезок
-            ld first = get_len(Segment(a, b.fi));
-            ld second = get_len(Segment(a, b.se));
-            ld osn = get_len(b);
-            ld p = (first+second+osn)*0.5l;
-            ld Sq = sqrtl(p*(p-first)*(p-second)*(p-osn));
-            ld osn_h = 2.0l*Sq/osn;
-            return osn_h;
-        } else {
-            return min(toch_toch(a, b.fi), toch_toch(a, b.se));
+    vector<Segment> segs(n);
+    for (ll i = 0; i < n; i += 1) {
+        cin >> segs[i].fi.x >> segs[i].fi.y >> segs[i].se.x >> segs[i].se.y;
+        if (segs[i].fi.x > segs[i].se.x) {
+            swap(segs[i].fi, segs[i].se);
         }
+        if (segs[i].fi.x == segs[i].se.x) {
+            segs[i].se.x += 1e-15;
+        }
+    }
+    sort(segs.begin(), segs.end(), [&] (Segment a, Segment b) {
+        return a.fi.x < b.fi.x;
+    });
+    set<ld> key_points;
+    map<ld, vll> starts;
+    map<ld, vll> ends;
+    for (ll i = 0; i < n; i += 1) {
+        Segment S = segs[i];
+        key_points.insert(S.fi.x);
+        key_points.insert(S.se.x);
+        starts[S.fi.x].push_back(i);
+        ends[S.se.x].push_back(i);
+    }
+    multiset<pair<ld, ll>> current_starts; // start and index_of_segment
+    struct Line {
+        ld k;
+        ld b;
     };
-    auto toch_pr = [&] (Point a, Segment b) -> ld {
-        ld first = get_len(Segment(a, b.fi));
-        ld second = get_len(Segment(a, b.se));
-        ld osn = get_len(b);
-        ld p = (first+second+osn)*0.5l;
-        ld Sq = sqrtl(p*(p-first)*(p-second)*(p-osn));
-        ld osn_h = 2.0l*Sq/osn;
-        return osn_h;
+    auto seg_to_line = [&] (Segment a) -> Line {
+        ld dx = a.se.x - a.fi.x;
+        ld dy = a.se.y - a.fi.y;
+        ld k = dy/dx;
+        ld b = a.fi.y-k*a.fi.x;
+//        watch(k);
+//        watch(b);
+        return Line(k, b);
     };
-    Point a = Point(Ax, Ay);
-    Point b = Point(Bx, By);
-    Point c = Point(Cx, Cy);
-    Point d = Point(Dx, Dy);
-    cout << toch_toch(a, c) << endl;
-    cout << toch_otr(a, Segment(c, d)) << endl;
-    cout << endl;
-    cout << toch_pr(a, Segment(c, d)) << endl;
-    cout << toch_otr(c, Segment(a, b)) << endl;
-    cout << endl;
-    cout << endl;
-    cout << endl;
-    cout << endl;
-    cout << endl;
-    cout << endl;
-    cout << endl;
-    cout << toch_pr(c, Segment(a, b)) << endl;
-    cout << endl;
-    cout << endl;
-    cout << endl;
+    auto cross = [&] (Line l1, Line l2) -> ld {
+        ld a = l1.b-l2.b;
+        ld b = l2.k-l1.k;
+        return a/b;
+    };
+    auto get_probable_intersection_x = [&] (Segment a, Segment b) -> ld {
+        Line A = seg_to_line(a);
+        Line B = seg_to_line(b);
+        return cross(A, B);
+    };
+    bool FOUND = false;
+    while (!key_points.empty()) {
+        ld tp = *key_points.begin();
+//        cout << "time point = " << tp << endl;
+        key_points.erase(key_points.begin());
+        for (const auto &ind : starts[tp]) {
+//            cout << "added " << ind << endl;
+            Segment x = segs[ind];
+//            watch(x.fi.x);
+//            watch(x.fi.y);
+            auto val = make_pair(x.fi.y, ind);
+            auto it = current_starts.upper_bound(val);
+            if (it != current_starts.end()) {
+                Segment y = segs[it->second];
+                if (abs(seg_to_line(x).k-seg_to_line(y).k) < EPS && abs(seg_to_line(x).b-seg_to_line(y).b) < EPS) {
+                    if (x.fi.x >= y.fi.x && x.fi.x <= y.se.x) {
+                        FOUND = true;
+                    }
+                    if (y.fi.x >= x.fi.x && y.fi.x <= x.se.x) {
+                        FOUND = true;
+                    }
+                } else if (abs(seg_to_line(x).k - seg_to_line(y).k) > EPS) {
+                    ld need = get_probable_intersection_x(x, y);
+                    if (need < tp) {
+                        assert(true);
+                    } else if ((x.se.x > need || abs(need-x.se.x) < EPS) && (y.se.x > need || abs(y.se.x-need) < EPS)) {
+                        FOUND = true;
+                    }
+                }
+            }
+            if (it != current_starts.begin()) {
+                it = prev(it);
+                Segment y = segs[it->second];
+                if (abs(seg_to_line(x).k-seg_to_line(y).k) < EPS && abs(seg_to_line(x).b-seg_to_line(y).b) < EPS) {
+                    if (x.fi.x >= y.fi.x && x.fi.x <= y.se.x) {
+                        FOUND = true;
+                    }
+                    if (y.fi.x >= x.fi.x && y.fi.x <= x.se.x) {
+                        FOUND = true;
+                    }
+                } else if (abs(seg_to_line(x).k - seg_to_line(y).k) > EPS) {
+                    ld need = get_probable_intersection_x(x, y);
+                    if (need < tp) {
+                        assert(true);
+                    } else if ((x.se.x > need || abs(need-x.se.x) < EPS) && (y.se.x > need || abs(y.se.x-need) < EPS)) {
+                        FOUND = true;
+                    }
+                }
+            }
+            current_starts.insert(val);
+        }
+        for (const auto &ind : ends[tp]) {
+            auto val = make_pair(segs[ind].fi.y, ind);
+            auto it = current_starts.find(val); assert(*it == val);
+            if (next(it) != current_starts.end() && it != current_starts.begin()) {
+                Segment x = segs[prev(it)->second];
+                Segment y = segs[next(it)->second];
+                if (abs(seg_to_line(x).k-seg_to_line(y).k) < EPS && abs(seg_to_line(x).b-seg_to_line(y).b) < EPS) {
+                    if (x.fi.x >= y.fi.x && x.fi.x <= y.se.x) {
+                        FOUND = true;
+                    }
+                    if (y.fi.x >= x.fi.x && y.fi.x <= x.se.x) {
+                        FOUND = true;
+                    }
+                } else if (abs(seg_to_line(x).k - seg_to_line(y).k) > EPS) {
+                    ld need = get_probable_intersection_x(x, y);
+                    if (need < tp) {
+                        assert(true);
+                    } else if ((x.se.x > need || abs(need-x.se.x) < EPS) && (y.se.x > need || abs(y.se.x-need) < EPS)) {
+                        FOUND = true;
+                    }
+                }
+            }
+            current_starts.erase(current_starts.find(val));
+        }
+    }
+    cout << (FOUND?"YES":"NO") << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
