@@ -136,29 +136,12 @@ ll sub(ll best, ll b) {
 ll sub(ll best, ll b, ll MODD) {
     return (best-(b%MODD)+MODD)%MODD;
 }
-ld EPS = 0.2l;
+ld EPS = 1e-1l;
 void solve() {
-    ll n; cin >> n;
-    ld S; cin >> S;
+    ll n, m, k; cin >> n >> m >> k;
     struct Point {
-        ld x;
-        ld y;
-    };
-    struct Segment {
-        Point a;
-        Point b;
-    };
-    vector<Point> points(n);
-    for (ll i = 0; i < n; i += 1) {
-        cin >> points[i].x >> points[i].y;
-    }
-    sort(points.begin(), points.end(), [&] (Point p1, Point p2) {
-        return p1.y < p2.y || (p1.y == p2.y && p1.x < p2.x);
-    });
-    struct osn {
-        ld deg;
-        ll i;
-        ll j;
+        ll x;
+        ll y;
     };
     auto get_phi = [&] (Point a, Point b) -> ld {
         ld dx = b.x-a.x;
@@ -167,93 +150,131 @@ void solve() {
         if (phi < 0) phi += 2.l*M_PI;
         return phi;
     };
-    vector<osn> a;
+    vector<Point> polygon(n);
+    vector<Point> queries(m);
     for (ll i = 0; i < n; i += 1) {
-        for (ll j = i+1; j < n; j += 1) {
-            ld alpha = get_phi(points[i], points[j]);
-            a.push_back(osn(alpha*180.l/M_PI, i, j));
+        // триангулируем из точки A1
+        // Поступает запрос:
+        // 1) находим полярный угол относительно A1
+        // 2) бинпоиск треугольника
+        // 3) пересекаем с полуплоскостью
+        cin >> polygon[i].x >> polygon[i].y;
+    }
+    Point best(1e18, 1e18);
+    for (ll i = 0; i < m; i += 1) {
+        cin >> queries[i].x >> queries[i].y;
+    }
+    ll ind = 0;
+    for (ll i = 0; i < n; i += 1) {
+        if (best.y > polygon[i].y || (best.y == polygon[i].y && best.x > polygon[i].x)) {
+            best = polygon[i];
+            ind = i;
         }
     }
-    sort(a.begin(), a.end(), [&] (osn a, osn b) {
-        return a.deg < b.deg;
-    });
-//    for (const auto &[deg, i, j] : a) {
-//        cout << deg << " deg: " << i << " -> " << j << endl;
-//    }
-    vll order_by_idx(n);
-    iota(order_by_idx.begin(), order_by_idx.end(), 0ll);
-    bool FOUND = false;
-    Segment AB;
-    auto toch_toch = [&] (Point a, Point b) -> ld {
-        return sqrtl((a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y));
-    };
-    auto get_len = [&] (Segment a) -> ld {
-        return toch_toch(a.a, a.b);
-    };
-    auto calc_S = [&] (Point a) -> ld {
-        ld first = get_len(Segment(a, AB.a));
-        ld second = get_len(Segment(a, AB.b));
-        ld osn = get_len(AB);
-        ld p = (first+second+osn)*0.5l;
-        ld Sq = sqrtl(p*(p-first)*(p-second)*(p-osn));
-        return Sq;
-    };
-    auto find_tri = [&] (ll l, ll r) -> void {
-        if (FOUND) return;
-        while (l <= r) {
-            ll mid = (l+r) >> 1;
-            ld Sq = calc_S(points[mid]);
-            if (abs(Sq-S) < EPS) {
-                FOUND = true;
-                cout << "Yes" << endl;
-                cout << ll(round(AB.a.x)) << " " << ll(round(AB.a.y)) << endl;
-                cout << ll(round(AB.b.x)) << " " << ll(round(AB.b.y)) << endl;
-                cout << ll(round(points[mid].x)) << " " << ll(round(points[mid].y)) << endl;
-                break;
-            } else if (Sq < S) {
-                l = mid + 1;
-            } else {
-                r = mid - 1;
-            }
+    rotate(polygon.begin(), polygon.begin() + ind, polygon.end());
+    vector<ld> angles;
+    for (ll i = 1; i < n; i += 1) {
+        ld angle = get_phi(polygon[0], polygon[i])*180.l/M_PI;
+        angles.push_back(angle);
+    }
+    struct Line {
+        ld k;
+        ld b;
+        ld operator()(ld arg) {
+            return k*arg+b;
         }
     };
-    auto find_tri_rev = [&] (ll l, ll r) -> void {
-        if (FOUND) return;
+    struct Segment {
+        Point fi;
+        Point se;
+    };
+    auto seg_to_line = [&] (Segment a) -> Line {
+        ld dx = a.se.x - a.fi.x;
+        ld dy = a.se.y - a.fi.y;
+        ld k = dy/dx;
+        ld b = a.fi.y-k*a.fi.x;
+        return Line(k, b);
+    };
+    vector<Segment> sides;
+    for (ll i = 0; i < n-1; i += 1) {
+        sides.push_back(Segment(polygon[i], polygon[i+1]));
+    }
+    ll INSIDE = 0;
+    auto ask = [&] (ll x, ll y) -> bool {
+        if (x == polygon[0].x && y == polygon[0].y) {
+            return true;
+        }
+        ld angle = get_phi(polygon[0], Point(x, y))*180.l/M_PI;
+        ll it = ll(angles.size());
+        ll l = 0, r = angles.size()-1;
         while (l <= r) {
-            ll mid = (l+r) >> 1;
-            ld Sq = calc_S(points[mid]);
-            if (abs(Sq-S) < EPS) {
-                FOUND = true;
-                cout << "Yes" << endl;
-                cout << ll(round(AB.a.x)) << " " << ll(round(AB.a.y)) << endl;
-                cout << ll(round(AB.b.x)) << " " << ll(round(AB.b.y)) << endl;
-                cout << ll(round(points[mid].x)) << " " << ll(round(points[mid].y)) << endl;
-                break;
-            } else if (Sq < S) {
+            ll mid = (l + r) >> 1;
+            if (angles[mid]-angle > EPS) {
                 r = mid - 1;
+                it = mid;
             } else {
                 l = mid + 1;
             }
         }
+        if (it == 0) {
+            assert(angles[it]-angle > EPS);
+            return false;
+        }
+        if (it == ll(angles.size())) {
+            if (polygon.back().x == polygon.front().x && polygon.back().x == x) {
+                if (y >= polygon.front().y && y <= polygon.back().y) {
+                    return true;
+                    // вертикальная прямая прямо со старта
+                }
+                return false;
+            } else {
+                ld val = seg_to_line(Segment(polygon.back(), polygon.front()))(x);
+                if (abs(val-y) < EPS) {
+                    if ((x >= polygon.back().x && x <= polygon.front().x) || (x <= polygon.back().x && x >= polygon.front().x)) {
+                        return true;
+                    }
+                    return false;
+                }
+                return false;
+                // на границе только если
+            }
+        } else {
+            ll dx = sides[it].se.x-sides[it].fi.x;
+            if (dx > 0) {
+                // НАД
+                Line li = seg_to_line(sides[it]);
+                if (li(x) < y || abs(li(x) - y) < EPS) {
+                    return true;
+                }
+                return false;
+            }
+            if (dx < 0) {
+                // ПОД
+                Line li = seg_to_line(sides[it]);
+                if (li(x) > y || abs(li(x) - y) < EPS) {
+                    return true;
+                    INSIDE += 1;
+                }
+                return false;
+            }
+            assert(abs(x-polygon.front().x) > EPS);
+            // вертикальный
+            if (x <= sides[it].fi.x && sides[it].fi.x >= polygon[0].x) {
+                return true;
+            }
+            if (x >= sides[it].fi.x && sides[it].fi.x <= polygon[0].x) {
+                return true;
+            }
+            return false;
+        }
+        assert(false);
     };
-    for (ll i = 0; i < ll(a.size()); i += 1) {
-        osn x = a[i];
-        Point A = points[order_by_idx[x.i]];
-        Point B = points[order_by_idx[x.j]];
-        ll l1 = 0; ll r1 = min(order_by_idx[x.i], order_by_idx[x.j]);
-        ll l2 = max(order_by_idx[x.i], order_by_idx[x.j]); ll r2 = n-1;
-        assert(r1+1 == l2);
-        swap(points[order_by_idx[x.i]], points[order_by_idx[x.j]]);
-        swap(order_by_idx[x.i], order_by_idx[x.j]);
-        AB = Segment(A, B);
-        find_tri_rev(l1, r1);
-        find_tri_rev(l2, r2);
-        find_tri(l1, r1);
-        find_tri(l2, r2);
+    for (ll i = 0; i < ll(queries.size()); i += 1) {
+        if (ask(queries[i].x, queries[i].y)) {
+            INSIDE += 1;
+        }
     }
-    if (!FOUND) {
-        cout << "No" << endl;
-    }
+    cout << (INSIDE >= k?"YES":"NO") << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
