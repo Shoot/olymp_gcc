@@ -136,145 +136,49 @@ ll sub(ll best, ll b) {
 ll sub(ll best, ll b, ll MODD) {
     return (best-(b%MODD)+MODD)%MODD;
 }
-ld EPS = 1e-1l;
 void solve() {
-    ll n, m, k; cin >> n >> m >> k;
     struct Point {
         ll x;
         ll y;
     };
-    auto get_phi = [&] (Point a, Point b) -> ld {
-        ld dx = b.x-a.x;
-        ld dy = b.y-a.y;
-        ld phi = atan2l(dy, dx);
-        if (phi < 0) phi += 2.l*M_PI;
-        return phi;
+    using Poly = vector<Point>;
+    auto get_area_x2 = [&] (const Poly &poly) -> ll { // Вычисление удвоенной площади многоугольника
+        ll a = 0;
+
+        for (Poly::const_iterator itp = poly.end() - 1, it = poly.begin();
+             it != poly.end();
+             itp = it++)
+            a += it->x * itp->y - itp->x * it->y;
+
+        return abs(a);
     };
-    vector<Point> polygon(n);
-    vector<Point> queries(m);
-    for (ll i = 0; i < n; i += 1) {
-        // триангулируем из точки A1
-        // Поступает запрос:
-        // 1) находим полярный угол относительно A1
-        // 2) бинпоиск треугольника
-        // 3) пересекаем с полуплоскостью
-        cin >> polygon[i].x >> polygon[i].y;
-    }
-    Point best(1e18, 1e18);
-    for (ll i = 0; i < m; i += 1) {
-        cin >> queries[i].x >> queries[i].y;
-    }
-    ll ind = 0;
-    for (ll i = 0; i < n; i += 1) {
-        if (best.y > polygon[i].y || (best.y == polygon[i].y && best.x > polygon[i].x)) {
-            best = polygon[i];
-            ind = i;
-        }
-    }
-    rotate(polygon.begin(), polygon.begin() + ind, polygon.end());
-    vector<ld> angles;
-    for (ll i = 1; i < n; i += 1) {
-        ld angle = get_phi(polygon[0], polygon[i])*180.l/M_PI;
-        angles.push_back(angle);
-    }
-    struct Line {
-        ld k;
-        ld b;
-        ld operator()(ld arg) {
-            return k*arg+b;
-        }
+
+    auto count_boundary = [&] (const Poly &poly) -> ll { // Вычисление количества целочисленных точек на границе многоугольника
+        ll n_boundary = 0;
+
+        for (Poly::const_iterator itp = poly.end() - 1, it = poly.begin();
+             it != poly.end();
+             itp = it++)
+            n_boundary += gcd(it->x - itp->x, it->y - itp->y);
+
+        return n_boundary;
     };
-    struct Segment {
-        Point fi;
-        Point se;
-    };
-    auto seg_to_line = [&] (Segment a) -> Line {
-        ld dx = a.se.x - a.fi.x;
-        ld dy = a.se.y - a.fi.y;
-        ld k = dy/dx;
-        ld b = a.fi.y-k*a.fi.x;
-        return Line(k, b);
-    };
-    vector<Segment> sides;
-    for (ll i = 0; i < n-1; i += 1) {
-        sides.push_back(Segment(polygon[i], polygon[i+1]));
+    ll n = 0;
+    cin >> n;
+
+    Poly poly(n);
+    for (Point& p : poly) {
+        cin >> p.x >> p.y;
     }
-    ll INSIDE = 0;
-    auto ask = [&] (ll x, ll y) -> bool {
-        if (x == polygon[0].x && y == polygon[0].y) {
-            return true;
-        }
-        ld angle = get_phi(polygon[0], Point(x, y))*180.l/M_PI;
-        ll it = ll(angles.size());
-        ll l = 0, r = angles.size()-1;
-        while (l <= r) {
-            ll mid = (l + r) >> 1;
-            if (angles[mid]-angle > EPS) {
-                r = mid - 1;
-                it = mid;
-            } else {
-                l = mid + 1;
-            }
-        }
-        if (it == 0) {
-            assert(angles[it]-angle > EPS);
-            return false;
-        }
-        if (it == ll(angles.size())) {
-            if (polygon.back().x == polygon.front().x && polygon.back().x == x) {
-                if (y >= polygon.front().y && y <= polygon.back().y) {
-                    return true;
-                    // вертикальная прямая прямо со старта
-                }
-                return false;
-            } else {
-                ld val = seg_to_line(Segment(polygon.back(), polygon.front()))(x);
-                if (abs(val-y) < EPS) {
-                    if ((x >= polygon.back().x && x <= polygon.front().x) || (x <= polygon.back().x && x >= polygon.front().x)) {
-                        return true;
-                    }
-                    return false;
-                }
-                return false;
-                // на границе только если
-            }
-        } else {
-            ll dx = sides[it].se.x-sides[it].fi.x;
-            if (dx > 0) {
-                // НАД
-                Line li = seg_to_line(sides[it]);
-                if (li(x) < y || abs(li(x) - y) < EPS) {
-                    return true;
-                }
-                return false;
-            }
-            if (dx < 0) {
-                // ПОД
-                Line li = seg_to_line(sides[it]);
-                if (li(x) > y || abs(li(x) - y) < EPS) {
-                    return true;
-                    INSIDE += 1;
-                }
-                return false;
-            }
-            assert(abs(x-polygon.front().x) > EPS);
-            // вертикальный
-            if (x <= sides[it].fi.x && sides[it].fi.x >= polygon[0].x) {
-                return true;
-            }
-            if (x >= sides[it].fi.x && sides[it].fi.x <= polygon[0].x) {
-                return true;
-            }
-            return false;
-        }
-        assert(false);
-    };
-    for (ll i = 0; i < ll(queries.size()); i += 1) {
-        if (ask(queries[i].x, queries[i].y)) {
-            INSIDE += 1;
-        }
-    }
-    cout << (INSIDE >= k?"YES":"NO") << endl;
+
+    ll area_x2 = get_area_x2(poly);
+
+    ll n_boundary = count_boundary(poly);
+
+    ll n_inside = (area_x2 + 2 - n_boundary) / 2;
+    // Из формулы Пика получаем количество точек внутри
+
+    cout << n_inside << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
