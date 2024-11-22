@@ -20,8 +20,8 @@ template <typename T> using ordered_set = tree<T, null_type, less<T>, rb_tree_ta
 ostream& endl(ostream& os) {
     return os << '\n';
 }
-#define all(xxx) xxx.begin(), xxx.end()
-#define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl
+//define all(xxx) xxx.begin(), xxx.end()
+//define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl
 template <class T, class S> inline bool chmax(T &best, const S &b) { return (best < b ? best = b, 1 : 0); }
 template <class T, class S> inline bool chmin(T &best, const S &b) { return (best > b ? best = b, 1 : 0); }
 template <typename T, typename U>
@@ -140,7 +140,7 @@ const ll NONEXIST = -1e3;
 void solve() {
     struct Line {
         ll k = 0;
-        ll b = -1e9;
+        ll b = 1e18;
         ll operator()(ll X) {
             return ll(k)*X + ll(b);
         }
@@ -168,10 +168,10 @@ void solve() {
         }
         ll tm = (tl + tr) >> 1;
         if (pos <= tm && V[i].left != NONEXIST) {
-            return max(V[i].line(pos), f(f, V[i].left, tl, tm, pos));
+            return min(V[i].line(pos), f(f, V[i].left, tl, tm, pos));
         }
         if (pos >= tm+1 && V[i].right != NONEXIST) {
-            return max(V[i].line(pos), f(f, V[i].right, tm+1, tr, pos));
+            return min(V[i].line(pos), f(f, V[i].right, tm+1, tr, pos));
         }
         return V[i].line(pos);
     };
@@ -190,8 +190,8 @@ void solve() {
     };
     auto insert_line = [&] (auto f, ll i, ll tl, ll tr, Line nw) -> void {
         ll tm = (tl + tr) >> 1;
-        ll dominating_m = nw(tm) > V[i].line(tm);
-        bool dominating_l = nw(tl) > V[i].line(tl);
+        ll dominating_m = nw(tm) < V[i].line(tm);
+        bool dominating_l = nw(tl) < V[i].line(tl);
         if (dominating_m) swap(nw, V[i].line);
         if (tl == tr) return;
         push(i);
@@ -221,26 +221,37 @@ void solve() {
     struct shit {
         ll x;
         ll y;
-        ll val;
     };
     vector<shit> a(n);
     for (ll i = 0; i < n; i += 1) {
-        cin >> a[i].x >> a[i].y >> a[i].val;
+        cin >> a[i].x >> a[i].y;
     }
     sort(a.begin(), a.end(), [&] (shit a, shit b) {
-        return a.x < b.x;
+        return a.x > b.x || (a.x == b.x && a.y > b.y);
     });
-    ll maxi = 0;
+    vector<shit> nw;
+    ll max_y = -1;
+    for (ll i = 0; i < n; i += 1) {
+        if (a[i].y <= max_y) continue;
+        max_y = max(max_y, a[i].y);
+        nw.push_back(shit(a[i].x, a[i].y));
+    }
+    a = nw;
+    reverse(a.begin(), a.end());
+    n = a.size();
     vector<ll> dp(n);
-    insert_line(insert_line, 0, L, R, Line(0, 0)); // neutral bc we can always get f(x) = 0
     for (ll i = 0; i < n; i += 1) {
         ll x = a[i].x;
         ll y = a[i].y;
-        ll val = a[i].val;
-        dp[i] = x*y+get_best(get_best, 0, L, R, y)-val;
-        insert_line(insert_line, 0, L, R, Line(-x, dp[i]));
+        if (i == 0) {
+            dp[i] = x*y;
+            insert_line(insert_line, 0, L, R, Line(y, 0));
+            continue;
+        }
+        insert_line(insert_line, 0, L, R, Line(y, dp[i-1]));
+        dp[i] = get_best(get_best, 0, L, R, x); // гарантированно берем iый
     }
-    cout << *max_element(all(dp)) << endl;
+    cout << dp.back() << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
