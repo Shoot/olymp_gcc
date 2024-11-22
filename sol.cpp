@@ -140,40 +140,40 @@ const ll NONEXIST = -1e3;
 void solve() {
     struct Line {
         ll k = 0;
-        ll b = -1e18;
+        ll b = -1e9;
         ll operator()(ll X) {
-            return k*X + b;
+            return ll(k)*X + ll(b);
         }
     };
     struct Node {
-        ll left = NONEXIST;
-        ll right = NONEXIST;
+        int left = NONEXIST;
+        int right = NONEXIST;
         Line line;
     };
     vector<Node> V;
-    V.emplace_back();
-    auto push = [&] (Node& v) -> void {
-        if (v.left == NONEXIST) {
-            V.emplace_back();
-            v.left = V.size()-1;
+    V.push_back(Node());
+    auto push = [&] (ll i) -> void {
+        if (V[i].left == NONEXIST) {
+            V.push_back(Node());
+            V[i].left = V.size()-1;
         }
-        if (v.right == NONEXIST) {
-            V.emplace_back();
-            v.right = V.size()-1;
+        if (V[i].right == NONEXIST) {
+            V.push_back(Node());
+            V[i].right = V.size()-1;
         }
     };
-    auto get_best = [&] (auto f, Node& v, ll tl, ll tr, ll pos) -> ll {
+    auto get_best = [&] (auto f, ll i, ll tl, ll tr, ll pos) -> ll {
         if (tl == tr) {
-            return v.line(pos);
+            return V[i].line(pos);
         }
         ll tm = (tl + tr) >> 1;
-        push(v);
-        assert(v.right >= 0);
-        assert(v.left >= 0);
-        if (pos <= tm) {
-            return max(v.line(pos), f(f, V[v.left], tl, tm, pos));
+        if (pos <= tm && V[i].left != NONEXIST) {
+            return max(V[i].line(pos), f(f, V[i].left, tl, tm, pos));
         }
-        return max(v.line(pos), f(f, V[v.right], tm+1, tr, pos));
+        if (pos >= tm+1 && V[i].right != NONEXIST) {
+            return max(V[i].line(pos), f(f, V[i].right, tm+1, tr, pos));
+        }
+        return V[i].line(pos);
     };
     auto vniz = [&] (ll a, ll b) -> ll {
         assert(b != 0);
@@ -188,20 +188,18 @@ void solve() {
         // до этого числа доминирует одна (включительно)
         return vniz(b.b-a.b, a.k-b.k);
     };
-    auto insert_line = [&] (auto f, Node& v, ll tl, ll tr, Line nw) -> void {
+    auto insert_line = [&] (auto f, ll i, ll tl, ll tr, Line nw) -> void {
         ll tm = (tl + tr) >> 1;
-        bool dominating_m = nw(tm) > v.line(tm);
-        bool dominating_l = nw(tl) > v.line(tl);
-        if (dominating_m) swap(nw, v.line);
+        ll dominating_m = nw(tm) > V[i].line(tm);
+        bool dominating_l = nw(tl) > V[i].line(tl);
+        if (dominating_m) swap(nw, V[i].line);
         if (tl == tr) return;
-        push(v);
-        assert(v.right >= 0);
-        assert(v.left >= 0);
+        push(i);
         if (dominating_m && dominating_l || !dominating_m && !dominating_l) {
-            f(f, V[v.right], tm+1, tr, nw);
+            f(f, V[i].right, tm+1, tr, nw);
         }
         if (dominating_m && !dominating_l || !dominating_m && dominating_l) {
-            f(f, V[v.left], tl, tm, nw);
+            f(f, V[i].left, tl, tm, nw);
         }
     };
     const ll L = -2e9;
@@ -234,13 +232,13 @@ void solve() {
     });
     ll maxi = 0;
     vector<ll> dp(n);
-    insert_line(insert_line, V.front(), L, R, Line(0, 0)); // neutral bc we can always get f(x) = 0
+    insert_line(insert_line, 0, L, R, Line(0, 0)); // neutral bc we can always get f(x) = 0
     for (ll i = 0; i < n; i += 1) {
         ll x = a[i].x;
         ll y = a[i].y;
         ll val = a[i].val;
-        dp[i] = x*y+get_best(get_best, V.front(), L, R, y)-val;
-        insert_line(insert_line, V.front(), L, R, Line(-x, dp[i]));
+        dp[i] = x*y+get_best(get_best, 0, L, R, y)-val;
+        insert_line(insert_line, 0, L, R, Line(-x, dp[i]));
     }
     cout << *max_element(all(dp)) << endl;
 }
