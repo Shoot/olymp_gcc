@@ -150,60 +150,50 @@ void solve() {
         int right = NONEXIST;
         Line line;
     };
-    vector<Node> V;
-    V.push_back(Node());
-    auto push = [&] (ll i) -> void {
-        if (V[i].left == NONEXIST) {
-            V.push_back(Node());
-            V[i].left = V.size()-1;
-        }
-        if (V[i].right == NONEXIST) {
-            V.push_back(Node());
-            V[i].right = V.size()-1;
+    ll n; cin >> n;
+    vector<vector<Node>> V(n+1, vector<Node>(1, Node()));
+    auto push_left = [&] (ll vert, ll i) -> void {
+        if (V[vert][i].left == NONEXIST) {
+            V[vert].push_back(Node());
+            V[vert][i].left = V[vert].size()-1;
         }
     };
-    auto get_best = [&] (auto f, ll i, ll tl, ll tr, ll pos) -> ll {
+    auto push_right = [&] (ll vert, ll i) -> void {
+        if (V[vert][i].right == NONEXIST) {
+            V[vert].push_back(Node());
+            V[vert][i].right = V[vert].size()-1;
+        }
+    };
+    auto get_best = [&] (ll vert, auto f, ll i, ll tl, ll tr, ll pos) -> ll {
         if (tl == tr) {
-            return V[i].line(pos);
+            return V[vert][i].line(pos);
         }
         ll tm = (tl + tr) >> 1;
-        if (pos <= tm && V[i].left != NONEXIST) {
-            return min(V[i].line(pos), f(f, V[i].left, tl, tm, pos));
+        if (pos <= tm && V[vert][i].left != NONEXIST) {
+            return min(V[vert][i].line(pos), f(vert, f, V[vert][i].left, tl, tm, pos));
         }
-        if (pos >= tm+1 && V[i].right != NONEXIST) {
-            return min(V[i].line(pos), f(f, V[i].right, tm+1, tr, pos));
+        if (pos >= tm+1 && V[vert][i].right != NONEXIST) {
+            return min(V[vert][i].line(pos), f(vert, f, V[vert][i].right, tm+1, tr, pos));
         }
-        return V[i].line(pos);
+        return V[vert][i].line(pos);
     };
-    auto vniz = [&] (ll a, ll b) -> ll {
-        assert(b != 0);
-        bool ost = abs(a)%abs(b);
-        ll res = abs(a)/abs(b);
-        if (a < 0 && b > 0 || a > 0 && b < 0) {
-            res = -res;
-        }
-        return res-ost;
-    };
-    auto intersect = [&] (Line a, Line b) -> ll {
-        // до этого числа доминирует одна (включительно)
-        return vniz(b.b-a.b, a.k-b.k);
-    };
-    auto insert_line = [&] (auto f, ll i, ll tl, ll tr, Line nw) -> void {
+    auto insert_line = [&] (ll vert, auto f, ll i, ll tl, ll tr, Line nw) -> void {
         ll tm = (tl + tr) >> 1;
-        ll dominating_m = nw(tm) < V[i].line(tm);
-        bool dominating_l = nw(tl) < V[i].line(tl);
-        if (dominating_m) swap(nw, V[i].line);
+        ll dominating_m = nw(tm) < V[vert][i].line(tm);
+        bool dominating_l = nw(tl) < V[vert][i].line(tl);
+        if (dominating_m) swap(nw, V[vert][i].line);
         if (tl == tr) return;
-        push(i);
-        if (dominating_m && dominating_l || !dominating_m && !dominating_l) {
-            f(f, V[i].right, tm+1, tr, nw);
+        if ((dominating_m && dominating_l) || (!dominating_m && !dominating_l)) {
+            push_right(vert, i);
+            f(vert, f, V[vert][i].right, tm+1, tr, nw);
         }
-        if (dominating_m && !dominating_l || !dominating_m && dominating_l) {
-            f(f, V[i].left, tl, tm, nw);
+        if ((dominating_m && !dominating_l) || (!dominating_m && dominating_l)) {
+            push_left(vert, i);
+            f(vert, f, V[vert][i].left, tl, tm, nw);
         }
     };
-    const ll L = -2e9;
-    const ll R = 2e9;
+    const ll L = -1e5-5;
+    const ll R = 1e5+5;
 //    ll q; cin >> q;
 //    for (ll i = 0; i < q; i += 1) {
 //        char tp; cin >> tp;
@@ -217,41 +207,83 @@ void solve() {
 //        }
 //        watch(V.size());
 //    }
-    ll n; cin >> n;
     struct shit {
-        ll x;
-        ll y;
+        ll a;
+        ll b;
     };
-    vector<shit> a(n);
-    for (ll i = 0; i < n; i += 1) {
-        cin >> a[i].x >> a[i].y;
+    vector<shit> a(n+1);
+    for (ll i = 1; i <= n; i += 1) {
+        cin >> a[i].a;
     }
-    sort(a.begin(), a.end(), [&] (shit a, shit b) {
-        return a.x > b.x || (a.x == b.x && a.y > b.y);
-    });
-    vector<shit> nw;
-    ll max_y = -1;
-    for (ll i = 0; i < n; i += 1) {
-        if (a[i].y <= max_y) continue;
-        max_y = max(max_y, a[i].y);
-        nw.push_back(shit(a[i].x, a[i].y));
+    for (ll i = 1; i <= n; i += 1) {
+        cin >> a[i].b;
     }
-    a = nw;
-    reverse(a.begin(), a.end());
-    n = a.size();
-    vector<ll> dp(n);
-    for (ll i = 0; i < n; i += 1) {
-        ll x = a[i].x;
-        ll y = a[i].y;
-        if (i == 0) {
-            dp[i] = x*y;
-            insert_line(insert_line, 0, L, R, Line(y, 0));
-            continue;
+    vvll sm(n+1);
+    for (ll i = 0; i < n-1; i += 1) {
+        ll u, v; cin >> u >> v;
+        sm[u].push_back(v);
+        sm[v].push_back(u);
+    }
+    vll sz(n+1, 1);
+    auto calc_sz = [&] (auto f, ll v, ll par) -> void {
+        for (const auto &x : sm[v]) {
+            if (x != par) {
+                f(f, x, v);
+                sz[v] += sz[x];
+            }
         }
-        insert_line(insert_line, 0, L, R, Line(y, dp[i-1]));
-        dp[i] = get_best(get_best, 0, L, R, x); // гарантированно берем iый
+    };
+    calc_sz(calc_sz, 1, 1);
+    vll ans(n+1, -666);
+    for (const auto &x : V) {
+        for (const auto &y : x) {
+            assert(y.line.b != 0 || y.line.k != 0);
+        }
     }
-    cout << dp.back() << endl;
+    auto merge_trees = [&] (auto f, ll into, ll vert, ll i) -> void {
+        if (V[vert][i].left != NONEXIST) {
+            f(f, into, vert, V[vert][i].left);
+        }
+        if (V[vert][i].right != NONEXIST) {
+            f(f, into, vert, V[vert][i].right);
+        }
+        if (V[vert][i].line.b < 1e17) insert_line(into, insert_line, 0, L, R, V[vert][i].line);
+    };
+    auto do_shit = [&] (auto f, ll v, ll par) -> void {
+        if (sm[v].size() == 1 && v != 1) {
+            ans[v] = 0;
+            insert_line(v, insert_line, 0, L, R, Line(a[v].b, ans[v]));
+            return;
+        }
+        ll best_val = -1;
+        ll best_child = -1;
+        for (const auto &x : sm[v]) {
+            if (x != par) {
+                f(f, x, v);
+                if (best_val < sz[x]) {
+                    best_val = sz[x];
+                    best_child = x;
+                }
+            }
+        }
+        assert(best_val > 0);
+        swap(V[best_child], V[v]);
+        for (const auto &x : sm[v]) {
+            if (x != par && x != best_child) {
+                merge_trees(merge_trees, v, x, 0);
+//                for (const Node n : V[x]) {
+//                    insert_line(v, insert_line, 0, L, R, n.line);
+//                }
+            }
+        }
+        ans[v] = get_best(v, get_best, 0, L, R, a[v].a); // гарантированно юзаем v
+        insert_line(v, insert_line, 0, L, R, Line(a[v].b, ans[v]));
+    };
+    do_shit(do_shit, 1, 1);
+    for (ll i = 1; i <= n; i += 1) {
+        cout << ans[i] << ' ';
+    }
+    cout << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
