@@ -136,77 +136,95 @@ ll sub(ll best, ll b) {
 ll sub(ll best, ll b, ll MODD) {
     return (best-(b%MODD)+MODD)%MODD;
 }
+vvll sm;
+vvll sm_rev;
+vbo seen;
+vll comp;
 void solve() {
-//    ll n; cin >> n;
-//    vvll a(3, vll(n));
-//    for (ll i = 0; i < 3; i += 1) {
-//        for (ll j = 0; j < n; j += 1) {
-//            cin >> a[i][j];
-//        }
-//    }
-//    for (ll j = 0; j < n; j += 1) {
-//        for (ll i = 0; i < 3; i += 1) {
-//            ll x = a[i][j];
-//            ll y = a[(i+1)%3][j];
-//
-//        }
-//    }
     ll n; cin >> n;
-    vll a(n); for (auto &x : a) cin >> x;
-    vector<vector<ll>> tree(4*n+10);
-    auto build = [&] (auto f, ll v, ll tl, ll tr) -> void {
-        if (tl == tr) {
-            tree[v].push_back(a[tl]);
-            return;
+    sm.assign(2*n+10, vll());
+    sm_rev.assign(2*n+10, vll());
+    seen.assign(2*n+10, false);
+    comp.assign(2*n+10, -1);
+    vvll a(3, vll(n));
+    for (ll i = 0; i < 3; i += 1) {
+        for (ll j = 0; j < n; j += 1) {
+            cin >> a[i][j];
         }
-        ll tm = (tl + tr) >> 1;
-        f(f, 2*v+1, tl, tm);
-        f(f, 2*v+2, tm+1, tr);
-        for (const auto &x : tree[2*v+1]) tree[v].push_back(x);
-        for (const auto &x : tree[2*v+2]) tree[v].push_back(x);
-        sort(all(tree[v]), greater<ll>());
-        if (tree[v].size() > 100) {
-            tree[v].resize(100);
-        }
-    };
-    build(build, 0, 0, n-1);
-    vll curr;
-    ll q; cin >> q;
-    auto get = [&] (auto f, ll v, ll tl, ll tr, ll l, ll r) -> void {
-        if (tl == l && tr == r) {
-            for (const auto &x : tree[v]) curr.push_back(x);
-            return;
-        }
-        ll tm = (tl + tr) >> 1;
-        if (l <= tm) {
-            f(f, 2*v+1, tl, tm, l, min(r, tm));
-        }
-        if (r >= tm+1) {
-            f(f, 2*v+2, tm+1, tr, max(l, tm+1), r);
-        }
-    };
-    for (ll i = 0; i < q; i += 1) {
-        curr.clear();
-        ll l, r; cin >> l >> r; l -= 1; r -= 1;
-        get(get, 0, 0, n-1, l, r);
-        sort(all(curr), greater<ll>());
-        ll sz = r-l+1;
-        if (sz == 1) {
-            cout << curr[0] << endl;
-            continue;
-        }
-        if (sz == 2) {
-            cout << ld(curr[0]+curr[1])/2.l << endl;
-            continue;
-        }
-        ld shit = 2.l;
-        ld su = 0;
-        for (ll b = 0; b < curr.size(); b += 1) {
-            su += ld(curr[b])/shit;
-            if (b != curr.size()-2) shit *= 2.l;
-        }
-        cout << su << endl;
     }
+    auto add_disj = [&] (ll a, ll a_is_neg, ll b, ll b_is_neg) -> void {
+        a = (2 * a) ^ a_is_neg;
+        b = (2 * b) ^ b_is_neg;
+        ll neg_a = a ^ 1;
+        ll neg_b = b ^ 1;
+        sm[neg_a].push_back(b);
+        sm_rev[b].push_back(neg_a);
+        sm[neg_b].push_back(a);
+        sm_rev[a].push_back(neg_b);
+    };
+    for (ll j = 0; j < n; j += 1) {
+        for (ll i = 0; i < 3; i += 1) {
+            ll x = a[i][j];
+            ll y = a[(i+1)%3][j];
+            ll shita = 0;
+            ll shitb = 0;
+            if (x < 0) x = -x, shita = 1;
+            if (y < 0) y = -y, shitb = 1;
+            add_disj(x, shita, y, shitb);
+        }
+    }
+//    for (ll i = 1; i <= n; i += 1) {
+//        cout << i << ": ";
+//        for (const auto &x : sm[2*i]) {
+//            if (x&1) cout << "~";
+//            cout << x/2 << " ";
+//        }cout << endl;
+//        cout << "~" << i << ": ";
+//        for (const auto &x : sm[2*i+1]) {
+//            if (x&1) cout << "~";
+//            cout << x/2 << " ";
+//        }cout << endl;
+//    }
+    auto solvable = [&] () -> bool {
+        vll toposort;
+        auto dfs = [&] (auto f, ll v) -> void {
+            seen[v] = true;
+            for (const auto &x : sm[v]) {
+                if (!seen[x]) {
+                    seen[x] = true;
+                    f(f, x);
+                }
+            }
+            toposort.push_back(v);
+        };
+        ll COMP = 0;
+        auto dfs_rev = [&] (auto f, ll v) -> void {
+            comp[v] = COMP;
+            for (const auto &x : sm_rev[v]) {
+                if (comp[x] == -1) {
+                    comp[x] = COMP;
+                    f(f, x);
+                }
+            }
+        };
+        for (ll i = 1; i <= n; i += 1) {
+            if (!seen[2*i]) dfs(dfs, 2*i);
+            if (!seen[2*i+1]) dfs(dfs, 2*i+1);
+        }
+        reverse(all(toposort));
+        for (const auto &x : toposort) {
+            if (comp[x] == -1) {
+                dfs_rev(dfs_rev, x);
+                COMP += 1;
+            }
+        }
+        bool OK = true;
+        for (ll i = 1; i <= n; i += 1) {
+            OK &= comp[2*i] != comp[2*i+1];
+        }
+        return OK;
+    };
+    cout << (solvable()?"YES":"NO") << endl;
 }
 int32_t main(int32_t argc, char* argv[]) {
 //    ifstream cin("distance.in");
@@ -228,7 +246,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-//    cin >> tt;
+    cin >> tt;
 
     while (tt--) {
         solve();
