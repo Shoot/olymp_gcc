@@ -21,7 +21,7 @@ ostream& endl(ostream& os) {
     return os << '\n';
 }
 #define all(xxx) xxx.begin(), xxx.end()
-#define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl
+#define watch(xxx) cout << "value of " << #xxx << " is " << (xxx) << endl
 template <class T, class S> inline bool chmax(T &best, const S &b) { return (best < b ? best = b, 1 : 0); }
 template <class T, class S> inline bool chmin(T &best, const S &b) { return (best > b ? best = b, 1 : 0); }
 template <typename T, typename U>
@@ -136,74 +136,60 @@ ll sub(ll best, ll b) {
 ll sub(ll best, ll b, ll MODD) {
     return (best-(b%MODD)+MODD)%MODD;
 }
-const ll NONEXIST = -1e3;
 void solve() {
-    struct Line {
-        ll k = 0;
-        ll b = -1e18;
-        ll operator()(ll X) {
-            return ll(k)*X + ll(b);
-        }
-    };
-    struct Node {
-        ll left = NONEXIST;
-        ll right = NONEXIST;
-        Line line;
-    };
-    vector<Node> V;
-    V.push_back(Node());
-    auto push = [&] (ll i) -> void {
-        if (V[i].left == NONEXIST) {
-            V.push_back(Node());
-            V[i].left = V.size()-1;
-        }
-        if (V[i].right == NONEXIST) {
-            V.push_back(Node());
-            V[i].right = V.size()-1;
-        }
-    };
-    auto get_best = [&] (auto f, ll i, ll tl, ll tr, ll pos) -> ll {
-        if (tl == tr) {
-            return V[i].line(pos);
-        }
-        ll tm = (tl + tr) >> 1;
-        if (pos <= tm && V[i].left != NONEXIST) {
-            return max(V[i].line(pos), f(f, V[i].left, tl, tm, pos));
-        }
-        if (pos >= tm+1 && V[i].right != NONEXIST) {
-            return max(V[i].line(pos), f(f, V[i].right, tm+1, tr, pos));
-        }
-        return V[i].line(pos);
-    };
-    auto insert_line = [&] (auto f, ll i, ll tl, ll tr, Line nw) -> void {
-        ll tm = (tl + tr) >> 1;
-        ll dominating_m = nw(tm) > V[i].line(tm);
-        bool dominating_l = nw(tl) > V[i].line(tl);
-        if (dominating_m) swap(nw, V[i].line);
-        if (tl == tr) return;
-        push(i);
-        if (dominating_m && dominating_l || !dominating_m && !dominating_l) {
-            f(f, V[i].right, tm+1, tr, nw);
-        }
-        if (dominating_m && !dominating_l || !dominating_m && dominating_l) {
-            f(f, V[i].left, tl, tm, nw);
-        }
-    };
-    const ll L = -2e9;
-    const ll R = 2e9;
     ll n; cin >> n;
-    vector<ll> a(n+1);
-    ll og = 0;
-    ll add = 0;
-    for (ll i = 1; i <= n; i += 1) cin >> a[i], og += a[i] * i;
-    vector<ll> pref(n+1);
-    for (ll i = 1; i <= n; i += 1) pref[i] = a[i]+pref[i-1];
-    for (ll i = 0; i <= n; i += 1) insert_line(insert_line, 0, L, R, Line(i, -pref[i]));
-    for (ll i = 1; i <= n; i += 1) {
-        add = max(add, get_best(get_best, 0, L, R, a[i]) +
-        pref[i - 1] - a[i] * (i - 1));
+    ll msb = -1;
+    for (ll i = 60; i >= 0; i -= 1) {
+        ll nvml = (1ll << i);
+        ll nvmr = min(n, (1ll << (i+1))-1);
+        if (nvml > nvmr) continue;
+        cout << "xor " << nvml << " " << nvmr << endl;
+        cout.flush();
+        ll ans; cin >> ans;
+        if (ans) {
+            msb = i;
+            break;
+        }
     }
-    cout << og + add << endl;
+    assert(msb != -1);
+    ll biggest_non_zero = -1;
+    ll l = 1ll << msb;
+    ll r = min(n, (1ll << (msb+1))-1);
+    while (l <= r) {
+        ll mid = (l + r) >> 1;
+        cout << "xor " << mid << " " << min(n, (1ll << (msb+1))-1) << endl;
+        cout.flush();
+        ll ans; cin >> ans;
+        if (ans) {
+            biggest_non_zero = mid;
+            l = mid+1;
+        } else {
+            r = mid-1;
+        }
+    }
+    assert(biggest_non_zero != -1);
+    ll A = biggest_non_zero;
+    ll first_non_zero = -1;
+    ll L = 1; ll R = A-1;
+    while (L <= R) {
+        ll MID = (L + R) >> 1;
+        cout << "xor 1 " << MID << endl;
+        cout.flush();
+        ll ans; cin >> ans;
+        if (ans != 0) {
+            first_non_zero = MID;
+            R = MID-1;
+        } else {
+            L = MID+1;
+        }
+    }
+    assert(first_non_zero != -1);
+    ll B = first_non_zero;
+    cout << "xor 1 " << n << endl;
+    cout.flush();
+    ll ans; cin >> ans;
+    cout << "ans " << A << " " << B << " " << (ans^A^B) << endl;
+    cout.flush();
 }
 
 int32_t main(int32_t argc, char* argv[]) {
@@ -226,7 +212,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-//    cin >> tt;
+    cin >> tt;
 
     while (tt--) {
         solve();
