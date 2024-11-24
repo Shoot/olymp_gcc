@@ -136,141 +136,76 @@ ll sub(ll best, ll b) {
 ll sub(ll best, ll b, ll MODD) {
     return (best-(b%MODD)+MODD)%MODD;
 }
-vvll sm;
-vvll sm_rev;
-vbo seen;
-vll comp;
-ll n;
+const ll NONEXIST = -1e3;
 void solve() {
-    auto add_disj = [&] (ll a, ll a_is_neg, ll b, ll b_is_neg) -> void {
-        a = (2 * a) ^ a_is_neg;
-        b = (2 * b) ^ b_is_neg;
-        ll neg_a = a ^ 1;
-        ll neg_b = b ^ 1;
-        sm[neg_a].push_back(b);
-        sm_rev[b].push_back(neg_a);
-        sm[neg_b].push_back(a);
-        sm_rev[a].push_back(neg_b);
-    };
-    auto add_eq = [&] (ll a, ll b) -> void {
-        a = (2 * a);
-        b = (2 * b);
-        ll neg_a = a ^ 1;
-        ll neg_b = b ^ 1;
-        sm[a].push_back(b);
-        sm[b].push_back(a);
-        sm_rev[b].push_back(a);
-        sm_rev[a].push_back(b);
-        sm[neg_b].push_back(neg_a);
-        sm[neg_a].push_back(neg_b);
-        sm_rev[neg_a].push_back(neg_b);
-        sm_rev[neg_b].push_back(neg_a);
-    };
-    auto add_uneq = [&] (ll a, ll b) -> void {
-        a = (2 * a);
-        b = (2 * b);
-        ll neg_a = a ^ 1;
-        ll neg_b = b ^ 1;
-        sm[a].push_back(neg_b);
-        sm[b].push_back(neg_a);
-        sm_rev[b].push_back(neg_a);
-        sm_rev[a].push_back(neg_b);
-        sm[neg_b].push_back(a);
-        sm[neg_a].push_back(b);
-        sm_rev[neg_a].push_back(b);
-        sm_rev[neg_b].push_back(a);
-    };
-    ll curr = 0;
-    auto solvable = [&] () -> bool {
-        vll toposort;
-        auto dfs = [&] (auto f, ll v) -> void {
-            seen[v] = true;
-            for (const auto &x : sm[v]) {
-                if (!seen[x]) {
-                    seen[x] = true;
-                    f(f, x);
-                }
-            }
-            toposort.push_back(v);
-        };
-        ll COMP = 0;
-        auto dfs_rev = [&] (auto f, ll v) -> void {
-            comp[v] = COMP;
-            for (const auto &x : sm_rev[v]) {
-                if (comp[x] == -1) {
-                    comp[x] = COMP;
-                    f(f, x);
-                }
-            }
-        };
-        for (ll i = 0; i < curr; i += 1) {
-            if (!seen[2*i]) dfs(dfs, 2*i);
-            if (!seen[2*i+1]) dfs(dfs, 2*i+1);
+    struct Line {
+        ll k = 0;
+        ll b = -1e18;
+        ll operator()(ll X) {
+            return ll(k)*X + ll(b);
         }
-        reverse(all(toposort));
-        for (const auto &x : toposort) {
-            if (comp[x] == -1) {
-                dfs_rev(dfs_rev, x);
-                COMP += 1;
-            }
-        }
-        bool OK = true;
-        for (ll i = 0; i < curr; i += 1) {
-            OK &= comp[2*i] != comp[2*i+1];
-        }
-        return OK;
     };
-    // last_solvable
-    cin >> n;
-    ll good = -1;
-    ll l = 0, r = n-1;
-    struct shit {
-        ll x;
-        ll y;
-        ll val1;
-        ll val2;
+    struct Node {
+        ll left = NONEXIST;
+        ll right = NONEXIST;
+        Line line;
     };
-    vector<shit> a(n);
-    map<ll, ll> stroka;
-    map<ll, ll> stolbec;
-    for (ll i = 0; i < n; i += 1) {
-        cin >> a[i].x >> a[i].y >> a[i].val1 >> a[i].val2;
-        if (stroka.count(a[i].x) == 0) {
-            stroka[a[i].x] = curr++;
+    vector<Node> V;
+    V.push_back(Node());
+    auto push = [&] (ll i) -> void {
+        if (V[i].left == NONEXIST) {
+            V.push_back(Node());
+            V[i].left = V.size()-1;
         }
-        if (stolbec.count(a[i].y) == 0) {
-            stolbec[a[i].y] = curr++;
+        if (V[i].right == NONEXIST) {
+            V.push_back(Node());
+            V[i].right = V.size()-1;
         }
-        a[i].x = stroka[a[i].x];
-        a[i].y = stolbec[a[i].y];
+    };
+    auto get_best = [&] (auto f, ll i, ll tl, ll tr, ll pos) -> ll {
+        if (tl == tr) {
+            return V[i].line(pos);
+        }
+        ll tm = (tl + tr) >> 1;
+        if (pos <= tm && V[i].left != NONEXIST) {
+            return max(V[i].line(pos), f(f, V[i].left, tl, tm, pos));
+        }
+        if (pos >= tm+1 && V[i].right != NONEXIST) {
+            return max(V[i].line(pos), f(f, V[i].right, tm+1, tr, pos));
+        }
+        return V[i].line(pos);
+    };
+    auto insert_line = [&] (auto f, ll i, ll tl, ll tr, Line nw) -> void {
+        ll tm = (tl + tr) >> 1;
+        ll dominating_m = nw(tm) > V[i].line(tm);
+        bool dominating_l = nw(tl) > V[i].line(tl);
+        if (dominating_m) swap(nw, V[i].line);
+        if (tl == tr) return;
+        push(i);
+        if (dominating_m && dominating_l || !dominating_m && !dominating_l) {
+            f(f, V[i].right, tm+1, tr, nw);
+        }
+        if (dominating_m && !dominating_l || !dominating_m && dominating_l) {
+            f(f, V[i].left, tl, tm, nw);
+        }
+    };
+    const ll L = -2e9;
+    const ll R = 2e9;
+    ll n; cin >> n;
+    vector<ll> a(n+1);
+    ll og = 0;
+    ll add = 0;
+    for (ll i = 1; i <= n; i += 1) cin >> a[i], og += a[i] * i;
+    vector<ll> pref(n+1);
+    for (ll i = 1; i <= n; i += 1) pref[i] = a[i]+pref[i-1];
+    for (ll i = 0; i <= n; i += 1) insert_line(insert_line, 0, L, R, Line(i, -pref[i]));
+    for (ll i = 1; i <= n; i += 1) {
+        add = max(add, get_best(get_best, 0, L, R, a[i]) +
+        pref[i - 1] - a[i] * (i - 1));
     }
-    auto ok = [&] (ll up_to) -> bool {
-        sm.assign(4*n+10, vll());
-        sm_rev.assign(4*n+10, vll());
-        seen.assign(4*n+10, false);
-        comp.assign(4*n+10, -1);
-        for (ll i = 0; i <= up_to; i += 1) {
-            if (a[i].val1 == a[i].val2) {
-                add_eq(a[i].x, a[i].y);
-            } else {
-                add_uneq(a[i].x, a[i].y);
-            }
-        }
-        return solvable();
-    };
-    while (l <= r) {
-        ll mid = (l+r) >> 1;
-        if (ok(mid)) {
-            good = mid;
-            l = mid+1;
-        } else {
-            r = mid-1;
-        }
-    }
-    for (ll i = 0; i < n; i += 1) {
-        cout << (i<=good?"Yes":"No") << endl;
-    }
+    cout << og + add << endl;
 }
+
 int32_t main(int32_t argc, char* argv[]) {
 //    ifstream cin("distance.in");
 //    ofstream cout("distance.out");
