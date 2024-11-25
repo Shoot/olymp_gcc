@@ -20,8 +20,8 @@ template <typename T> using ordered_set = tree<T, null_type, less<T>, rb_tree_ta
 ostream& endl(ostream& os) {
     return os << '\n';
 }
-//define all(xxx) xxx.begin(), xxx.end()
-//define watch(xxx) cout << "value of " << #xxx << " is " << (xxx) << endl
+#define all(xxx) xxx.begin(), xxx.end()
+#define watch(xxx) cout << "value of " << #xxx << " is " << (xxx) << endl
 template <class T, class S> inline bool chmax(T &best, const S &b) { return (best < b ? best = b, 1 : 0); }
 template <class T, class S> inline bool chmin(T &best, const S &b) { return (best > b ? best = b, 1 : 0); }
 template <typename T, typename U>
@@ -63,11 +63,24 @@ void print(Head&& head, Tail&&... tail) {
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 uniform_int_distribution<ll> distrib(0ll, 5ll);
-//constexpr __int128 MOD = 819356875157278019ll;
-constexpr __int128 MOD = 957363431467152001;
-__int128 powm(__int128 best, __int128 b) {
+//constexpr ll MOD = 819356875157278019ll;
+constexpr ll MOD = 1e9+7;
+void in(vector<ll> & best) {
+    for (auto & zero_leaf : best) cin >> zero_leaf;
+}
+void in(vector<ll> & best, ll l, ll r) {
+    for (ll i=l; i < r; i+=1) {
+        cin >> best[i];
+    }
+}
+void inn(vector<ll> & best, ll l, ll rr) {
+    for (ll i=l; i <= rr; i+=1) {
+        cin >> best[i];
+    }
+}
+ll powm(ll best, ll b) {
     assert(b >= 0);
-    __int128 d = 1;
+    ll d = 1;
     while (b) {
         if (b&1) d = (d*best) % MOD;
         b >>= 1;
@@ -75,9 +88,9 @@ __int128 powm(__int128 best, __int128 b) {
     }
     return d;
 }
-__int128 powm(__int128 best, __int128 b, __int128 MODD) {
+ll powm(ll best, ll b, ll MODD) {
     assert(b >= 0);
-    __int128 d = 1;
+    ll d = 1;
     while (b) {
         if (b&1) d = (d*best) % MODD;
         b >>= 1;
@@ -85,9 +98,9 @@ __int128 powm(__int128 best, __int128 b, __int128 MODD) {
     }
     return d;
 }
-__int128 poww(__int128 best, __int128 b) {
+ll poww(ll best, ll b) {
     assert(b >= 0);
-    __int128 d = 1;
+    ll d = 1;
     while (b) {
         if (b&1) d = (d*best);
         b >>= 1;
@@ -95,7 +108,7 @@ __int128 poww(__int128 best, __int128 b) {
     }
     return d;
 }
-ld poww(ld best, __int128 b) {
+ld poww(ld best, ll b) {
     assert(b >= 0);
     ld d = 1;
     while (b) {
@@ -105,100 +118,198 @@ ld poww(ld best, __int128 b) {
     }
     return d;
 }
-__int128 mul(__int128 best, __int128 b) {
+ll mul(ll best, ll b) {
     return (best*b)%MOD;
 }
-__int128 mul(__int128 best, __int128 b, __int128 MODD) {
+ll mul(ll best, ll b, ll MODD) {
     return (best*b)%MODD;
 }
-__int128 sum(__int128 best, __int128 b) {
+ll sum(ll best, ll b) {
     return (best+b)%MOD;
 }
-__int128 sum(__int128 best, __int128 b, __int128 MODD) {
+ll sum(ll best, ll b, ll MODD) {
     return (best+b)%MODD;
 }
-__int128 sub(__int128 best, __int128 b) {
+ll sub(ll best, ll b) {
     return (best-(b%MOD)+MOD)%MOD;
 }
-__int128 sub(__int128 best, __int128 b, __int128 MODD) {
+ll sub(ll best, ll b, ll MODD) {
     return (best-(b%MODD)+MODD)%MODD;
 }
-namespace std {
-    template <>
-    struct hash<__int128> {
-        std::size_t operator()(__int128 value) const {
-            // Simple hash function: mix the bits of __int128 into a size_t
-            uint64_t high = static_cast<uint64_t>(value >> 64);
-            uint64_t low = static_cast<uint64_t>(value);
-            return std::hash<uint64_t>()(high) ^ (std::hash<uint64_t>()(low) << 1);
-        }
-    };
-} // namespace std
-__int128 MAXN = 2e5+10;
-__int128 base = MAXN;
-__int128 revbase7 = powm(base, MOD-2, MOD);
-vector<__int128> base_power7(MAXN, 1);
-vector<__int128> base_rev_power7(MAXN, 1);
+struct shit {
+    ll idx;
+    ll high_priority_class, low_priority_class;
+};
 void solve() {
-    for (ll i = 1; i < MAXN; i += 1) {
-        base_power7[i] = (base_power7[i-1]*base)%MOD;
-        base_rev_power7[i] = (base_rev_power7[i-1]*revbase7)%MOD;
+    function<ll(shit,shit)> comp = [] (shit a, shit b){
+        if (a.high_priority_class == b.high_priority_class) {
+            return a.low_priority_class < b.low_priority_class;
+        }
+        return a.high_priority_class < b.high_priority_class;
+    };
+    ll o = 31;
+    ll N = 6e5;
+    vll powo(N);
+    vll revpow_o(N);
+    powo[0] = 1;
+    for (ll i = 1; i < N; i += 1) {
+        powo[i] = mul(powo[i-1], o);
     }
-    ll n; cin >> n;
-    vector<string> shit(n);
-    vvll pref(n);
-    vll sz(n);
+    revpow_o[N-1] = powm(powo[N-1], MOD-2);
+    for (ll i = N-2; i >= 0; i -= 1) {
+        revpow_o[i] = mul(revpow_o[i+1], o);
+    }
+    assert(powo[0] == 1);
+    assert(powo[1] == o);
+    assert(revpow_o[0] == 1);
+    assert(revpow_o[1] == powm(o, MOD-2));
+    string s;
+    cin >> s;
+    auto s2 = s;
+    reverse(s2.begin(), s2.end());
+    ll n = ll(s.size());
+    vll pref_hash(n+1);
+    vll pref_hash2(n+1);
+    for (ll i = 1; i <= n; i += 1) {
+        pref_hash[i] = sum(pref_hash[i-1], mul(s[i-1]-'a'+1, powo[i]));
+    }
+    for (ll i = 1; i <= n; i += 1) {
+        pref_hash2[i] = sum(pref_hash2[i-1], mul(s2[i-1]-'a'+1, powo[i]));
+    }
+    function<ll(ll, ll)> hash = [&] (ll l, ll r) {
+        l += 1;
+        r += 1;
+        return mul(
+                sub(pref_hash[r],pref_hash[l-1]),
+                revpow_o[l-1]
+        );
+    };
+    function<ll(ll, ll)> rhash = [&] (ll l, ll r) {
+        assert(l <= r);
+        l += 1;
+        r += 1;
+        return mul(
+                sub(pref_hash2[r],pref_hash2[l-1]),
+                revpow_o[l-1]
+        );
+    };
+    s.push_back('\0');
+    n = ll(s.size());
+    vector<shit> curr(n);
     for (ll i = 0; i < n; i += 1) {
-        cin >> shit[i];
-        sz[i] = shit[i].size();
-        pref[i].resize(sz[i]+1);
+        curr[i].idx = i;
+        curr[i].high_priority_class = s[i];
+        curr[i].low_priority_class = s[i];
     }
-    for (ll x = 0; x < n; x += 1) {
-        for (ll i = 0; i < sz[x]; i += 1) {
-            pref[x][i+1] = sum(pref[x][i], mul(__int128(shit[x][i]-'a'+1), base_power7[i]), MOD);
+    sort(all(curr), comp);
+    ll classes_cnt = 1;
+    vll c(n);
+    for (ll i = 0; i < n; i += 1) {
+        if (i > 0 && (curr[i].high_priority_class!=curr[i-1].high_priority_class ||
+                      curr[i].low_priority_class!=curr[i-1].low_priority_class)) {
+            classes_cnt += 1;
         }
+        c[curr[i].idx] = classes_cnt;
+//        cout << curr[i].idx << " " << curr[i].high_priority_class << " " << curr[i].low_priority_class << endl;
     }
-    ll l = 1, r = *min_element(sz.begin(), sz.end());
-    string ans;
-    while (l <= r) {
-        ll mid = (l+r) >> 1;
-        unordered_map<__int128, ll> st;
-        for (ll x = 0; x < n; x += 1) {
-            unordered_set<__int128> st_local;
-            for (ll i = 0; i < sz[x]+1-mid; i += 1) {
-                __int128 val = (((pref[x][i+mid]-pref[x][i]+MOD)%MOD)*base_rev_power7[i])%MOD;
-                st_local.insert(val);
-            }
-            for (const auto &z : st_local) {
-                st[z] += 1;
-            }
+    for (ll k = 0; classes_cnt < n; k += 1) {
+        ll two_pow_k = 1ll << k;
+        for (ll i = 0; i < n; i += 1) {
+            curr[i].idx = i;
+            curr[i].high_priority_class = c[i];
+            curr[i].low_priority_class = c[(i+two_pow_k)%n];
+//            cout << curr[i].idx << " " << curr[i].high_priority_class << " " << curr[i].low_priority_class << endl;
         }
-        bool intersected7 = false;
-        __int128 got = -1;
-        for (const auto &[i, j] : st) {
-            assert(j <= n);
-            if (j == n) {
-                got = i;
-                intersected7 = true;
-                break;
+        sort(all(curr), comp);
+        classes_cnt = 1;
+        for (ll i = 0; i < n; i += 1) {
+            if (i > 0 && (curr[i].high_priority_class!=curr[i-1].high_priority_class ||
+                          curr[i].low_priority_class!=curr[i-1].low_priority_class)) {
+                classes_cnt += 1;
             }
-        }
-        if (intersected7) {
-            l = mid+1;
-            ll x = 0;
-            unordered_set<__int128> st_local;
-            for (ll i = 0; i < sz[x]+1-mid; i += 1) {
-                __int128 val = (((pref[x][i+mid]-pref[x][i]+MOD)%MOD)*base_rev_power7[i])%MOD;
-                if (val == got) {
-                    ans = shit[x].substr(i, mid);
-                }
-                st_local.insert(val);
-            }
-        } else {
-            r = mid-1;
+            c[curr[i].idx] = classes_cnt;
         }
     }
-    cout << ans << endl;
+    vpll clasort(n);
+    for (ll i = 0; i <n; i+=1) {
+        clasort[i].first = c[i];
+        clasort[i].second = i;
+    }
+    sort(all(clasort));
+    auto get_first_diff_relative = [&] (ll l1, ll r1, ll l2, ll r2) -> ll {
+        ll sz = r1-l1+1;
+        assert(sz == r2-l2+1);
+        ll first_diff_rel = sz-1;
+        ll l = 0, r = sz - 1;
+        while (l <= r) {
+            ll mid = (l + r) >> 1;
+            if (hash(l1, l1 + mid) != hash(l2, l2 + mid)) {
+                first_diff_rel = mid;
+                r = mid - 1;
+            } else {
+                l = mid + 1;
+            }
+        }
+        return first_diff_rel;
+    };
+    auto query = [&] (ll START, ll END) -> ll {
+        ll sz = END-START+1;
+        ll l = 0, r = n-1;
+        ll first_equal = n-1;
+        while (l <= r) {
+            ll mid = (l+r) >> 1;
+            ll idx = clasort[mid].second;
+            ll first_diff = get_first_diff_relative(START, END, idx, idx+sz-1);
+            auto possible = s.substr(idx, sz);
+            if (s[idx+first_diff] < s[START+first_diff]) {
+                l = mid+1;
+                first_equal = mid+1;
+            } else {
+                r = mid-1;
+            }
+        }
+        ll last_equal = n-1;
+        l = 0, r = n-1;
+        while (l <= r) {
+            ll mid = (l+r) >> 1;
+            ll idx = clasort[mid].second;
+            ll first_diff = get_first_diff_relative(START, END, idx, idx+sz-1);
+            if (s[idx+first_diff] > s[START+first_diff]) {
+                r = mid-1;
+                last_equal = mid-1;
+            } else {
+                l = mid+1;
+            }
+        }
+        ll kol = last_equal-first_equal+1;
+        return kol;
+    };
+    ll sz = ll(s.size())-1;
+    for (ll i = 0; i < n - 1; i += 1) {
+        watch(i);
+        ll each_nech = 0;
+        ll l_n = 1, r_n = min(i, sz-i-1);
+        while (l_n <= r_n) {
+            ll mid = (l_n + r_n) >> 1;
+            cout << i-mid << " -> " <<  i-1 << endl;
+            cout << sz-(i+mid)-1 << " -> " << sz-(i+1)-1 << endl;
+            ll lh = hash(i-mid, i-1);
+            ll rh = rhash(sz-(i+mid)-1, sz-(i+1)-1);
+            cout << lh << " " << rh << endl;
+            if (lh == rh) {
+                l_n = mid+1;
+                each_nech = mid;
+            } else {
+                r_n = mid-1;
+            }
+        }
+        watch(each_nech);
+    }
+//    ll q; cin >> q;
+//    for (ll i = 0; i < q; i += 1) {
+//        ll l, r; cin >> l >> r;
+//        cout << query(l, r) << endl;
+//    }
 }
 
 int32_t main(int32_t argc, char* argv[]) {
