@@ -79,7 +79,7 @@ void inn(vector<ll> & best, ll l, ll rr) {
     }
 }
 ll powm(ll best, ll b) {
-    //assert(b >= 0);
+    assert(b >= 0);
     ll d = 1;
     while (b) {
         if (b&1) d = (d*best) % MOD;
@@ -89,7 +89,7 @@ ll powm(ll best, ll b) {
     return d;
 }
 ll powm(ll best, ll b, ll MODD) {
-    //assert(b >= 0);
+    assert(b >= 0);
     ll d = 1;
     while (b) {
         if (b&1) d = (d*best) % MODD;
@@ -99,7 +99,7 @@ ll powm(ll best, ll b, ll MODD) {
     return d;
 }
 ll poww(ll best, ll b) {
-    //assert(b >= 0);
+    assert(b >= 0);
     ll d = 1;
     while (b) {
         if (b&1) d = (d*best);
@@ -109,7 +109,7 @@ ll poww(ll best, ll b) {
     return d;
 }
 ld poww(ld best, ll b) {
-    //assert(b >= 0);
+    assert(b >= 0);
     ld d = 1;
     while (b) {
         if (b&1) d = (d*best);
@@ -245,74 +245,40 @@ void solve() {
     auto get_minimum_lcp = [&] (ll l, ll r) -> ll {
         ll sz = r-l+1;
         if (sz == 0) return lcp[l];
-        ll bt = 63-__builtin_clzl(sz);
+        ll bt = ll(log2l((sz)));
         return min(st[bt][l], st[bt][r-(1ll << bt)+1]);
     };
-    auto is_first_greater = [&] (ll l1, ll r1, ll l2, ll r2) -> bool {
-        if (l1 == l2) return false;
-        ll rank1 = rank[l1];
-        ll rank2 = rank[l2];
-        //assert(rank1 != rank2);
-        if (rank1 < rank2) return false;
-        ll sz = r1-l1+1;
-        //assert(sz == r2-l2+1);
-        return get_minimum_lcp(rank2, rank1-1) < sz;
-    };
     auto is_first_less = [&] (ll l1, ll r1, ll l2, ll r2) -> bool {
-        if (l1 == l2) return false;
+        if (l1 == l2) return r1 < r2;
         ll rank1 = rank[l1];
         ll rank2 = rank[l2];
-        //assert(rank1 != rank2);
-        if (rank1 > rank2) return false;
-        ll sz = r1-l1+1;
-        //assert(sz == r2-l2+1);
-        return get_minimum_lcp(rank1, rank2-1) < sz;
+        assert(rank1 != rank2);
+        ll sz = min(r1-l1+1, r2-l2+1);
+        bool one = get_minimum_lcp(min(rank1, rank2), max(rank1, rank2)-1) < sz && rank1 < rank2;
+        if (one) return true;
+        bool another = get_minimum_lcp(min(rank1, rank2), max(rank1, rank2)-1) >= sz && r1-l1 < r2-l2;
+        return another;
     };
-    auto query = [&] (ll START, ll END) -> ll {
-        ll sz = END-START+1;
-        ll l = 0, r = n-1;
-        ll first_equal = n-1;
-        while (l <= r) {
-            ll mid = (l+r) >> 1;
-            ll idx = sa[mid];
-            if (is_first_greater(START, END, idx, idx+sz-1)) {
-                l = mid+1;
-                first_equal = mid+1;
-            } else {
-                r = mid-1;
-            }
-        }
-        ll last_equal = n-1;
-        l = 0, r = n-1;
-        while (l <= r) {
-            ll mid = (l+r) >> 1;
-            ll idx = sa[mid];
-            if (is_first_less(START, END, idx, idx+sz-1)) {
-                r = mid-1;
-                last_equal = mid-1;
-            } else {
-                l = mid+1;
-            }
-        }
-        ll kol = last_equal-first_equal+1;
-        return kol;
+//    cout << MAXI << endl;
+    ll q; cin >> q;
+    vector<pll> Q(q);
+    for (ll i = 0; i < q; i += 1) {
+        cin >> Q[i].first >> Q[i].second;
+
+    }
+    auto comp = [&] (pll a, pll b) {
+        bool f_l = is_first_less(a.first-1, a.second-1, b.first-1, b.second-1);
+        bool s_l = is_first_less(b.first-1, b.second-1, a.first-1, a.second-1);
+        if (!f_l && !s_l) return a < b;
+        return f_l;
     };
-    ll sz = ll(s.size())-1;
-//    cout << d1 << endl;
-//    cout << d2 << endl;
-    ll MAXI = 0;
-    for (ll i = 0; i < sz; i += 1) {
-        ll l = 2*d1[i]-1;
-        ll val = l*query(i-(d1[i]-1), i+(d1[i]-1));
-        MAXI = max(MAXI, val);
+    sort(Q.begin(), Q.end(), comp);
+    for (const auto &[i, j] : Q) {
+        cout << i << ' ' << j << endl;
     }
-    for (ll i = 0; i < sz; i += 1) {
-        if (d2[i] == 0) continue;
-        ll l = d2[i]*2;
-        ll val = l*query(i-d2[i]+1, i+d2[i]);
-        MAXI = max(MAXI, val);
-    }
-    cout << MAXI << endl;
+//    assert(is_sorted(Q.begin(), Q.end(), [&] (pll a, pll b) {
+//        return s.substr(a.first-1, a.second-a.first+1) < s.substr(b.first-1, b.second-b.first+1);
+//    }));
 }
 
 int32_t main(int32_t argc, char* argv[]) {
