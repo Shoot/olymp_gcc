@@ -160,10 +160,6 @@ void solve() {
     for (ll i = N-2; i >= 0; i -= 1) {
         revpow_o[i] = mul(revpow_o[i+1], o);
     }
-    //assert(powo[0] == 1);
-    //assert(powo[1] == o);
-    //assert(revpow_o[0] == 1);
-    //assert(revpow_o[1] == powm(o, MOD-2));
     string s(3e5, 'a');
 //    cin >> s;
     auto s2 = s;
@@ -194,41 +190,41 @@ void solve() {
     s.push_back('\0');
     n = ll(s.size());
     auto start = chrono::high_resolution_clock::now();
-    vector<shit> curr(n);
-    for (ll i = 0; i < n; i += 1) {
-        curr[i].idx = i;
-        curr[i].high_priority_class = s[i];
-        curr[i].low_priority_class = s[i];
-    }
-    sort(curr.begin(), curr.end(), comp);
-    ll classes_cnt = 1;
+    ll classes_cnt = 0;
+    ll cnt = 0;
+    vvll mp(500);
+    for (ll i = 0; i < n; i++) mp[s[i]].push_back(i);
     vll c(n);
-    for (ll i = 0; i < n; i += 1) {
-        if (i > 0 && (curr[i].high_priority_class != curr[i-1].high_priority_class ||
-                      curr[i].low_priority_class != curr[i-1].low_priority_class)) {
-            classes_cnt += 1;
-        }
-        c[curr[i].idx] = classes_cnt;
+    vll p(n);
+    for (auto &x : mp) {
+        if (x.empty()) continue;
+        for (ll u : x)
+            c[u] = classes_cnt, p[cnt++] = u;
+        classes_cnt++;
     }
-    stop = chrono::high_resolution_clock::now();
-    cout << chrono::duration_cast<chrono::milliseconds>(stop-start) << endl;
+    vll c_nw(n);
     for (ll K = 0; classes_cnt < n; K += 1) {
+        vvll a(classes_cnt);
         ll two_pow_k = 1ll << K;
+        ll classes_cnt_ = 0;
+        cnt = 0;
         for (ll i = 0; i < n; i += 1) {
-            curr[i].idx = i;
-            curr[i].high_priority_class = c[i];
-            curr[i].low_priority_class = c[(i+two_pow_k)%n];
+            ll prev = (p[i]-two_pow_k+n)%n;
+            a[c[prev]].push_back(prev);
         }
-        sort(curr.begin(), curr.end(), comp);
-        classes_cnt = 1;
-        for (ll i = 0; i < n; i += 1) {
-            if (i > 0 && (curr[i].high_priority_class != curr[i-1].high_priority_class ||
-                          curr[i].low_priority_class != curr[i-1].low_priority_class)) {
-                classes_cnt += 1;
+        for (ll i = 0; i < classes_cnt; i++) { // same prev
+            for (size_t j = 0; j < a[i].size(); j++) {
+                // если суффикс начинает новый класс эквивалентности
+                if (j == 0 || c[(a[i][j]+two_pow_k)%n] != c[(a[i][j-1]+two_pow_k)%n])
+                    classes_cnt_++;
+                c_nw[a[i][j]] = classes_cnt_-1;
+                p[cnt++] = a[i][j];
             }
-            c[curr[i].idx] = classes_cnt;
         }
+        swap(c, c_nw);
+        swap(classes_cnt, classes_cnt_);
     }
+    stop = chrono::high_resolution_clock::now(); cout << chrono::duration_cast<chrono::milliseconds>(stop-start) << endl;
     vpll clasort(n);
     for (ll i = 0; i <n; i+=1) {
         clasort[i].first = c[i];
@@ -239,8 +235,8 @@ void solve() {
     vll sa(n);
     vll lcp(n-1);
     for (ll i = 0; i < n; i+=1) {
-        rank[i] = c[i]-1;
-        sa[c[i]-1] = i;
+        rank[i] = c[i];
+        sa[c[i]] = i;
     }
     auto get_first_diff_relative = [&] (ll l1, ll r1, ll l2, ll r2) -> ll {
         ll sz = min(r1-l1+1, r2-l2+1);
@@ -268,8 +264,6 @@ void solve() {
         while (i+k < n && j+k < n && s[i+k] == s[j+k]) k++;
         lcp[rank[i]] = k;
     }
-    stop = chrono::high_resolution_clock::now();
-    cout << chrono::duration_cast<chrono::milliseconds>(stop-start) << endl;
     //    for (ll i = 0; i < sz; i += 1) {
 //        cout << lcp[rank[i]] << ' ';
 //    }cout << endl;
@@ -282,8 +276,6 @@ void solve() {
             if (shi < n) st[b][i] = min(st[b][i], st[b-1][shi]);
         }
     }
-    stop = chrono::high_resolution_clock::now();
-    cout << chrono::duration_cast<chrono::milliseconds>(stop-start) << endl;
     auto get_minimum_lcp = [&] (ll l, ll r) -> ll {
         ll sz = r-l+1;
         if (sz == 0) return lcp[l];
@@ -341,6 +333,7 @@ void solve() {
     };
     ll sz = ll(s.size())-1;
     ll MAXI = 0;
+    stop = chrono::high_resolution_clock::now(); cout << chrono::duration_cast<chrono::milliseconds>(stop-start) << endl;
     for (ll i = 0; i < sz; i += 1) {
         ll each_nech = 0;
         ll l_n = 1, r_n = min(i, sz-i-1);
@@ -359,8 +352,7 @@ void solve() {
         ll val = l*query(i-each_nech, i+each_nech);
         MAXI = max(MAXI, val);
     }
-    stop = chrono::high_resolution_clock::now();;
-    cout << chrono::duration_cast<chrono::milliseconds>(stop-start) << endl;
+    stop = chrono::high_resolution_clock::now(); cout << chrono::duration_cast<chrono::milliseconds>(stop-start) << endl;
     for (ll i = 0; i < sz; i += 1) {
         ll each_chet = 0;
         ll l_n = 1, r_n = min(i+1, sz-i-1);
@@ -380,8 +372,7 @@ void solve() {
         ll val = l*query(i-each_chet+1, i+each_chet);
         MAXI = max(MAXI, val);
     }
-    stop = chrono::high_resolution_clock::now();;
-    cout << chrono::duration_cast<chrono::milliseconds>(stop-start) << endl;
+    stop = chrono::high_resolution_clock::now(); cout << chrono::duration_cast<chrono::milliseconds>(stop-start) << endl;
     cout << MAXI << endl;
 }
 
