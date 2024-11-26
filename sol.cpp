@@ -136,46 +136,100 @@ ll sub(ll best, ll b) {
 ll sub(ll best, ll b, ll MODD) {
     return (best-(b%MODD)+MODD)%MODD;
 }
-vector<int> manacher_odd(string &s) {
-    int n = (int) s.size();
-    vector<int> d(n, 1);
-    int l = 0, r = 0;
-    for (int i = 1; i < n; i++) {
-        if (i < r)
-            d[i] = min(r - i + 1, d[l + r - i]);
-        while (i - d[i] >= 0 && i + d[i] < n && s[i - d[i]] == s[i + d[i]])
-            d[i]++;
-        if (i + d[i] - 1 > r)
-            l = i - d[i] + 1, r = i + d[i] - 1;
-    }
-    return d;
-}
-vector<int> manacher_even(string &s) {
-    int n = (int) s.size();
-    vector<int> d(n, 0);
-    int l = -1, r = -1;
-    for (int i = 0; i < n - 1; i++) {
-        if (i < r)
-            d[i] = min(r - i, d[l + r - i - 1]);
-        while (i - d[i] >= 0 && i + d[i] + 1 < n && s[i - d[i]] == s[i + d[i] + 1])
-            d[i]++;
-        if (i + d[i] > r)
-            l = i - d[i] + 1, r = i + d[i];
-    }
-    return d;
-}
 void solve() {
-    string s;
-    cin >> s;
-    ll n = ll(s.size());
-    auto d1 = manacher_odd(s);
-    auto d2 = manacher_even(s);
-    ll kol = 0;
-    for (ll i = 0; i < n; i += 1) {
-        kol += d1[i];
-        kol += d2[i];
+    ll q; cin >> q;
+    struct Node {
+        ll zero = -1;
+        ll one = -1;
+        ll kol_path = 0;
+    };
+    vector<Node> trie;
+    trie.push_back(Node());
+    auto push = [&] (ll v) -> void {
+        if (trie[v].one == -1) {
+            trie.push_back(Node());
+            trie[v].one = ll(trie.size()-1);
+        }
+        if (trie[v].zero == -1) {
+            trie.push_back(Node());
+            trie[v].zero = ll(trie.size()-1);
+        }
+    };
+    auto push_one = [&] (ll v) -> void {
+        if (trie[v].one == -1) {
+            trie.push_back(Node());
+            trie[v].one = ll(trie.size()-1);
+        }
+    };
+    auto push_zero = [&] (ll v) -> void {
+        if (trie[v].zero == -1) {
+            trie.push_back(Node());
+            trie[v].zero = ll(trie.size()-1);
+        }
+    };
+    auto find = [&] (ll x, ll inc) -> ll {
+        ll curr = 0;
+        for (ll i = 60; i >= 0; i -= 1) {
+            ll bt = 1ll << i;
+            if (x&bt) {
+                push_one(curr);
+                curr = trie[curr].one;
+            } else {
+                push_zero(curr);
+                curr = trie[curr].zero;
+            }
+            trie[curr].kol_path += inc;
+            assert(trie[curr].kol_path >= 0);
+        }
+        return curr;
+    };
+    auto insert = [&] (ll x) -> void {
+        find(x, 1);
+    };
+    insert(0);
+    auto erase = [&] (ll x) -> void {
+        find(x, -1);
+    };
+    auto get_best = [&] (ll x) -> ll {
+        ll curr = 0;
+        ll found = 0;
+        for (ll i = 60; i >= 0; i -= 1) {
+            push(curr);
+            ll bt = 1ll << i;
+            ll has = x&bt;
+            if (has && trie[trie[curr].zero].kol_path) {
+                curr = trie[curr].zero;
+                continue;
+            }
+            if (!has && trie[trie[curr].one].kol_path) {
+                curr = trie[curr].one;
+                found += bt;
+                continue;
+            }
+            if (trie[trie[curr].zero].kol_path) {
+                curr = trie[curr].zero;
+                continue;
+            }
+            if (trie[trie[curr].one].kol_path) {
+                curr = trie[curr].one;
+                found += bt;
+                continue;
+            }
+            assert(false);
+        }
+        return found;
+    };
+    for (ll i = 0; i < q; i += 1) {
+        char type; cin >> type;
+        ll x; cin >> x;
+        if (type == '+') {
+            insert(x);
+        } else if (type == '-') {
+            erase(x);
+        } else {
+            cout << (x^get_best(x)) << endl;
+        }
     }
-    cout << kol << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
