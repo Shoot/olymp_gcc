@@ -11,47 +11,60 @@ using namespace std;
 void solve() {
     int n;
     cin >> n;
-    vector<multiset<int>> sm(n+1);
+    vector<vector<int>> sm(n+1);
+    vector<vector<int>> sm_rev(n+1);
+    int one = 0;
     for (int i = 1; i <= n; i += 1) {
-        int kol; cin >> kol;
-        for (int j = 0; j < kol; j += 1) {
-            int v, nvm; cin >> v >> nvm;
-            if (i < v) {
-                sm[i].insert(v);
-                sm[v].insert(i);
+        int depend; cin >> depend;
+        if (depend == i) one += 1;
+        sm[i].push_back(depend);
+        sm_rev[depend].push_back(i);
+    }
+    bitset<1'000'000> seen;
+    vector<int> topo;
+    auto dfs = [&] (auto f, int v) -> void {
+        seen[v] = true;
+        for (const auto &x : sm[v]) {
+            if (!seen[x]) {
+                seen[x] = true;
+                f(f, x);
+            }
+        }
+        topo.push_back(v);
+    };
+    for (int i = 1; i <= n; i += 1) {
+        if (!seen[i]) {
+            dfs(dfs, i);
+        }
+    }
+    reverse(topo.begin(), topo.end());
+//    for (const auto &x : topo) {
+//        cout << x << '!';
+//    }cout << endl;
+    vector<int> comp(n+1);
+    int COMP = 0;
+    int SZ = 0;
+    auto dfs_rev = [&] (auto f, int v) -> void {
+        comp[v] = COMP;
+        SZ += 1;
+        for (const auto &x : sm_rev[v]) {
+            if (!comp[x]) {
+                f(f, x);
+            }
+        }
+    };
+    int tot = 0;
+    for (int i = 0; i < n; i += 1) {
+        if (!comp[topo[i]]) {
+            COMP += 1;
+            SZ = 0;
+            dfs_rev(dfs_rev, topo[i]);
+            if (SZ != 1) {
+                tot += 1;
             }
         }
     }
-    int nech = 0;
-    int nech_v = 1;
-    for (int i = 1; i <= n; i += 1) {
-        if (sm[i].size()%2) {
-            nech_v = i;
-            nech += 1;
-        }
-    }
-    if (nech > 2) {
-        cout << -1 << endl;
-        return;
-    }
-    vector<int> ans;
-    auto find_path = [&] (auto f, int v) -> void {
-        while (!sm[v].empty()) {
-            auto it = sm[v].begin();
-            int x = *it;
-            sm[v].erase(sm[v].find(x));
-            sm[x].erase(sm[x].find(v));
-            f(f, x);
-        }
-        ans.push_back(v);
-    };
-
-    find_path(find_path, nech_v);
-    cout << ans.size()-1 << endl;
-    for (const auto &x : ans) {
-        cout << x << ' ';
-    }
-    cout << endl;
+    cout << tot+one << endl;
 }
 
 int32_t main() {
