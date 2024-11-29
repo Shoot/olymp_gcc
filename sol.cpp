@@ -37,50 +37,14 @@ ostream& operator<<(ostream& os, const vector<T>& A) {
     }
     return os;
 }
-void scan(ll &best) { cin >> best; }
-void scan(char &best) { cin >> best; }
-void scan(double &best) { cin >> best; }
-void scan(long double &best) { cin >> best; }
-void scan(string &best) { cin >> best; }
-template <class T, class S> void scan(pair<T, S> &p) { scan(p.first), scan(p.second); }
-template <class T> void scan(vector<T> &best) {for(auto &i : best) scan(i);}
-template <class T> void scan(T &best) { cin >> best; }
-void IN() {}
-template <class Head, class... Tail> void IN(Head &head, Tail &...tail) {
-    scan(head);
-    IN(tail...);
-}
-void print() {
-    cout << "\n";
-}
-template <class Head, class... Tail>
-void print(Head&& head, Tail&&... tail) {
-    cout << head;
-    if (sizeof...(Tail)) cout << " ";
-    print(forward<Tail>(tail)...);
-}
-//#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math,trapv")
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-uniform_int_distribution<ll> distrib(1ll, 100ll);
-//constexpr ll MOD = 819356875157278019ll;
-constexpr ll MOD = 1e9+7;
-void in(vector<ll> & best) {
-    for (auto & zero_leaf : best) cin >> zero_leaf;
-}
-void in(vector<ll> & best, ll l, ll r) {
-    for (ll i=l; i < r; i+=1) {
-        cin >> best[i];
-    }
-}
-void inn(vector<ll> & best, ll l, ll rr) {
-    for (ll i=l; i <= rr; i+=1) {
-        cin >> best[i];
-    }
-}
-ll powm(ll best, ll b) {
+//uniform_int_distribution<__int128> distrib(1ll, 100ll);
+constexpr __int128 MOD = 819356875157278019ll;
+//constexpr __int128 MOD = 1e9+7;
+__int128 powm(__int128 best, __int128 b) {
     assert(b >= 0);
-    ll d = 1;
+    __int128 d = 1;
     while (b) {
         if (b&1) d = (d*best) % MOD;
         b >>= 1;
@@ -88,9 +52,9 @@ ll powm(ll best, ll b) {
     }
     return d;
 }
-ll powm(ll best, ll b, ll MODD) {
+__int128 powm(__int128 best, __int128 b, __int128 MODD) {
     assert(b >= 0);
-    ll d = 1;
+    __int128 d = 1;
     while (b) {
         if (b&1) d = (d*best) % MODD;
         b >>= 1;
@@ -98,9 +62,9 @@ ll powm(ll best, ll b, ll MODD) {
     }
     return d;
 }
-ll poww(ll best, ll b) {
+__int128 poww(__int128 best, __int128 b) {
     assert(b >= 0);
-    ll d = 1;
+    __int128 d = 1;
     while (b) {
         if (b&1) d = (d*best);
         b >>= 1;
@@ -108,7 +72,7 @@ ll poww(ll best, ll b) {
     }
     return d;
 }
-ld poww(ld best, ll b) {
+ld poww(ld best, __int128 b) {
     assert(b >= 0);
     ld d = 1;
     while (b) {
@@ -118,101 +82,79 @@ ld poww(ld best, ll b) {
     }
     return d;
 }
-ll mul(ll best, ll b) {
+__int128 mul(__int128 best, __int128 b) {
     return (best*b)%MOD;
 }
-ll mul(ll best, ll b, ll MODD) {
+__int128 mul(__int128 best, __int128 b, __int128 MODD) {
     return (best*b)%MODD;
 }
-ll sum(ll best, ll b) {
+__int128 sum(__int128 best, __int128 b) {
     return (best+b)%MOD;
 }
-ll sum(ll best, ll b, ll MODD) {
+__int128 sum(__int128 best, __int128 b, __int128 MODD) {
     return (best+b)%MODD;
 }
-ll sub(ll best, ll b) {
+__int128 sub(__int128 best, __int128 b) {
     return (best-(b%MOD)+MOD)%MOD;
 }
-ll sub(ll best, ll b, ll MODD) {
+__int128 sub(__int128 best, __int128 b, __int128 MODD) {
     return (best-(b%MODD)+MODD)%MODD;
 }
 void solve() {
-    ll n, m;
-    cin >> n >> m;
-    n *= 2;
-    vvll sm(n+m+1);
-    vector<multiset<ll>> sms(n+m+1);
-    vector<set<ll>> smu(n+m+1);
-    for (ll i = 1; i <= m; i += 1) {
-        ll one, two, three;
-        cin >> one >> two >> three;
-        sm[one].push_back(n/2+i); sms[one].insert(n/2+i); smu[one].insert(n/2+i);
-        sm[two].push_back(n/2+i); sms[two].insert(n/2+i); smu[two].insert(n/2+i);
-        sm[three].push_back(n/2+i); sms[three].insert(n/2+i); smu[three].insert(n/2+i);
-        sm[n/2+i].push_back(one); sms[n/2+i].insert(one); smu[n/2+i].insert(one);
-        sm[n/2+i].push_back(two); sms[n/2+i].insert(two); smu[n/2+i].insert(two);
-        sm[n/2+i].push_back(three); sms[n/2+i].insert(three); smu[n/2+i].insert(three);
+    constexpr ll N = 1e6+1;
+    constexpr __int128 b = 31;
+    vector<__int128> base(N);
+    vector<__int128> revbase(N);
+    base[0] = 1;
+    for (ll i = 1; i < N; i += 1) {
+        base[i] = mul(base[i-1], b);
     }
-    vll h(n+m+1);
-    bitset<1'000'000> seen;
-    auto dfs = [&] (auto f, ll v) -> void {
-        seen[v] = true;
-        for (const auto &x : sm[v]) {
-            if (!seen[x]) {
-                h[x] = h[v] + 1;
-                seen[x] = true;
-                f(f, x);
-            }
-        }
-    };
+    revbase.back() = powm(base.back(), MOD-2);
+    for (ll i = N-2; i >= 0; i -= 1) {
+        revbase[i] = mul(revbase[i+1], b);
+    }
+    assert(revbase[0] == 1);
+    string temp; cin >> temp;
+    ll n = ll(temp.size());
+    vll a(n+1);
     for (ll i = 1; i <= n; i += 1) {
-        if (!seen[i]) {
-            h[i] = 1;
-            dfs(dfs, i);
+        a[i] = temp[i-1]-'a'+1;
+    }
+    vector<__int128> hash(n+1);
+    for (ll i = 1; i <= n; i += 1) {
+        hash[i] = sum(hash[i-1], mul(a[i], base[i-1]));
+    }
+//    cout << "pref hash: ";
+//    for (const auto &x : hash) {
+//        cout << ll(x) << ' ';
+//    }cout << endl;
+    vvll divs(n+1);
+    for (ll div = 1; div <= n; div += 1) {
+        for (ll j = div; j <= n; j += div) {
+            divs[j].push_back(div);
         }
     }
-    vll best_edge_up_from_subtree(n+m+1);
-    vll is_sochl(n+m+1);
-    vll is_root(n+m+1);
-    auto calc_up = [&] (auto f, ll v, ll par) -> void {
-        seen[v] = true;
-        best_edge_up_from_subtree[v] = h[v];
-        for (const auto &x : sm[v]) {
-            if (x != par || sms[v].count(par) > 1) best_edge_up_from_subtree[v] = min(h[x], best_edge_up_from_subtree[v]);
-            if (!seen[x]) {
-                seen[x] = true;
-                f(f, x, v);
-                best_edge_up_from_subtree[v] = min(best_edge_up_from_subtree[x], best_edge_up_from_subtree[v]);
-                if (!is_root[v] && best_edge_up_from_subtree[x] >= h[v]) {
-                    is_sochl[v] = true;
+//    for (const auto &x : divs) {
+//        for (const auto &y : x) {
+//            cout << y << ' ';
+//        }cout << endl;
+//    }
+    vector<set<ll>> good_sizes(n+1);
+    for (ll i = 1; i <= n; i += 1) {
+        for (const auto &div : divs[i]) {
+            if (div == i) {
+                good_sizes[i].insert(i);
+            } else {
+                if (!good_sizes[i-div].contains(div)) continue;
+                if (sum(hash[i-div], mul(hash[div], base[i-div])) == hash[i]) {
+                    good_sizes[i].insert(div);
                 }
             }
         }
-    };
-    seen.reset();
-    for (ll i = 1; i <= n; i += 1) {
-        if (!seen[i]) {
-            is_root[i] = 1;
-            calc_up(calc_up, i, -1);
-        }
     }
     for (ll i = 1; i <= n; i += 1) {
-        if (is_root[i]) {
-            if (smu[i].size() > 1) {
-                is_sochl[i] = 1;
-            }
-        }
-    }
-    vll ans;
-    // проверяем только "производные вершины"
-    // если такая является точкой сочленения то и все тройное ребро
-    for (ll i = n/2+1; i <= n; i += 1) {
-        if (is_sochl[i]) {
-            ans.push_back(i-n/2);
-        }
-    }
-    cout << ans.size() << endl;
-    cout << ans << endl;
+        cout << i/(*good_sizes[i].begin()) << ' ';
+    }cout << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
@@ -234,7 +176,7 @@ int32_t main(int32_t argc, char* argv[]) {
         cerr.tie(nullptr);
         clog.tie(nullptr);
     }
-    ll tt = 1;
+    __int128 tt = 1;
 //    cin >> tt;
 
     while (tt--) {
