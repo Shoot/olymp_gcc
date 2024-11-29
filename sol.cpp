@@ -37,14 +37,50 @@ ostream& operator<<(ostream& os, const vector<T>& A) {
     }
     return os;
 }
+void scan(ll &best) { cin >> best; }
+void scan(char &best) { cin >> best; }
+void scan(double &best) { cin >> best; }
+void scan(long double &best) { cin >> best; }
+void scan(string &best) { cin >> best; }
+template <class T, class S> void scan(pair<T, S> &p) { scan(p.first), scan(p.second); }
+template <class T> void scan(vector<T> &best) {for(auto &i : best) scan(i);}
+template <class T> void scan(T &best) { cin >> best; }
+void IN() {}
+template <class Head, class... Tail> void IN(Head &head, Tail &...tail) {
+    scan(head);
+    IN(tail...);
+}
+void print() {
+    cout << "\n";
+}
+template <class Head, class... Tail>
+void print(Head&& head, Tail&&... tail) {
+    cout << head;
+    if (sizeof...(Tail)) cout << " ";
+    print(forward<Tail>(tail)...);
+}
+//#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math,trapv")
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-//uniform_int_distribution<__int128> distrib(1ll, 100ll);
-constexpr __int128 MOD = 819356875157278019ll;
-//constexpr __int128 MOD = 1e9+7;
-__int128 powm(__int128 best, __int128 b) {
+uniform_int_distribution<ll> distrib(0ll, 5ll);
+//constexpr ll MOD = 819356875157278019ll;
+constexpr ll MOD = 1e9+7;
+void in(vector<ll> & best) {
+    for (auto & zero_leaf : best) cin >> zero_leaf;
+}
+void in(vector<ll> & best, ll l, ll r) {
+    for (ll i=l; i < r; i+=1) {
+        cin >> best[i];
+    }
+}
+void inn(vector<ll> & best, ll l, ll rr) {
+    for (ll i=l; i <= rr; i+=1) {
+        cin >> best[i];
+    }
+}
+ll powm(ll best, ll b) {
     assert(b >= 0);
-    __int128 d = 1;
+    ll d = 1;
     while (b) {
         if (b&1) d = (d*best) % MOD;
         b >>= 1;
@@ -52,9 +88,9 @@ __int128 powm(__int128 best, __int128 b) {
     }
     return d;
 }
-__int128 powm(__int128 best, __int128 b, __int128 MODD) {
+ll powm(ll best, ll b, ll MODD) {
     assert(b >= 0);
-    __int128 d = 1;
+    ll d = 1;
     while (b) {
         if (b&1) d = (d*best) % MODD;
         b >>= 1;
@@ -62,9 +98,9 @@ __int128 powm(__int128 best, __int128 b, __int128 MODD) {
     }
     return d;
 }
-__int128 poww(__int128 best, __int128 b) {
+ll poww(ll best, ll b) {
     assert(b >= 0);
-    __int128 d = 1;
+    ll d = 1;
     while (b) {
         if (b&1) d = (d*best);
         b >>= 1;
@@ -72,7 +108,7 @@ __int128 poww(__int128 best, __int128 b) {
     }
     return d;
 }
-ld poww(ld best, __int128 b) {
+ld poww(ld best, ll b) {
     assert(b >= 0);
     ld d = 1;
     while (b) {
@@ -82,79 +118,115 @@ ld poww(ld best, __int128 b) {
     }
     return d;
 }
-__int128 mul(__int128 best, __int128 b) {
+ll mul(ll best, ll b) {
     return (best*b)%MOD;
 }
-__int128 mul(__int128 best, __int128 b, __int128 MODD) {
+ll mul(ll best, ll b, ll MODD) {
     return (best*b)%MODD;
 }
-__int128 sum(__int128 best, __int128 b) {
+ll sum(ll best, ll b) {
     return (best+b)%MOD;
 }
-__int128 sum(__int128 best, __int128 b, __int128 MODD) {
+ll sum(ll best, ll b, ll MODD) {
     return (best+b)%MODD;
 }
-__int128 sub(__int128 best, __int128 b) {
+ll sub(ll best, ll b) {
     return (best-(b%MOD)+MOD)%MOD;
 }
-__int128 sub(__int128 best, __int128 b, __int128 MODD) {
+ll sub(ll best, ll b, ll MODD) {
     return (best-(b%MODD)+MODD)%MODD;
 }
+vll p(2e5);
+vll sz(2e5, 1);
+ll get_p(ll a) {
+    return p[a] == a ? a : p[a] = get_p(p[a]);
+}
 void solve() {
-    constexpr ll N = 1e6+1;
-    constexpr __int128 b = 31;
-    vector<__int128> base(N);
-    vector<__int128> revbase(N);
-    base[0] = 1;
-    for (ll i = 1; i < N; i += 1) {
-        base[i] = mul(base[i-1], b);
-    }
-    revbase.back() = powm(base.back(), MOD-2);
-    for (ll i = N-2; i >= 0; i -= 1) {
-        revbase[i] = mul(revbase[i+1], b);
-    }
-    assert(revbase[0] == 1);
-    string temp; cin >> temp;
-    ll n = ll(temp.size());
-    vll a(n+1);
-    for (ll i = 1; i <= n; i += 1) {
-        a[i] = temp[i-1]-'a'+1;
-    }
-    vector<__int128> hash(n+1);
-    for (ll i = 1; i <= n; i += 1) {
-        hash[i] = sum(hash[i-1], mul(a[i], base[i-1]));
-    }
-//    cout << "pref hash: ";
-//    for (const auto &x : hash) {
-//        cout << ll(x) << ' ';
-//    }cout << endl;
-    vvll divs(n+1);
-    for (ll div = 1; div <= n; div += 1) {
-        for (ll j = div; j <= n; j += div) {
-            divs[j].push_back(div);
+    iota(p.begin(), p.end(), 0ll);
+    auto unite = [&] (ll a, ll b) -> void {
+        a = get_p(a);
+        b = get_p(b);
+        if (a == b) return;
+        if (sz[a] > sz[b]) swap(a, b);
+        p[a] = b;
+        sz[b] += sz[a];
+    };
+    ll n, days, q;
+    cin >> n >> days >> q;
+    // lca бинапами + максимум бинапами
+    struct Edge {
+        ll to;
+        ll day;
+        Edge(ll to, ll day) {
+            this->to = to;
+            this->day = day;
         }
-    }
-//    for (const auto &x : divs) {
-//        for (const auto &y : x) {
-//            cout << y << ' ';
-//        }cout << endl;
-//    }
-    vector<set<ll>> good_sizes(n+1);
-    for (ll i = 1; i <= n; i += 1) {
-        for (const auto &div : divs[i]) {
-            if (div == i) {
-                good_sizes[i].insert(i);
-            } else {
-                if (!good_sizes[i-div].contains(div)) continue;
-                if (sum(hash[i-div], mul(hash[div], base[i-div])) == hash[i]) {
-                    good_sizes[i].insert(div);
-                }
+    };
+    vector<vector<Edge>> sm(n+1);
+    for (ll g = days; g >= 1; g -= 1) {
+        for (ll another = g + g; another <= n; another += g) {
+            ll p_one = get_p(g);
+            ll p_another = get_p(another);
+            if (p_one != p_another) {
+                unite(p_one, p_another);
+                sm[p_one].push_back(Edge(p_another, days-g+1));
+                sm[p_another].push_back(Edge(p_one, days-g+1));
             }
         }
     }
-    for (ll i = 1; i <= n; i += 1) {
-        cout << i/(*good_sizes[i].begin()) << ' ';
-    }cout << endl;
+    vvll up(20, vll(n+1));
+    vvll max_on_up(20, vll(n+1));
+    vll h(n+1);
+    auto dfs = [&] (auto f, ll v, ll par) -> void {
+        for (const auto &[x, w] : sm[v]) {
+            if (x != par) {
+                h[x] = h[v] + 1;
+                up[0][x] = v;
+                max_on_up[0][x] = w;
+                f(f, x, v);
+            }
+        }
+    };
+    up[0][1] = 1;
+    dfs(dfs, 1, -1);
+    for (ll i = 1; i < 20; i += 1) {
+        for (ll v = 1; v <= n; v += 1) {
+            up[i][v] = up[i-1][up[i-1][v]];
+            max_on_up[i][v] = max(max_on_up[i-1][v], max_on_up[i-1][up[i-1][v]]);
+        }
+    }
+    for (ll i = 0; i < q; i += 1) {
+        ll u, v;
+        cin >> u >> v;
+        ll maxi = 0;
+        if (h[u] < h[v]) swap(u, v);
+        ll d = h[u] - h[v];
+        for (ll bt = 19; bt >= 0; bt -= 1) {
+            if (d&(1ll << bt)) {
+                maxi = max(maxi, max_on_up[bt][u]);
+                u = up[bt][u];
+            }
+        }
+        if (u == v) {
+            cout << maxi << endl;
+            continue;
+        }
+        for (ll bt = 19; bt >= 0; bt -= 1) {
+            if (up[bt][u] != up[bt][v]) {
+                maxi = max(maxi, max_on_up[bt][u]);
+                maxi = max(maxi, max_on_up[bt][v]);
+                u = up[bt][u];
+                v = up[bt][v];
+            }
+        }
+        maxi = max(maxi, max_on_up[0][u]);
+        maxi = max(maxi, max_on_up[0][v]);
+        assert(u != v);
+        u = up[0][u];
+        v = up[0][v];
+        assert(u == v);
+        cout << maxi << endl;
+    }
 }
 
 int32_t main(int32_t argc, char* argv[]) {
@@ -176,7 +248,7 @@ int32_t main(int32_t argc, char* argv[]) {
         cerr.tie(nullptr);
         clog.tie(nullptr);
     }
-    __int128 tt = 1;
+    ll tt = 1;
 //    cin >> tt;
 
     while (tt--) {
