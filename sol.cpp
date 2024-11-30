@@ -136,97 +136,65 @@ ll sub(ll best, ll b) {
 ll sub(ll best, ll b, ll MODD) {
     return (best-(b%MODD)+MODD)%MODD;
 }
-vll p(2e5);
-vll sz(2e5, 1);
-ll get_p(ll a) {
-    return p[a] == a ? a : p[a] = get_p(p[a]);
-}
+ll dx[4] = {0, 0, 1, -1};
+ll dy[4] = {1, -1, 0, 0};
 void solve() {
-    iota(p.begin(), p.end(), 0ll);
-    auto unite = [&] (ll a, ll b) -> void {
-        a = get_p(a);
-        b = get_p(b);
-        if (a == b) return;
-        if (sz[a] > sz[b]) swap(a, b);
-        p[a] = b;
-        sz[b] += sz[a];
+    const ll INF = 1e18;
+    ll n; cin >> n;
+    ll m; cin >> m;
+    ll stx, sty; cin >> stx >> sty;
+    stx -= 1;
+    sty -= 1;
+    ll left, right;
+    cin >> left >> right;
+    vector<string> shit(n);
+    for (auto &x : shit) cin >> x;
+    struct Shit {
+        ll i;
+        ll j;
+        ll d;
     };
-    ll n, days, q;
-    cin >> n >> days >> q;
-    // lca бинапами + максимум бинапами
-    struct Edge {
-        ll to;
-        ll day;
-        Edge(ll to, ll day) {
-            this->to = to;
-            this->day = day;
-        }
-    };
-    vector<vector<Edge>> sm(n+1);
-    for (ll g = days; g >= 1; g -= 1) {
-        for (ll another = g + g; another <= n; another += g) {
-            ll p_one = get_p(g);
-            ll p_another = get_p(another);
-            if (p_one != p_another) {
-                unite(p_one, p_another);
-                sm[p_one].push_back(Edge(p_another, days-g+1));
-                sm[p_another].push_back(Edge(p_one, days-g+1));
+    deque<Shit> q;
+    q.push_back(Shit(stx, sty, 0));
+    vvpll d(n, vpll(m, make_pair(INF, INF)));
+    d[stx][sty] = make_pair(0, 0);
+    while (!q.empty()) {
+        Shit tp = q.front();
+        q.pop_front();
+        ll i = tp.i;
+        ll j = tp.j;
+        ll dist = d[i][j].first;
+        for (ll x = 0; x < 4; x += 1) {
+            ll nwi = i+dx[x];
+            ll nwj = j+dy[x];
+            if (nwi < 0 || nwj < 0 || nwi >= n || nwj >= m || shit[nwi][nwj] == '*') continue;
+            if (d[nwi][nwj].first == INF) {
+                d[nwi][nwj].first = dist;
+                d[nwi][nwj].first += nwj < j; // влево
+                // l = r + sty-nwj
+                // r = l-sty+nwj
+                d[nwi][nwj].second = nwj-sty+d[nwi][nwj].first;
+                if (nwj != j) {
+                    q.push_back(Shit(nwi, nwj, d[nwi][nwj].first));
+                } else {
+                    q.push_front(Shit(nwi, nwj, d[nwi][nwj].first));
+                }
             }
         }
     }
-    vvll up(20, vll(n+1));
-    vvll max_on_up(20, vll(n+1));
-    vll h(n+1);
-    auto dfs = [&] (auto f, ll v, ll par) -> void {
-        for (const auto &[x, w] : sm[v]) {
-            if (x != par) {
-                h[x] = h[v] + 1;
-                up[0][x] = v;
-                max_on_up[0][x] = w;
-                f(f, x, v);
+    ll tot = 0;
+    for (ll i = 0; i < n; i += 1) {
+        for (ll j = 0; j < m; j += 1) {
+            if (d[i][j].first <= left && d[i][j].second <= right) {
+//                shit[i][j] = '+';
+                tot += 1;
             }
-        }
-    };
-    up[0][1] = 1;
-    dfs(dfs, 1, -1);
-    for (ll i = 1; i < 20; i += 1) {
-        for (ll v = 1; v <= n; v += 1) {
-            up[i][v] = up[i-1][up[i-1][v]];
-            max_on_up[i][v] = max(max_on_up[i-1][v], max_on_up[i-1][up[i-1][v]]);
         }
     }
-    for (ll i = 0; i < q; i += 1) {
-        ll u, v;
-        cin >> u >> v;
-        ll maxi = 0;
-        if (h[u] < h[v]) swap(u, v);
-        ll d = h[u] - h[v];
-        for (ll bt = 19; bt >= 0; bt -= 1) {
-            if (d&(1ll << bt)) {
-                maxi = max(maxi, max_on_up[bt][u]);
-                u = up[bt][u];
-            }
-        }
-        if (u == v) {
-            cout << maxi << endl;
-            continue;
-        }
-        for (ll bt = 19; bt >= 0; bt -= 1) {
-            if (up[bt][u] != up[bt][v]) {
-                maxi = max(maxi, max_on_up[bt][u]);
-                maxi = max(maxi, max_on_up[bt][v]);
-                u = up[bt][u];
-                v = up[bt][v];
-            }
-        }
-        maxi = max(maxi, max_on_up[0][u]);
-        maxi = max(maxi, max_on_up[0][v]);
-        assert(u != v);
-        u = up[0][u];
-        v = up[0][v];
-        assert(u == v);
-        cout << maxi << endl;
-    }
+    cout << tot << endl;
+//    for (const auto &x : shit) {
+//        cout << x << endl;
+//    }
 }
 
 int32_t main(int32_t argc, char* argv[]) {
