@@ -136,65 +136,89 @@ ll sub(ll best, ll b) {
 ll sub(ll best, ll b, ll MODD) {
     return (best-(b%MODD)+MODD)%MODD;
 }
-ll dx[4] = {0, 0, 1, -1};
-ll dy[4] = {1, -1, 0, 0};
+vvll sm;
+vvll sm_rev;
+vbo seen;
+vll comp;
 void solve() {
-    const ll INF = 1e18;
     ll n; cin >> n;
+    sm.assign(n+10, vll());
+    sm_rev.assign(n+10, vll());
+    seen.assign(n+10, false);
+    comp.assign(n+10, -1);
     ll m; cin >> m;
-    ll stx, sty; cin >> stx >> sty;
-    stx -= 1;
-    sty -= 1;
-    ll left, right;
-    cin >> left >> right;
-    vector<string> shit(n);
-    for (auto &x : shit) cin >> x;
-    struct Shit {
-        ll i;
-        ll j;
-        ll d;
+    ll hrs; cin >> hrs;
+    vll hr(n); for (auto &x : hr) cin >> x;
+    for (ll i = 0; i < m; i += 1) {
+        ll u, v; cin >> u >> v;
+        if ((hr[u-1] + 1)%hrs == hr[v-1]) {
+            clog << u << " -> " << v << endl;
+            sm[u].push_back(v);
+            sm_rev[v].push_back(u);
+        }
+        if ((hr[v-1] + 1)%hrs == hr[u-1]) {
+            clog << v << " -> " << u << endl;
+            sm[v].push_back(u);
+            sm_rev[u].push_back(v);
+        }
+    }
+    vll toposort;
+    auto dfs = [&] (auto f, ll v) -> void {
+        seen[v] = true;
+        for (const auto &x : sm[v]) {
+            if (!seen[x]) {
+                seen[x] = true;
+                f(f, x);
+            }
+        }
+        toposort.push_back(v);
     };
-    deque<Shit> q;
-    q.push_back(Shit(stx, sty, 0));
-    vvpll d(n, vpll(m, make_pair(INF, INF)));
-    d[stx][sty] = make_pair(0, 0);
-    while (!q.empty()) {
-        Shit tp = q.front();
-        q.pop_front();
-        ll i = tp.i;
-        ll j = tp.j;
-        ll dist = d[i][j].first;
-        for (ll x = 0; x < 4; x += 1) {
-            ll nwi = i+dx[x];
-            ll nwj = j+dy[x];
-            if (nwi < 0 || nwj < 0 || nwi >= n || nwj >= m || shit[nwi][nwj] == '*') continue;
-            if (d[nwi][nwj].first == INF) {
-                d[nwi][nwj].first = dist;
-                d[nwi][nwj].first += nwj < j; // влево
-                // l = r + sty-nwj
-                // r = l-sty+nwj
-                d[nwi][nwj].second = nwj-sty+d[nwi][nwj].first;
-                if (nwj != j) {
-                    q.push_back(Shit(nwi, nwj, d[nwi][nwj].first));
-                } else {
-                    q.push_front(Shit(nwi, nwj, d[nwi][nwj].first));
-                }
+    ll COMP = 0;
+    auto dfs_rev = [&] (auto f, ll v) -> void {
+        comp[v] = COMP;
+        for (const auto &x : sm_rev[v]) {
+            if (comp[x] == -1) {
+                comp[x] = COMP;
+                f(f, x);
+            }
+        }
+    };
+    for (ll i = 1; i <= n; i += 1) {
+        if (!seen[i]) dfs(dfs, i);
+    }
+    reverse(toposort.begin(), toposort.end());
+    for (const auto &x : toposort) {
+        if (comp[x] == -1) {
+            dfs_rev(dfs_rev, x);
+            COMP += 1;
+        }
+    }
+    vll outdeg(n+1);
+    vll compsz(n+1);
+    for (ll i = 1; i <= n; i += 1) {
+        compsz[comp[i]] += 1;
+        for (const auto &x : sm[i]) {
+            if (comp[x] != comp[i]) {
+                outdeg[comp[i]] += 1;
             }
         }
     }
-    ll tot = 0;
-    for (ll i = 0; i < n; i += 1) {
-        for (ll j = 0; j < m; j += 1) {
-            if (d[i][j].first <= left && d[i][j].second <= right) {
-//                shit[i][j] = '+';
-                tot += 1;
+    ll best_comp = -1;
+    ll ans = 1e18;
+    for (ll i = 1; i <= n; i += 1) {
+        if (!outdeg[comp[i]]) {
+            if (ans > compsz[comp[i]]) {
+                ans = compsz[comp[i]];
+                best_comp = comp[i];
             }
         }
     }
-    cout << tot << endl;
-//    for (const auto &x : shit) {
-//        cout << x << endl;
-//    }
+    cout << ans << endl;
+    for (ll i = 1; i <= n; i += 1) {
+        if (comp[i] == best_comp) {
+            cout << i << ' ';
+        }
+    }cout << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
