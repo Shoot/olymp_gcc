@@ -1,86 +1,181 @@
 #include <bits/stdc++.h>
 using namespace std;
+using vbo = vector<bool>;
 using ll = long long;
+using ull = unsigned long long;
 using pll = pair<ll, ll>;
+using ld = long double;
+using qll = queue<ll>;
 using vll = vector<ll>;
-using vpll = vector<pll>;
 using vvll = vector<vector<ll>>;
 using vvpll = vector<vector<pll>>;
-void solve() {
-    ll INF = 1e18;
-    ll n, m, k;
-    cin >> n >> m >> k;
-    vvpll sm(n+1);
-    struct edge {
-        ll u, v, w, idx;
-    };
-    vector<edge> edges(m);
-    ll nvm = 0;
-    for (auto &edge : edges) {
-        nvm += 1;
-        edge.idx = nvm;
-        cin >> edge.u >> edge.v >> edge.w;
-        edge.w = -edge.w;
-        sm[edge.u].push_back(pll(edge.v, edge.w));
-    }
-    vll need(k);
-    for (auto &x : need) cin >> x;
-    vvll D(n+1, vll(n+1, INF));
-    vvll EDGE(n+1, vll(n+1, INF));
-    vvll nxt(n+1, vll(n+1, INF));
-    for (ll i = 1; i <= n; i += 1) {
-        D[i][i] = 0;
-        nxt[i][i] = i;
-    }
-    for (const auto &[u, v, w, idx] : edges) {
-        if (D[u][v] > w) {
-            D[u][v] = w;
-            EDGE[u][v] = idx;
-            nxt[u][v] = v;
-        }
-    }
-    vll ans;
-    for (ll i = 1; i <= n; i += 1) {
-        for (ll u = 1; u <= n; u += 1) {
-            for (ll v = 1; v <= n; v += 1) {
-                if (D[u][i] + D[i][v] < D[u][v]) {
-                    if (D[u][i] < INF && D[i][v] < INF) {
-                        // чтобы не делать тупых обновлений из-за отриц ребер
-                        // то есть может получится < INF а пути нету!!
-                        D[u][v] = D[u][i] + D[i][v];
-                        nxt[u][v] = nxt[u][i];
-                        if (D[u][v] < -INF) D[u][v] = -INF;
-                    }
-                }
-            }
-        }
-    }
-    bool FARM_IT = false;
-    auto go_to = [&] (ll from, ll to) -> void {
-        while (from != to) {
-            ans.push_back(EDGE[from][nxt[from][to]]);
-            from = nxt[from][to];
-        }
-    };
-    for (ll i = 1; i < k; i += 1) {
-        ll from = need[i-1];
-        ll to = need[i];
-        for (ll s = 1; s <= n; s += 1) {
-            FARM_IT |= D[from][s] < INF && D[s][to] < INF && D[s][s] < 0;
-        }
-        go_to(from, to);
-    }
-    if (FARM_IT) {
-        cout << "infinitely kind" << endl;
-        return;
-    }
-    cout << ans.size() << endl;
-    for (const auto &x : ans) {
-        cout << x << ' ';
-    }cout << endl;
+using qld = queue<ld>;
+using vld = vector<ld>;
+using qpll = queue<pll>;
+using vpll = vector<pll>;
+#include <ext/pb_ds/assoc_container.hpp>
+#include <ext/pb_ds/tree_policy.hpp>
+using namespace __gnu_pbds;
+template <typename T> using ordered_set = tree<T, null_type, less<T>, rb_tree_tag, tree_order_statistics_node_update>;
+ostream& endl(ostream& os) {
+    return os << '\n';
 }
-int main()
-{
-    solve();
+#define all(xxx) xxx.begin(), xxx.end()
+#define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl
+template <class T, class S> inline bool chmax(T &best, const S &b) { return (best < b ? best = b, 1 : 0); }
+template <class T, class S> inline bool chmin(T &best, const S &b) { return (best > b ? best = b, 1 : 0); }
+template <typename T, typename U>
+ostream& operator<<(ostream& os, const pair<T, U>& A) {
+    os << A.fi << " " << A.se;
+    return os;
+}
+template <typename T>
+ostream& operator<<(ostream& os, const vector<T>& A) {
+    for (size_t i = 0; i < A.size(); i++) {
+        if (i) os << " ";
+        os << A[i];
+    }
+    return os;
+}
+void scan(ll &best) { cin >> best; }
+void scan(char &best) { cin >> best; }
+void scan(double &best) { cin >> best; }
+void scan(long double &best) { cin >> best; }
+void scan(string &best) { cin >> best; }
+template <class T, class S> void scan(pair<T, S> &p) { scan(p.first), scan(p.second); }
+template <class T> void scan(vector<T> &best) {for(auto &i : best) scan(i);}
+template <class T> void scan(T &best) { cin >> best; }
+void IN() {}
+template <class Head, class... Tail> void IN(Head &head, Tail &...tail) {
+    scan(head);
+    IN(tail...);
+}
+void print() {
+    cout << "\n";
+}
+template <class Head, class... Tail>
+void print(Head&& head, Tail&&... tail) {
+    cout << head;
+    if (sizeof...(Tail)) cout << " ";
+    print(forward<Tail>(tail)...);
+}
+//#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math,trapv")
+#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
+mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
+uniform_int_distribution<ll> distrib(0ll, 5ll);
+//constexpr ll MOD = 819356875157278019ll;
+constexpr ll MOD = 1e9+7;
+void in(vector<ll> & best) {
+    for (auto & zero_leaf : best) cin >> zero_leaf;
+}
+void in(vector<ll> & best, ll l, ll r) {
+    for (ll i=l; i < r; i+=1) {
+        cin >> best[i];
+    }
+}
+void inn(vector<ll> & best, ll l, ll rr) {
+    for (ll i=l; i <= rr; i+=1) {
+        cin >> best[i];
+    }
+}
+ll powm(ll best, ll b) {
+    assert(b >= 0);
+    ll d = 1;
+    while (b) {
+        if (b&1) d = (d*best) % MOD;
+        b >>= 1;
+        best = (best*best) % MOD;
+    }
+    return d;
+}
+ll powm(ll best, ll b, ll MODD) {
+    assert(b >= 0);
+    ll d = 1;
+    while (b) {
+        if (b&1) d = (d*best) % MODD;
+        b >>= 1;
+        best = (best*best) % MODD;
+    }
+    return d;
+}
+ll poww(ll best, ll b) {
+    assert(b >= 0);
+    ll d = 1;
+    while (b) {
+        if (b&1) d = (d*best);
+        b >>= 1;
+        best = (best*best);
+    }
+    return d;
+}
+ld poww(ld best, ll b) {
+    assert(b >= 0);
+    ld d = 1;
+    while (b) {
+        if (b&1) d = (d*best);
+        b >>= 1;
+        best = (best*best);
+    }
+    return d;
+}
+ll mul(ll best, ll b) {
+    return (best*b)%MOD;
+}
+ll mul(ll best, ll b, ll MODD) {
+    return (best*b)%MODD;
+}
+ll sum(ll best, ll b) {
+    return (best+b)%MOD;
+}
+ll sum(ll best, ll b, ll MODD) {
+    return (best+b)%MODD;
+}
+ll sub(ll best, ll b) {
+    return (best-(b%MOD)+MOD)%MOD;
+}
+ll sub(ll best, ll b, ll MODD) {
+    return (best-(b%MODD)+MODD)%MODD;
+}
+void solve() {
+    string s; cin >> s;
+    if (s[0] == '9') {
+        s.insert(s.begin(), '0');
+    }
+    bool notfirst = false;
+    for (auto &x : s) {
+        if (!notfirst) {
+            x += 1;
+            notfirst = true;
+        } else {
+            x = '0';
+        }
+    }
+    cout << s << endl;
+}
+int32_t main(int32_t argc, char* argv[]) {
+//    ifstream cin("distance.in");
+//    ofstream cout("distance.out");
+    cout << fixed << setprecision(17);
+    bool use_fast_io = true;
+    for (int32_t i = 1; i < argc; ++i) {
+        if (string(argv[i]) == "-local-no-fast-io") {
+            use_fast_io = false;
+//            cout << "No fastIO" << endl;
+            break;
+        }
+    }
+    if (use_fast_io) {
+        ios::sync_with_stdio(false);
+        cin.tie(nullptr);
+        cout.tie(nullptr);
+        cerr.tie(nullptr);
+        clog.tie(nullptr);
+    }
+    ll tt = 1;
+//    cin >> tt;
+
+    while (tt--) {
+        solve();
+    }
     return 0;
 }

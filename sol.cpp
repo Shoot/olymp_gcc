@@ -20,8 +20,8 @@ template <typename T> using ordered_set = tree<T, null_type, less<T>, rb_tree_ta
 ostream& endl(ostream& os) {
     return os << '\n';
 }
-//define all(xxx) xxx.begin(), xxx.end()
-//define watch(xxx) cout << "value of " << #xxx << " is " << (xxx) << endl
+#define all(xxx) xxx.begin(), xxx.end()
+#define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl
 template <class T, class S> inline bool chmax(T &best, const S &b) { return (best < b ? best = b, 1 : 0); }
 template <class T, class S> inline bool chmin(T &best, const S &b) { return (best > b ? best = b, 1 : 0); }
 template <typename T, typename U>
@@ -136,91 +136,72 @@ ll sub(ll best, ll b) {
 ll sub(ll best, ll b, ll MODD) {
     return (best-(b%MODD)+MODD)%MODD;
 }
-vvll sm;
-vvll sm_rev;
-vbo seen;
-vll comp;
 void solve() {
-    ll n; cin >> n;
-    sm.assign(n+10, vll());
-    sm_rev.assign(n+10, vll());
-    seen.assign(n+10, false);
-    comp.assign(n+10, -1);
-    ll m; cin >> m;
-    ll hrs; cin >> hrs;
-    vll hr(n); for (auto &x : hr) cin >> x;
-    for (ll i = 0; i < m; i += 1) {
-        ll u, v; cin >> u >> v;
-        if ((hr[u-1] + 1)%hrs == hr[v-1]) {
-            clog << u << " -> " << v << endl;
-            sm[u].push_back(v);
-            sm_rev[v].push_back(u);
-        }
-        if ((hr[v-1] + 1)%hrs == hr[u-1]) {
-            clog << v << " -> " << u << endl;
-            sm[v].push_back(u);
-            sm_rev[u].push_back(v);
-        }
+    ll n, q; cin >> n >> q;
+    vll a(n);
+    map<ll,set<ll>> positions;
+    for (ll i = 0; i < n; i += 1) {
+        cin >> a[i];
+        positions[a[i]].insert(i);
     }
-    vll toposort;
-    auto dfs = [&] (auto f, ll v) -> void {
-        seen[v] = true;
-        for (const auto &x : sm[v]) {
-            if (!seen[x]) {
-                seen[x] = true;
-                f(f, x);
-            }
+    map<ll,ll> total;
+    multiset<pll> total_values;
+    for (auto &[val, st] : positions) {
+        ll prev_pos = -1;
+        for (const auto &pos : st) {
+            ll sz = pos-prev_pos-1;
+            total[val] += sz*(sz+1)/2;
+            prev_pos = pos;
         }
-        toposort.push_back(v);
-    };
-    ll COMP = 0;
-    auto dfs_rev = [&] (auto f, ll v) -> void {
-        comp[v] = COMP;
-        for (const auto &x : sm_rev[v]) {
-            if (comp[x] == -1) {
-                comp[x] = COMP;
-                f(f, x);
-            }
-        }
-    };
-    for (ll i = 1; i <= n; i += 1) {
-        if (!seen[i]) dfs(dfs, i);
+        ll sz = n-prev_pos-1;
+        total[val] += sz*(sz+1)/2;
+        st.insert(-1);
+        st.insert(n);
     }
-    reverse(toposort.begin(), toposort.end());
-    for (const auto &x : toposort) {
-        if (comp[x] == -1) {
-            dfs_rev(dfs_rev, x);
-            COMP += 1;
-        }
+    for (const auto &[c, kol] : total) {
+        total_values.insert(pll(kol, c));
     }
-    vll outdeg(n+1);
-    vll compsz(n+1);
-    for (ll i = 1; i <= n; i += 1) {
-        compsz[comp[i]] += 1;
-        for (const auto &x : sm[i]) {
-            if (comp[x] != comp[i]) {
-                outdeg[comp[i]] += 1;
-            }
+    for (ll ii = 0; ii < q; ii += 1) {
+        ll idx, val;
+        cin >> idx >> val;
+        if (!total.contains(val)) {
+            positions[val].insert(-1);
+            positions[val].insert(n);
+            ll sz = n-(-1)-1;
+            total[val] = sz*(sz+1)/2;
+            total_values.insert(pll(total[val], val));
         }
-    }
-    ll best_comp = -1;
-    ll ans = 1e18;
-    for (ll i = 1; i <= n; i += 1) {
-        if (!outdeg[comp[i]]) {
-            if (ans > compsz[comp[i]]) {
-                ans = compsz[comp[i]];
-                best_comp = comp[i];
-            }
-        }
-    }
-    cout << ans << endl;
-    for (ll i = 1; i <= n; i += 1) {
-        if (comp[i] == best_comp) {
-            cout << i << ' ';
-        }
-    }cout << endl;
-}
+        idx -= 1;
+        if (a[idx] != val) {
+            positions[a[idx]].erase(idx);
+            auto nxt = positions[a[idx]].upper_bound(idx);
+            auto prev = nxt; prev--;
+            total_values.erase(total_values.find(pll(total[a[idx]], a[idx])));
+            ll sz_l = idx-*prev-1;
+            total[a[idx]] -= sz_l*(sz_l+1)/2;
+            ll sz_r = *nxt-idx-1;
+            total[a[idx]] -= sz_r*(sz_r+1)/2;
+            ll sz_new = *nxt-*prev-1;
+            total[a[idx]] += sz_new*(sz_new+1)/2;
+            total_values.insert(pll(total[a[idx]], a[idx]));
 
+            a[idx] = val;
+            positions[a[idx]].insert(idx);
+            auto nxtt = positions[a[idx]].upper_bound(idx);
+            auto prevv = nxtt; prevv--; prevv--;
+            total_values.erase(total_values.find(pll(total[a[idx]], a[idx])));
+            ll sz_prevv = *nxtt-*prevv-1;
+            total[a[idx]] -= sz_prevv*(sz_prevv+1)/2;
+            ll nwl = idx-*prevv-1;
+            total[a[idx]] += nwl*(nwl+1)/2;
+            ll nwr = *nxtt-idx-1;
+            total[a[idx]] += nwr*(nwr+1)/2;
+            total_values.insert(pll(total[a[idx]], a[idx]));
+        }
+        cout << total_values.begin()->first << endl;
+//        cout << total_values.begin()->first << "(" << total_values.begin()->second << ")" << endl;
+    }
+}
 int32_t main(int32_t argc, char* argv[]) {
 //    ifstream cin("distance.in");
 //    ofstream cout("distance.out");
