@@ -137,69 +137,33 @@ ll sub(ll best, ll b, ll MODD) {
     return (best-(b%MODD)+MODD)%MODD;
 }
 void solve() {
-    ll n, q; cin >> n >> q;
-    vll a(n);
-    map<ll,set<ll>> positions;
-    for (ll i = 0; i < n; i += 1) {
-        cin >> a[i];
-        positions[a[i]].insert(i);
-    }
-    map<ll,ll> total;
-    multiset<pll> total_values;
-    for (auto &[val, st] : positions) {
-        ll prev_pos = -1;
-        for (const auto &pos : st) {
-            ll sz = pos-prev_pos-1;
-            total[val] += sz*(sz+1)/2;
-            prev_pos = pos;
+    const ll N = 2e5+10;
+    const ll INF = 1e18;
+    vll dp(N, INF);
+    dp[0] = 0;
+    for (ll i = 1000; i >= 3; i -= 1) {
+        ll val = i*(i-1)/2;
+        for (ll from = 0; from < N; from += 1) {
+            if (dp[from] == INF) continue;
+            ll to = from+val;
+            if (to >= N) break;
+//            if (dp[to] != INF) {
+//                continue;
+//            }
+            dp[to] = min(dp[to], dp[from]+i);
+            if (from != 0) {
+                dp[to] = min(dp[to], dp[from]+i-1);
+            }
         }
-        ll sz = n-prev_pos-1;
-        total[val] += sz*(sz+1)/2;
-        st.insert(-1);
-        st.insert(n);
     }
-    for (const auto &[c, kol] : total) {
-        total_values.insert(pll(kol, c));
-    }
-    for (ll ii = 0; ii < q; ii += 1) {
-        ll idx, val;
-        cin >> idx >> val;
-        if (!total.contains(val)) {
-            positions[val].insert(-1);
-            positions[val].insert(n);
-            ll sz = n-(-1)-1;
-            total[val] = sz*(sz+1)/2;
-            total_values.insert(pll(total[val], val));
+    ll q; cin >> q;
+    for (ll i = 0; i < q; i += 1) {
+        ll n, k; cin >> n >> k;
+        if (n*(n-1)/2 < k) {
+            cout << "NO" << endl;
+            continue;
         }
-        idx -= 1;
-        if (a[idx] != val) {
-            positions[a[idx]].erase(idx);
-            auto nxt = positions[a[idx]].upper_bound(idx);
-            auto prev = nxt; prev--;
-            total_values.erase(total_values.find(pll(total[a[idx]], a[idx])));
-            ll sz_l = idx-*prev-1;
-            total[a[idx]] -= sz_l*(sz_l+1)/2;
-            ll sz_r = *nxt-idx-1;
-            total[a[idx]] -= sz_r*(sz_r+1)/2;
-            ll sz_new = *nxt-*prev-1;
-            total[a[idx]] += sz_new*(sz_new+1)/2;
-            total_values.insert(pll(total[a[idx]], a[idx]));
-
-            a[idx] = val;
-            positions[a[idx]].insert(idx);
-            auto nxtt = positions[a[idx]].upper_bound(idx);
-            auto prevv = nxtt; prevv--; prevv--;
-            total_values.erase(total_values.find(pll(total[a[idx]], a[idx])));
-            ll sz_prevv = *nxtt-*prevv-1;
-            total[a[idx]] -= sz_prevv*(sz_prevv+1)/2;
-            ll nwl = idx-*prevv-1;
-            total[a[idx]] += nwl*(nwl+1)/2;
-            ll nwr = *nxtt-idx-1;
-            total[a[idx]] += nwr*(nwr+1)/2;
-            total_values.insert(pll(total[a[idx]], a[idx]));
-        }
-        cout << total_values.begin()->first << endl;
-//        cout << total_values.begin()->first << "(" << total_values.begin()->second << ")" << endl;
+        cout << (dp[k]<=n?"YES":"NO") << endl;
     }
 }
 int32_t main(int32_t argc, char* argv[]) {
