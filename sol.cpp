@@ -137,33 +137,38 @@ ll sub(ll best, ll b, ll MODD) {
     return (best-(b%MODD)+MODD)%MODD;
 }
 void solve() {
-    const ll N = 2e5+10;
-    const ll INF = 1e18;
-    vll dp(N, INF);
-    dp[0] = 0;
-    for (ll i = 1000; i >= 3; i -= 1) {
-        ll val = i*(i-1)/2;
-        for (ll from = 0; from < N; from += 1) {
-            if (dp[from] == INF) continue;
-            ll to = from+val;
-            if (to >= N) break;
-//            if (dp[to] != INF) {
-//                continue;
-//            }
-            dp[to] = min(dp[to], dp[from]+i);
-            if (from != 0) {
-                dp[to] = min(dp[to], dp[from]+i-1);
+    ll n, q; cin >> n >> q;
+    string s; cin >> s;
+    vector<set<ll>> positions(26);
+    for (ll i = 0; i < n; i += 1) {
+        positions[s[i]-'a'].insert(i);
+    }
+    for (ll i = 0; i < q; i += 1) {
+        string query; cin >> query;
+        ll l = 1, r = n;
+        ll good = -1;
+        auto can = [&] (ll x) -> bool {
+            ll prev = -x;
+            for (const auto &c : query) {
+                auto it = positions[c-'a'].lower_bound(prev+x);
+                if (it == positions[c-'a'].end()) {
+                    return false;
+                }
+                ll nxt = *it;
+                prev = nxt;
+            }
+            return true;
+        };
+        while (l <= r) {
+            ll mid = (l + r) >> 1;
+            if (can(mid)) {
+                good = mid;
+                l = mid + 1;
+            } else {
+                r = mid - 1;
             }
         }
-    }
-    ll q; cin >> q;
-    for (ll i = 0; i < q; i += 1) {
-        ll n, k; cin >> n >> k;
-        if (n*(n-1)/2 < k) {
-            cout << "NO" << endl;
-            continue;
-        }
-        cout << (dp[k]<=n?"YES":"NO") << endl;
+        cout << good << endl;
     }
 }
 int32_t main(int32_t argc, char* argv[]) {
