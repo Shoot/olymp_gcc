@@ -136,58 +136,115 @@ ll sub(ll best, ll b) {
 ll sub(ll best, ll b, ll MODD) {
     return (best-(b%MODD)+MODD)%MODD;
 }
-vll p(5e5+20);
-vll sz(5e5+20, 1);
-vll mini(5e5+20);
-vll maxi(5e5+20);
-ll get_parent(ll x) {
-    if (p[x] == x) {
-        return x;
-    }
-    ll real = get_parent(p[x]);
-    return p[x] = real;
-}
-
-void unite(ll x, ll y) {
-    x = get_parent(x);
-    y = get_parent(y);
-    if (x == y) return;
-    if (sz[x] > sz[y]) swap(x, y);
-    p[x] = y;
-    sz[y] += sz[x];
-    mini[y] = min(mini[y], mini[x]);
-    maxi[y] = max(maxi[y], maxi[x]);
-}
 void solve() {
-    iota(p.begin(), p.end(), 0);
-    iota(mini.begin(), mini.end(), 0);
-    iota(maxi.begin(), maxi.end(), 0);
-    ll n, m, q; cin >> n >> m >> q;
+    ll n, m;
+    cin >> n >> m;
+    vvll sm(n+1);
+    vpll edges;
     for (ll i = 0; i < m; i += 1) {
-        ll shit1, shit2; cin >> shit1 >> shit2;
+        ll u, v; cin >> u >> v;
+        sm[u].push_back(v);
+        sm[v].push_back(u);
+        edges.push_back(pll(u, v));
     }
-    struct shit {
-        string tp;
-        ll u;
-        ll v;
+    bitset<1'000'000> seen;
+    vll h(n+1);
+    vll up(n+1);
+    auto calc_h = [&] (auto f, ll v) -> void {
+        seen[v] = true;
+        for (const auto &x : sm[v]) {
+            if (!seen[x]) {
+                seen[x] = true;
+                h[x] = h[v] + 1;
+                f(f, x);
+            }
+        }
     };
-    vector<shit> queries(q);
-    for (ll i = 0; i < q; i += 1) {
-        cin >> queries[i].tp >> queries[i].u >> queries[i].v;
-    }
-    reverse(queries.begin(), queries.end());
-    vector<string> ans;
-    for (ll i = 0; i < q; i += 1) {
-        if (queries[i].tp == "cut") {
-            unite(queries[i].u, queries[i].v);
-        } else {
-            ans.push_back((get_parent(queries[i].u)==get_parent(queries[i].v)?"YES":"NO"));
+    for (ll i = 1; i <= n; i += 1) {
+        if (!seen[i]) {
+            h[i] = 1;
+            calc_h(calc_h, i);
         }
     }
-    reverse(ans.begin(), ans.end());
-    for (const auto &x : ans) {
-        cout << x << endl;
+    auto get_best_up_in_subtree = [&] (auto f, ll v, ll par) -> void {
+        seen[v] = true;
+        up[v] = h[v];
+        for (const auto &x : sm[v]) {
+            if (!seen[x]) {
+                f(f, x, v);
+                up[v] = min(up[v], up[x]);
+            } else {
+                if (x != par) {
+                    up[v] = min(up[v], h[x]);
+                }
+            }
+        }
+    };
+    seen.reset();
+    for (ll i = 1; i <= n; i += 1) {
+        if (!seen[i]) {
+            get_best_up_in_subtree(get_best_up_in_subtree, i, i);
+        }
     }
+    map<pll, ll> mp;
+    auto get_color = [&] (ll u, ll v) -> ll {
+        if (u > v) swap(u, v);
+        assert(u != v);
+        auto edge = pll(u, v);
+        if (!mp.contains(edge)) {
+            return -1;
+        }
+        return mp[edge];
+    };
+    ll COLOR = 0;
+    auto set_color = [&] (ll u, ll v, ll C) -> void {
+        if (u > v) swap(u, v);
+        assert(u != v);
+        auto edge = pll(u, v);
+        mp[edge] = C;
+    };
+    auto color = [&] (auto f, ll v, ll C, ll par) -> void {
+        seen[v] = true;
+        for (const auto &x : sm[v]) {
+            if (x == par) continue;
+            if (!seen[x]) {
+                seen[x] = true;
+                if (up[x] >= h[v]) {
+                    COLOR += 1;
+                    set_color(v, x, COLOR);
+                    f(f, x, COLOR, v);
+                } else {
+                    set_color(v, x, C);
+                    f(f, x, C, v);
+                }
+            } else {
+                if (h[x] < h[v]) {
+                    set_color(v, x, C);
+                }
+            }
+        }
+    };
+    seen.reset();
+    for (ll i = 1; i <= n; i += 1) {
+        if (!seen[i]) {
+            color(color, i, COLOR, i);
+        }
+    }
+    cout << COLOR << endl;
+    vll ans(m);
+    for (ll i = 0; i < m; i += 1) {
+        ans[i] = get_color(edges[i].first, edges[i].second);
+    }
+    map<ll, ll> nvm;
+    ll nxt = 1;
+    for (ll i = 0; i < m; i += 1) {
+        ll x = ans[i];
+        if (!nvm.contains(x)) {
+            nvm[x] = nxt++;
+        }
+        x = nvm[x];
+        cout << x << ' ';
+    }cout << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
