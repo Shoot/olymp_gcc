@@ -136,117 +136,91 @@ ll sub(ll best, ll b) {
 ll sub(ll best, ll b, ll MODD) {
     return (best-(b%MODD)+MODD)%MODD;
 }
+using base = complex<double>;
+
+void fft(vector<base> & a, bool invert) {
+    int n = (int) a.size();
+    if (n == 1)  return;
+
+    vector<base> a0(n/2),  a1(n/2);
+    for (int i = 0, j = 0; i < n; i+=2, ++j) {
+        a0[j] = a[i];
+        a1[j] = a[i+1];
+    }
+    fft(a0, invert);
+    fft(a1, invert);
+
+    double ang = 2*M_PI/n * (invert ? -1 : 1);
+    base w(1),  wn(cos(ang), sin(ang));
+    for (int i = 0; i < n/2; ++i) {
+        a[i] = a0[i] + w * a1[i];
+        a[i+n/2] = a0[i] - w * a1[i];
+        if (invert)
+            a[i] /= 2,  a[i+n/2] /= 2;
+        w *= wn;
+    }
+}
+void multiply(const vector<int> & a, const vector<int> & b, vector<int> & res) {
+    vector<base> fa(a.begin(), a.end()),  fb(b.begin(), b.end());
+    size_t n = 1;
+    while (n < max (a.size(), b.size()))  n <<= 1;
+    n <<= 1;
+    fa.resize(n),  fb.resize(n);
+
+    fft(fa, false),  fft(fb, false);
+    for (size_t i=0; i < n; ++i)
+        fa[i] *= fb[i];
+    fft(fa, true);
+
+    res.resize(n);
+    for (size_t i=0; i < n; ++i)
+        res[i] = int(fa[i].real() + 0.5);
+    int carry = 0;
+    for (size_t i=0; i < n; ++i) {
+        res[i] += carry;
+        carry = res[i] / 10;
+        res[i] %= 10;
+    }
+}
 void solve() {
-    ll n, m;
-    cin >> n >> m;
-    vvll sm(n+1);
-    vpll edges;
-    for (ll i = 0; i < m; i += 1) {
-        ll u, v; cin >> u >> v;
-        sm[u].push_back(v);
-        sm[v].push_back(u);
-        edges.push_back(pll(u, v));
+    vector<int> shit;
+    string a, b;
+    cin >> a >> b;
+    vector<int> A;
+    bool a_otr = false;
+    bool b_otr = false;
+    for (const auto &x : a) {
+        if (x == '-') {
+            a_otr = true;
+            continue;
+        }
+        A.push_back(x-'0');
     }
-    bitset<1'000'000> seen;
-    vll h(n+1);
-    vll up(n+1);
-    auto calc_h = [&] (auto f, ll v) -> void {
-        seen[v] = true;
-        for (const auto &x : sm[v]) {
-            if (!seen[x]) {
-                seen[x] = true;
-                h[x] = h[v] + 1;
-                f(f, x);
-            }
+    vector<int> B;
+    for (const auto &x : b) {
+        if (x == '-') {
+            b_otr = true;
+            continue;
         }
-    };
-    for (ll i = 1; i <= n; i += 1) {
-        if (!seen[i]) {
-            h[i] = 1;
-            calc_h(calc_h, i);
-        }
+        B.push_back(x-'0');
     }
-    auto get_best_up_in_subtree = [&] (auto f, ll v, ll par) -> void {
-        seen[v] = true;
-        up[v] = h[v];
-        for (const auto &x : sm[v]) {
-            if (!seen[x]) {
-                f(f, x, v);
-                up[v] = min(up[v], up[x]);
-            } else {
-                if (x != par) {
-                    up[v] = min(up[v], h[x]);
-                }
-            }
-        }
-    };
-    seen.reset();
-    for (ll i = 1; i <= n; i += 1) {
-        if (!seen[i]) {
-            get_best_up_in_subtree(get_best_up_in_subtree, i, i);
-        }
+    vector<int> NOL = {0};
+    if (A == NOL || B == NOL) {
+        cout << 0 << endl;
+        return;
     }
-    map<pll, ll> mp;
-    auto get_color = [&] (ll u, ll v) -> ll {
-        if (u > v) swap(u, v);
-        assert(u != v);
-        auto edge = pll(u, v);
-        if (!mp.contains(edge)) {
-            return -1;
-        }
-        return mp[edge];
-    };
-    ll COLOR = 0;
-    auto set_color = [&] (ll u, ll v, ll C) -> void {
-        if (u > v) swap(u, v);
-        assert(u != v);
-        auto edge = pll(u, v);
-        mp[edge] = C;
-    };
-    auto color = [&] (auto f, ll v, ll C, ll par) -> void {
-        seen[v] = true;
-        for (const auto &x : sm[v]) {
-            if (x == par) continue;
-            if (!seen[x]) {
-                seen[x] = true;
-                if (up[x] >= h[v]) {
-                    COLOR += 1;
-                    set_color(v, x, COLOR);
-                    f(f, x, COLOR, v);
-                } else {
-                    set_color(v, x, C);
-                    f(f, x, C, v);
-                }
-            } else {
-                if (h[x] < h[v]) {
-                    set_color(v, x, C);
-                }
-            }
-        }
-    };
-    seen.reset();
-    for (ll i = 1; i <= n; i += 1) {
-        if (!seen[i]) {
-            color(color, i, COLOR, i);
-        }
+    reverse(A.begin(), A.end());
+    reverse(B.begin(), B.end());
+    multiply(A, B, shit);
+    while (shit.back() == 0) shit.pop_back();
+    reverse(shit.begin(), shit.end());
+    if (a_otr != b_otr) {
+        cout << "-";
     }
-    cout << COLOR << endl;
-    vll ans(m);
-    for (ll i = 0; i < m; i += 1) {
-        ans[i] = get_color(edges[i].first, edges[i].second);
-    }
-    map<ll, ll> nvm;
-    ll nxt = 1;
-    for (ll i = 0; i < m; i += 1) {
-        ll x = ans[i];
-        if (!nvm.contains(x)) {
-            nvm[x] = nxt++;
-        }
-        x = nvm[x];
-        cout << x << ' ';
+    for (const auto &x : shit) {
+        cout << x;
     }cout << endl;
 }
-
 int32_t main(int32_t argc, char* argv[]) {
 //    ifstream cin("distance.in");
 //    ofstream cout("distance.out");
