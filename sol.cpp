@@ -17,11 +17,11 @@ using vpll = vector<pll>;
 #include <ext/pb_ds/tree_policy.hpp>
 using namespace __gnu_pbds;
 template <typename T> using ordered_set = tree<T, null_type, less<T>, rb_tree_tag, tree_order_statistics_node_update>;
-ostream& endl(ostream& os) {
-    return os << '\n';
-}
-#define all(xxx) xxx.begin(), xxx.end()
-#define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl
+//ostream& endl(ostream& os) {
+//    return os << '\n';
+//}
+//define all(xxx) xxx.begin(), xxx.end()
+//define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl
 template <class T, class S> inline bool chmax(T &best, const S &b) { return (best < b ? best = b, 1 : 0); }
 template <class T, class S> inline bool chmin(T &best, const S &b) { return (best > b ? best = b, 1 : 0); }
 template <typename T, typename U>
@@ -62,7 +62,7 @@ void print(Head&& head, Tail&&... tail) {
 //#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math,trapv")
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-uniform_int_distribution<ll> distrib(0ll, 5ll);
+uniform_int_distribution<ll> distrib(0ll, 10ll);
 //constexpr ll MOD = 819356875157278019ll;
 constexpr ll MOD = 1e9+7;
 void in(vector<ll> & best) {
@@ -136,41 +136,60 @@ ll sub(ll best, ll b) {
 ll sub(ll best, ll b, ll MODD) {
     return (best-(b%MODD)+MODD)%MODD;
 }
-void solve() {
-    ll n, q; cin >> n >> q;
-    string s; cin >> s;
-    vector<set<ll>> positions(26);
-    for (ll i = 0; i < n; i += 1) {
-        positions[s[i]-'a'].insert(i);
+vll p(5e5+20);
+vll sz(5e5+20, 1);
+vll mini(5e5+20);
+vll maxi(5e5+20);
+ll get_parent(ll x) {
+    if (p[x] == x) {
+        return x;
     }
+    ll real = get_parent(p[x]);
+    return p[x] = real;
+}
+
+void unite(ll x, ll y) {
+    x = get_parent(x);
+    y = get_parent(y);
+    if (x == y) return;
+    if (sz[x] > sz[y]) swap(x, y);
+    p[x] = y;
+    sz[y] += sz[x];
+    mini[y] = min(mini[y], mini[x]);
+    maxi[y] = max(maxi[y], maxi[x]);
+}
+void solve() {
+    iota(p.begin(), p.end(), 0);
+    iota(mini.begin(), mini.end(), 0);
+    iota(maxi.begin(), maxi.end(), 0);
+    ll n, m, q; cin >> n >> m >> q;
+    for (ll i = 0; i < m; i += 1) {
+        ll shit1, shit2; cin >> shit1 >> shit2;
+    }
+    struct shit {
+        string tp;
+        ll u;
+        ll v;
+    };
+    vector<shit> queries(q);
     for (ll i = 0; i < q; i += 1) {
-        string query; cin >> query;
-        ll l = 1, r = n;
-        ll good = -1;
-        auto can = [&] (ll x) -> bool {
-            ll prev = -x;
-            for (const auto &c : query) {
-                auto it = positions[c-'a'].lower_bound(prev+x);
-                if (it == positions[c-'a'].end()) {
-                    return false;
-                }
-                ll nxt = *it;
-                prev = nxt;
-            }
-            return true;
-        };
-        while (l <= r) {
-            ll mid = (l + r) >> 1;
-            if (can(mid)) {
-                good = mid;
-                l = mid + 1;
-            } else {
-                r = mid - 1;
-            }
+        cin >> queries[i].tp >> queries[i].u >> queries[i].v;
+    }
+    reverse(queries.begin(), queries.end());
+    vector<string> ans;
+    for (ll i = 0; i < q; i += 1) {
+        if (queries[i].tp == "cut") {
+            unite(queries[i].u, queries[i].v);
+        } else {
+            ans.push_back((get_parent(queries[i].u)==get_parent(queries[i].v)?"YES":"NO"));
         }
-        cout << good << endl;
+    }
+    reverse(ans.begin(), ans.end());
+    for (const auto &x : ans) {
+        cout << x << endl;
     }
 }
+
 int32_t main(int32_t argc, char* argv[]) {
 //    ifstream cin("distance.in");
 //    ofstream cout("distance.out");
