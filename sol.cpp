@@ -20,84 +20,73 @@ template <typename T> using ordered_set = tree<T, null_type, less<T>, rb_tree_ta
 ostream& endl(ostream& os) {
     return os << '\n';
 }
-//define all(xxx) xxx.begin(), xxx.end()
-//define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl
+#define all(xxx) xxx.begin(), xxx.end()
+#define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 uniform_int_distribution<ll> distrib(0ll, 10ll);
 //constexpr ll MOD = 819356875157278019ll;
 constexpr ll MOD = 1e9+7;
 
-void solve(){
-    string l, r; cin >> l >> r;
-    reverse(l.begin(), l.end());
-    reverse(r.begin(), r.end());
-    while (l.size() != r.size()) {
-        l.push_back('0');
+void solve() {
+    ll n, m; cin >> n >> m;
+    ll rx, ry; cin >> rx >> ry; rx -= 1; ry -= 1;
+    ll fx, fy; cin >> fx >> fy; fx -= 1; fy -= 1;
+    vvll ok(n, vll(m, true));
+    ll shitty; cin >> shitty;
+    for (ll i = 0; i < shitty; i += 1) {
+        ll x, y; cin >> x >> y; x -= 1; y -= 1;
+        ok[x][y] = false;
     }
-    ll dp[10][20][2][2][2]; // dp[][][][][] = kolvo_sposobov_popast_v_sostoyaniye
-    ll been[10][20][2][2][2][20]; // dp[][][][][][x] = dlya dliny x — eto kolvo chisel u kotorih est otrezok iz x odinakovih cifr
-    ll dp_nw[10][20][2][2][2];
-    ll been_nw[10][20][2][2][2][20];
-    reverse(l.begin(), l.end());
-    reverse(r.begin(), r.end());
-    clog << l << "," << r << endl;
-    ll n = l.size();
-    memset(dp, 0, sizeof(dp));
-    memset(been, 0, sizeof(been));
-    dp[0][1][0][0][0] = 1;
-    been[0][1][0][0][0][1] = 1;
-    vector<ll> kol_by_length(20);
-    for (ll i = 0; i < n; i += 1) {
-        clog << "i = " << i << ".." << endl;
-        memset(dp_nw, 0, sizeof(dp_nw));
-        memset(been_nw, 0, sizeof(been_nw));
-        for (ll last = 0; last <= 9; last += 1) {
-            for (ll kol = 0; kol <= 19; kol += 1) {
-                for (ll more_than_l = 0; more_than_l < 2; more_than_l += 1) {
-                    for (ll less_than_r = 0; less_than_r < 2; less_than_r += 1) {
-                        for (ll was_non_zero = 0; was_non_zero < 2; was_non_zero += 1) {
-                            if (!dp[last][kol][more_than_l][less_than_r][was_non_zero]) continue;
-                            for (ll nw = 0; nw <= 9; nw += 1) {
-                                if (nw < (l[i]-'0') && !more_than_l) continue;
-                                if (nw > (r[i]-'0') && !less_than_r) continue;
-                                ll nwkol = 1;
-                                if (nw == last && (nw != 0 || was_non_zero)) nwkol += kol;
-                                dp_nw[nw][nwkol][more_than_l||nw>(l[i]-'0')][less_than_r||nw<(r[i]-'0')][was_non_zero || nw != 0] += dp[last][kol][more_than_l][less_than_r][was_non_zero];
-                                for (ll trkol = 0; trkol <= 19; trkol += 1) {
-                                    been_nw[nw][nwkol][more_than_l||nw>(l[i]-'0')][less_than_r||nw<(r[i]-'0')][was_non_zero || nw != 0][trkol] += been[last][kol][more_than_l][less_than_r][was_non_zero][trkol];
-                                }
-                                been_nw[nw][nwkol][more_than_l||nw>(l[i]-'0')][less_than_r||nw<(r[i]-'0')][was_non_zero || nw != 0][nwkol] += dp[last][kol][more_than_l][less_than_r][was_non_zero]-been[last][kol][more_than_l][less_than_r][was_non_zero][nwkol];
-                            }
-                        }
-                    }
-                }
-            }
+    ll d[100][100][4];
+    const ll FROM_UP = 0;
+    const ll FROM_RIGHT = 1;
+    const ll FROM_DOWN = 2;
+    const ll FROM_LEFT = 3;
+    ll dx[4] = {1, 0, -1, 0};
+    ll dy[4] = {0, -1, 0, 1};
+    ll shit[4] = {3, 0, 1, 2};
+    const ll INF = 1e18;
+    for (ll i = 0; i < 100; i += 1) {
+        for (ll j = 0; j < 100; j += 1) {
+            d[i][j][FROM_UP] = INF;
+            d[i][j][FROM_DOWN] = INF;
+            d[i][j][FROM_LEFT] = INF;
+            d[i][j][FROM_RIGHT] = INF;
         }
-        swap(dp, dp_nw);
-        swap(been, been_nw);
     }
-    for (ll last = 0; last <= 9; last += 1) {
-        for (ll kol = 0; kol <= 19; kol += 1) {
-            for (ll more_than_l = 0; more_than_l < 2; more_than_l += 1) {
-                for (ll less_than_r = 0; less_than_r < 2; less_than_r += 1) {
-                    for (ll was_non_zero = 0; was_non_zero < 2; was_non_zero += 1) {
-                        for (ll been_sz = 0; been_sz <= 19; been_sz += 1) {
-                            ll shit = been[last][kol][more_than_l][less_than_r][was_non_zero][been_sz];
-                            kol_by_length[been_sz] += shit;
-                        }
-                    }
+    d[rx][ry][FROM_UP] = 0;
+    d[rx][ry][FROM_DOWN] = 0;
+    d[rx][ry][FROM_LEFT] = 0;
+    d[rx][ry][FROM_RIGHT] = 0;
+    qpll q; q.push(pll(rx,ry));
+    while (!q.empty()) {
+        ll x = q.front().first;
+        ll y = q.front().second;
+        q.pop();
+        for (ll from = 0; from < 4; from += 1) {
+            if (d[x][y][from] == INF) continue;
+            for (ll i = 0; i < 4; i += 1) {
+                if (i == from) continue;
+                if (x + dx[i] < 0 || x + dx[i] >= n) continue;
+                if (y + dy[i] < 0 || y + dy[i] >= m) continue;
+                if (!ok[x+dx[i]][y+dy[i]]) continue;
+                ll nxt = d[x][y][from] + 1;
+                if (nxt < d[x+dx[i]][y+dy[i]][shit[i]]) {
+                    d[x+dx[i]][y+dy[i]][shit[i]] = nxt;
+                    q.push(pll(x+dx[i], y+dy[i]));
                 }
             }
         }
     }
-    for (ll i = 19; i >= 0; i -= 1) {
-        if (kol_by_length[i] != 0) {
-            cout << i << " " << kol_by_length[i] << endl;
-            return;
-        }
+    ll mini = INF;
+    for (ll i = 0; i < 4; i += 1) {
+        mini = min(mini, d[fx][fy][i]);
     }
-    assert(false);
+    if (mini == INF) {
+        mini = -1;
+    }
+    cout << mini << endl;
 }
 
 int32_t main(int32_t argc, char* argv[]) {
@@ -120,7 +109,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-    cin >> tt;
+//    cin >> tt;
 
     while (tt--) {
         solve();
