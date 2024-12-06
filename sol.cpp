@@ -17,210 +17,89 @@ using vpll = vector<pll>;
 #include <ext/pb_ds/tree_policy.hpp>
 using namespace __gnu_pbds;
 template <typename T> using ordered_set = tree<T, null_type, less<T>, rb_tree_tag, tree_order_statistics_node_update>;
-//ostream& endl(ostream& os) {
-//    return os << '\n';
-//}
+ostream& endl(ostream& os) {
+    return os << '\n';
+}
 //define all(xxx) xxx.begin(), xxx.end()
 //define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl
-template <class T, class S> inline bool chmax(T &best, const S &b) { return (best < b ? best = b, 1 : 0); }
-template <class T, class S> inline bool chmin(T &best, const S &b) { return (best > b ? best = b, 1 : 0); }
-template <typename T, typename U>
-ostream& operator<<(ostream& os, const pair<T, U>& A) {
-    os << A.fi << " " << A.se;
-    return os;
-}
-template <typename T>
-ostream& operator<<(ostream& os, const vector<T>& A) {
-    for (size_t i = 0; i < A.size(); i++) {
-        if (i) os << " ";
-        os << A[i];
-    }
-    return os;
-}
-void scan(ll &best) { cin >> best; }
-void scan(char &best) { cin >> best; }
-void scan(double &best) { cin >> best; }
-void scan(long double &best) { cin >> best; }
-void scan(string &best) { cin >> best; }
-template <class T, class S> void scan(pair<T, S> &p) { scan(p.first), scan(p.second); }
-template <class T> void scan(vector<T> &best) {for(auto &i : best) scan(i);}
-template <class T> void scan(T &best) { cin >> best; }
-void IN() {}
-template <class Head, class... Tail> void IN(Head &head, Tail &...tail) {
-    scan(head);
-    IN(tail...);
-}
-void print() {
-    cout << "\n";
-}
-template <class Head, class... Tail>
-void print(Head&& head, Tail&&... tail) {
-    cout << head;
-    if (sizeof...(Tail)) cout << " ";
-    print(forward<Tail>(tail)...);
-}
-//#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math,trapv")
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
 uniform_int_distribution<ll> distrib(0ll, 10ll);
 //constexpr ll MOD = 819356875157278019ll;
 constexpr ll MOD = 1e9+7;
-void in(vector<ll> & best) {
-    for (auto & zero_leaf : best) cin >> zero_leaf;
-}
-void in(vector<ll> & best, ll l, ll r) {
-    for (ll i=l; i < r; i+=1) {
-        cin >> best[i];
-    }
-}
-void inn(vector<ll> & best, ll l, ll rr) {
-    for (ll i=l; i <= rr; i+=1) {
-        cin >> best[i];
-    }
-}
-ll powm(ll best, ll b) {
-    assert(b >= 0);
-    ll d = 1;
-    while (b) {
-        if (b&1) d = (d*best) % MOD;
-        b >>= 1;
-        best = (best*best) % MOD;
-    }
-    return d;
-}
-ll powm(ll best, ll b, ll MODD) {
-    assert(b >= 0);
-    ll d = 1;
-    while (b) {
-        if (b&1) d = (d*best) % MODD;
-        b >>= 1;
-        best = (best*best) % MODD;
-    }
-    return d;
-}
-ll poww(ll best, ll b) {
-    assert(b >= 0);
-    ll d = 1;
-    while (b) {
-        if (b&1) d = (d*best);
-        b >>= 1;
-        best = (best*best);
-    }
-    return d;
-}
-ld poww(ld best, ll b) {
-    assert(b >= 0);
-    ld d = 1;
-    while (b) {
-        if (b&1) d = (d*best);
-        b >>= 1;
-        best = (best*best);
-    }
-    return d;
-}
-ll mul(ll best, ll b) {
-    return (best*b)%MOD;
-}
-ll mul(ll best, ll b, ll MODD) {
-    return (best*b)%MODD;
-}
-ll sum(ll best, ll b) {
-    return (best+b)%MOD;
-}
-ll sum(ll best, ll b, ll MODD) {
-    return (best+b)%MODD;
-}
-ll sub(ll best, ll b) {
-    return (best-(b%MOD)+MOD)%MOD;
-}
-ll sub(ll best, ll b, ll MODD) {
-    return (best-(b%MODD)+MODD)%MODD;
-}
-using base = complex<double>;
 
-void fft(vector<base> & a, bool invert) {
-    int n = (int) a.size();
-    if (n == 1)  return;
-
-    vector<base> a0(n/2),  a1(n/2);
-    for (int i = 0, j = 0; i < n; i+=2, ++j) {
-        a0[j] = a[i];
-        a1[j] = a[i+1];
+void solve(){
+    string l, r; cin >> l >> r;
+    reverse(l.begin(), l.end());
+    reverse(r.begin(), r.end());
+    while (l.size() != r.size()) {
+        l.push_back('0');
     }
-    fft(a0, invert);
-    fft(a1, invert);
-
-    double ang = 2*M_PI/n * (invert ? -1 : 1);
-    base w(1),  wn(cos(ang), sin(ang));
-    for (int i = 0; i < n/2; ++i) {
-        a[i] = a0[i] + w * a1[i];
-        a[i+n/2] = a0[i] - w * a1[i];
-        if (invert)
-            a[i] /= 2,  a[i+n/2] /= 2;
-        w *= wn;
-    }
-}
-void multiply(const vector<int> & a, const vector<int> & b, vector<int> & res) {
-    vector<base> fa(a.begin(), a.end()),  fb(b.begin(), b.end());
-    size_t n = 1;
-    while (n < max (a.size(), b.size()))  n <<= 1;
-    n <<= 1;
-    fa.resize(n),  fb.resize(n);
-
-    fft(fa, false),  fft(fb, false);
-    for (size_t i=0; i < n; ++i)
-        fa[i] *= fb[i];
-    fft(fa, true);
-
-    res.resize(n);
-    for (size_t i=0; i < n; ++i)
-        res[i] = int(fa[i].real() + 0.5);
-    int carry = 0;
-    for (size_t i=0; i < n; ++i) {
-        res[i] += carry;
-        carry = res[i] / 10;
-        res[i] %= 10;
-    }
-}
-void solve() {
-    vector<int> shit;
-    string a, b;
-    cin >> a >> b;
-    vector<int> A;
-    bool a_otr = false;
-    bool b_otr = false;
-    for (const auto &x : a) {
-        if (x == '-') {
-            a_otr = true;
-            continue;
+    ll dp[10][20][2][2][2]; // dp[][][][][] = kolvo_sposobov_popast_v_sostoyaniye
+    ll been[10][20][2][2][2][20]; // dp[][][][][][x] = dlya dliny x — eto kolvo chisel u kotorih est otrezok iz x odinakovih cifr
+    ll dp_nw[10][20][2][2][2];
+    ll been_nw[10][20][2][2][2][20];
+    reverse(l.begin(), l.end());
+    reverse(r.begin(), r.end());
+    clog << l << "," << r << endl;
+    ll n = l.size();
+    memset(dp, 0, sizeof(dp));
+    memset(been, 0, sizeof(been));
+    dp[0][1][0][0][0] = 1;
+    been[0][1][0][0][0][1] = 1;
+    vector<ll> kol_by_length(20);
+    for (ll i = 0; i < n; i += 1) {
+        clog << "i = " << i << ".." << endl;
+        memset(dp_nw, 0, sizeof(dp_nw));
+        memset(been_nw, 0, sizeof(been_nw));
+        for (ll last = 0; last <= 9; last += 1) {
+            for (ll kol = 0; kol <= 19; kol += 1) {
+                for (ll more_than_l = 0; more_than_l < 2; more_than_l += 1) {
+                    for (ll less_than_r = 0; less_than_r < 2; less_than_r += 1) {
+                        for (ll was_non_zero = 0; was_non_zero < 2; was_non_zero += 1) {
+                            if (!dp[last][kol][more_than_l][less_than_r][was_non_zero]) continue;
+                            for (ll nw = 0; nw <= 9; nw += 1) {
+                                if (nw < (l[i]-'0') && !more_than_l) continue;
+                                if (nw > (r[i]-'0') && !less_than_r) continue;
+                                ll nwkol = 1;
+                                if (nw == last && (nw != 0 || was_non_zero)) nwkol += kol;
+                                dp_nw[nw][nwkol][more_than_l||nw>(l[i]-'0')][less_than_r||nw<(r[i]-'0')][was_non_zero || nw != 0] += dp[last][kol][more_than_l][less_than_r][was_non_zero];
+                                for (ll trkol = 0; trkol <= 19; trkol += 1) {
+                                    been_nw[nw][nwkol][more_than_l||nw>(l[i]-'0')][less_than_r||nw<(r[i]-'0')][was_non_zero || nw != 0][trkol] += been[last][kol][more_than_l][less_than_r][was_non_zero][trkol];
+                                }
+                                been_nw[nw][nwkol][more_than_l||nw>(l[i]-'0')][less_than_r||nw<(r[i]-'0')][was_non_zero || nw != 0][nwkol] += dp[last][kol][more_than_l][less_than_r][was_non_zero]-been[last][kol][more_than_l][less_than_r][was_non_zero][nwkol];
+                            }
+                        }
+                    }
+                }
+            }
         }
-        A.push_back(x-'0');
+        swap(dp, dp_nw);
+        swap(been, been_nw);
     }
-    vector<int> B;
-    for (const auto &x : b) {
-        if (x == '-') {
-            b_otr = true;
-            continue;
+    for (ll last = 0; last <= 9; last += 1) {
+        for (ll kol = 0; kol <= 19; kol += 1) {
+            for (ll more_than_l = 0; more_than_l < 2; more_than_l += 1) {
+                for (ll less_than_r = 0; less_than_r < 2; less_than_r += 1) {
+                    for (ll was_non_zero = 0; was_non_zero < 2; was_non_zero += 1) {
+                        for (ll been_sz = 0; been_sz <= 19; been_sz += 1) {
+                            ll shit = been[last][kol][more_than_l][less_than_r][was_non_zero][been_sz];
+                            kol_by_length[been_sz] += shit;
+                        }
+                    }
+                }
+            }
         }
-        B.push_back(x-'0');
     }
-    vector<int> NOL = {0};
-    if (A == NOL || B == NOL) {
-        cout << 0 << endl;
-        return;
+    for (ll i = 19; i >= 0; i -= 1) {
+        if (kol_by_length[i] != 0) {
+            cout << i << " " << kol_by_length[i] << endl;
+            return;
+        }
     }
-    reverse(A.begin(), A.end());
-    reverse(B.begin(), B.end());
-    multiply(A, B, shit);
-    while (shit.back() == 0) shit.pop_back();
-    reverse(shit.begin(), shit.end());
-    if (a_otr != b_otr) {
-        cout << "-";
-    }
-    for (const auto &x : shit) {
-        cout << x;
-    }cout << endl;
+    assert(false);
 }
+
 int32_t main(int32_t argc, char* argv[]) {
 //    ifstream cin("distance.in");
 //    ofstream cout("distance.out");
@@ -241,7 +120,7 @@ int32_t main(int32_t argc, char* argv[]) {
         clog.tie(nullptr);
     }
     ll tt = 1;
-//    cin >> tt;
+    cin >> tt;
 
     while (tt--) {
         solve();
