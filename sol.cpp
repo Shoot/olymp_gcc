@@ -30,63 +30,90 @@ constexpr ll MOD = 1e9+7;
 
 void solve() {
     ll n, m; cin >> n >> m;
-    ll rx, ry; cin >> rx >> ry; rx -= 1; ry -= 1;
-    ll fx, fy; cin >> fx >> fy; fx -= 1; fy -= 1;
-    vvll ok(n, vll(m, true));
-    ll shitty; cin >> shitty;
-    for (ll i = 0; i < shitty; i += 1) {
-        ll x, y; cin >> x >> y; x -= 1; y -= 1;
-        ok[x][y] = false;
+    vector<vvpll> sm(n, vvpll(m));
+    vector<string> d(n);
+    for (auto &x : d) {
+        cin >> x;
     }
-    ll d[100][100][4];
-    const ll FROM_UP = 0;
-    const ll FROM_RIGHT = 1;
-    const ll FROM_DOWN = 2;
-    const ll FROM_LEFT = 3;
-    ll dx[4] = {1, 0, -1, 0};
-    ll dy[4] = {0, -1, 0, 1};
-    ll shit[4] = {3, 0, 1, 2};
-    const ll INF = 1e18;
-    for (ll i = 0; i < 100; i += 1) {
-        for (ll j = 0; j < 100; j += 1) {
-            d[i][j][FROM_UP] = INF;
-            d[i][j][FROM_DOWN] = INF;
-            d[i][j][FROM_LEFT] = INF;
-            d[i][j][FROM_RIGHT] = INF;
-        }
-    }
-    d[rx][ry][FROM_UP] = 0;
-    d[rx][ry][FROM_DOWN] = 0;
-    d[rx][ry][FROM_LEFT] = 0;
-    d[rx][ry][FROM_RIGHT] = 0;
-    qpll q; q.push(pll(rx,ry));
-    while (!q.empty()) {
-        ll x = q.front().first;
-        ll y = q.front().second;
-        q.pop();
-        for (ll from = 0; from < 4; from += 1) {
-            if (d[x][y][from] == INF) continue;
-            for (ll i = 0; i < 4; i += 1) {
-                if (i == from) continue;
-                if (x + dx[i] < 0 || x + dx[i] >= n) continue;
-                if (y + dy[i] < 0 || y + dy[i] >= m) continue;
-                if (!ok[x+dx[i]][y+dy[i]]) continue;
-                ll nxt = d[x][y][from] + 1;
-                if (nxt < d[x+dx[i]][y+dy[i]][shit[i]]) {
-                    d[x+dx[i]][y+dy[i]][shit[i]] = nxt;
-                    q.push(pll(x+dx[i], y+dy[i]));
-                }
+    vvll ok(n, vll(m));
+    for (ll i = 0; i < n; i += 1) {
+        for (ll j = 0; j < m; j += 1) {
+            if (d[i][j] == '.') {
+                ok[i][j] = true;
             }
         }
     }
-    ll mini = INF;
-    for (ll i = 0; i < 4; i += 1) {
-        mini = min(mini, d[fx][fy][i]);
+    vector<pair<pll, pll>> edges;
+    for (ll i = 0; i < n; i += 1) {
+        for (ll j = 0; j < m; j += 1) {
+            if (!ok[i][j]) continue;
+            if (i > 0 && ok[i-1][j]) sm[i][j].push_back(pll(i-1, j)), edges.push_back(make_pair(pll(i,j), pll(i-1,j)));
+            if (j > 0 && ok[i][j-1]) sm[i][j].push_back(pll(i, j-1)), edges.push_back(make_pair(pll(i,j), pll(i,j-1)));
+            if (j+1 < m && ok[i][j+1]) sm[i][j].push_back(pll(i, j+1)), edges.push_back(make_pair(pll(i,j), pll(i,j+1)));
+            if (i+1 < n && ok[i+1][j]) sm[i][j].push_back(pll(i+1, j)), edges.push_back(make_pair(pll(i,j), pll(i+1,j)));
+        }
     }
-    if (mini == INF) {
-        mini = -1;
+    vvll seen(n, vll(m));
+    vvll depth(n, vll(m));
+    vvll cycle_in_subtree(n, vll(m));
+    vvll up_in_subtree(n, vll(m));
+    auto dfs = [&] (auto f, pll v, pll par) -> void {
+        if (par != v) depth[v.first][v.second] = depth[par.first][par.second] + 1;
+        seen[v.first][v.second] = true;
+        up_in_subtree[v.first][v.second] = depth[v.first][v.second];
+        for (const auto &x : sm[v.first][v.second]) {
+            if (x != par) {
+                if (seen[x.first][x.second]) {
+                    up_in_subtree[v.first][v.second] = min(up_in_subtree[v.first][v.second], depth[x.first][x.second]);
+                }
+            }
+        }
+        for (const auto &x : sm[v.first][v.second]) {
+            if (!seen[x.first][x.second]) {
+                f(f, x, v);
+                up_in_subtree[v.first][v.second] = min(up_in_subtree[v.first][v.second], up_in_subtree[x.first][x.second]);
+                if (up_in_subtree[x.first][x.second] <= depth[v.first][v.second]) {
+                    cycle_in_subtree[x.first][x.second] = true;
+                }
+                cycle_in_subtree[v.first][v.second] |= cycle_in_subtree[x.first][x.second];
+            }
+        }
+    };
+    for (int i = 0; i < n; i += 1) {
+        for (ll j = 0; j < m; j += 1) {
+            if (!seen[i][j]) {
+                depth[i][j] = 1;
+                dfs(dfs, pll(i,j), pll(i,j));
+            }
+        }
     }
-    cout << mini << endl;
+    for (auto &x : d) {
+        for (auto &y : x) {
+            if (y == '.') {
+                y = 'X';
+            }
+        }
+    }
+//    cout << up_in_subtree[0][0] << endl;
+//    cout << up_in_subtree[0][1] << endl;
+//    cout << up_in_subtree[1][0] << endl;
+//    cout << up_in_subtree[1][1] << endl;
+    for (ll i = 0; i < n; i += 1) {
+        for (ll j = 0; j < m; j += 1) {
+            if (cycle_in_subtree[i][j]) {
+                d[i][j] = '.';
+            }
+        }
+    }
+//    for (const auto &[u, v] : edges) {
+//        if (depth[u.first][u.second] >= up_in_subtree[v.first][v.second] && depth[u.first][u.second] < depth[v.first][v.second]) {
+//            d[v.first][v.second] = '.';
+//            d[u.first][u.second] = '.';
+//        }
+//    }
+    for (const auto &x : d) {
+        cout << x << endl;
+    }
 }
 
 int32_t main(int32_t argc, char* argv[]) {
