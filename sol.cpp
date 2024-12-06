@@ -53,32 +53,25 @@ void solve() {
             if (i+1 < n && ok[i+1][j]) sm[i][j].push_back(pll(i+1, j)), edges.push_back(make_pair(pll(i,j), pll(i+1,j)));
         }
     }
-    vvll seen(n, vll(m));
-    vvll depth(n, vll(m));
-    vvll up_in_subtree(n, vll(m));
-    auto dfs = [&] (auto f, pll v, pll par) -> void {
-        if (par != v) depth[v.first][v.second] = depth[par.first][par.second] + 1;
-        seen[v.first][v.second] = true;
-        up_in_subtree[v.first][v.second] = depth[v.first][v.second];
-        for (const auto &x : sm[v.first][v.second]) {
-            if (x != par) {
-                if (seen[x.first][x.second]) {
-                    up_in_subtree[v.first][v.second] = min(up_in_subtree[v.first][v.second], depth[x.first][x.second]);
-                }
-            }
-        }
-        for (const auto &x : sm[v.first][v.second]) {
-            if (!seen[x.first][x.second]) {
-                f(f, x, v);
-                up_in_subtree[v.first][v.second] = min(up_in_subtree[v.first][v.second], up_in_subtree[x.first][x.second]);
-            }
-        }
-    };
-    for (int i = 0; i < n; i += 1) {
+    qpll q;
+    vvll kol(n, vll(m));
+    for (ll i = 0; i < n ; i += 1) {
         for (ll j = 0; j < m; j += 1) {
-            if (!seen[i][j]) {
-                depth[i][j] = 1;
-                dfs(dfs, pll(i,j), pll(i,j));
+            kol[i][j] = ll(sm[i][j].size());
+            if (kol[i][j] <= 1 && ok[i][j]) {
+                q.push(pll(i, j));
+            }
+        }
+    }
+    while (!q.empty()) {
+        auto [x, y] = q.front();
+        q.pop();
+        for (const auto &[to_x, to_y] : sm[x][y]) {
+            if (kol[to_x][to_y] > 1) {
+                kol[to_x][to_y] -= 1;
+                if (kol[to_x][to_y] == 1) {
+                    q.push(pll(to_x, to_y));
+                }
             }
         }
     }
@@ -89,14 +82,11 @@ void solve() {
             }
         }
     }
-//    cout << up_in_subtree[0][0] << endl;
-//    cout << up_in_subtree[0][1] << endl;
-//    cout << up_in_subtree[1][0] << endl;
-//    cout << up_in_subtree[1][1] << endl;
-    for (const auto &[u, v] : edges) {
-        if (depth[u.first][u.second] >= up_in_subtree[v.first][v.second] && depth[u.first][u.second] < depth[v.first][v.second]) {
-            d[v.first][v.second] = '.';
-            d[u.first][u.second] = '.';
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < m; ++j) {
+            if (ok[i][j] && kol[i][j] > 1) {
+                d[i][j] = '.';
+            }
         }
     }
     for (const auto &x : d) {

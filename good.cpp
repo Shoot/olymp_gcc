@@ -22,136 +22,79 @@ ostream& endl(ostream& os) {
 }
 #define all(xxx) xxx.begin(), xxx.end()
 #define watch(xxx) cout << "value of " << #xxx << " is " << xxx << endl
-template <class T, class S> inline bool chmax(T &best, const S &b) { return (best < b ? best = b, 1 : 0); }
-template <class T, class S> inline bool chmin(T &best, const S &b) { return (best > b ? best = b, 1 : 0); }
-template <typename T, typename U>
-ostream& operator<<(ostream& os, const pair<T, U>& A) {
-    os << A.fi << " " << A.se;
-    return os;
-}
-template <typename T>
-ostream& operator<<(ostream& os, const vector<T>& A) {
-    for (size_t i = 0; i < A.size(); i++) {
-        if (i) os << " ";
-        os << A[i];
-    }
-    return os;
-}
-void scan(ll &best) { cin >> best; }
-void scan(char &best) { cin >> best; }
-void scan(double &best) { cin >> best; }
-void scan(long double &best) { cin >> best; }
-void scan(string &best) { cin >> best; }
-template <class T, class S> void scan(pair<T, S> &p) { scan(p.first), scan(p.second); }
-template <class T> void scan(vector<T> &best) {for(auto &i : best) scan(i);}
-template <class T> void scan(T &best) { cin >> best; }
-void IN() {}
-template <class Head, class... Tail> void IN(Head &head, Tail &...tail) {
-    scan(head);
-    IN(tail...);
-}
-void print() {
-    cout << "\n";
-}
-template <class Head, class... Tail>
-void print(Head&& head, Tail&&... tail) {
-    cout << head;
-    if (sizeof...(Tail)) cout << " ";
-    print(forward<Tail>(tail)...);
-}
-//#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math,trapv")
 #pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
-uniform_int_distribution<ll> distrib(0ll, 5ll);
+uniform_int_distribution<ll> distrib(0ll, 10ll);
 //constexpr ll MOD = 819356875157278019ll;
 constexpr ll MOD = 1e9+7;
-void in(vector<ll> & best) {
-    for (auto & zero_leaf : best) cin >> zero_leaf;
-}
-void in(vector<ll> & best, ll l, ll r) {
-    for (ll i=l; i < r; i+=1) {
-        cin >> best[i];
-    }
-}
-void inn(vector<ll> & best, ll l, ll rr) {
-    for (ll i=l; i <= rr; i+=1) {
-        cin >> best[i];
-    }
-}
-ll powm(ll best, ll b) {
-    assert(b >= 0);
-    ll d = 1;
-    while (b) {
-        if (b&1) d = (d*best) % MOD;
-        b >>= 1;
-        best = (best*best) % MOD;
-    }
-    return d;
-}
-ll powm(ll best, ll b, ll MODD) {
-    assert(b >= 0);
-    ll d = 1;
-    while (b) {
-        if (b&1) d = (d*best) % MODD;
-        b >>= 1;
-        best = (best*best) % MODD;
-    }
-    return d;
-}
-ll poww(ll best, ll b) {
-    assert(b >= 0);
-    ll d = 1;
-    while (b) {
-        if (b&1) d = (d*best);
-        b >>= 1;
-        best = (best*best);
-    }
-    return d;
-}
-ld poww(ld best, ll b) {
-    assert(b >= 0);
-    ld d = 1;
-    while (b) {
-        if (b&1) d = (d*best);
-        b >>= 1;
-        best = (best*best);
-    }
-    return d;
-}
-ll mul(ll best, ll b) {
-    return (best*b)%MOD;
-}
-ll mul(ll best, ll b, ll MODD) {
-    return (best*b)%MODD;
-}
-ll sum(ll best, ll b) {
-    return (best+b)%MOD;
-}
-ll sum(ll best, ll b, ll MODD) {
-    return (best+b)%MODD;
-}
-ll sub(ll best, ll b) {
-    return (best-(b%MOD)+MOD)%MOD;
-}
-ll sub(ll best, ll b, ll MODD) {
-    return (best-(b%MODD)+MODD)%MODD;
+ll n, m;
+vector<string> d;
+bool is_valid(int x, int y) {
+    return x >= 0 && x < n && y >= 0 && y < m && d[x][y] == '.';
 }
 void solve() {
-    string s; cin >> s;
-    if (s[0] == '9') {
-        s.insert(s.begin(), '0');
+    cin >> n >> m;
+    vector<vvpll> sm(n, vvpll(m));
+    d.resize(n);
+    for (auto &x : d) {
+        cin >> x;
     }
-    bool notfirst = false;
-    for (auto &x : s) {
-        if (!notfirst) {
-            x += 1;
-            notfirst = true;
-        } else {
-            x = '0';
+    vvll ok(n, vll(m));
+    for (ll i = 0; i < n; i += 1) {
+        for (ll j = 0; j < m; j += 1) {
+            if (d[i][j] == '.') {
+                ok[i][j] = true;
+            }
         }
     }
-    cout << s << endl;
+    vector<pair<pll, pll>> edges;
+    for (ll i = 0; i < n; i += 1) {
+        for (ll j = 0; j < m; j += 1) {
+            if (!ok[i][j]) continue;
+            if (i > 0 && ok[i-1][j]) sm[i][j].push_back(pll(i-1, j)), edges.push_back(make_pair(pll(i,j), pll(i-1,j)));
+            if (j > 0 && ok[i][j-1]) sm[i][j].push_back(pll(i, j-1)), edges.push_back(make_pair(pll(i,j), pll(i,j-1)));
+            if (j+1 < m && ok[i][j+1]) sm[i][j].push_back(pll(i, j+1)), edges.push_back(make_pair(pll(i,j), pll(i,j+1)));
+            if (i+1 < n && ok[i+1][j]) sm[i][j].push_back(pll(i+1, j)), edges.push_back(make_pair(pll(i,j), pll(i+1,j)));
+        }
+    }
+    queue<pair<int, int>> q;
+    vvll kol(n, vll(m));
+    vector<pair<int, int>> directions = {{-1, 0}, {0, 1}, {1, 0}, {0, -1}};
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < m; ++j) {
+//            kol[i][j] = sm[i][j].size();
+            if (d[i][j] == '.') {
+                for (auto [dx, dy] : directions) {
+                    int ni = i + dx, nj = j + dy;
+                    if (is_valid(ni, nj)) {
+                        kol[i][j]++;
+                    }
+                }
+                if (kol[i][j] <= 1) {
+                    q.emplace(i, j);
+                }
+            }
+        }
+    }
+    for (auto &x : d) {
+        for (auto &y : x) {
+            if (y == '.') {
+                y = 'X';
+            }
+        }
+    }
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < m; ++j) {
+            if (ok[i][j] && kol[i][j] > 1) {
+                d[i][j] = '.';
+            }
+        }
+    }
+    for (const auto &x : d) {
+        cout << x << endl;
+    }
 }
+
 int32_t main(int32_t argc, char* argv[]) {
 //    ifstream cin("distance.in");
 //    ofstream cout("distance.out");
