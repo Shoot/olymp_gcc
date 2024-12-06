@@ -55,7 +55,6 @@ void solve() {
     }
     vvll seen(n, vll(m));
     vvll depth(n, vll(m));
-    vvll cycle_in_subtree(n, vll(m));
     vvll up_in_subtree(n, vll(m));
     auto dfs = [&] (auto f, pll v, pll par) -> void {
         if (par != v) depth[v.first][v.second] = depth[par.first][par.second] + 1;
@@ -72,10 +71,6 @@ void solve() {
             if (!seen[x.first][x.second]) {
                 f(f, x, v);
                 up_in_subtree[v.first][v.second] = min(up_in_subtree[v.first][v.second], up_in_subtree[x.first][x.second]);
-                if (up_in_subtree[x.first][x.second] <= depth[v.first][v.second]) {
-                    cycle_in_subtree[x.first][x.second] = true;
-                }
-                cycle_in_subtree[v.first][v.second] |= cycle_in_subtree[x.first][x.second];
             }
         }
     };
@@ -98,19 +93,12 @@ void solve() {
 //    cout << up_in_subtree[0][1] << endl;
 //    cout << up_in_subtree[1][0] << endl;
 //    cout << up_in_subtree[1][1] << endl;
-    for (ll i = 0; i < n; i += 1) {
-        for (ll j = 0; j < m; j += 1) {
-            if (cycle_in_subtree[i][j]) {
-                d[i][j] = '.';
-            }
+    for (const auto &[u, v] : edges) {
+        if (depth[u.first][u.second] >= up_in_subtree[v.first][v.second] && depth[u.first][u.second] < depth[v.first][v.second]) {
+            d[v.first][v.second] = '.';
+            d[u.first][u.second] = '.';
         }
     }
-//    for (const auto &[u, v] : edges) {
-//        if (depth[u.first][u.second] >= up_in_subtree[v.first][v.second] && depth[u.first][u.second] < depth[v.first][v.second]) {
-//            d[v.first][v.second] = '.';
-//            d[u.first][u.second] = '.';
-//        }
-//    }
     for (const auto &x : d) {
         cout << x << endl;
     }
