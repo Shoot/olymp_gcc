@@ -43,7 +43,7 @@
 				}
 			],
 			"type" : "STRING",
-			"value" : "Debug"
+			"value" : "Release"
 		},
 		{
 			"name" : "CMAKE_CACHEFILE_DIR",
@@ -55,7 +55,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/Users/whoami/CLionProjects/olymp_gcc/cmake-build-debug"
+			"value" : "/Users/whoami/CLionProjects/olymp_gcc/cmake-build-release"
 		},
 		{
 			"name" : "CMAKE_CACHE_MAJOR_VERSION",
@@ -151,10 +151,10 @@
 				},
 				{
 					"name" : "HELPSTRING",
-					"value" : "CXX compiler"
+					"value" : "No help, variable specified on the command line."
 				}
 			],
-			"type" : "STRING",
+			"type" : "UNINITIALIZED",
 			"value" : "/opt/homebrew/bin/g++"
 		},
 		{
@@ -511,7 +511,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/Users/whoami/CLionProjects/olymp_gcc/cmake-build-debug/CMakeFiles/pkgRedirects"
+			"value" : "/Users/whoami/CLionProjects/olymp_gcc/cmake-build-release/CMakeFiles/pkgRedirects"
 		},
 		{
 			"name" : "CMAKE_GENERATOR",
@@ -1183,7 +1183,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/Users/whoami/CLionProjects/olymp_gcc/cmake-build-debug"
+			"value" : "/Users/whoami/CLionProjects/olymp_gcc/cmake-build-release"
 		},
 		{
 			"name" : "olymp_gcc_IS_TOP_LEVEL",
