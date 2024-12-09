@@ -32,7 +32,7 @@ void solve() {
     auto multiply = [&] (vector<ll> &A, vector<ll> &B) -> vector<ll> {
         vector<comp> one(A.begin(), A.end()), another(B.begin(), B.end());
         ll multsz = 1;
-        while (multsz < A.size()+B.size()) multsz <<= 1;
+        while (multsz < ll(A.size()+B.size())) multsz <<= 1;
         one.resize(multsz);
         another.resize(multsz);
         auto dir = comp(cos(PI * 2. / multsz), sin(PI * 2. / multsz));
@@ -48,21 +48,21 @@ void solve() {
 
         vector<ll> coeff_ll(multsz);
         for (ll i = 0; i < multsz; i += 1) {
-            coeff_ll[i] = round(coeff_mult[i].real()) / multsz;
+            coeff_ll[i] = round(coeff_mult[i].real() / multsz);
         }
         return coeff_ll;
     };
-    auto normalize10 = [&] (vector<ll> &P) -> void {
-        for (ll i = 0; i < P.size(); i += 1) {
-            while (P[i] >= 10) {
-                assert(i+1 < P.size());
-                P[i] -= 10;
-                P[i+1] += 1;
+    auto normalize10 = [&] (vector<ll> &P, ll MAX_RAZRYAD) -> void {
+        for (ll i = 0; i < ll(P.size()); i += 1) {
+            if (P[i] >= MAX_RAZRYAD) {
+                assert(i+1 < ll(P.size()));
+                P[i + 1] += P[i] / MAX_RAZRYAD;
+                P[i] %= MAX_RAZRYAD;
             }
             assert(P[i] >= 0);
-            assert(P[i] < 10);
+            assert(P[i] < MAX_RAZRYAD);
         }
-        while (P.back() == 0) {
+        while (!P.empty() && P.back() == 0) {
             P.pop_back();
         }
     };
@@ -79,16 +79,30 @@ void solve() {
     }
     reverse(x.begin(), x.end());
     reverse(y.begin(), y.end());
+    const ll base_pow = 2;
+    const ll MAX_RAZRYAD = 1'00;
+    while (x.size()%base_pow != 0) x.push_back('0');
+    while (y.size()%base_pow != 0) y.push_back('0');
     vector<ll> a;
     vector<ll> b;
-    for (ll i = 0; i < x.size(); i += 1) {
-        a.push_back(x[i]-'0');
+    for (ll i = 0; i < ll(x.size()); i += base_pow) {
+        ll curr = 0;
+        for (ll j = base_pow-1; j >= 0; j -= 1) {
+            curr *= 10;
+            curr += x[i+j]-'0';
+        }
+        a.push_back(curr);
     }
-    for (ll i = 0; i < y.size(); i += 1) {
-        b.push_back(y[i]-'0');
+    for (ll i = 0; i < ll(y.size()); i += base_pow) {
+        ll curr = 0;
+        for (ll j = base_pow-1; j >= 0; j -= 1) {
+            curr *= 10;
+            curr += y[i+j]-'0';
+        }
+        b.push_back(curr);
     }
     auto c = multiply(a, b);
-    normalize10(c);
+    normalize10(c, MAX_RAZRYAD);
     if (c.empty()) {
         cout << 0 << endl;
         return;
@@ -97,6 +111,8 @@ void solve() {
         cout << "-";
     }
     for (ll i = c.size()-1; i >= 0; i -= 1) {
+        if (i != ll(c.size()) - 1)
+            cout << setw(base_pow) << setfill('0');
         cout << c[i];
     }cout << endl;
     // 1 2 3 4 -> (10,0) (-2,-2) (-2,0) (-2,2)
