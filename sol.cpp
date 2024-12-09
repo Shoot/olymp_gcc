@@ -4,30 +4,40 @@ using ll = long long;
 using comp = complex<double>;
 const double PI = acos(-1);
 void solve() {
-    auto FFT = [&] (auto f, vector<comp> P, comp x) -> vector<comp> {
-        ll n = ll(P.size());
+    vector<comp> w;
+    auto FFT = [&] (auto f, const vector<comp> &P, vector<comp>& A, bool invert,
+            ll coeff_from = 0, ll write_from = 0, ll n = -1, ll step = 1) -> void {
+        assert(n != 0);
+        if (n == -1) {
+            n = ll(P.size());
+            if (A.empty()) {
+                A.resize(n);
+            }
+            w.resize(n);
+            comp c(1);
+            auto x = comp(cos(PI * 2. / n), sin(PI * 2. / n));
+            if (invert) {
+                x = comp(cos(PI * 2. / n), -sin(PI * 2. / n));
+            }
+            for (ll i = 0; i < n; i += 1) {
+                w[i] = c;
+                c *= x;
+            }
+        }
         if (n == 1) {
-            return P;
+            A[write_from] = P[coeff_from];
+            return;
         }
-        vector<comp> A(n);
-        vector<comp> P0;
-        vector<comp> P1;
-        for (ll i = 0; i < n; i += 2) {
-            P0.push_back(P[i]);
+        f(f, P, A,  invert, coeff_from, write_from, n/2, step * 2);
+        f(f, P, A, invert, coeff_from+step, write_from+n/2, n/2, step * 2);
+        ll idx = 0;
+        for (ll i = write_from; i < write_from+n/2; i += 1) {
+            auto aa = A[i];
+            auto bb = A[i + n/2];
+            A[i] = aa + w[idx] * bb;
+            A[i + n/2] = aa + -w[idx] * bb;
+            idx += step;
         }
-        for (ll i = 1; i < n; i += 2) {
-            P1.push_back(P[i]);
-        }
-        auto A0 = f(f, P0, x * x);
-        auto A1 = f(f, P1, x * x);
-        comp c(1);
-        for (ll i = 0; i < n/2; i += 1) {
-            A[i] = A0[i] + c * A1[i];
-            A[i + n/2] = A0[i] + -c * A1[i];
-            c *= x;
-        }
-
-        return A;
     };
     auto multiply = [&] (vector<ll> &A, vector<ll> &B) -> vector<ll> {
         vector<comp> one(A.begin(), A.end()), another(B.begin(), B.end());
@@ -35,16 +45,17 @@ void solve() {
         while (multsz < ll(A.size()+B.size())) multsz <<= 1;
         one.resize(multsz);
         another.resize(multsz);
-        auto dir = comp(cos(PI * 2. / multsz), sin(PI * 2. / multsz));
-        auto rev = comp(cos(PI * 2. / multsz), -sin(PI * 2. / multsz));
-        auto FFT_direct_one = FFT(FFT, one, dir);
-        auto FFT_direct_another = FFT(FFT, another, dir);
+        vector<comp> FFT_direct_one;
+        vector<comp> FFT_direct_another;
+        FFT(FFT, one, FFT_direct_one, false);
+        FFT(FFT, another, FFT_direct_another, false);
 
         vector<comp> values_mult(multsz);
         for (ll i = 0; i < multsz; i += 1) {
             values_mult[i] = FFT_direct_one[i] * FFT_direct_another[i];
         }
-        auto coeff_mult = FFT(FFT, values_mult, rev);
+        vector<comp> coeff_mult;
+        FFT(FFT, values_mult, coeff_mult, true);
 
         vector<ll> coeff_ll(multsz);
         for (ll i = 0; i < multsz; i += 1) {
@@ -115,8 +126,9 @@ void solve() {
             cout << setw(base_pow) << setfill('0');
         cout << c[i];
     }cout << endl;
+
     // 1 2 3 4 -> (10,0) (-2,-2) (-2,0) (-2,2)
-    // 1 2 3 4 5 6 7 8 -> (36,0) (-4,-9.65685) (-4,-4) (-4,-1.65685) (-4,0) (-4,1.65685) (-4,4) (-4,9.65685)
+    // {1, 2, 3, 4, 5, 6, 7, 8} -> (36,0) (-4,-9.65685) (-4,-4) (-4,-1.65685) (-4,0) (-4,1.65685) (-4,4) (-4,9.65685)
 //    for (const auto &x : FFT_direct_one) {
 //        cout << x << ' ';
 //    }cout << endl;
