@@ -1,79 +1,116 @@
-#include <bits/stdc++.h>
+#include <iostream>
+#include <vector>
+#include <cmath>
 
 using namespace std;
-using ll = long long;
-using vll = vector<long long>;
-void solve() {
-    ll q; cin >> q;
-    const ll INF = 1e18;
-    const ll N = 1e9+10;
-    struct Node {
-        ll first_zero;
-    };
-    map<ll, Node> mp;
-    map<ll, ll> a;
-    auto merge = [&] (Node &one, const Node &another) -> void {
-        one.first_zero = min(one.first_zero, another.first_zero);
-    };
-    auto set_point = [&] (auto f, ll v, ll tl, ll tr, ll pos, ll val) -> void {
-        Node ss = {INF};
-        mp[v] = ss;
-        if (tl == tr) {
-            a[pos] = val;
-            if (val == 0) {
-                mp[v].first_zero = pos;
-            } else {
-                mp[v].first_zero = INF;
+
+// Функция кодирования данных с использованием кода Хэмминга
+vector<int> hammingEncode(const vector<int>& data) {
+    int m = data.size(); // Количество бит данных
+    int r = 0; // Количество контрольных бит
+
+    // Вычисляем количество контрольных бит
+    while (pow(2, r) < (m + r + 1)) {
+        r++;
+    }
+
+    int totalBits = m + r; // Общее количество бит (данные + контрольные биты)
+    vector<int> encoded(totalBits, 0);
+
+    // Распределяем данные по позициям (пропускаем позиции для контрольных бит)
+    int j = 0;
+    for (int i = 1; i <= totalBits; ++i) {
+        if ((i & (i - 1)) == 0) {
+            // Позиция степени двойки (контрольный бит)
+            continue;
+        }
+        encoded[i - 1] = data[j++];
+    }
+
+    // Устанавливаем значения контрольных бит
+    for (int i = 0; i < r; ++i) {
+        int position = pow(2, i);
+        int parity = 0;
+        for (int j = 1; j <= totalBits; ++j) {
+            if (j & position) {
+                parity ^= encoded[j - 1];
             }
-            return;
         }
-        ll tm = (tl + tr) >> 1;
-        if (pos <= tm) {
-            f(f, 2*v+1, tl, tm, pos, val);
-        }
-        if (pos >= tm+1) {
-            f(f, 2*v+2, tm+1, tr, pos, val);
-        }
-        if (mp.count(2*v+1)) mp[v].first_zero = min(mp[v].first_zero, mp[2*v+1].first_zero);
-        else mp[v].first_zero = min(mp[v].first_zero, tl);
-        if (mp.count(2*v+2)) mp[v].first_zero = min(mp[v].first_zero, mp[2*v+2].first_zero);
-        else mp[v].first_zero = min(mp[v].first_zero, tm+1);
-    };
-    auto get_segment = [&] (auto f, ll v, ll tl, ll tr, ll l, ll r) -> Node {
-        if (tl == l && tr == r) {
-            Node ss = {tl};
-            if (!mp.count(v)) {
-                mp[v] = ss;
+        encoded[position - 1] = parity;
+    }
+
+    return encoded;
+}
+
+// Функция декодирования и проверки ошибок
+vector<int> hammingDecode(vector<int>& received) {
+    int totalBits = received.size();
+    int r = 0;
+
+    // Вычисляем количество контрольных бит
+    while (pow(2, r) < (totalBits + 1)) {
+        r++;
+    }
+
+    // Проверяем контрольные биты на ошибки
+    int errorPosition = 0;
+    for (int i = 0; i < r; ++i) {
+        int position = pow(2, i);
+        int parity = 0;
+        for (int j = 1; j <= totalBits; ++j) {
+            if (j & position) {
+                parity ^= received[j - 1];
             }
-            return mp[v];
         }
-        ll tm = (tl + tr) >> 1;
-        Node x = {INF};
-        if (l <= tm) {
-            auto t = f(f, 2*v+1, tl, tm, l, min(r, tm));
-            merge(x, t);
-        }
-        if (r >= tm+1) {
-            auto t = f(f, 2*v+2, tm+1, tr, max(l, tm+1), r);
-            merge(x, t);
-        }
-        return x;
-    };
-    for (ll i = 0; i < q; i += 1) {
-        ll x; cin >> x;
-        if (x < 0) {
-            set_point(set_point, 0, 1, N, -x, 0);
-        } else {
-            auto ans = get_segment(get_segment, 0, 1, N, x, N);
-            cout << ans.first_zero << "\n";
-            set_point(set_point, 0, 1, N, ans.first_zero, 1);
+        if (parity != 0) {
+            errorPosition += position;
         }
     }
+
+    // Исправляем ошибку, если обнаружена
+    if (errorPosition > 0) {
+        cout << "Ошибка обнаружена в позиции " << errorPosition << ". Исправляем...\n";
+        received[errorPosition - 1] ^= 1;
+    } else {
+        cout << "Ошибок не обнаружено.\n";
+    }
+
+    // Извлекаем данные, исключая контрольные биты
+    vector<int> data;
+    for (int i = 1; i <= totalBits; ++i) {
+        if ((i & (i - 1)) != 0) {
+            data.push_back(received[i - 1]);
+        }
+    }
+
+    return data;
 }
-int main()
-{
-    ios::sync_with_stdio(0);
-    cin.tie(0);
-    solve();
+
+// Главная функция
+int main() {
+    // Пример данных для кодирования
+    vector<int> data = {1, 0, 1, 1};
+    cout << "Исходные данные: ";
+    for (int bit : data) cout << bit;
+    cout << endl;
+
+    // Кодирование
+    vector<int> encoded = hammingEncode(data);
+    cout << "Закодированные данные: ";
+    for (int bit : encoded) cout << bit;
+    cout << endl;
+
+    // Добавляем ошибку для проверки декодирования
+    encoded[6] ^= 1; // Инвертируем один бит (вносим ошибку)
+    cout << "Принятые данные (с ошибкой): ";
+    for (int bit : encoded) cout << bit;
+    cout << endl;
+
+    // Декодирование
+    vector<int> decoded = hammingDecode(encoded);
+    cout << "Декодированные данные: ";
+    for (int bit : decoded) cout << bit;
+    cout << endl;
+
     return 0;
 }
