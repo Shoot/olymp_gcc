@@ -6,57 +6,103 @@ using ll = long long;
 const ll INF = 1e18;
 mt19937 mt(time(0));
 void solve() {
-    ll q; cin >> q;
-    struct Point {
-        double x;
-        double y;
+    ll n; cin >> n; ll q; cin >> q;
+    struct Edge {
+        ll u;
+        ll v;
     };
-    vector<Point> pts(q);
-    for (ll i = 0; i < q; i += 1) {
-        cin >> pts[i].x >> pts[i].y;
+    const ll sz = max(q, 1ll);
+    vector<vector<Edge>> tree(4*sz+10);
+    auto set_edge = [&] (auto f, ll v, ll tl, ll tr, ll l, ll r, Edge e) -> void {
+        if (tl == l && tr == r) {
+            tree[v].push_back(e);
+            return;
+        }
+        ll tm = (tl + tr) >> 1;
+        if (l <= tm) {
+            f(f, 2*v+1, tl, tm, l, min(tm, r), e);
+        }
+        if (r >= tm+1) {
+            f(f, 2*v+2, tm+1, tr, max(l, tm+1), r, e);
+        }
+    };
+    map<pair<ll,ll>, ll> time_last_added;
+    vector<bool> is_asked(sz+1);
+    vector<ll> answer(sz+1);
+    for (ll i = 1; i <= q; i += 1) {
+        char type; cin >> type;
+        if (type == '?') {
+            is_asked[i] = true;
+        } else if (type == '+') {
+            ll u, v; cin >> u >> v;
+            if (u > v) {
+                swap(u, v);
+            }
+            assert(!time_last_added.count({u, v}));
+            time_last_added[{u, v}] = i;
+        } else {
+            ll u, v; cin >> u >> v;
+            if (u > v) {
+                swap(u, v);
+            }
+            assert(time_last_added.count({u, v}));
+            set_edge(set_edge, 0, 1, sz, time_last_added[{u, v}], i, {u, v});
+            time_last_added.erase({u, v});
+        }
     }
-    sort(pts.begin(), pts.end(), [&] (Point a, Point b) {
-        if (a.x == b.x) {
-            return a.y < b.y;
+    for (const auto &[e, t] : time_last_added) {
+        auto [u, v] = e;
+        set_edge(set_edge, 0, 1, sz, time_last_added[{u, v}], sz, {u, v});
+    }
+    vector<ll> p(n+1);
+    iota(p.begin(), p.end(), 0ll);
+    vector<ll> dsusz(n+1, 1);
+    auto find = [&] (auto f, ll u) -> ll {
+        if (p[u] == u) {
+            return u;
         }
-        return a.x < b.x;
-    });
-    auto dist = [&] (Point a, Point b) -> double {
-        return sqrt((a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y));
+        return f(f, p[u]);
     };
-    auto solve = [&] (auto f, ll l, ll r) -> double {
-        if (r - l + 1 <= 1) {
-            return INF;
+    stack<pair<ll&, ll>> stck;
+    auto unite = [&] (ll u, ll v) -> void {
+        u = find(find, u);
+        v = find(find, v);
+        if (dsusz[u] > dsusz[v]) {
+            swap(u, v);
         }
-        ll mid = (l + r) >> 1;
-        auto pt = pts[mid];
-        double d = INF;
-        d = min(d, f(f, l, mid));
-        d = min(d, f(f, mid+1, r));
-        vector<Point> t;
-        for (ll i = l; i <= r; i += 1) {
-            if (abs(pts[i].x-pts[mid].x) <= d) {
-                t.push_back(pts[i]);
-            }
+        if (u == v) {
+            return;
         }
-        sort(t.begin(), t.end(), [&] (Point a, Point b) {
-            if (a.y == b.y) {
-                return a.x < b.x;
-            }
-            return a.y < b.y;
-        });
-        ll n = ll(t.size());
-        for (ll i = 0; i < n; i += 1) {
-            for (ll j = 1; j < 9; j += 1) {
-                if (i+j >= n) {
-                    break;
-                }
-                d = min(d, dist(t[i], t[i+j]));
-            }
-        }
-        return d;
+        stck.push({p[u], p[u]});
+        stck.push({dsusz[v], dsusz[v]});
+        p[u] = v;
+        dsusz[v] += dsusz[u];
     };
-    cout << solve(solve, 0, q-1) << endl;
+    auto dfs = [&] (auto f, ll V, ll tl, ll tr) -> void {
+        ll kol = ll(stck.size());
+        for (const auto &[u, v] : tree[V]) {
+            unite(u, v);
+        }
+        if (tl == tr && is_asked[tl]) {
+            // answer
+            answer[tl] = n-stck.size()/2;
+        }
+        if (tl != tr) {
+            ll tm = (tl + tr) >> 1;
+            f(f, 2*V+1, tl, tm);
+            f(f, 2*V+2, tm+1, tr);
+        }
+        while (stck.size() > kol) {
+            stck.top().first = stck.top().second;
+            stck.pop();
+        }
+    };
+    dfs(dfs, 0, 1, sz);
+    for (ll i = 1; i <= q; i += 1) {
+        if (is_asked[i]) {
+            cout << answer[i] << endl;
+        }
+    }
 }
 
 int main(int32_t argc, char* argv[]) {
