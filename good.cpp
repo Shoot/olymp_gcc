@@ -1,21 +1,23 @@
 #include <bits/stdc++.h>
-
+#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 using namespace std;
-#define endl "\n"
-using ll = long long;
-const ll INF = 1e18;
+//define endl "\n"
+using ll = int;
+const ll INF = 1e9;
 mt19937 mt(time(0));
 void solve() {
-    ll n, q; cin >> n >> q;
-    vector<ll> p(n+1);
-    iota(p.begin(), p.end(), 0ll);
-    struct Change {
-
-    };
-    stack<Change> stck;
-    for (ll i = 0; i < n; i += 1) {
-
+    ll n, k; cin >> n >> k;
+    vector<vector<ll>> sm(n+1);
+    for (ll i = 1; i <= n; i += 1) {
+        ll p; cin >> p;
+        if (p != i) {
+            sm[p].push_back(i);
+        }
     }
+    /* после удаления ровно k ребер чтобы {просуммировать только те у которых остались оба ребра} -> max */
+    /* компоненты из простых циклов?? */
+    /* получается, уничтожая ребро, мы уничтожаем 2 или 1 или 0 вершины */
+    // максимум это сначала уничтожаем двойные
 }
 
 int main(int32_t argc, char* argv[]) {
