@@ -1,68 +1,95 @@
 #include <bits/stdc++.h>
-#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
 using namespace std;
-#define endl "\n"
-using ll = long long;
-const ll INF = 1e18;
-mt19937 mt(time(0));
-void solve() {
-    ll n; cin >> n; ll m; cin >> m;
-    vector<ll> p(n+1);
-    iota(p.begin(), p.end(), 0ll);
-    vector<ll> dsusz(n+1, 1);
-    auto find = [&] (auto f, ll u) -> ll {
-        if (p[u] == u) {
-            return u;
+int main () {
+//    ios::sync_with_stdio(false);
+//    cin.tie(0);
+    int n, k;
+    vector<int> A;
+    vector<int> d_vals;
+    vector<vector<int>> ans;
+    auto is_d_more = [&] (int shift) -> bool {
+        int i = 0;
+        int j = shift;
+        for (int k = 0; k < n; k += 1) {
+            if (A[i+k>=n?i+k-n:i+k] > d_vals[j+k>=n?j+k-n:j+k]) {
+                return false;
+            }
+            if (A[i+k>=n?i+k-n:i+k] < d_vals[j+k>=n?j+k-n:j+k]) {
+                return true;
+            }
         }
-        return p[u]=f(f, p[u]);
+        return false;
     };
-    auto unite = [&] (ll u, ll v) -> void {
-        u = find(find, u);
-        v = find(find, v);
-        if (dsusz[u] > dsusz[v]) {
-            swap(u, v);
+    auto make_minus = [&] (vector<int>& x) -> void {
+        for (auto &y : x) {
+            y = -y;
         }
-        if (u == v) {
+    };
+    auto undo_minus = [&] (vector<int>& x) -> void {
+        make_minus(x);
+    };
+    auto is_father = [&] () -> bool {
+        d_vals = A;
+        for (int shift = 0; shift < n; shift += 1) { // (nothing)
+            if (is_d_more(shift)) {
+                return false;
+            }
+        }
+        make_minus(d_vals);
+        for (int shift = 0; shift < n; shift += 1) { // minus
+            if (is_d_more(shift)) {
+                return false;
+            }
+        }
+        reverse(d_vals.begin(), d_vals.end());
+        for (int shift = 0; shift < n; shift += 1) { // rev, minus
+            if (is_d_more(shift)) {
+                return false;
+            }
+        }
+        undo_minus(d_vals);
+        for (int shift = 0; shift < n; shift += 1) { // rev
+            if (is_d_more(shift)) {
+                return false;
+            }
+        }
+        return true;
+    };
+    auto out = [&] () -> void {
+        cout << ans.size() << "\n";
+        for (const auto &x : ans) {
+            cout << "(";
+            for (int i = 0; i < int(x.size()); i += 1) {
+                cout << x[i];
+                if (i == int(x.size())-1) {
+                    cout << ")";
+                } else {
+                    cout << ",";
+                }
+            }
+            cout << "\n";
+        }
+    };
+    auto dfs = [&] (auto f, int idx) -> void {
+        if (idx == n) {
+            if (accumulate(A.begin(), A.end(), 0) == 0 && is_father()) {
+                ans.push_back({A});
+            }
             return;
         }
-        p[u] = v;
-        dsusz[v] += dsusz[u];
-    };
-    struct Edge {
-        ll u;
-        ll v;
-        ll w;
-    };
-    vector<Edge> Es(m);
-    for (ll i = 0; i < m; i += 1) {
-        ll u, v, w; cin >> u >> v >> w;
-        Es[i].u = u;
-        Es[i].v = v;
-        Es[i].w = w;
-    }
-    sort(Es.begin(), Es.end(), [&] (Edge a, Edge b) {
-        if (a.w == b.w) {
-            return make_pair(a.u, a.v) < make_pair(b.u, b.v);
+        for (int nxt = -k; nxt <= k; nxt += 1) {
+            A[idx] = nxt;
+            f(f, idx+1);
         }
-        return a.w < b.w;
-    });
-    ll su = 0;
-    for (ll i = 0; i < m; i += 1) {
-        if (find(find, Es[i].u) != find(find, Es[i].v)) {
-            unite(Es[i].u, Es[i].v);
-            su += Es[i].w;
+    };
+    int tt = 0;
+    while (cin >> n >> k) {
+        if (++tt > 1) {
+            cout << "\n";
         }
+        A.resize(n);
+        dfs(dfs, 0);
+        out();
+        ans.clear();
     }
-    cout << su << endl;
-}
-
-int main(int32_t argc, char* argv[]) {
-    cout << fixed << setprecision(6);
-    bool use_fast_io = true;
-    for (int32_t i = 1; i < argc; i += 1) use_fast_io &= string(argv[i]) != "-local-no-fast-io";
-    if (use_fast_io) ios::sync_with_stdio(false), cin.tie(0);
-    ll tt = 1;
-    while (tt--)
-        solve();
-    return 0;
 }

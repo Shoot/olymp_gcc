@@ -1,117 +1,77 @@
-#include <bits/stdc++.h>
-#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
+#include<bits/stdc++.h>
 using namespace std;
-#define endl "\n"
-using ll = long long;
-const ll INF = 1e18;
-mt19937 mt(time(0));
-void solve() {
-    ll n; cin >> n; ll q; cin >> q;
-    struct Edge {
-        ll u;
-        ll v;
-    };
-    const ll sz = q+1;
-    vector<vector<Edge>> tree(12e5+10);
-    auto set_edge = [&] (auto f, ll v, ll tl, ll tr, ll l, ll r, Edge e) -> void {
-        if (tl == l && tr == r) {
-            tree[v].push_back(e);
-            return;
-        }
-        ll tm = (tl + tr) >> 1;
-        if (l <= tm) {
-            f(f, 2*v+1, tl, tm, l, min(tm, r), e);
-        }
-        if (r >= tm+1) {
-            f(f, 2*v+2, tm+1, tr, max(l, tm+1), r, e);
-        }
-    };
-    map<pair<ll,ll>, ll> time_last_added;
-    vector<bool> is_asked(12e5+10);
-    vector<ll> answer(12e5+10);
-    for (ll i = 1; i <= q; i += 1) {
-        char type; cin >> type;
-        if (type == '?') {
-            is_asked[i] = true;
-        } else if (type == '+') {
-            ll u, v; cin >> u >> v;
-            if (u > v) {
-                swap(u, v);
-            }
-            assert(!time_last_added.count({u, v}));
-            time_last_added[{u, v}] = i;
-        } else {
-            ll u, v; cin >> u >> v;
-            if (u > v) {
-                swap(u, v);
-            }
-            assert(time_last_added.count({u, v}));
-            set_edge(set_edge, 0, 1, sz, time_last_added[{u, v}], i, {u, v});
-            time_last_added.erase({u, v});
-        }
-    }
-    for (const auto &[e, t] : time_last_added) {
-        auto [u, v] = e;
-        set_edge(set_edge, 0, 1, sz, time_last_added[{u, v}], sz, {u, v});
-    }
-    vector<ll> p(n+1);
-    iota(p.begin(), p.end(), 0ll);
-    vector<ll> dsusz(n+1, 1);
-    auto find = [&] (auto f, ll u) -> ll {
-        if (p[u] == u) {
-            return u;
-        }
-        return f(f, p[u]);
-    };
-    stack<pair<ll&, ll>> stck;
-    auto unite = [&] (ll u, ll v) -> void {
-        u = find(find, u);
-        v = find(find, v);
-        if (dsusz[u] > dsusz[v]) {
-            swap(u, v);
-        }
-        if (u == v) {
-            return;
-        }
-        stck.push({p[u], p[u]});
-        stck.push({dsusz[v], dsusz[v]});
-        p[u] = v;
-        dsusz[v] += dsusz[u];
-    };
-    auto dfs = [&] (auto f, ll V, ll tl, ll tr) -> void {
-        ll kol = ll(stck.size());
-        for (const auto &[u, v] : tree[V]) {
-            unite(u, v);
-        }
-        if (tl == tr && is_asked[tl]) {
-            // answer
-            answer[tl] = n-stck.size()/2;
-        }
-        if (tl != tr) {
-            ll tm = (tl + tr) >> 1;
-            f(f, 2*V+1, tl, tm);
-            f(f, 2*V+2, tm+1, tr);
-        }
-        while (stck.size() > kol) {
-            stck.top().first = stck.top().second;
-            stck.pop();
-        }
-    };
-    dfs(dfs, 0, 1, sz+1);
-    for (ll i = 1; i <= q; i += 1) {
-        if (is_asked[i]) {
-            cout << answer[i] << endl;
-        }
-    }
+#define maxm 100005
+#define maxn 15
+int a[maxn], s[maxm][maxn], b[maxn * 2], n, k, ans;
+void put(int num[]) {
+    printf("(%d", num[0]);
+    for(int i = 1; i < n; i++)
+        printf(",%d", num[i]);
+    printf(")\n");
 }
-
-int main(int32_t argc, char* argv[]) {
-    cout << fixed << setprecision(6);
-    bool use_fast_io = true;
-    for (int32_t i = 1; i < argc; i += 1) use_fast_io &= string(argv[i]) != "-local-no-fast-io";
-    if (use_fast_io) ios::sync_with_stdio(false), cin.tie(0);
-    ll tt = 1;
-    while (tt--)
-        solve();
+bool judge(int x) {
+    for(int i = x, j = 0; j < n; i++, j++)
+        if(a[j] != b[i])
+            return b[i] > a[j];
+    return false;
+}
+void check() {
+    for(int i = 0; i < n; i++)
+        b[i] = b[n + i] = a[i];
+//move
+    for(int i = 0; i < n; i++)
+        if(b[i] == a[0] && judge(i))
+            return ;
+//res
+    for(int i = 0; i < 2 * n; i++)
+        b[i] = -b[i];
+//opp and move
+    for(int i = 0; i < n; i++)
+        if(b[i] == a[0] && judge(i))
+            return ;
+//swap and opp
+    for(int i = 0; i < n; i++)
+        swap(b[i],b[2 * n - i - 1]);
+//swap and opp and move
+    for(int i = 0; i < n; i++)
+        if(b[i] == a[0] && judge(i))
+            return ;
+//opp
+    for(int i = 0; i < 2 * n; i++)
+        b[i] = -b[i];
+//swap and move
+    for(int i = 0; i < n; i++)
+        if(b[i] == a[0] && judge(i))
+            return ;
+    memcpy(s[ans++],a,sizeof(a));
+}
+void dfs(int cur, int Sum) {
+    if(cur == n) {
+        if(Sum == 0)
+            check();
+        return ;
+    }
+    if(abs(Sum) > ( (n - cur) * a[0]))
+        return ;
+    for(a[cur] = -a[0]; a[cur] < a[0]; a[cur]++) {
+        if(a[cur - 1] == a[0] && a[cur] > a[1])
+            return ;
+        dfs(cur+1,Sum + a[cur]);
+    }
+    if(a[cur] == a[0] && a[cur - 1] <= a[1])
+        dfs(cur+1,Sum + a[cur]);
+}
+int main() {
+    int cas = 0;
+    while(scanf("%d%d", &n, &k) != EOF && n) {
+        ans = 1;
+        for(a[0] = 1; a[0] <= k; a[0]++)
+            dfs(1,a[0]);
+        if(cas++)
+            printf("\n");
+        printf("%d\n", ans);
+        for(int i = 0; i < ans; i++)
+            put(s[i]);
+    }
     return 0;
 }
