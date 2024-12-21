@@ -3,93 +3,80 @@ using namespace std;
 int main () {
 //    ios::sync_with_stdio(false);
 //    cin.tie(0);
-    int n, k;
-    vector<int> A;
-    vector<int> d_vals;
-    vector<vector<int>> ans;
-    auto is_d_more = [&] (int shift) -> bool {
-        int i = 0;
-        int j = shift;
-        for (int k = 0; k < n; k += 1) {
-            if (A[i+k>=n?i+k-n:i+k] > d_vals[j+k>=n?j+k-n:j+k]) {
-                return false;
-            }
-            if (A[i+k>=n?i+k-n:i+k] < d_vals[j+k>=n?j+k-n:j+k]) {
-                return true;
-            }
-        }
-        return false;
-    };
-    auto make_minus = [&] (vector<int>& x) -> void {
-        for (auto &y : x) {
-            y = -y;
-        }
-    };
-    auto undo_minus = [&] (vector<int>& x) -> void {
-        make_minus(x);
-    };
-    auto is_father = [&] () -> bool {
-        d_vals = A;
-        for (int shift = 0; shift < n; shift += 1) { // (nothing)
-            if (is_d_more(shift)) {
-                return false;
-            }
-        }
-        make_minus(d_vals);
-        for (int shift = 0; shift < n; shift += 1) { // minus
-            if (is_d_more(shift)) {
-                return false;
-            }
-        }
-        reverse(d_vals.begin(), d_vals.end());
-        for (int shift = 0; shift < n; shift += 1) { // rev, minus
-            if (is_d_more(shift)) {
-                return false;
-            }
-        }
-        undo_minus(d_vals);
-        for (int shift = 0; shift < n; shift += 1) { // rev
-            if (is_d_more(shift)) {
-                return false;
-            }
-        }
-        return true;
-    };
-    auto out = [&] () -> void {
-        cout << ans.size() << "\n";
-        for (const auto &x : ans) {
-            cout << "(";
-            for (int i = 0; i < int(x.size()); i += 1) {
-                cout << x[i];
-                if (i == int(x.size())-1) {
-                    cout << ")";
-                } else {
-                    cout << ",";
+    int n; cin >> n;
+    map<int, string> mp;
+    map<string, int> invmp;
+    for (int i = 1; i <= n; i += 1) {
+        string filename; cin >> filename;
+        mp[i] = filename;
+        invmp[filename] = i;
+    }
+    vector<vector<int>> sm(n+1);
+    for (int i = 1; i <= n; i += 1) {
+        string filename; cin >> filename;
+        assert(filename == mp[i]);
+        int sz; cin >> sz;
+        cin.ignore();
+        for (int j = 0; j < sz; j += 1) {
+            string imports;
+            getline(cin, imports);
+            int start_of_next_item = 1;
+            for (int k = 0; k <= imports.size(); k += 1) {
+                if (k == imports.size() || imports[k] == ',') {
+                    sm[i].push_back(invmp[imports.substr(start_of_next_item, k-start_of_next_item)]);
+                } else if (imports[k] == ' ') {
+                    start_of_next_item = k + 1;
                 }
             }
-            cout << "\n";
         }
-    };
-    auto dfs = [&] (auto f, int idx) -> void {
-        if (idx == n) {
-            if (accumulate(A.begin(), A.end(), 0) == 0 && is_father()) {
-                ans.push_back({A});
-            }
-            return;
-        }
-        for (int nxt = -k; nxt <= k; nxt += 1) {
-            A[idx] = nxt;
-            f(f, idx+1);
-        }
-    };
-    int tt = 0;
-    while (cin >> n >> k) {
-        if (++tt > 1) {
-            cout << "\n";
-        }
-        A.resize(n);
-        dfs(dfs, 0);
-        out();
-        ans.clear();
     }
+    int min_cycle = 1e9;
+    int min_cycle_vertice = -1;
+    bitset<501> seen;
+    vector<int> par(501);
+    auto bfs = [&] (int u) -> void {
+        queue<pair<int,int>> q;
+        q.push({0, u});
+        seen.reset();
+        seen[u] = true;
+        while (!q.empty()) {
+            auto [d, tp] = q.front();
+            q.pop();
+            for (const auto &x : sm[tp]) {
+                if (x == u) {
+                    par[x] = tp;
+                    if (d + 1 < min_cycle) {
+                        min_cycle = d + 1;
+                        min_cycle_vertice = u;
+                    }
+                    return;
+                }
+                if (!seen[x]) {
+                    par[x] = tp;
+                    seen[x] = true;
+                    q.push({d + 1, x});
+                }
+            }
+        }
+    };
+    for (int i = 1; i <= n; i += 1) {
+        bfs(i);
+    }
+    if (min_cycle_vertice == -1) {
+        cout << "SHIP IT" << "\n";
+        return 0;
+    }
+    bfs(min_cycle_vertice);
+    int curr = min_cycle_vertice;
+    vector<string> res;
+    while (par[curr] != min_cycle_vertice) {
+        curr = par[curr];
+        res.push_back(mp[curr]);
+    }
+    reverse(res.begin(), res.end());
+    cout << mp[min_cycle_vertice] << " ";
+    for (const auto &x : res) {
+        cout << x << " ";
+    }
+    cout << "\n";
 }
