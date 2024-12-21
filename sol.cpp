@@ -233,31 +233,57 @@ struct bigint {
 int main () {
     ios::sync_with_stdio(false);
     cin.tie(0);
-    bigint n, m; cin >> n >> m;
-    bigint p; cin >> p;
-    auto sum = [&] (bigint a, bigint b) -> bigint {
+    bigint n; int m; cin >> n >> m;
+    int p; cin >> p;
+    auto sum = [&] (int a, int b) -> int {
         return (a+b)%p;
     };
-    auto sub = [&] (bigint a, bigint b) -> bigint {
+    auto sub = [&] (int a, int b) -> int {
         return (a%p-b%p+p)%p;
     };
-    auto mul = [&] (bigint a, bigint b) -> bigint {
+    auto mul = [&] (int a, int b) -> int {
         return (a*b)%p;
     };
-    auto powm = [&] (bigint a, bigint power) -> bigint {
-        bigint res = 1;
-        bigint p = a;
-        while (power > 0) {
-            if (power % 2 == 1) {
-                res = mul(res, p);
+    vector<pair<int, int>> pairs;
+    auto is_good = [&] (int a, int b) -> bool {
+        for (int i = 0; i < m-1; i += 1) {
+            if ((a&(1<<i))==(b&(1<<i))&&(a&(1<<(i+1)))==(b&(1<<(i+1)))&&bool(a&(1<<(i)))==bool(a&(1<<(i+1)))) {
+                return false;
             }
-            p = mul(p, p);
-            power = power / 2;
         }
-        return res;
+        return true;
     };
-    bigint bad = powm(2, (n-1)*(m-1));
-    bigint total = powm(2, n*m);
-    bigint good = sub(total, bad);
-    cout << good << "\n";
+    for (int maskA = 0; maskA < (1<<m); maskA += 1) {
+        for (int maskB = 0; maskB < (1<<m); maskB += 1) {
+            if (is_good(maskA, maskB)) {
+                pairs.push_back({maskA, maskB});
+            }
+        }
+    }
+    auto dnc = [&] (auto f, bigint l, bigint r, int mll, int mrr) -> int {
+        assert(r-l+1 >= 1);
+        if (r-l+1 <= 2) {
+            return 1;
+        }
+        bigint mid = (l+r) / 2;
+        int tot = 0;
+        for (const auto &[mlr, mrl] : pairs) {
+            if (l == mid && mll != mlr) continue;
+            if (l+1 == mid && !is_good(mll, mlr)) continue;
+            if (mid+1 == r && mrl != mrr) continue;
+            if (mid+2 == r && !is_good(mrl, mrr)) continue;
+            tot = sum(tot, f(f, l, mid, mll, mlr));
+            tot = sum(tot, f(f, mid+1, r, mrl, mrr));
+        }
+        return tot;
+    };
+    int ans = 0;
+    for (int maskA = 0; maskA < (1<<m); maskA += 1) {
+        for (int maskB = 0; maskB < (1<<m); maskB += 1) {
+            if (n == 1 && maskA != maskB) continue;
+            if (n == 2 && !is_good(maskA, maskB)) continue;
+            ans = sum(ans, dnc(dnc, 0, n-1, maskA, maskB));
+        }
+    }
+    cout << ans << "\n";
 }
