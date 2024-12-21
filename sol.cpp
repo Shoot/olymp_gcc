@@ -1,289 +1,247 @@
 #include <bits/stdc++.h>
 using namespace std;
-constexpr int digits(int base) noexcept {
-    return base <= 1 ? 0 : 1 + digits(base / 10);
+using vbo = vector<bool>;
+using ll = long long;
+using ull = unsigned long long;
+using pll = pair<ll, ll>;
+using ld = long double;
+using qll = queue<ll>;
+using vll = vector<ll>;
+using vvll = vector<vector<ll>>;
+using vvpll = vector<vector<pll>>;
+using qld = queue<ld>;
+using vld = vector<ld>;
+using qpll = queue<pll>;
+using vpll = vector<pll>;
+#include <ext/pb_ds/assoc_container.hpp>
+#include <ext/pb_ds/tree_policy.hpp>
+using namespace __gnu_pbds;
+template <typename T> using ordered_set = tree<T, null_type, less<T>, rb_tree_tag, tree_order_statistics_node_update>;
+ostream& endl(ostream& os) {
+    return os << '\n';
+}
+//define all(xxx) xxx.begin(), xxx.end()
+//define watch(xxx) cout << "value of " << #xxx << " is " << (xxx) << endl
+template <class T, class S> inline bool chmax(T &best, const S &b) { return (best < b ? best = b, 1 : 0); }
+template <class T, class S> inline bool chmin(T &best, const S &b) { return (best > b ? best = b, 1 : 0); }
+template <typename T, typename U>
+ostream& operator<<(ostream& os, const pair<T, U>& A) {
+    os << A.fi << " " << A.se;
+    return os;
+}
+template <typename T>
+ostream& operator<<(ostream& os, const vector<T>& A) {
+    for (size_t i = 0; i < A.size(); i++) {
+        if (i) os << " ";
+        os << A[i];
+    }
+    return os;
+}
+void scan(ll &best) { cin >> best; }
+void scan(char &best) { cin >> best; }
+void scan(double &best) { cin >> best; }
+void scan(long double &best) { cin >> best; }
+void scan(string &best) { cin >> best; }
+template <class T, class S> void scan(pair<T, S> &p) { scan(p.first), scan(p.second); }
+template <class T> void scan(vector<T> &best) {for(auto &i : best) scan(i);}
+template <class T> void scan(T &best) { cin >> best; }
+void IN() {}
+template <class Head, class... Tail> void IN(Head &head, Tail &...tail) {
+    scan(head);
+    IN(tail...);
+}
+void print() {
+    cout << "\n";
+}
+template <class Head, class... Tail>
+void print(Head&& head, Tail&&... tail) {
+    cout << head;
+    if (sizeof...(Tail)) cout << " ";
+    print(forward<Tail>(tail)...);
+}
+//#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math,trapv")
+#pragma GCC optimize("Ofast,no-stack-protector,unroll-loops,no-stack-protector,fast-math")
+mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
+//uniform_int_distribution<ll> distrib(0ll, 5ll);
+//constexpr ll MOD = 819356875157278019ll;
+constexpr ll MOD = 1e9+7;
+void in(vector<ll> & best) {
+    for (auto & zero_leaf : best) cin >> zero_leaf;
+}
+void in(vector<ll> & best, ll l, ll r) {
+    for (ll i=l; i < r; i+=1) {
+        cin >> best[i];
+    }
+}
+void inn(vector<ll> & best, ll l, ll rr) {
+    for (ll i=l; i <= rr; i+=1) {
+        cin >> best[i];
+    }
+}
+ll powm(ll best, ll b) {
+    assert(b >= 0);
+    ll d = 1;
+    while (b) {
+        if (b&1) d = (d*best) % MOD;
+        b >>= 1;
+        best = (best*best) % MOD;
+    }
+    return d;
+}
+ll powm(ll best, ll b, ll MODD) {
+    assert(b >= 0);
+    ll d = 1;
+    while (b) {
+        if (b&1) d = (d*best) % MODD;
+        b >>= 1;
+        best = (best*best) % MODD;
+    }
+    return d;
+}
+ll poww(ll best, ll b) {
+    assert(b >= 0);
+    ll d = 1;
+    while (b) {
+        if (b&1) d = (d*best);
+        b >>= 1;
+        best = (best*best);
+    }
+    return d;
+}
+ld poww(ld best, ll b) {
+    assert(b >= 0);
+    ld d = 1;
+    while (b) {
+        if (b&1) d = (d*best);
+        b >>= 1;
+        best = (best*best);
+    }
+    return d;
+}
+ll mul(ll best, ll b) {
+    return (best*b)%MOD;
+}
+ll mul(ll best, ll b, ll MODD) {
+    return (best*b)%MODD;
+}
+ll sum(ll best, ll b) {
+    return (best+b)%MOD;
+}
+ll sum(ll best, ll b, ll MODD) {
+    return (best+b)%MODD;
+}
+ll sub(ll best, ll b) {
+    return (best-(b%MOD)+MOD)%MOD;
+}
+ll sub(ll best, ll b, ll MODD) {
+    return (best-(b%MODD)+MODD)%MODD;
+}
+vll p(2e5);
+vll sz(2e5, 1);
+ll get_p(ll a) {
+    return p[a] == a ? a : p[a] = get_p(p[a]);
+}
+ll su;
+void solve() {
+    ll n = 10;
+    vvll sm(n+1);
+    ll U, V;
+    for (ll i = 0; i < n-1; i += 1) {
+        U = rng()%n+1;
+        V = rng()%n+1;
+        while (U == V) {
+            U = rng()%n+1;
+        }
+//        cin >> U >> V;
+        sm[U].push_back(V);
+        sm[V].push_back(U);
+//        cout << U << " " << V << "\n";
+    }
+    vvll up(20, vll(n+1));
+    vll h(n+1);
+    bitset<11> seen;
+    auto dfs = [&] (auto f, ll v, ll par) -> void {
+        seen[v] = true;
+        for (const auto &x : sm[v]) {
+            if (x != par && !seen[x]) {
+                h[x] = h[v] + 1;
+                up[0][x] = v;
+                f(f, x, v);
+            }
+        }
+    };
+    up[0][1] = 1;
+    dfs(dfs, 1, -1);
+    for (ll i = 1; i < 20; i += 1) {
+        for (ll v = 1; v <= n; v += 1) {
+            up[i][v] = up[i-1][up[i-1][v]];
+        }
+    }
+    su = 0;
+    for (ll UU = 1; UU <= n; UU += 1) for (ll VV = 1; VV <= n; VV += 1) {
+        ll u = UU;
+        ll v = VV;
+        if (h[u] < h[v]) swap(u, v);
+        ll d = h[u] - h[v];
+        for (ll bt = 19; bt >= 0; bt -= 1) {
+            if (d&(1ll << bt)) {
+                u = up[bt][u];
+            }
+        }
+        if (u == v) {
+//            cout << UU << VV << "(2)->" << v << endl;
+            su += h[v];
+            continue;
+        }
+        for (ll bt = 19; bt >= 0; bt -= 1) {
+            if (up[bt][u] != up[bt][v]) {
+                u = up[bt][u];
+                v = up[bt][v];
+            }
+        }
+        assert(u != v);
+        u = up[0][u];
+        v = up[0][v];
+        if (u == v) {
+            su += h[v];
+//            cout << UU << VV << "->" << v << endl;
+        } else {
+//            cout << "BAD\n";
+        }
+    }
+//    cout << su << ":)" << endl;
 }
 
-constexpr int base = 10;
-constexpr int base_digits = digits(base);
-
-struct bigint {
-    // value == 0 is represented by empty z
-    vector<int> z;  // digits
-
-    // sign == 1 <==> value >= 0
-    // sign == -1 <==> value < 0
-    int sign;
-
-    bigint(long long v = 0) { *this = v; }
-
-    bigint &operator=(long long v) {
-        sign = v < 0 ? -1 : 1;
-        v *= sign;
-        z.clear();
-        for (; v > 0; v = v / base)
-            z.push_back((int)(v % base));
-        return *this;
-    }
-
-    bigint &operator+=(const bigint &other) {
-        if (sign == other.sign) {
-            for (int i = 0, carry = 0; i < other.z.size() || carry; ++i) {
-                if (i == z.size())
-                    z.push_back(0);
-                z[i] += carry + (i < other.z.size() ? other.z[i] : 0);
-                carry = z[i] >= base;
-                if (carry)
-                    z[i] -= base;
-            }
-        } else if (other != 0 /* prevent infinite loop */) {
-            *this -= -other;
-        }
-        return *this;
-    }
-
-    friend bigint operator+(bigint a, const bigint &b) {
-        a += b;
-        return a;
-    }
-
-    bigint &operator-=(const bigint &other) {
-        if (sign == other.sign) {
-            if ((sign == 1 && *this >= other) || (sign == -1 && *this <= other)) {
-                for (int i = 0, carry = 0; i < other.z.size() || carry; ++i) {
-                    z[i] -= carry + (i < other.z.size() ? other.z[i] : 0);
-                    carry = z[i] < 0;
-                    if (carry)
-                        z[i] += base;
-                }
-                trim();
-            } else {
-                *this = other - *this;
-                this->sign = -this->sign;
-            }
-        } else {
-            *this += -other;
-        }
-        return *this;
-    }
-
-    friend bigint operator-(bigint a, const bigint &b) {
-        a -= b;
-        return a;
-    }
-
-    bigint &operator*=(int v) {
-        if (v < 0)
-            sign = -sign, v = -v;
-        for (int i = 0, carry = 0; i < z.size() || carry; ++i) {
-            if (i == z.size())
-                z.push_back(0);
-            long long cur = (long long)z[i] * v + carry;
-            carry = (int)(cur / base);
-            z[i] = (int)(cur % base);
-        }
-        trim();
-        return *this;
-    }
-
-    bigint operator*(int v) const { return bigint(*this) *= v; }
-
-    friend pair<bigint, bigint> divmod(const bigint &a1, const bigint &b1) {
-        int norm = base / (b1.z.back() + 1);
-        bigint a = a1.abs() * norm;
-        bigint b = b1.abs() * norm;
-        bigint q, r;
-        q.z.resize(a.z.size());
-
-        for (int i = (int)a.z.size() - 1; i >= 0; i--) {
-            r *= base;
-            r += a.z[i];
-            int s1 = b.z.size() < r.z.size() ? r.z[b.z.size()] : 0;
-            int s2 = b.z.size() - 1 < r.z.size() ? r.z[b.z.size() - 1] : 0;
-            int d = (int)(((long long)s1 * base + s2) / b.z.back());
-            r -= b * d;
-            while (r < 0)
-                r += b, --d;
-            q.z[i] = d;
-        }
-
-        q.sign = a1.sign * b1.sign;
-        r.sign = a1.sign;
-        q.trim();
-        r.trim();
-        return {q, r / norm};
-    }
-
-    bigint operator/(const bigint &v) const { return divmod(*this, v).first; }
-
-    bigint operator%(const bigint &v) const { return divmod(*this, v).second; }
-
-    bigint &operator/=(int v) {
-        if (v < 0)
-            sign = -sign, v = -v;
-        for (int i = (int)z.size() - 1, rem = 0; i >= 0; --i) {
-            long long cur = z[i] + rem * (long long)base;
-            z[i] = (int)(cur / v);
-            rem = (int)(cur % v);
-        }
-        trim();
-        return *this;
-    }
-
-    bigint operator/(int v) const { return bigint(*this) /= v; }
-
-    int operator%(int v) const {
-        if (v < 0)
-            v = -v;
-        int m = 0;
-        for (int i = (int)z.size() - 1; i >= 0; --i)
-            m = (int)((z[i] + m * (long long)base) % v);
-        return m * sign;
-    }
-
-    bool operator<(const bigint &v) const {
-        if (sign != v.sign)
-            return sign < v.sign;
-        if (z.size() != v.z.size())
-            return z.size() * sign < v.z.size() * v.sign;
-        for (int i = (int)z.size() - 1; i >= 0; i--)
-            if (z[i] != v.z[i])
-                return z[i] * sign < v.z[i] * sign;
-        return false;
-    }
-
-    bool operator>(const bigint &v) const { return v < *this; }
-
-    bool operator<=(const bigint &v) const { return !(v < *this); }
-
-    bool operator>=(const bigint &v) const { return !(*this < v); }
-
-    bool operator==(const bigint &v) const { return sign == v.sign && z == v.z; }
-
-
-    void trim() {
-        while (!z.empty() && z.back() == 0)
-            z.pop_back();
-        if (z.empty())
-            sign = 1;
-    }
-
-    friend bigint operator-(bigint v) {
-        if (!v.z.empty())
-            v.sign = -v.sign;
-        return v;
-    }
-
-    bigint abs() const { return sign == 1 ? *this : -*this; }
-
-    void read(const string &s) {
-        sign = 1;
-        z.clear();
-        int pos = 0;
-        while (pos < s.size() && (s[pos] == '-' || s[pos] == '+')) {
-            if (s[pos] == '-')
-                sign = -sign;
-            ++pos;
-        }
-        for (int i = (int)s.size() - 1; i >= pos; i -= base_digits) {
-            int x = 0;
-            for (int j = max(pos, i - base_digits + 1); j <= i; j++)
-                x = x * 10 + s[j] - '0';
-            z.push_back(x);
-        }
-        trim();
-    }
-
-    friend istream &operator>>(istream &stream, bigint &v) {
-        string s;
-        stream >> s;
-        v.read(s);
-        return stream;
-    }
-
-    friend ostream &operator<<(ostream &stream, const bigint &v) {
-        if (v.sign == -1)
-            stream << '-';
-        stream << (v.z.empty() ? 0 : v.z.back());
-        for (int i = (int)v.z.size() - 2; i >= 0; --i)
-            stream << setw(base_digits) << setfill('0') << v.z[i];
-        return stream;
-    }
-
-    bigint operator*(const bigint &v) const {
-        return mul_simple(v);
-    }
-
-    bigint mul_simple(const bigint &v) const {
-        bigint res;
-        res.sign = sign * v.sign;
-        res.z.resize(z.size() + v.z.size());
-        for (int i = 0; i < z.size(); ++i)
-            if (z[i])
-                for (int j = 0, carry = 0; j < v.z.size() || carry; ++j) {
-                    long long cur = res.z[i + j] + (long long)z[i] * (j < v.z.size() ? v.z[j] : 0) + carry;
-                    carry = (int)(cur / base);
-                    res.z[i + j] = (int)(cur % base);
-                }
-        res.trim();
-        return res;
-    }
-};
-
-int main () {
-    ios::sync_with_stdio(false);
-    cin.tie(0);
-    bigint n; int m; cin >> n >> m;
-    int p; cin >> p;
-    auto sum = [&] (int a, int b) -> int {
-        return (a+b)%p;
-    };
-    auto sub = [&] (int a, int b) -> int {
-        return (a%p-b%p+p)%p;
-    };
-    auto mul = [&] (int a, int b) -> int {
-        return (a*b)%p;
-    };
-    vector<pair<int, int>> pairs;
-    auto is_good = [&] (int a, int b) -> bool {
-        for (int i = 0; i < m-1; i += 1) {
-            if ((a&(1<<i))==(b&(1<<i))&&(a&(1<<(i+1)))==(b&(1<<(i+1)))&&bool(a&(1<<(i)))==bool(a&(1<<(i+1)))) {
-                return false;
-            }
-        }
-        return true;
-    };
-    for (int maskA = 0; maskA < (1<<m); maskA += 1) {
-        for (int maskB = 0; maskB < (1<<m); maskB += 1) {
-            if (is_good(maskA, maskB)) {
-                pairs.push_back({maskA, maskB});
-            }
+int32_t main(int32_t argc, char* argv[]) {
+//    ifstream cin("distance.in");
+//    ofstream cout("distance.out");
+    cout << fixed << setprecision(17);
+    bool use_fast_io = true;
+    for (int32_t i = 1; i < argc; ++i) {
+        if (string(argv[i]) == "-local-no-fast-io") {
+            use_fast_io = false;
+//            cout << "No fastIO" << endl;
+            break;
         }
     }
-    auto dnc = [&] (auto f, bigint l, bigint r, int mll, int mrr) -> int {
-        assert(r-l+1 >= 1);
-        if (r-l+1 <= 2) {
-            return 1;
-        }
-        bigint mid = (l+r) / 2;
-        int tot = 0;
-        for (const auto &[mlr, mrl] : pairs) {
-            if (l == mid && mll != mlr) continue;
-            if (l+1 == mid && !is_good(mll, mlr)) continue;
-            if (mid+1 == r && mrl != mrr) continue;
-            if (mid+2 == r && !is_good(mrl, mrr)) continue;
-            tot = sum(tot, f(f, l, mid, mll, mlr));
-            tot = sum(tot, f(f, mid+1, r, mrl, mrr));
-        }
-        return tot;
-    };
-    int ans = 0;
-    for (int maskA = 0; maskA < (1<<m); maskA += 1) {
-        for (int maskB = 0; maskB < (1<<m); maskB += 1) {
-            if (n == 1 && maskA != maskB) continue;
-            if (n == 2 && !is_good(maskA, maskB)) continue;
-            ans = sum(ans, dnc(dnc, 0, n-1, maskA, maskB));
+    if (use_fast_io) {
+        ios::sync_with_stdio(false);
+        cin.tie(nullptr);
+        cout.tie(nullptr);
+        cerr.tie(nullptr);
+        clog.tie(nullptr);
+    }
+    ll tt = 1e7;
+//    cin >> tt;
+    ll maxi = 0;
+    while (tt--) {
+        su = 0;
+        solve();
+        if (maxi < su) {
+            maxi = su;
+            cout << maxi << "\n";
         }
     }
-    cout << ans << "\n";
+    cout << maxi << "!\n";
+    return 0;
 }
