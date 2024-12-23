@@ -7,62 +7,43 @@ int main() {
     long long m;
     cin >> m;
     vector<long long> price(n+1);
-    set<long long> prices;
     for (long long i = 1; i <= n; i += 1) {
         cin >> price[i];
-        prices.insert(price[i]);
     }
-    vector<vector<pair<int, int>>> adj(n+1);
-    set<int> key_levels;
+    vector<vector<pair<long long, long long>>> adj(n+1);
     for (long long i = 0; i < m; i += 1) {
-        long long u, v, w;
-        cin >> u >> v >> w;
-        adj[u].push_back({w, v});
-        adj[v].push_back({w, u});
-        key_levels.insert(w);
+        long long u, v, l;
+        cin >> u >> v >> l;
+        adj[u].push_back({l, v});
+        adj[v].push_back({l, u});
     }
-    struct State {
-        int v;
-        int level;
-        auto operator<=>(const State & o) const = default;
-    };
-    map<long long, set<State>> st;
-    vector<map<int, long long>> d(n+1);
-    vector<map<int, bool>> seen(n+1);
-    d[1][1] = 0;
-    st[0].insert({1, 1});
+    set<pair<long long, long long>> st;
+    vector<long long> min_level(n+1, INF);
+    min_level[1] = 1;
+    st.insert({1, 1});
+    bitset<1'000'000> seen;
+    long long price_at_best_gym = INF;
+    long long tot = 0;
+    long long curr_level = 1;
     while (!st.empty()) {
-        auto [u, level] = *st.begin()->second.begin();
-        if (u == n) {
-            cout << d[u][level] << endl;
+        long long v = st.begin()->second;
+        tot += price_at_best_gym*(min_level[v]-curr_level);
+        if (v == n) {
+            cout << tot << endl;
             return 0;
         }
-        st.begin()->second.erase(st.begin()->second.begin());
-        if (st.begin()->second.empty()) {
-            st.erase(st.begin());
-        }
-        if (seen[u].count(level)) {
+        curr_level = min_level[v];
+        price_at_best_gym = min(price_at_best_gym, price[v]);
+        st.erase(st.begin());
+        if (seen[v]) {
             continue;
         }
-        seen[u][level] = true;
-        for (const auto &[w, v] : adj[u]) {
-            if (w <= level) {
-                if (!d[v].count(level) || d[v][level] > d[u][level]) {
-                    d[v][level] = d[u][level];
-                    st[d[v][level]].insert({v, level});
-                }
+        seen[v] = true;
+        for (const auto &[l, x] : adj[v]) {
+            if (min_level[x] > max(min_level[v], l)) {
+                min_level[x] = max(min_level[v], l);
+                st.insert({max(min_level[v], l), x});
             }
-        }
-        auto it = key_levels.upper_bound(level);
-        while (it != key_levels.end()) {
-            int nwl = *it;
-            if (!d[u].count(nwl) || d[u][nwl] > d[u][level] + price[u]*(nwl-level)) {
-                d[u][nwl] = d[u][level] + price[u]*(nwl-level);
-                st[d[u][level] + price[u]*(nwl-level)].insert({u, nwl});
-            } else {
-                break;
-            }
-            it++;
         }
     }
     cout << -1 << endl;
