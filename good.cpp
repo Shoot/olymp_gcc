@@ -1,77 +1,55 @@
-#include<bits/stdc++.h>
+#include <bits/stdc++.h>
 using namespace std;
-#define maxm 100005
-#define maxn 15
-int a[maxn], s[maxm][maxn], b[maxn * 2], n, k, ans;
-void put(int num[]) {
-    printf("(%d", num[0]);
-    for(int i = 1; i < n; i++)
-        printf(",%d", num[i]);
-    printf(")\n");
-}
-bool judge(int x) {
-    for(int i = x, j = 0; j < n; i++, j++)
-        if(a[j] != b[i])
-            return b[i] > a[j];
-    return false;
-}
-void check() {
-    for(int i = 0; i < n; i++)
-        b[i] = b[n + i] = a[i];
-//move
-    for(int i = 0; i < n; i++)
-        if(b[i] == a[0] && judge(i))
-            return ;
-//res
-    for(int i = 0; i < 2 * n; i++)
-        b[i] = -b[i];
-//opp and move
-    for(int i = 0; i < n; i++)
-        if(b[i] == a[0] && judge(i))
-            return ;
-//swap and opp
-    for(int i = 0; i < n; i++)
-        swap(b[i],b[2 * n - i - 1]);
-//swap and opp and move
-    for(int i = 0; i < n; i++)
-        if(b[i] == a[0] && judge(i))
-            return ;
-//opp
-    for(int i = 0; i < 2 * n; i++)
-        b[i] = -b[i];
-//swap and move
-    for(int i = 0; i < n; i++)
-        if(b[i] == a[0] && judge(i))
-            return ;
-    memcpy(s[ans++],a,sizeof(a));
-}
-void dfs(int cur, int Sum) {
-    if(cur == n) {
-        if(Sum == 0)
-            check();
-        return ;
+
+int main () {
+    int n;
+    cin >> n;
+
+    vector<int> a(n);
+    int s = 0;
+    vector<int> pref(n, 0);
+
+    for (int i = 0; i < n; i++) {
+        cin >> a[i];
+        s += a[i];
+        pref[i] = s;
     }
-    if(abs(Sum) > ( (n - cur) * a[0]))
-        return ;
-    for(a[cur] = -a[0]; a[cur] < a[0]; a[cur]++) {
-        if(a[cur - 1] == a[0] && a[cur] > a[1])
-            return ;
-        dfs(cur+1,Sum + a[cur]);
+
+    int maxn = min(2*s/n+10, s+1);
+
+    vector<vector<vector<int>>> dp(2, vector<vector<int>>(s + 1, vector<int>(maxn, 1e9)));
+
+    for (int su = 0; su < maxn - 1; su++) {
+        dp[0][su][su] = abs(pref[0] - su);
     }
-    if(a[cur] == a[0] && a[cur - 1] <= a[1])
-        dfs(cur+1,Sum + a[cur]);
-}
-int main() {
-    int cas = 0;
-    while(scanf("%d%d", &n, &k) != EOF && n) {
-        ans = 1;
-        for(a[0] = 1; a[0] <= k; a[0]++)
-            dfs(1,a[0]);
-        if(cas++)
-            printf("\n");
-        printf("%d\n", ans);
-        for(int i = 0; i < ans; i++)
-            put(s[i]);
+
+    for (int i = 1; i < n; i++) {
+        for (int su = 0; su <= s; su++) {
+            for (int last = 0; last < maxn - 1; last++) {
+                if (su - last >= 0) {
+                    if (last - 1 >= 0) {
+                        dp[i % 2][su][last] = min({
+                                                          dp[(i + 1) % 2][su - last][last + 1],
+                                                          dp[(i + 1) % 2][su - last][last - 1],
+                                                          dp[(i + 1) % 2][su - last][last]
+                                                  }) + abs(su - pref[i]);
+                    } else {
+                        dp[i % 2][su][last] = min({
+                                                          dp[(i + 1) % 2][su - last][last + 1],
+                                                          dp[(i + 1) % 2][su - last][last]
+                                                  }) + abs(su - pref[i]);
+                    }
+                }
+            }
+        }
     }
+
+    int ans = 1e9;
+    for (int i = 0; i < maxn - 1; i++) {
+        ans = min(ans, dp[(n - 1) % 2][s][i]);
+    }
+
+    cout << ans;
+
     return 0;
 }
