@@ -1,36 +1,72 @@
-#include <bits/stdc++.h>
+#include <algorithm>
+#include <vector>
+#include <iostream>
+#include <numeric>
 using namespace std;
-int32_t main () {
-    const int INF = 1e9;
-    int n;
-    cin >> n;
-    vector<int> pref(n);
-    for (int i = 0; i < n; i += 1) {
-        cin >> pref[i];
-        if (i != 0) pref[i] += pref[i-1];
+const long long INF = 1e18;
+struct line {
+    long long k, b;
+    long long operator()(long long x) {
+        return k * x + b;
     }
-    int MAX_SU = 1.5e3+10;
-    int MAX_VAL = pref.back()/n+n+10;
-    MAX_VAL = min(MAX_VAL, MAX_SU);
-    vector<vector<int>> dp(MAX_SU+2, vector<int>(MAX_VAL+2, INF));
-    auto nw_dp = dp;
-    for (int last = 0; last <= MAX_VAL; last += 1) {
-        dp[last][last] = abs(pref[0]-last);
+};
+long long cross(line a, line b) {
+    return double(a.b - b.b) / (b.k - a.k);
+}
+vector<pair<long long, line>> lines(1e6);
+struct CHT {
+    long long idx = 0;
+    long long nxt = 0;
+    void insert(line l) {
+        while (nxt && cross(l, lines[nxt-1].second) <= lines[nxt-1].first) nxt -= 1;
+        lines[nxt++] = {lines.empty() ? -INF : cross(l, lines[nxt-1].second), l};
+        idx = min(idx, (long long)(nxt - 1));
     }
-    for (int i = 1; i < n; i += 1) {
-        for (int su = 0; su <= MAX_SU; su += 1) {
-            for (int last = 0; last <= MAX_VAL; last += 1) {
-                if (su >= last) {
-                    int diff = abs(su-pref[i]);
-                    nw_dp[su][last] = dp[su-last][last+1];
-                    nw_dp[su][last] = min(nw_dp[su][last], dp[su-last][last]);
-                    if (last != 0) nw_dp[su][last] = min(nw_dp[su][last], dp[su-last][last-1]);
-                    nw_dp[su][last] += diff;
-                }
-            }
+    long long get(long long x) {
+        for (;;++idx) {
+            if (idx + 1 == nxt || lines[idx + 1].first > x) return lines[idx].second(x);
         }
-        swap(dp,nw_dp);
     }
-    cout << *min_element(dp[pref.back()].begin(), dp[pref.back()].end()) << "\n";
+};
+
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(0);
+    long long n; cin >> n;
+    long long cats_n; cin >> cats_n;
+    long long feeders; cin >> feeders;
+    struct cat {
+        long long where;
+        long long t;
+    };
+    vector<long long> d(n);
+    for (long long i = 1; i < n; i += 1) {
+        d[i] = d[i-1];
+        long long x; cin >> x;
+        d[i] += x;
+    }
+    vector<cat> a(cats_n);
+    vector<long long> val(cats_n);
+    for (long long i = 0; i < cats_n; i += 1) {
+        cin >> a[i].where >> a[i].t;
+        a[i].where -= 1;
+        val[i] = a[i].t-d[a[i].where];
+    }
+    sort(val.begin(), val.end());
+    vector<long long> dp(cats_n+1, INF);
+    vector<long long> ndp(cats_n+1, INF);
+    for (long long k = 1; k <= feeders; k += 1) {
+        CHT c;
+        for (long long i = 1; i <= cats_n; i += 1) {
+            long long cur = val[i-1] * i;
+            if (i != 1) cur = min(cur, c.get(val[i-1]) + val[i-1] * i);
+            ndp[i] = cur;
+            c.insert({-i, dp[i]});
+        }
+        swap(dp, ndp);
+    }
+
+    long long ans = dp.back() - accumulate(val.begin(), val.end(), 0ll);
+    cout << ans << endl;
     return 0;
 }
