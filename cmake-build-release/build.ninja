@@ -51,7 +51,7 @@ build cmake_object_order_depends_target_olymp_gcc: phony || .
 
 build CMakeFiles/olymp_gcc.dir/sol.cpp.o: CXX_COMPILER__olymp_gcc_unscanned_Release /Users/whoami/CLionProjects/olymp_gcc/sol.cpp || cmake_object_order_depends_target_olymp_gcc
   DEP_FILE = CMakeFiles/olymp_gcc.dir/sol.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++20 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.1.sdk -fdiagnostics-color=always
+  FLAGS = -O3 -DNDEBUG -std=gnu++23 -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.1.sdk -fdiagnostics-color=always
   OBJECT_DIR = CMakeFiles/olymp_gcc.dir
   OBJECT_FILE_DIR = CMakeFiles/olymp_gcc.dir
 
