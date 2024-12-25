@@ -1,41 +1,46 @@
 #include <bits/stdc++.h>
 using namespace std;
-long long gcd(long long a,long long b)
-{
-    if (a%b==0) return b;
-    else return gcd(b,a%b);
+long long gcd(long long a,long long b) {
+    if (a%b==0) {
+        return b;
+    }
+    return gcd(b,a%b);
 }
-void solve(long long a, long long b, long long m) {
-    a %= m, b %= m;
-    long long k = 1, add = 0, g;
-    while ((g = gcd(a, m)) > 1) {
-        if (b == k) {
+long long x, z, k;
+void solve() {
+    x %= z, k %= z;
+    long long O = 1, add = 0, g;
+    while ((g = gcd(x, z)) > 1) {
+        if (k == O) {
             cout << add << "\n";
             return;
         }
-        if (b % g) {
+        if (k % g) {
             cout << "No Solution\n";
             return;
         }
-        b /= g, m /= g, add += 1;
-        k = (k * 1ll * a / g) % m;
+        k /= g;
+        z /= g;
+        add += 1;
+        O = (O * 1ll * x / g) % z;
     }
 
-    long long n = sqrt(m) + 1;
-    long long an = 1;
-    for (long long i = 0; i < n; i += 1)
-        an = (an * 1ll * a) % m;
-
-    unordered_map<long long, long long> vals;
-    for (long long q = 0, cur = b; q <= n; q += 1) {
-        vals[cur] = q;
-        cur = (cur * 1ll * a) % m;
+    long long sqrt_z = sqrt(z) + 1;
+    long long x_pow_sqrt = 1;
+    for (long long i = 0; i < sqrt_z; i += 1) {
+        x_pow_sqrt = (x_pow_sqrt * 1ll * x) % z;
     }
 
-    for (long long p = 1, cur = k; p <= n; p += 1) {
-        cur = (cur * 1ll * an) % m;
-        if (vals.count(cur)) {
-            long long ans = n * p - vals[cur] + add;
+    unordered_map<long long, long long> k_mult_by_x_pow;
+    for (long long q = 0, cur = k; q <= sqrt_z; q += 1) {
+        k_mult_by_x_pow[cur] = q;
+        cur = (cur * 1ll * x) % z;
+    }
+
+    for (long long p = 1, cur = O; p <= sqrt_z; p += 1) {
+        cur = (cur * x_pow_sqrt) % z;
+        if (k_mult_by_x_pow.count(cur)) {
+            long long ans = sqrt_z * p - k_mult_by_x_pow[cur] + add;
             cout << ans << "\n";
             return;
         }
@@ -43,14 +48,13 @@ void solve(long long a, long long b, long long m) {
     cout << "No Solution\n";
     return;
 }
-int32_t main() {
+int main() {
     while (true) {
-        long long a, m, b;
-        cin >> a >> m >> b;
-        if (a == 0 && m == 0 && b == 0) {
+        cin >> x >> z >> k;
+        if (x == 0 && z == 0 && k == 0) {
             break;
         }
-        solve(a, b, m);
+        solve();
     }
     return 0;
 }
