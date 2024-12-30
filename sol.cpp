@@ -1,100 +1,55 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+void solve() {
+    int n, m;
+    cin >> n >> m;
+    vector<vector<int>> tree(4*n+5);
+    vector<int> a(n);
+    for (auto &x : a) {
+        cin >> x;
+    }
+    auto build = [&] (auto f, int v, int tl, int tr) -> void {
+        for (int i = tl; i <= tr; i += 1) {
+            tree[v].push_back(a[i]);
+        }
+        sort(tree[v].begin(), tree[v].end());
+        if (tl == tr) {
+            return;
+        }
+        int tm = (tl + tr) >> 1;
+        f(f, 2 * v + 1, tl, tm);
+        f(f, 2 * v + 2, tm+1, tr);
+    };
+    build(build, 0, 0, n-1);
+    auto answer = [&] (auto f, int v, int tl, int tr, int l, int r, int val) -> int {
+        if (tl == l && tr == r) {
+            return upper_bound(tree[v].begin(), tree[v].end(), val) - tree[v].begin();
+        }
+        int ans = 0;
+        int tm = (tl + tr) >> 1;
+        if (l <= tm) {
+            ans += f(f, 2 * v + 1, tl, tm, l, min(r, tm), val);
+        }
+        if (r >= tm + 1) {
+            ans += f(f, 2 * v + 2, tm + 1, tr, max(l, tm + 1), r, val);
+        }
+        return ans;
+    };
+    for (int i = 0; i < m; i += 1) {
+        int l, r, x;
+        cin >> l >> r >> x;
+        cout << answer(answer, 0, 0, n-1, l, r, x) << "\n";
+    }
+}
+
 int main() {
     ios::sync_with_stdio(0);
     cin.tie(0);
-    long long n;
-    cin >> n;
-    vector<long long> a(n);
-    for (auto &x : a) {
-        cin >> x;
-        x += 1;
+    int T;
+    cin >> T;
+    for (int tt = 1; tt <= T; tt += 1) {
+        cout << "Case " << tt << ":\n";
+        solve();
     }
-    n += 1;
-    a.push_back(0);
-    vector<long long> rank(n);
-    vector<long long> sa(n);
-    vector<long long> lcp(n - 1);
-    long long alphabet = 12;
-    vector<long long> p(n), c(n), cnt(max(alphabet, n), 0);
-    for (long long i = 0; i < n; i += 1) {
-        cnt[a[i]] += 1;
-    }
-    for (long long i = 1; i < alphabet; i += 1) {
-        cnt[i] += cnt[i - 1];
-    }
-    for (long long i = 0; i < n; i += 1) {
-        p[--cnt[a[i]]] = i;
-    }
-    c[p[0]] = 0;
-    long long classes = 1;
-    for (long long i = 1; i < n; i += 1) {
-        if (a[p[i]] != a[p[i - 1]]) {
-            classes += 1;
-        }
-        c[p[i]] = classes - 1;
-    }
-    vector<long long> pn(n), cn(n);
-    for (long long h = 0; (1 << h) < n; h += 1) {
-        for (long long i = 0; i < n; i += 1) {
-            pn[i] = p[i] - (1 << h);
-            if (pn[i] < 0) {
-                pn[i] += n;
-            }
-        }
-        fill(cnt.begin(), cnt.begin() + classes, 0);
-        for (long long i = 0; i < n; i += 1) {
-            cnt[c[pn[i]]] += 1;
-        }
-        for (long long i = 1; i < classes; i += 1) {
-            cnt[i] += cnt[i - 1];
-        }
-        for (long long i = n - 1; i >= 0; i--) {
-            p[--cnt[c[pn[i]]]] = pn[i];
-        }
-        cn[p[0]] = 0;
-        classes = 1;
-        for (long long i = 1; i < n; i += 1) {
-            pair<long long, long long> cur = {c[p[i]], c[(p[i] + (1 << h)) % n]};
-            pair<long long, long long> prev = {c[p[i - 1]], c[(p[i - 1] + (1 << h)) % n]};
-            if (cur != prev) {
-                classes += 1;
-            }
-            cn[p[i]] = classes - 1;
-        }
-        swap(c, cn);
-    }
-    for (long long i = 0; i < n; i += 1) {
-        rank[i] = c[i];
-        sa[c[i]] = i;
-    }
-    for (long long i = 0, k = 0; i < n; i += 1, k ? k -= 1 : 0) {
-        if (rank[i] == n-1) {
-            k = 0;
-            continue;
-        }
-        long long j = sa[rank[i]+1];
-        while (i+k < n && j+k < n && a[i+k] == a[j+k]) k++;
-        lcp[rank[i]] = k;
-    }
-    n -= 1;
-    long long decr = 0;
-    long long incr = 0;
-    for (auto &x : a) {
-        x -= 1;
-    }
-    for (long long i = 0; i < n; i += 1) {
-        if (a[i] == 0) {
-            decr += n - i;
-            incr = 1;
-        }
-    }
-    for (long long i = 1; i < n; i += 1) {
-        if (a[sa[i]] != 0) {
-            decr += lcp[i];
-        }
-    }
-    long long UNIQUE_SUBSTRINGS = n*(n+1)/2-decr+incr;
-    return 0;
 }
