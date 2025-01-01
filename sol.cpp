@@ -39,7 +39,9 @@ int main() {
                 got_keys.resize(11);
             }
             Node(int x, int y, vector<bool> got_keys) : x(x), y(y), got_keys(got_keys){};
-            auto operator<=>(const Node& o) const = default;
+            auto operator<(const Node& o) const {
+                return tie(x, y, got_keys) < tie(o.x, o.y, o.got_keys);
+            };
         };
         int dx[4] = {1, -1, 0, 0};
         int dy[4] = {0, 0, 1, -1};
