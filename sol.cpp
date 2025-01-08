@@ -1,77 +1,82 @@
 #include <bits/stdc++.h>
 using namespace std;
-#define int long long
-vector<int> par;
 
-signed main() {
-    int n, m;
-    cin >> n >> m;
-    int cap[1005][1005];
-    memset(cap, 0, sizeof(cap));
-    int src = n + m;
-    int snk = n + m + 1;
-    int no_expences_or_misses = 0;
-    for (int i = 0; i < n; i += 1) {
-        int price;
-        cin >> price;
-        cap[i][snk] = price;
-    }
-    for (int i = 0; i < m; i += 1) {
-        int u, v, profit;
-        cin >> u >> v >> profit;
-        u -= 1;
-        v -= 1;
-        cap[src][i + n] = profit;
-        cap[i + n][u] = 1e18;
-        cap[i + n][v] = 1e18;
-        no_expences_or_misses += profit;
-    }
-    auto min_cut = [&] () -> int {
-        vector<vector<int>> adj(n + m + 2);
-        for (int i = 0; i < n + m + 2; i += 1) {
-            for (int j = 0; j < n + m + 2; j += 1) {
-                if (cap[i][j] != 0) {
-                    adj[i].push_back(j);
-                    adj[j].push_back(i);
-                }
-            }
-        }
-        auto find_shortest = [&] () -> int {
-            par.assign(n + m + 2, -1);
-            queue<pair<int, int>> q;
-            q.push({1e18, src});
-            while (!q.empty()) {
-                auto [min_on_path, u] = q.front();
-                q.pop();
-                if (u == snk) {
-                    return min_on_path;
-                }
-                for (const auto &v : adj[u]) {
-                    if (cap[u][v] == 0 || par[v] != -1) {
-                        continue;
-                    }
-                    par[v] = u;
-                    q.push({min(min_on_path, cap[u][v]), v});
-                }
-            }
+int main() {
+    while (true) {
+        int m, n, A, B;
+        cin >> m >> n >> A >> B;
+        if (m == 0 && n == 0 && A == 0 && B == 0) {
             return 0;
+        }
+        int a = A, b = B, C = ~(1<<31), M = (1<<16)-1;
+        auto gen = [&] () -> int {
+            a = 36969 * (a & M) + (a >> 16);
+            b = 18000 * (b & M) + (b >> 16);
+            return (C & ((a << 16) + b)) % 1000000;
         };
-        int tot = 0;
-        while (true) {
-            int add = find_shortest();
-            if (add == 0) {
+        struct Triple {
+            int x;
+            int y;
+            int z;
+        };
+        vector<Triple> triples(m + n);
+        for (int i = 0; i < m; i += 1) {
+            cin >> triples[i].x >> triples[i].y >> triples[i].z;
+        }
+        for (int i = m; i < m + n; i += 1) {
+            triples[i].x = gen();
+            triples[i].y = gen();
+            triples[i].z = gen();
+        }
+        auto comp = [] (Triple a, Triple b) {
+            if (a.x != b.x) return a.x < b.x;
+            if (a.y != b.y) return a.y > b.y;
+            return a.z > b.z;
+        };
+        sort(triples.begin(), triples.end(), comp);
+        struct YZ {
+            int y;
+            int z;
+            bool operator<(const YZ& another) const {
+                if (y != another.y) return y < another.y;
+                return z > another.z;
+            }
+        };
+        int sz = int(triples.size());
+        vector<set<YZ>> last(sz+1);
+        auto can_continue_from = [&] (int from, int y, int z) -> bool {
+            auto it = last[from].lower_bound({y, z});
+            if (it == last[from].begin()) return false;
+            it--;
+            return it->z < z;
+        };
+        auto continue_from = [&] (int from, int y, int z) -> void {
+            auto it = last[from + 1].upper_bound({y, z});
+            while (it != last[from+1].end() && it->z >= z) {
+                last[from + 1].erase(it);
+                it = last[from + 1].upper_bound({y, z});
+            }
+            last[from + 1].insert({y, z});
+        };
+        for (const auto &[x, y, z] : triples) {
+            int l = 1, r = sz - 1;
+            int good = 0;
+            while (l <= r) {
+                int mid = (l + r) >> 1;
+                if (can_continue_from(mid, y, z)) {
+                    good = mid;
+                    l = mid + 1;
+                } else {
+                    r = mid - 1;
+                }
+            }
+            continue_from(good, y, z);
+        }
+        for (int ans = sz; ans >= 1; ans -= 1) {
+            if (!last[ans].empty()) {
+                cout << ans << "\n";
                 break;
             }
-            int go = snk;
-            while (go != src) {
-                int from = par[go];
-                cap[from][go] -= add;
-                cap[go][from] += add;
-                go = from;
-            }
-            tot += add;
         }
-        return tot;
-    };
-    cout << no_expences_or_misses - min_cut() << "\n";
+    }
 }
