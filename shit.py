@@ -3,19 +3,16 @@ from random import randint
 
 # system("g++ sol.cpp -o CPP")
 def add_test():
-    N = randint(1, 50)
-    s = ""
-    s += f"{N}\n"
-    while 1:
-        o = []
-        for j in range(N):
-            o.append(randint(0, 1000))
-        if sum(o) <= 10000:
-            break
-        print("tried")
-    for j in o:
-        s += f"{j} "
-    s += "\n"
+    lines = randint(1, 10)
+    drivers = randint(1, 10)
+    stops = randint(1, 10)
+    s = f"{lines} {drivers} {stops}\n"
+    for i in range(lines):
+        this_stops = randint(1, stops)
+        for j in range(this_stops):
+            s += f"{randint(1, stops)}"
+        s += "\n"
+
     with open('001.dat', 'w') as f:
         f.write(s)
 def stable ():
