@@ -1,106 +1,58 @@
 #include <bits/stdc++.h>
 using namespace std;
-#define RF 10
-#define KA 9
-#define FH 8
-#define FL 7
-#define ST_NE_PERV_TUZ 6
-#define ST_PERV_TUZ 5
-#define TR 4
-#define P2 3
-#define ONE 2
+#pragma GCC optimize("Ofast,unroll-loops")
+#pragma GCC target("avx2,fma,bmi")
+vector<vector<bool>> Good(600, vector<bool>(600));
+vector<vector<pair<int, int>>> match(600, vector<pair<int, int>>(600, {-1, -1}));
+bool seen[600][600];
+int di[4] = {0, 0, -1, 1};
+int dj[4] = {1, -1, 0, 0};
+int n;
+bool try_kuhn(int i, int j) {
+    if (seen[i][j]) return false;
+    seen[i][j] = true;
+    for (int k = 0; k < 4; k += 1) {
+        int ni = i + di[k];
+        int nj = j + dj[k];
+        if (ni < 0 || ni >= n || nj < 0 || nj >= n || !Good[ni][nj]) {
+            continue;
+        }
+        if (match[ni][nj] == make_pair(-1, -1) || try_kuhn(match[ni][nj].first, match[ni][nj].second)) {
+            match[ni][nj] = {i, j};
+            return true;
+        }
+    }
+    return false;
+};
 signed main() {
-    int n;
-    struct Card {
-        char mast;
-        int rang;
-        bool operator<(const Card & other) {
-            return tie(mast, rang) < tie(other.mast, other.rang);
-        }
-    };
-    auto toCard = [&] (string s) -> Card {
-        Card card;
-        if (s[0] >= '2' && s[0] <= '9') {
-            card.rang = s[0] - 'i';
-        } else if (s[0] == 'X') {
-            card.rang = 10;
-        } else if (s[0] == 'J') {
-            card.rang = 11;
-        } else if (s[0] == 'Q') {
-            card.rang = 12;
-        } else if (s[0] == 'K') {
-            card.rang = 13;
-        } else {
-            assert(s[0] == 'A');
-            card.rang = 14;
-        }
-        card.mast = s[1];
-        return card;
-    };
-    struct Comb {
-        int Type;
-        int HighestInFigure;
-        int HighestOutsideFigure;
-        bool operator<(const Comb& other) const {
-            return tie(Type, HighestInFigure, HighestOutsideFigure) < tie(other.Type, other.HighestInFigure, other.HighestOutsideFigure);
-        }
-    };
-    auto getCombs = [&] (vector<Card>& cards, map<Comb, set<int>> & mp, int person) -> void {
-        for (int mask = 0; mask < (1 << 5); mask += 1) {
-            Comb result = {0, 0, 0};
-            int size = __builtin_popcount(mask);
-            for (int i = 0; i < 7; i += 1) {
-                if (mask&(1<<i)) {
-                    result.HighestInFigure = max(result.HighestInFigure, cards[i].rang);
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    int T;
+    cin >> T;
+    for (int tt = 1; tt <= T; tt += 1) {
+        cin >> n;
+        for (int i = 0; i < n; i += 1) {
+            for (int j = 0; j < n; j += 1) {
+                match[i][j] = {-1, -1};
+                char x;
+                cin >> x;
+                if (x == '#') {
+                    Good[i][j] = true;
                 } else {
-                    result.HighestOutsideFigure = max(result.HighestOutsideFigure, cards[i].rang);
+                    Good[i][j] = false;
                 }
             }
-            if (size == 5 && isRF(cards)) {
-                result.Type = RF;
-                mp[result].insert(person);
-            }
-            if (size == 4 && isKA(cards)) {
-                result.Type = KA;
-                mp[result].insert(person);
-            }
-            if (size == 5 && isKA(cards)) {
-                result.Type = KA;
-                mp[result].insert(person);
-            }
         }
-    };
-    while (cin >> n) {
-        vector<Card> c(5);
-        for (int i = 0; i < 5; i += 1) {
-            string s;
-            cin >> s;
-            c[i] = toCard(s);
-        }
-        map<Comb, set<int>> mp;
-        for (int i = 1; i <= n; i += 1) {
-            string s1, s2;
-            cin >> s1 >> s2;
-            c.push_back(toCard(s1));
-            c.push_back(toCard(s2));
-            for (int mask = 0; mask < (1 << 7); mask += 1) {
-                if (__builtin_popcount(mask) == 5) {
-                    vector<Card> cards;
-                    for (int bt = 0; bt < 7; bt += 1) {
-                        if ((1<<bt)&mask) {
-                            cards.push_back(c[bt]);
-                        }
-                    }
-                    getCombs(cards, mp, i);
+        int matching = 0;
+        for (int i = 0; i < n; i += 1) {
+            for (int j = 0; j < n; j += 1) {
+                if ((i + j) % 2 != 0 || !Good[i][j]) continue;
+                memset(seen, 0, sizeof(seen));
+                if (try_kuhn(i, j)) {
+                    matching += 1;
                 }
             }
-            c.pop_back();
-            c.pop_back();
         }
-        assert(!mp.empty());
-        for (const auto &x : mp.rbegin()->second) {
-            cout << x << " ";
-        }
-        cout << "\n";
+        cout << "Case " << tt << ": " << matching << "\n";
     }
 }
