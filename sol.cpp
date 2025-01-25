@@ -1,35 +1,55 @@
 #include <bits/stdc++.h>
 using namespace std;
-#pragma GCC optimize("Ofast,unroll-loops")
-#pragma GCC target("sse,avx2")
-vector<vector<bool>> dir;
-vector<vector<bool>> complex_path;
-vector<vector<int>> all;
-void godo(int i, int j) {
-    for (int b4j = i; b4j < j; b4j += 1) {
-        complex_path[i][j] = complex_path[i][j] ^ (all[i][b4j]&dir[b4j][j]);
-    }
-}
-signed main() {
-    int n;
-    cin >> n;
-    all.assign(n, vector<int>(n));
-    dir.assign(n, vector<bool>(n));
-    complex_path.assign(n, vector<bool>(n));
-    for (int i = 0; i < n; i += 1) {
-        for (int j = i + 1; j < n; j += 1) {
-            char c;
-            cin >> c;
-            all[i][j] = c == '1';
+int main() {
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    int T;
+    cin >> T;
+    vector<int> component;
+    component.reserve(1000);
+    for (int tt = 0; tt < T; tt += 1) {
+        int m;
+        cin >> m;
+        vector<int> inDegree(1001), outDegree(1001);
+        vector<vector<int>> adj(1001);
+        for (int i = 0; i < m; ++i) {
+            int u, v;
+            cin >> u >> v;
+            outDegree[u]++;
+            inDegree[v]++;
+            adj[u].push_back(v);
+            adj[v].push_back(u);
         }
-    }
-    int su = 0;
-    for (int i = n-1; i >= 0; i -= 1) {
-        for (int j = i + 1; j < n; j += 1) {
-            godo(i, j);
-            dir[i][j] = all[i][j] ^ complex_path[i][j];
-            su += dir[i][j];
+        auto in_og = inDegree, out_og = outDegree;
+        auto dfs = [&] (auto f, int u) -> void {
+            if (!inDegree[u] && !outDegree[u]) {
+                return;
+            }
+            component.push_back(u);
+            inDegree[u] = 0;
+            outDegree[u] = 0;
+            for (const auto &v : adj[u]) {
+                f(f, v);
+            }
+        };
+        int tot = 0;
+        for (int i = 1; i <= 1000; i += 1) {
+            if (!inDegree[i] && !outDegree[i]) {
+                continue;
+            }
+            component.clear();
+            dfs(dfs, i);
+            tot += 1;
         }
+        int fix1 = 0;
+        int fix2 = 0;
+        for (int i = 1; i <= 1000; i += 1) {
+            if (in_og[i] > out_og[i]) {
+                fix1 += in_og[i] - out_og[i];
+            } else if (in_og[i] < out_og[i]) {
+                fix2 += out_og[i] - in_og[i];
+            }
+        }
+        cout << m + 1 + tot - 1 + (fix1+fix2)/2 << "\n";
     }
-    cout << su << "\n";
 }

@@ -1,80 +1,68 @@
 #include <bits/stdc++.h>
 using namespace std;
-
-typedef long long ll;
-typedef pair<int, int> pii;
-typedef pair<ll, ll> pll;
-
-const int MAXN = 1e5;
-
-int N;
-pii A[MAXN+10], B[MAXN+10];
-int ans[MAXN+10];
-
-struct BIT
-{
-    int tree[MAXN*2+10];
-    void update(int i, int k) { for(; i<=N+N; i+=(i&-i)) tree[i]+=k; }
-    int query(int i) { int ret=0; for(; i>0; i-=(i&-i)) ret+=tree[i]; return ret; }
-}bit;
-
-int main()
-{
-    ios_base::sync_with_stdio(false); cin.tie(NULL);
-
-    cin >> N;
-    vector<int> comp;
-    for(int i=1; i<=N; i++) cin >> A[i].first >> A[i].second;
-    for(int i=1; i<=N; i++) cin >> B[i].first >> B[i].second;
-    for(int i=1; i<=N; i++) comp.push_back(A[i].second), comp.push_back(B[i].second);
-    sort(comp.begin(), comp.end());
-    comp.erase(unique(comp.begin(), comp.end()), comp.end());
-    for(int i=1; i<=N; i++) A[i].second=lower_bound(comp.begin(), comp.end(), A[i].second)-comp.begin()+1;
-    for(int i=1; i<=N; i++) B[i].second=lower_bound(comp.begin(), comp.end(), B[i].second)-comp.begin()+1;
-
-    set<pii> S;
-    vector<pii> V;
-    for(int i=1; i<=N; i++) V.push_back({A[i].first, -i});
-    for(int i=1; i<=N; i++) V.push_back({B[i].first, i});
-    sort(V.begin(), V.end());
-
-    for(auto [x, p] : V)
-    {
-        if(p<0)
-        {
-            S.insert({A[-p].second, -p});
+int main() {
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    int T;
+    cin >> T;
+    vector<int> component;
+    vector<pair<bool,bool>> comps;
+    component.reserve(1000);
+    comps.reserve(1000);
+    for (int tt = 0; tt < T; tt += 1) {
+        int m;
+        cin >> m;
+        vector<int> inDegree(1001), outDegree(1001);
+        vector<vector<int>> adj(1001);
+        for (int i = 0; i < m; ++i) {
+            int u, v;
+            cin >> u >> v;
+            outDegree[u]++;
+            inDegree[v]++;
+            adj[u].push_back(v);
+            adj[v].push_back(u);
         }
-        else
-        {
-            auto it=S.upper_bound({B[p].second, N+1});
-            if(it==S.begin()) return !(cout << "syntax error\n");
-            it--;
-            ans[it->second]=p;
-            S.erase(it);
+        int fix1 = 0;
+        int fix2 = 0;
+        for (int i = 1; i <= 1000; i += 1) {
+            if (inDegree[i] > outDegree[i]) {
+                fix1 += inDegree[i] - outDegree[i];
+            } else if (inDegree[i] < outDegree[i]) {
+                fix2 += outDegree[i] - inDegree[i];
+            }
         }
-    }
+        auto dfs = [&] (auto f, int u) -> void {
+            if (!inDegree[u] && !outDegree[u]) {
+                return;
+            }
+            component.push_back(u);
+            inDegree[u] = 0;
+            outDegree[u] = 0;
+            for (const auto &v : adj[u]) {
+                f(f, v);
+            }
+        };
+        int tot = 0;
+        comps.clear();
+        int yes_yes = 0;
 
-    vector<array<int, 4>> V2;
-    for(int i=1; i<=N; i++)
-    {
-        auto [xl, yl] = A[i];
-        auto [xr, yr] = B[ans[i]];
-        V2.push_back({xl, -1, yl, yl});
-        V2.push_back({xl, -1, yr, yr});
-        V2.push_back({xr, 1, yl, yl});
-        V2.push_back({xr, 1, yr, yr});
-        V2.push_back({xl, 0, yl, yr});
-        V2.push_back({xr, 0, yl, yr});
-    }
-    sort(V2.begin(), V2.end());
-    for(auto [x, ty, yl, yr] : V2)
-    {
-        if(ty==-1) bit.update(yl, 1);
-        else if(ty==1) bit.update(yl, -1);
-        else
-        {
-            if(bit.query(yr)-bit.query(yl-1)>2) return !(cout << "syntax error\n");
+        for (int i = 1; i <= 1000; i += 1) {
+            if (!inDegree[i] && !outDegree[i]) {
+                continue;
+            }
+            component.clear();
+            dfs(dfs, i);
+            bool need1 = false;
+            bool need2 = false;
+            for (const auto &x : component) {
+                need1 |= inDegree[i] > outDegree[i];
+                need2 |= inDegree[i] < outDegree[i];
+            }
+            comps.push_back({need1,need2});
+            yes_yes += need1 && need2;
+            tot += 1;
         }
+
+        cout << m + 1 + tot - 1 + (fix1+fix2)/2 - yes_yes - (first+last) / 2 << "\n";
     }
-    for(int i=1; i<=N; i++) cout << ans[i] << '\n';
 }
