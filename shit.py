@@ -2,25 +2,8 @@ from os import system
 from random import randint
 
 # system("g++ sol.cpp -o CPP")
-n = -1
 def add_test():
-    global n
-    n = randint(1, 5)
-    print(f"N = {n}")
-    s = f"{n}\n"
-    points_st = set()
-    points = list()
-
-    while len(points) < 2 * n:
-        x = randint(1,10)
-        y = randint(1,10)
-        if (x,y) in points_st:
-            continue
-        points_st.add((x, y))
-        points.append((x, y))
-    for x,y in points:
-        s += f"{x} {y}\n"
-
+    s = f"1\n{randint(1, 10)} {randint(1, 10)} {randint(1, 10)}"
     with open('001.dat', 'w') as f:
         f.write(s)
 def stable ():
@@ -32,8 +15,6 @@ def unstable ():
 def check ():
     with open('his.ans') as f:
         with open('my.ans') as f0:
-            if n == 1:
-                print(f"my={f0.read()}, his={f.read()}")
             assert f0.read() == f.read()
 for j in range(1, 100000):
     print('hi')
