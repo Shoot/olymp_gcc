@@ -1,89 +1,81 @@
 #include <bits/stdc++.h>
 using namespace std;
-#define int long long
 signed main() {
-    int n;
-    cin >> n;
-    vector<int> val(n+1);
-    for (int i = 1; i <= n; i += 1) {
-        cin >> val[i];
+    int M;
+    cin >> M;
+    struct Measure {
+        int fromi;
+        int fromj;
+        int dist;
+    };
+    map<int,vector<Measure>> mp;
+    for (int i = 0; i < M; i += 1) {
+        string s;
+        cin >> s;
+        auto stre = stringstream(s);
+        string num;
+        getline(stre, num, ',');
+        int x = stoi(num);
+        getline(stre, num, ':');
+        int y = stoi(num);
+        while (getline(stre, num, '-')) {
+            int id = stoi(num);
+            getline(stre, num, ',');
+            int r = stoi(num);
+            mp[id].push_back({x, y, r});
+        }
     }
-    vector<vector<int>> adj(n+1);
-    for (int i = 0; i < n-1; i += 1) {
-        int u, v;
-        cin >> u >> v;
-        adj[u].push_back(v);
-        adj[v].push_back(u);
-    }
-    vector<int> sz(n+1);
-    bitset<1'000'000> done;
-    auto calc_sizes = [&] (auto f, int u, int p) -> void {
-        sz[u] = 1;
-        for (const auto &v : adj[u]) {
-            if (v != p && !done[v]) {
-                f(f, v, u);
-                sz[u] += sz[v];
-            }
-        }
-    };
-    int su = 0;
-    auto find_centroid_in_subtree = [&] (auto f, int u, int root, int p) -> int {
-        int subtree_size = sz[root];
-        for (const auto &x : adj[u]) {
-            if (x != p && !done[x] && sz[x] > subtree_size / 2) {
-                return f(f, x, root, u);
-            }
-        }
-        return u;
-    };
-    vector<int> w(n+1);
-    vector<int> d(n+1);
-    vector<pair<int,int>> curr_w_d;
-    curr_w_d.reserve(1'000'000);
-    auto calc_w_d = [&] (auto f, int u, int p) -> void {
-        curr_w_d.push_back({w[u], d[u]});
-        for (const auto &x : adj[u]) {
-            if (x != p && !done[x]) {
-                d[x] = d[u] + 1;
-                w[x] = w[u] + val[x];
-                f(f, x, u);
-            }
-        }
-    };
-    auto solve = [&] (auto f, int root) -> void {
-        calc_sizes(calc_sizes, root, -1);
-        int centroid = find_centroid_in_subtree(find_centroid_in_subtree, root, root, -1);
-        int cnt = 1;
-        int suD = 0;
-        int suW = val[centroid];
-        int suWD = 0 * val[centroid];
-        for (const auto &x : adj[centroid]) {
-            if (!done[x]) {
-                curr_w_d.clear();
-                d[x] = 1;
-                w[x] = val[x];
-                calc_w_d(calc_w_d, x, centroid);
-                for (const auto &[W, D] : curr_w_d) {
-                    su += cnt * W * D;
-                    su += suD * W;
-                    su += suW * D;
-                    su += suWD;
-                }
-                for (const auto &[W, D] : curr_w_d) {
-                    cnt += 1;
-                    suW += W + val[centroid];
-                    suD += D;
-                    suWD += (W + val[centroid])*D;
+    vector<map<int,map<int,int>>> f(30001);
+    vector<int> cnt(30001);
+    for (const auto &[id, ms] : mp) {
+        cnt[id] = ms.size();
+        vector<vector<int>> possible(201, vector<int>(201));
+        for (const auto &[x, y, r] : ms) {
+            set<pair<int,int>> done;
+            int i1 = x - r;
+            if (i1 >= 1) {
+                for (int j1 = 1; j1 <= 200; j1 += 1) {
+                    int di = abs(i1 - x);
+                    int dj = abs(j1 - y);
+                    if (max(di, dj) == r && !done.count({i1, j1})) {
+                        done.insert({i1,j1});
+                        f[id][i1][j1] += 1;
+                    }
                 }
             }
-        }
-        done[centroid] = true;
-        for (const auto &x : adj[centroid]) {
-            if (!done[x]) {
-                f(f, x);
+            i1 = x + r;
+            if (i1 <= 200) {
+                for (int j1 = 1; j1 <= 200; j1 += 1) {
+                    int di = abs(i1 - x);
+                    int dj = abs(j1 - y);
+                    if (max(di, dj) == r && !done.count({i1, j1})) {
+                        done.insert({i1,j1});
+                        f[id][i1][j1] += 1;
+                    }
+                }
+            }
+            int j2 = y - r;
+            if (j2 >= 1) {
+                for (int i2 = 1; i2 <= 200; i2 += 1) {
+                    int di = abs(i2 - x);
+                    int dj = abs(j2 - y);
+                    if (max(di, dj) == r && !done.count({i2, j2})) {
+                        done.insert({i2,j2});
+                        f[id][i2][j2] += 1;
+                    }
+                }
+            }
+            j2 = y + r;
+            if (j2 <= 200) {
+                for (int i2 = 1; i2 <= 200; i2 += 1) {
+                    int di = abs(i2 - x);
+                    int dj = abs(j2 - y);
+                    if (max(di, dj) == r && !done.count({i2, j2})) {
+                        done.insert({i2,j2});
+                        f[id][i2][j2] += 1;
+                    }
+                }
             }
         }
-    };
-    solve(solve, 1);
-    cout << su << "\n";
+    }
 }
