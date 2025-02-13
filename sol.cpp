@@ -1,14 +1,15 @@
-#include <bits/stdc++.h>
+#include <iostream>
+#include <vector>
 using namespace std;
+constexpr long long MOD = 1e9 + 7;
 signed main() {
-    string s, t;
-    cin >> s >> t;
-    string ans;
-    for (int i = 0; i < s.size(); i += 1) {
-        ans.push_back(s[i]);
-        if (equal(ans.end() - t.size(), ans.end(), t.begin())) {
-            ans.resize(ans.size() - t.size());
-        }
+    long long n;
+    cin >> n;
+    vector<long long> ifact(n+1);
+    ifact[0] = 1;
+    ifact[1] = 0;
+    for (long long i = 2; i <= n; i += 1) {
+        ifact[i] = (i-1)*((ifact[i-1]+ifact[i-2])%MOD)%MOD;
     }
-    cout << ans << "\n";
+    cout << ifact.back() << "\n";
 }

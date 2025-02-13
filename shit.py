@@ -3,7 +3,10 @@ from random import randint
 
 # system("g++ sol.cpp -o CPP")
 def add_test():
-    s = f"1\n{randint(1, 10)} {randint(1, 10)} {randint(1, 10)}"
+    n = 4
+    s = f"1\n{n}\n"
+    for i in range(n):
+        s += f"{randint(0, 1)} "
     with open('001.dat', 'w') as f:
         f.write(s)
 def stable ():
