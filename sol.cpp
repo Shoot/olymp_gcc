@@ -19,7 +19,7 @@ int powm(int a, int b) {
 }
 signed main() {
     int ibase = powm(base, MOD-2);
-    int32_t n;
+    int n;
     cin >> n;
     vector<string> strings(n);
     for (auto &x : strings) {
@@ -55,48 +55,53 @@ signed main() {
         assert(false);
         return 0ll;
     };
-    vector<vector<int>> got(5);
-    for (int i = 1; i < 5; i += 1) {
-        got[i].reserve(3000*3001/2);
+    vector<vector<vector<int>>> got(5);
+    for (int i = 0; i < 5; i += 1) {
+        got[i].resize(3001);
+        for (int sz = 1; sz <= 3000; sz += 1) {
+            got[i][sz].reserve(3000-sz+1);
+        }
     }
-    for (int w = 1; w < n; w += 1)
+    for (int w = 0; w < n; w += 1) {
         for (int l = 1; l <= strings[w].size(); l += 1) {
             for (int r = l; r <= strings[w].size(); r += 1) {
-                got[w].push_back(get_hash(w, l, r));
+                got[w][r - l + 1].push_back(get_hash(w, l, r));
             }
         }
-    for (auto &x : got) {
-        sort(x.begin(), x.end());
     }
-    vector<pair<int,int32_t>> check;
-    check.reserve(3000*3001/2);
-    for (int l = 1; l <= strings[0].size(); l += 1) {
-        for (int r = l; r <= strings[0].size(); r += 1) {
-            check.push_back({get_hash(0, l, r), r-l+1});
+    int l = 1, r = 3000;
+    int good = 0;
+    while (l <= r) {
+        int mid = (l + r) >> 1;
+        for (int i = 0; i < 5; i += 1) {
+            sort(got[i][mid].begin(), got[i][mid].end());
+        }
+        int it1 = 0, it2 = 0, it3 = 0, it4 = 0;
+        for (const auto &x : got[0][mid]) {
+            while (it1 < got[1][mid].size() && got[1][mid][it1] < x) {
+                it1 += 1;
+            }
+            while (it2 < got[2][mid].size() && got[2][mid][it2] < x) {
+                it2 += 1;
+            }
+            while (it3 < got[3][mid].size() && got[3][mid][it3] < x) {
+                it3 += 1;
+            }
+            while (it4 < got[4][mid].size() && got[4][mid][it4] < x) {
+                it4 += 1;
+            }
+            if (it1 == got[1][mid].size() || it2 == got[2][mid].size() || it3 == got[3][mid].size() || it4 == got[4][mid].size()) {
+                break;
+            }
+            if (got[1][mid][it1] == x && got[2][mid][it2] == x && got[3][mid][it3] == x && got[4][mid][it4] == x) {
+                l = mid + 1;
+                good = mid;
+                break;
+            }
+        }
+        if (good != mid) {
+            r = mid - 1;
         }
     }
-    sort(check.begin(), check.end());
-    int32_t maxi = 0;
-    int it1 = 0, it2 = 0, it3 = 0, it4 = 0;
-    for (const auto &[x, len] : check) {
-        while (it1 < got[1].size() && got[1][it1] < x) {
-            it1 += 1;
-        }
-        while (it2 < got[2].size() && got[2][it2] < x) {
-            it2 += 1;
-        }
-        while (it3 < got[3].size() && got[3][it3] < x) {
-            it3 += 1;
-        }
-        while (it4 < got[4].size() && got[4][it4] < x) {
-            it4 += 1;
-        }
-        if (it1 == got[1].size() || it2 == got[2].size() || it3 == got[3].size() || it4 == got[4].size()) {
-            break;
-        }
-        if (got[1][it1] == x && got[2][it2] == x && got[3][it3] == x && got[4][it4] == x) {
-            maxi = max(maxi, len);
-        }
-    }
-    cout << maxi << "\n";
+    cout << good << "\n";
 }
