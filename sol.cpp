@@ -5,25 +5,13 @@ signed main() {
     cin >> k;
     string s;
     cin >> s;
-    vector<int> cnt(100);
-    int need_cells = 0;
-    int l = 0;
-    int tot = 0;
-    // unique = k
-    // size > k
-    // answer = cnt_of_subarrays_with_such_qualities
-    for (int i = 0; i < s.size(); i += 1) {
-        need_cells += !cnt[s[i]-'a'];
-        cnt[s[i]-'a'] += 1;
-        while (need_cells > k) {
-            cnt[s[l]-'a'] -= 1;
-            need_cells -= !cnt[s[l]-'a'];
-            l += 1;
+    long long tot = 0;
+    // cyclic substrings of size > k, cycle is of size exactly k
+    for (int i = 0, j = 0; i < s.size(); i += 1) {
+        for (j = max(i+k, j); j < s.size() && s[j] == s[j-k]; j += 1) {
+
         }
-        int sz = i - l + 1;
-        if (sz > k) {
-            tot += sz - k;
-        }
+        tot += j - i - k;
     }
     cout << tot << "\n";
 }
