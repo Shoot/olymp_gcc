@@ -1,52 +1,41 @@
-#include <bits/stdc++.h>
+#include <iostream>
+#include <vector>
+#include <map>
 using namespace std;
 signed main() {
-    string l, r;
-    cin >> l >> r;
-    auto ok = [&] (string s) -> bool {
-        long long one = 0;
-        for (const auto &x : s) {
-            one += x == '1';
+    map<pair<long long, long long>, long long> dp;
+    auto do_dp = [&] (auto f, long long sz, long long first) -> long long {
+        if (sz == 1) {
+            return 1;
         }
-        if (one != s.size()-1) {
-            return false;
+        if (dp.count({sz, first})) {
+            return dp[{sz, first}];
         }
-        for (const auto &x : s) {
-            if (x == '0' || x == '4' || x == '6' || x == '8' || x == '9') {
-                return false;
-            }
+        long long ans = 0;
+        for (long long nxt = first; nxt <= 9; nxt += 1) {
+            ans += f(f, sz - 1, nxt);
         }
-        return true;
+        return dp[{sz, first}] = ans;
     };
-    vector<long long> all(500'001);
-    for (long long i = 1; i <= 500000; i += 1) {
-        all[i] = all[i-1] + 4*i;
+    long long n;
+    cin >> n;
+    long long sz = 1;
+    while (do_dp(do_dp, sz + 1, 0) <= n) {
+        sz += 1;
     }
-    auto cnt = [&] (const string &s, char x) -> long long {
-        long long tot = s.size();
-        for (long long i = 0; i < s.size(); i += 1) {
-            if (s[i] == '1') {
-                tot -= 1;
-                continue;
-            }
-            if (s[i] == '0') {
-                tot = 0;
+    long long nxt = 0;
+    long long alr_more_than = 0;
+    vector<long long> res;
+    for (; sz >= 1; sz -= 1) {
+        for (; nxt <= 9; nxt += 1) {
+            if (alr_more_than + do_dp(do_dp, sz, nxt) > n) {
                 break;
             }
-            bool can = true;
-            for (long long j = i+1; j < s.size(); j += 1) {
-                if (s[j] > '1') {
-                    break;
-                }
-                can &= s[j] == '1';
-            }
-            tot -= s[i] < x || s[i] == x && !can;
-            break;
+            alr_more_than += do_dp(do_dp, sz, nxt);
         }
-        return tot;
-    };
-    auto fnd = [&] (string s) -> long long {
-        return cnt(s, '2')+cnt(s, '3')+cnt(s, '5')+cnt(s, '7')+all[s.size()-1];
-    };
-    cout << fnd(r)-fnd(l)+ok(l) << "\n";
+        res.push_back(nxt);
+    }
+    for (const auto &x : res) {
+        cout << x;
+    }cout << "\n";
 }
