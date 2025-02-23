@@ -3,11 +3,16 @@ using namespace std;
 using ll = long long;
 const ll MOD = (1ll << 61) - 1;
 ll mod(__int128 x) {
+    if (x >= 0 && x < MOD) {
+        return x;
+    }
+    if (x-MOD >= 0 && x-MOD < MOD) {
+        return x-MOD;
+    }
     ll ret = (x & MOD) + (x >> 61);
     if (ret >= MOD) {
         ret -= MOD;
     }
-    assert(ret >= 0 && ret < MOD);
     return ret;
 }
 ll mul(ll a, ll b) {
@@ -27,89 +32,59 @@ ll powm(ll a, ll b) {
     }
     return ans;
 }
+#include <bits/stdc++.h>
+using namespace std;
+vector<long long> manacher_odd(string &s) {
+    long long n = (long long) s.size();
+    vector<long long> d(n, 1);
+    long long l = 0, r = 0;
+    for (long long i = 1; i < n; i++) {
+        if (i < r)
+            d[i] = min(r - i + 1, d[l + r - i]);
+        while (i - d[i] >= 0 && i + d[i] < n && s[i - d[i]] == s[i + d[i]])
+            d[i]++;
+        if (i + d[i] - 1 > r)
+            l = i - d[i] + 1, r = i + d[i] - 1;
+    }
+    return d;
+}
+vector<long long> manacher_even(string &s) {
+    long long n = (long long) s.size();
+    vector<long long> d(n, 0);
+    long long l = -1, r = -1;
+    for (long long i = 0; i < n - 1; i++) {
+        if (i < r)
+            d[i] = min(r - i, d[l + r - i - 1]);
+        while (i - d[i] >= 0 && i + d[i] + 1 < n && s[i - d[i]] == s[i + d[i] + 1])
+            d[i]++;
+        if (i + d[i] > r)
+            l = i - d[i] + 1, r = i + d[i];
+    }
+    return d;
+}
 signed main() {
     const ll base = 31;
     const ll ibase = powm(base, MOD-2);
     string s;
     cin >> s;
     int n = int(s.size());
-    s = s + s + s;
-    auto is = s;
-    reverse(is.begin(), is.end());
-    vector<ll> hash(s.size());
-    vector<ll> ihash(s.size());
-    vector<ll> basepow(s.size());
-    vector<ll> ibasepow(s.size());
-    basepow[0] = 1;
-    for (int i = 1; i < s.size(); i += 1) {
-        basepow[i] = mul(basepow[i-1], base);
-    }
-    ibasepow[0] = 1;
-    for (int i = 1; i < s.size(); i += 1) {
-        ibasepow[i] = mul(ibasepow[i-1], ibase);
-    }
-    for (int i = 0; i < s.size(); i += 1) {
-        hash[i] = mul(s[i]-'A'+1, basepow[i]);
-        if (i) {
-            hash[i] = sum(hash[i], hash[i-1]);
+    s = string(s.end()-n/2, s.end()) + s + string(s.begin(), s.begin()+n/2);
+    auto d1 = manacher_odd(s);
+    auto d2 = manacher_even(s);
+    int maxi = 0;
+    for (long long i = 0; i < s.size(); i += 1) {
+        int chet = d2[i]*2;
+        int nechet = d1[i]*2-1;
+        if (nechet > n) {
+            maxi = max(maxi, n - (n % 2 == 0));
+        } else {
+            maxi = max(maxi, nechet);
+        }
+        if (chet > n) {
+            maxi = max(maxi, n - (n % 2 == 1));
+        } else {
+            maxi = max(maxi, chet);
         }
     }
-    for (int i = 0; i < s.size(); i += 1) {
-        ihash[i] = mul(is[i]-'A'+1, basepow[i]);
-        if (i) {
-            ihash[i] = sum(ihash[i], ihash[i-1]);
-        }
-    }
-    auto get = [&] (int l, int r) -> ll {
-        if (!(l <= r)) {
-            return 0ll;
-        }
-        ll temp = hash[r];
-        if (l) {
-            temp = sum(temp, mod(-hash[l-1]+MOD));
-        }
-        temp = mul(temp, ibasepow[l]);
-        return temp;
-    };
-    auto iget = [&] (int l, int r) -> ll {
-        int nwl = s.size()-r-1;
-        int nwr = s.size()-l-1;
-        l = nwl;
-        r = nwr;
-        if (!(l <= r)) {
-            return 0ll;
-        }
-        ll temp = ihash[r];
-        if (l) {
-            temp = sum(temp, mod(-ihash[l-1]+MOD));
-        }
-        temp = mul(temp, ibasepow[l]);
-        return temp;
-    };
-    int ans = 0;
-    for (int i = n; i-n < n; i += 1) {
-        int l = 0, r = n / 2 - (n % 2 == 0);
-        while (l <= r) {
-            int mid = (l + r) >> 1;
-            if (get(i-mid, i-1) == iget(i+1, i+mid)) {
-                ans = max(ans, 1+2*mid);
-                l = mid + 1;
-            } else {
-                r = mid - 1;
-            }
-        }
-    }
-    for (int i = n; i-n < n; i += 1) {
-        int l = 1, r = n / 2;
-        while (l <= r) {
-            int mid = (l + r) >> 1;
-            if (get(i-mid+1, i) == iget(i+1, i+mid)) {
-                ans = max(ans, 2*mid);
-                l = mid + 1;
-            } else {
-                r = mid - 1;
-            }
-        }
-    }
-    cout << ans << "\n";
+    cout << maxi << endl;
 }
