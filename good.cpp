@@ -1,44 +1,59 @@
 #include <bits/stdc++.h>
 using namespace std;
-signed main() {
-    int T;
-    cin >> T;
-    char x[2] = {'R', 'L'};
-    char y[2] = {'U', 'D'};
-    for (int tt = 0; tt < T; tt += 1) {
-        string s;
-        cin >> s;
-        int n = int(s.size());
-        int mini = 1e9;
-        for (const auto &one : x) {
-            for (const auto &another : y) {
-                for (const auto &third : x) {
-                    if (third != one) {
-                        for (const auto &fourth : y) {
-                            if (fourth != another) {
-                                int one_cnt = 0;
-                                int another_cnt = 0;
-                                for (int i = 0; i < n / 2; i += 1) {
-                                    one_cnt += s[i] == one;
-                                    another_cnt += s[i] == another;
-                                }
-                                int third_cnt = 0;
-                                int fourth_cnt = 0;
-                                for (int i = n / 2; i < n; i += 1) {
-                                    third_cnt += s[i] == third;
-                                    fourth_cnt += s[i] == fourth;
-                                }
-                                int free_left = n / 2 - (one_cnt + another_cnt);
-                                int free_right = n / 2 - (third_cnt + fourth_cnt);
-                                int val = max(free_left+free_right, (abs(one_cnt-third_cnt)+abs(another_cnt-fourth_cnt))/2+(abs(one_cnt-third_cnt)+abs(another_cnt-fourth_cnt))%2);
-                                cout << one << another << ", " << third << fourth << " : " << val << "\n";
-                                mini = min(mini, val);
-                            }
-                        }
-                    }
-                }
-            }
+#define int long long
+const int MOD = 53161247837439787ll;
+const int base = 503;
+int mul(int a, int b) {
+    return __int128(a)*b%MOD;
+}
+int powm(int a, int b) {
+    int ans = 1;
+    while (b) {
+        if (b&1) {
+            ans = mul(ans, a);
         }
-        cout << mini << "\n";
+        a = mul(a, a);
+        b >>= 1;
     }
+    return ans;
+}
+signed main() {
+    int ibase = powm(base, MOD-2);
+    const int n = 2;
+    vector<string> strings(n);
+    for (auto &x : strings) {
+        cin >> x;
+    }
+    int sz = strings[0].size();
+    strings[1] += strings[1];
+    vector<int> basepow(100000+1);
+    vector<int> ibasepow(100000+1);
+    basepow[0] = 1;
+    ibasepow[0] = 1;
+    for (int i = 1; i <= 100000; i += 1) {
+        basepow[i] = mul(basepow[i-1], base);
+    }
+    for (int i = 1; i <= 100000; i += 1) {
+        ibasepow[i] = mul(ibasepow[i-1], ibase);
+    }
+    vector<vector<int>> hash(n);
+    for (int w = 0; w < n; w += 1) {
+        hash[w].assign(strings[w].size()+1, 0);
+        for (int i = 1; i <= strings[w].size(); i += 1) {
+            hash[w][i] = hash[w][i-1];
+            (hash[w][i] += mul(strings[w][i-1], basepow[i-1])) %= MOD;
+        }
+    }
+    auto get_hash = [&] (int w, int l, int r) -> int {
+        if (l <= r) {
+            return mul((hash[w][r]-hash[w][l-1]+MOD)%MOD, ibasepow[l-1]);
+        }
+        return 0ll;
+    };
+    for (int i = 1; i <= sz; i += 1) {
+        if (get_hash(1, i, i+sz-1) == get_hash(0, 1, strings[0].size())) {
+            cout << i-1 << "\n";
+            return 0;
+        }
+    }cout << -1 << "\n";
 }

@@ -3,12 +3,14 @@ from random import randint
 
 # system("g++ sol.cpp -o CPP")
 def add_test():
-    n = 4
-    s = f"1\n{n}\n"
+    n = randint(2, 20)
+    one = ""
+    another = ""
     for i in range(n):
-        s += f"{randint(0, 1)} "
+        one += chr(ord('a')+randint(0, 1))
+    x = randint(0, n-1)
     with open('001.dat', 'w') as f:
-        f.write(s)
+        f.write(f"{one}\n{one[x:]+one[:x]}")
 def stable ():
     system("./his < 001.dat > his.ans")
     # print('ok')
@@ -18,7 +20,10 @@ def unstable ():
 def check ():
     with open('his.ans') as f:
         with open('my.ans') as f0:
-            assert f0.read() == f.read()
+            x = f0.read().strip()
+            y = f.read().strip()
+            print(f"{x} vs {y}")
+            assert x == y
 for j in range(1, 100000):
     print('hi')
     add_test()

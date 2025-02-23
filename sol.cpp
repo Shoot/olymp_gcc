@@ -1,41 +1,42 @@
-#include <iostream>
-#include <vector>
-#include <map>
+#include <bits/stdc++.h>
 using namespace std;
+#define int long long
 signed main() {
-    map<pair<long long, long long>, long long> dp;
-    auto do_dp = [&] (auto f, long long sz, long long first) -> long long {
-        if (sz == 1) {
-            return 1;
+    int n, k;
+    cin >> n >> k;
+    vector<int> vals(n);
+    vector<int> sums(n);
+    for (int i = 0; i < n; i += 1) {
+        int x;
+        cin >> x;
+        int su = 0;
+        for (const auto &y : to_string(x)) {
+            su += y - '0';
         }
-        if (dp.count({sz, first})) {
-            return dp[{sz, first}];
+        vals[i] = x;
+        sums[i] = su;
+    }
+    vector<int> g(n);
+    iota(g.begin(), g.end(), 0LL);
+    auto can = [&] (double x) -> bool {
+        sort(g.begin(), g.end(), [&] (int a, int b) {
+            return double(vals[a]) - x*sums[a] > double(vals[b]) - x*sums[b];
+        });
+        int V = 0, S = 0;
+        for (int i = 0; i < k; i += 1) {
+            V += vals[g[i]];
+            S += sums[g[i]];
         }
-        long long ans = 0;
-        for (long long nxt = first; nxt <= 9; nxt += 1) {
-            ans += f(f, sz - 1, nxt);
-        }
-        return dp[{sz, first}] = ans;
+        return double(V)/S >= x;
     };
-    long long n;
-    cin >> n;
-    long long sz = 1;
-    while (do_dp(do_dp, sz + 1, 0) <= n) {
-        sz += 1;
-    }
-    long long nxt = 0;
-    long long alr_more_than = 0;
-    vector<long long> res;
-    for (; sz >= 1; sz -= 1) {
-        for (; nxt <= 9; nxt += 1) {
-            if (alr_more_than + do_dp(do_dp, sz, nxt) > n) {
-                break;
-            }
-            alr_more_than += do_dp(do_dp, sz, nxt);
+    double l = 0, r = accumulate(vals.begin(), vals.end(), 0.);
+    while (r - l > 1e-8) {
+        double mid = (l + r) / 2;
+        if (can(mid)) {
+            l = mid;
+        } else {
+            r = mid;
         }
-        res.push_back(nxt);
     }
-    for (const auto &x : res) {
-        cout << x;
-    }cout << "\n";
+    cout << fixed << setprecision(6) << l << "\n";
 }
