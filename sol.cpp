@@ -1,68 +1,115 @@
 #include <bits/stdc++.h>
 using namespace std;
+using ll = long long;
+const ll MOD = (1ll << 61) - 1;
+ll mod(__int128 x) {
+    ll ret = (x & MOD) + (x >> 61);
+    if (ret >= MOD) {
+        ret -= MOD;
+    }
+    assert(ret >= 0 && ret < MOD);
+    return ret;
+}
+ll mul(ll a, ll b) {
+    return mod(__int128(a)*b);
+}
+ll sum(ll a, ll b) {
+    return mod(a+b);
+}
+ll powm(ll a, ll b) {
+    ll ans = 1;
+    while (b) {
+        if (b&1) {
+            ans = mul(ans, a);
+        }
+        b >>= 1;
+        a = mul(a, a);
+    }
+    return ans;
+}
 signed main() {
+    const ll base = 31;
+    const ll ibase = powm(base, MOD-2);
     string s;
     cin >> s;
     int n = int(s.size());
-    int k;
-    cin >> k;
-    // [dist][0=to_right/1=to_left][rest]
-    bool dp[201][2][51];
-    memset(dp, 0, sizeof(dp));
-    dp[100][0][k] = 1;
-    bool nwdp[201][2][51];
-    for (int i = 0; i < n; i += 1) {
-        memset(nwdp, 0, sizeof(nwdp));
-        for (int d = -100; d <= 100; d += 1) {
-            for (int lr = 0; lr < 2; lr += 1) {
-                for (int rest = 0; rest <= 50; rest += 1) {
-                    if (dp[d+100][lr][rest]) {
-                        if (rest >= 1) {
-                            int nd = d;
-                            int nlr = lr;
-                            if (s[i] == 'T') {
-                                if (lr) {
-                                    nd -= 1;
-                                } else {
-                                    nd += 1;
-                                }
-                            } else {
-                                nlr = 1 - lr;
-                            }
-                            if (nd+100 >= 0 && nd+100 <= 200)
-                                for (int j = rest-1; j >= 0; j -= 2) {
-                                    nwdp[nd+100][nlr][j] = true;
-                                }
-                        }
-                        int nd = d;
-                        int nlr = lr;
-                        if (s[i] == 'T') {
-                            nlr = 1 - lr;
-                        }
-                        if (s[i] == 'F') {
-                            if (lr) {
-                                nd -= 1;
-                            } else {
-                                nd += 1;
-                            }
-                        }
-                        if (nd+100 >= 0 && nd+100 <= 200)
-                            for (int j = rest; j >= 0; j -= 2) {
-                                nwdp[nd+100][nlr][j] = true;
-                            }
-                    }
-                }
-            }
-        }
-        swap(dp, nwdp);
+    s = s + s + s;
+    auto is = s;
+    reverse(is.begin(), is.end());
+    vector<ll> hash(s.size());
+    vector<ll> ihash(s.size());
+    vector<ll> basepow(s.size());
+    vector<ll> ibasepow(s.size());
+    basepow[0] = 1;
+    for (int i = 1; i < s.size(); i += 1) {
+        basepow[i] = mul(basepow[i-1], base);
     }
-    int maxi = -1e9;
-    for (int d = -100; d <= 100; d += 1) {
-        for (int lr = 0; lr < 2; lr += 1) {
-            if (dp[d+100][lr][0]) {
-                maxi = max(maxi, abs(d));
-            }
+    ibasepow[0] = 1;
+    for (int i = 1; i < s.size(); i += 1) {
+        ibasepow[i] = mul(ibasepow[i-1], ibase);
+    }
+    for (int i = 0; i < s.size(); i += 1) {
+        hash[i] = mul(s[i]-'A'+1, basepow[i]);
+        if (i) {
+            hash[i] = sum(hash[i], hash[i-1]);
         }
     }
-    cout << maxi << "\n";
+    for (int i = 0; i < s.size(); i += 1) {
+        ihash[i] = mul(is[i]-'A'+1, basepow[i]);
+        if (i) {
+            ihash[i] = sum(ihash[i], ihash[i-1]);
+        }
+    }
+    auto get = [&] (int l, int r) -> ll {
+        if (!(l <= r)) {
+            return 0ll;
+        }
+        ll temp = hash[r];
+        if (l) {
+            temp = sum(temp, mod(-hash[l-1]+MOD));
+        }
+        temp = mul(temp, ibasepow[l]);
+        return temp;
+    };
+    auto iget = [&] (int l, int r) -> ll {
+        int nwl = s.size()-r-1;
+        int nwr = s.size()-l-1;
+        l = nwl;
+        r = nwr;
+        if (!(l <= r)) {
+            return 0ll;
+        }
+        ll temp = ihash[r];
+        if (l) {
+            temp = sum(temp, mod(-ihash[l-1]+MOD));
+        }
+        temp = mul(temp, ibasepow[l]);
+        return temp;
+    };
+    int ans = 0;
+    for (int i = n; i-n < n; i += 1) {
+        int l = 0, r = n / 2 - (n % 2 == 0);
+        while (l <= r) {
+            int mid = (l + r) >> 1;
+            if (get(i-mid, i-1) == iget(i+1, i+mid)) {
+                ans = max(ans, 1+2*mid);
+                l = mid + 1;
+            } else {
+                r = mid - 1;
+            }
+        }
+    }
+    for (int i = n; i-n < n; i += 1) {
+        int l = 1, r = n / 2;
+        while (l <= r) {
+            int mid = (l + r) >> 1;
+            if (get(i-mid+1, i) == iget(i+1, i+mid)) {
+                ans = max(ans, 2*mid);
+                l = mid + 1;
+            } else {
+                r = mid - 1;
+            }
+        }
+    }
+    cout << ans << "\n";
 }
