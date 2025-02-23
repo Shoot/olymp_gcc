@@ -1,33 +1,68 @@
 #include <bits/stdc++.h>
 using namespace std;
-#define int long long
 signed main() {
-    constexpr int MOD = 1e9+7;
-    string s, t;
+    string s;
+    cin >> s;
+    int n = int(s.size());
     int k;
-    cin >> s >> t >> k;
-    // сохраняем позиции первой, второй, .. букв строки t которые находятся внутри s.
-    // dp[сколько символов из копий s уже полностью позади][колво покрытых символов из строки t] = number_of_ways
-    // dp[колво покрытых символов из строки t] = number_of_ways
-    vector<vector<int>> where(t.size());
-    for (int i = 0; i < s.size(); i += 1) {
-        for (int j = 0; j < t.size(); j += 1) {
-            if (s[i] == t[j]) {
-                where[j].push_back(i);
+    cin >> k;
+    // [dist][0=to_right/1=to_left][rest]
+    bool dp[201][2][51];
+    memset(dp, 0, sizeof(dp));
+    dp[100][0][k] = 1;
+    bool nwdp[201][2][51];
+    for (int i = 0; i < n; i += 1) {
+        memset(nwdp, 0, sizeof(nwdp));
+        for (int d = -100; d <= 100; d += 1) {
+            for (int lr = 0; lr < 2; lr += 1) {
+                for (int rest = 0; rest <= 50; rest += 1) {
+                    if (dp[d+100][lr][rest]) {
+                        if (rest >= 1) {
+                            int nd = d;
+                            int nlr = lr;
+                            if (s[i] == 'T') {
+                                if (lr) {
+                                    nd -= 1;
+                                } else {
+                                    nd += 1;
+                                }
+                            } else {
+                                nlr = 1 - lr;
+                            }
+                            if (nd+100 >= 0 && nd+100 <= 200)
+                                for (int j = rest-1; j >= 0; j -= 2) {
+                                    nwdp[nd+100][nlr][j] = true;
+                                }
+                        }
+                        int nd = d;
+                        int nlr = lr;
+                        if (s[i] == 'T') {
+                            nlr = 1 - lr;
+                        }
+                        if (s[i] == 'F') {
+                            if (lr) {
+                                nd -= 1;
+                            } else {
+                                nd += 1;
+                            }
+                        }
+                        if (nd+100 >= 0 && nd+100 <= 200)
+                            for (int j = rest; j >= 0; j -= 2) {
+                                nwdp[nd+100][nlr][j] = true;
+                            }
+                    }
+                }
+            }
+        }
+        swap(dp, nwdp);
+    }
+    int maxi = -1e9;
+    for (int d = -100; d <= 100; d += 1) {
+        for (int lr = 0; lr < 2; lr += 1) {
+            if (dp[d+100][lr][0]) {
+                maxi = max(maxi, abs(d));
             }
         }
     }
-    vector<int> dp(t.size()+1);
-    dp[0] = 1;
-    vector<int> nwdp(t.size()+1);
-    int ans = 0;
-    for (int pozad = 0; pozad < s.size()*k; pozad += 1) {
-        fill(nwdp.begin(), nwdp.end(), 0ll);
-        for (int pokr = t.size()-1; pokr >= 0; pokr -= 1) if (dp[pokr]) {
-            if (s[pozad%s.size()] == t[pokr]) {
-                (dp[pokr+1] += dp[pokr]) %= MOD;
-            }
-        }
-    }
-    cout << dp.back() << "\n";
+    cout << maxi << "\n";
 }
