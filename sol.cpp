@@ -1,67 +1,59 @@
 #include <bits/stdc++.h>
 using namespace std;
-#define int long long
-vector<int> par;
-
-signed main() {
-    int n, m;
-    cin >> n >> m;
-    int cap[1005][1005];
-    memset(cap, 0, sizeof(cap));
-    int src = 1;
-    int snk = n;
-    int no_expences_or_misses = 0;
-    for (int i = 0; i < m; i += 1) {
-        int u, v, profit;
-        cin >> u >> v >> profit;
-        cap[u][v] = profit;
+int main () {
+    int n, m, o1, o2;
+    cin >> n >> m >> o1 >> o2;
+    vector<string> a(n);
+    int free = 0;
+    for (auto &x : a) {
+        cin >> x;
+        for (auto &y : x) {
+            free += y == '*';
+        }
     }
-    auto min_cut = [&] () -> int {
-        vector<vector<int>> adj(n + 1);
-        for (int i = 0; i <= n; i += 1) {
-            for (int j = 0; j <= n; j += 1) {
-                if (cap[i][j] != 0) {
-                    adj[i].push_back(j);
-                    adj[j].push_back(i);
-                }
-            }
-        }
-        auto find_shortest = [&] () -> int {
-            par.assign(n + 1, -1);
-            queue<pair<int, int>> q;
-            q.push({1e18, src});
-            while (!q.empty()) {
-                auto [min_on_path, u] = q.front();
-                q.pop();
-                if (u == snk) {
-                    return min_on_path;
-                }
-                for (const auto &v : adj[u]) {
-                    if (cap[u][v] == 0 || par[v] != -1) {
-                        continue;
+    vector<vector<int>> adj(n*m+1);
+    for (int i = 0; i < n; i += 1) {
+        for (int j = 0; j < m; j += 1) {
+            int v = i*m+j+1;
+            if ((i+j)%2==0)
+                if (a[i][j] == '*') {
+                    for (int ii = 0; ii < n; ii += 1) {
+                        for (int jj = 0; jj < m; jj += 1) {
+                            if (abs(ii-i)+abs(jj-j) == 1) {
+                                int vv = ii*m+jj + 1;
+                                if (a[ii][jj] == '*') {
+                                    adj[v].push_back(vv);
+                                }
+                            }
+                        }
                     }
-                    par[v] = u;
-                    q.push({min(min_on_path, cap[u][v]), v});
+                }
+        }
+    }
+    n = n * m + 1;
+    vector<int> match(n, -1);
+    auto matching = [&] (auto f, int u, vector<bool>& visited, vector<int>& match) -> bool {
+        for (int v: adj[u]) {
+            if (!visited[v]) {
+                visited[v] = true;
+                if (match[v] == -1 || f(f, match[v], visited, match)) {
+                    match[v] = u;
+                    return true;
                 }
             }
-            return 0;
-        };
-        int tot = 0;
-        while (true) {
-            int add = find_shortest();
-            if (add == 0) {
-                break;
-            }
-            int go = snk;
-            while (go != src) {
-                int from = par[go];
-                cap[from][go] -= add;
-                cap[go][from] += add;
-                go = from;
-            }
-            tot += add;
         }
-        return tot;
+        return false;
     };
-    cout << min_cut() << "\n";
+    int sz = 0;
+    for (int i = 0; i < n; ++i) {
+        vector<bool> visited(n);
+        sz += matching(matching, i, visited, match);
+    }
+    int rest = free - 2*sz;
+    if (2*o2 > o1) {
+        cout << sz*o1+rest*o2 << "\n";
+    } else {
+        cout << free*o2 << "\n";
+    }
+    return 0;
 }
