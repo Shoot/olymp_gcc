@@ -1,106 +1,61 @@
-#include <bits/stdc++.h>
+#include <iostream>
+#include <vector>
+#include <numeric>
+#include <algorithm>
+#include <map>
+#include <cassert>
 using namespace std;
-#define int long long
 signed main() {
-    int n, m;
-    cin >> n >> m;
-    vector<int> row(n);
-    vector<int> col(m);
-    for (auto &x : row) {
-        cin >> x;
-    }
-    for (auto &x : col) {
-        cin >> x;
-    }
-    vector<vector<int>> a(n, vector<int>(m));
-    for (auto &x : a) {
-        for (auto &y : x) {
-            cin >> y;
+    long long n, k;
+    map<pair<long long,long long>,long long> mem;
+    auto C = [&] (auto f, long long n, long long k) -> long long {
+        if (mem.count({n, k})) {
+            return mem[{n, k}];
         }
-    }
-    vector<vector<int>> cap(n+m+2, vector<int>(n+m+2));
-    int src = n + m;
-    int snk = n + m + 1;
-    for (int i = 0; i < n; i += 1) {
-        cap[src][i] = row[i];
-    }
-    for (int i = 0; i < m; i += 1) {
-        cap[i+n][snk] = col[i];
-    }
-    for (int i = 0; i < n; i += 1) {
-        for (int j = 0; j < m; j += 1) {
-            if (a[i][j] != -1) {
-                cap[src][i] -= a[i][j];
-                cap[j+n][snk] -= a[i][j];
-            } else {
-                cap[i][j+n] = 1e18;
-            }
+        if (k == 0) {
+            return mem[{n, k}] = 1;
         }
-    }
-    vector<int> par;
-    auto min_cut = [&] () -> int {
-        vector<vector<int>> adj(n);
-        for (int i = 0; i < n; i += 1) {
-            for (int j = 0; j < n; j += 1) {
-                if (cap[i][j] != 0) {
-                    adj[i].push_back(j);
-                    adj[j].push_back(i);
-                }
-            }
+        if (n == 0) {
+            return mem[{n, k}] = 0;
         }
-        auto find_shortest = [&] () -> int {
-            par.assign(n, -1);
-            queue<pair<int, int>> q;
-            q.push({1e18, src});
-            while (!q.empty()) {
-                auto [min_on_path, u] = q.front();
-                q.pop();
-                if (u == snk) {
-                    return min_on_path;
-                }
-                for (const auto &v : adj[u]) {
-                    if (cap[u][v] == 0 || par[v] != -1) {
-                        continue;
-                    }
-                    par[v] = u;
-                    q.push({min(min_on_path, cap[u][v]), v});
-                }
-            }
-            return 0;
-        };
-        int tot = 0;
-        while (true) {
-            int add = find_shortest();
-            if (add == 0) {
-                break;
-            }
-            int go = snk;
-            while (go != src) {
-                int from = par[go];
-                cap[from][go] -= add;
-                cap[go][from] += add;
-                go = from;
-            }
-            tot += add;
-        }
-        return tot;
+        return mem[{n, k}] = f(f, n-1, k)+f(f, n-1, k-1);
     };
-    auto prev = cap;
-    int N = n;
-    n = n + m + 2;
-    min_cut();
-    for (int i = 0; i < N; i += 1) {
-        for (int j = 0; j < m; j += 1) if (a[i][j] == -1) {
-            a[i][j] = prev[i][j+N] - cap[i][j+N];
-            if (a[i][j] < 0) {
-                cout << -1 << "\n";
-                return 0;
+    cin >> n >> k;
+    vector<long long> a(k);
+    for (auto &x : a) {
+        cin >> x;
+    }
+    auto gen = [&] (long long order) -> vector<long long> {
+        vector<long long> ret(k);
+        order -= 1;
+        long long curr = 1;
+        for (long long i = 0; i < k; i += 1) {
+            while (curr != n-(k-i-1) && order >= C(C, n-curr, k-i-1)) {
+                order -= C(C, n-curr, k-i-1);
+                curr += 1;
             }
+            ret[i] = curr;
+            curr = curr + 1;
+        }
+        return ret;
+    };
+    long long good = -1;
+    long long l = 1, r = C(C, n, k);
+    while (l <= r) {
+        long long mid = (l + r) >> 1;
+        auto g = gen(mid);
+        if (g <= a) {
+            good = mid;
+            l = mid + 1;
+        } else {
+            r = mid - 1;
         }
     }
-    for (const auto &x : a) {
-        for (const auto &y : x) {
-            cout << y << " ";
-        }cout << "\n";
+    if (good == C(C, n, k)) {
+        cout << 0 << "\n";
+        return 0;
     }
+    for (const auto &x : gen(good+1)) {
+        cout << x << " ";
+    }cout << "\n";
 }
