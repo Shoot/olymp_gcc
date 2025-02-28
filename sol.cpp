@@ -1,52 +1,76 @@
 #include <bits/stdc++.h>
 using namespace std;
+#define int long long
 signed main() {
-    int T;
-    cin >> T;
-    const int di[4] = {1, -1, 0, 0};
-    const int dj[4] = {0, 0, 1, -1};
-    for (int tt = 1; tt <= T; tt += 1) {
-        int N;
-        cin >> N;
-        vector<string> a(N);
-        for (int i = 0; i < N; i += 1) {
-            cin >> a[i];
-        }
-        vector<vector<int>> adj(N*N);
-        for (int i = 0; i < N; i += 1) {
-            for (int j = 0; j < N; j += 1) if ((i+j)%2==1) {
-                for (int k = 0; k < 4; k += 1) {
-                    int ni = i + di[k];
-                    int nj = j + dj[k];
-                    if (ni >= 0 && ni < N && nj >= 0 && nj < N) {
-                        if (a[i][j] == '#' && a[ni][nj] == '#') {
-                            adj[i+j*N].push_back(ni+nj*N);
-                        }
-                    }
-                }
-            }
-        }
-        bitset<600> vis;
-        vector<int> match(600, -1);
-        auto matching = [&] (auto f, int u) -> bool {
-            for (const auto &x : adj[u]) {
-                if (!vis[x]) {
-                    vis[x] = true;
-                    if (match[x] == -1 || f(f, match[x])) {
-                        match[x] = u;
-                        return true;
-                    }
-                }
-            }
-            return false;
-        };
-        int sz = 0;
-        for (int i = 0; i < N*N; i += 1) {
-            vis.reset();
-            if (matching(matching, i)) {
-                sz += 1;
-            }
-        }
-        cout << "Case " << tt << ": " << sz << "\n";
+    int n, m;
+    cin >> n >> m;
+    vector<vector<int>> cap(n+m+2, vector<int>(n+m+2));
+    int src = n+m;
+    int snk = n+m+1;
+    for (int i = 0; i < m; i += 1) {
+        cap[src][n+i] = 1;
     }
+    for (int i = 0; i < n; i += 1) {
+        cap[i][snk] = 1;
+    }
+    for (int i = 0; i < n; i += 1) {
+        int sz;
+        cin >> sz;
+        for (int j = 0; j < sz; j += 1) {
+            int x;
+            cin >> x;
+            x -= 1;
+            cap[n+x][i] = 1e18;
+        }
+    }
+    n = n + m + 2;
+    auto min_cut = [&] () -> int {
+        vector<int> par;
+        vector<vector<int>> adj(n);
+        for (int i = 0; i < n; i += 1) {
+            for (int j = 0; j < n; j += 1) {
+                if (cap[i][j] != 0) {
+                    adj[i].push_back(j);
+                    adj[j].push_back(i);
+                }
+            }
+        }
+        auto find_shortest = [&] () -> int {
+            par.assign(n, -1);
+            queue<pair<int, int>> q;
+            q.push({1e18, src});
+            while (!q.empty()) {
+                auto [min_on_path, u] = q.front();
+                q.pop();
+                if (u == snk) {
+                    return min_on_path;
+                }
+                for (const auto &v : adj[u]) {
+                    if (cap[u][v] == 0 || par[v] != -1) {
+                        continue;
+                    }
+                    par[v] = u;
+                    q.push({min(min_on_path, cap[u][v]), v});
+                }
+            }
+            return 0;
+        };
+        int tot = 0;
+        while (true) {
+            int add = find_shortest();
+            if (add == 0) {
+                break;
+            }
+            int go = snk;
+            while (go != src) {
+                int from = par[go];
+                cap[from][go] -= add;
+                cap[go][from] += add;
+                go = from;
+            }
+            tot += add;
+        }
+        return tot;
+    };
+    cout << min_cut() << "\n";
 }
