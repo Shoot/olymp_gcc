@@ -1,31 +1,33 @@
-#include <bits/stdc++.h>
-#pragma GCC optimize("O3", "unroll-loops")
-#pragma GCC target("avx2", "popcnt")
+#include <iostream>
+#include <vector>
+
 using namespace std;
-signed main() {
-    ios::sync_with_stdio(0);
-    cin.tie(0);
-    vector<bitset<4'000>> g(4000);
-    vector<bitset<4'000>> ans(4000);
+
+int main() {
     int n;
     cin >> n;
-    char c;
-    for (int i = 0; i < n; i += 1) {
-        for (int j = 0; j < n; j += 1) {
-            cin >> c;
-            g[i][j] = c-'0';
-        }
+    int N = 1 << n; // Размер массива F (2^n)
+
+    vector<int> F(N), P(N);
+
+    for (int i = 0; i < N; i++) {
+        cin >> F[i];
+        P[i] = F[i]; // Начнем с того, что P = F
     }
-    for (int i = 0; i < n; i += 1) {
-        for (int j = 0; j < n; j += 1) {
-            if (g[i][j]) {
-                ans[i] ^= g[j];
+
+    // Прямое преобразование Мёбиуса
+    for (int bit = 0; bit < n; bit++) {
+        for (int i = 0; i < N; i++) {
+            if (i & (1 << bit)) {
+                P[i] += P[i ^ (1 << bit)];
             }
         }
     }
-    int cnt = 0;
-    for (const auto &x : ans) {
-        cnt += x.count();
+
+    for (int i = 0; i < N; i++) {
+        cout << P[i] << " ";
     }
-    cout << cnt << "\n";
+    cout << endl;
+
+    return 0;
 }
