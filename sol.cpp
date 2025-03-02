@@ -1,33 +1,21 @@
-#include <iostream>
-#include <vector>
-
+#include <bits/stdc++.h>
 using namespace std;
-
-int main() {
-    int n;
-    cin >> n;
-    int N = 1 << n; // Размер массива F (2^n)
-
+signed main() {
+    int btsz;
+    cin >> btsz;
+    int N = 1LL << btsz;
     vector<int> F(N), P(N);
-
     for (int i = 0; i < N; i++) {
         cin >> F[i];
-        P[i] = F[i]; // Начнем с того, что P = F
+        P[i] = F[i];
     }
-
-    // Прямое преобразование Мёбиуса
-    for (int bit = 0; bit < n; bit++) {
-        for (int i = 0; i < N; i++) {
-            if (i & (1 << bit)) {
-                P[i] += P[i ^ (1 << bit)];
-            }
+    for (int bt = 0; bt < btsz; bt += 1)
+    for (int i = 0; i < N; i += 1) {
+        if (i&(1LL<<bt)) {
+            P[i] += P[i-(1LL<<bt)];
         }
     }
-
-    for (int i = 0; i < N; i++) {
-        cout << P[i] << " ";
-    }
-    cout << endl;
-
-    return 0;
+    for (const auto &x : P) {
+        cout << x << " ";
+    }cout << "\n";
 }
