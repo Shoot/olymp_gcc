@@ -1,208 +1,92 @@
-#include <bits/stdc++.h>
+#include <iostream>
+#include <vector>
 using namespace std;
-#define int long long
-signed main() {
-    int n, m, k;
-    cin >> n >> m >> k;
-    struct Edge {
-        int w;
-        int to;
-    };
-    vector<vector<Edge>> adj(n+1);
-    vector<vector<int>> cost(n+1, vector<int>(n+1));
-    vector<int> cost_by_num(m+1);
-    vector<vector<int>> num(n+1, vector<int>(n+1));
-    for (int i = 0; i < m; i += 1) {
-        int u, v, w;
-        cin >> u >> v >> w;
-        adj[u].push_back({w, v});
-        adj[v].push_back({w, u});
-        cost[u][v] = w;
-        cost[v][u] = w;
-        num[v][u] = i+1;
-        num[u][v] = i+1;
-        cost_by_num[i+1] = w;
+
+constexpr int INF = 1e9;
+
+struct SegmentTree {
+    vector<int> tree, LL, RR;
+    int sz = 0;
+
+    SegmentTree(int n) {
+        tree.resize(1.9e7);
+        LL.resize(1.9e7);
+        RR.resize(1.9e7);
     }
-    bitset<2'001> city;
-    for (int i = 1; i <= n; i += 1) {
-        if (adj[i].size() > 1) {
-            city[i] = true;
-        }
+
+    int get_max(int u, int tl, int tr, int l, int r) {
+        if (l > tr || r < tl) return -INF;
+        if (u == -1) return INF;
+        if (tl == l && tr == r) return tree[u];
+        int tm = (tl + tr) >> 1;
+        return max(get_max(LL[u], tl, tm, l, min(tm, r)),
+                   get_max(RR[u], tm+1, tr, max(l, tm+1), r));
     }
-    auto do_city = [&] (int u, vector<pair<int, vector<int>>> &dp) -> void {
-        for (const auto &[w, x] : adj[u]) {
-            if (!city[x]) {
-                clog << "City = " << u << ", town = " << x << "\n";
-                for (int from = n-1; from >= 0; from -= 1) {
-                    if (dp[from+1].first > dp[from].first+w) {
-                        dp[from+1].first = dp[from].first+w;
-                        dp[from+1].second = dp[from].second;
-                        dp[from+1].second.push_back(num[u][x]);
-                    }
-                }
-            }
-        }
-    };
-    bitset<2'001> seen;
-    bool cycle;
-    vector<vector<pair<int, vector<int>>>> dp_parent_uses_me(n+1, vector<pair<int, vector<int>>>(n+1, pair<int, vector<int>>{(int)1e18, {}}));
-    vector<vector<pair<int, vector<int>>>> dp_individual(n+1, vector<pair<int, vector<int>>>(n+1, pair<int, vector<int>>{(int)1e18, {}}));
-    dp_parent_uses_me.reserve(3000);
-    dp_individual.reserve(3000);
-    vector<int> order;
-    auto dfs = [&] (auto f, int u, int p) -> void {
-        if (seen[u] || !city[u]) {
+
+    void recalc(int ul, int ur) {
+        tree[sz] = max(ul != -1 ? tree[ul] : INF, ur != -1 ? tree[ur] : INF);
+        LL[sz] = ul;
+        RR[sz] = ur;
+        sz++;
+    }
+
+    void st(int u, int tl, int tr, int pos, int val) {
+        if (tl == tr) {
+            tree[sz] = val;
+            sz++;
             return;
         }
-        seen[u] = true;
-        order.push_back(u);
-        dp_individual[u][0].first = 0;
-        dp_parent_uses_me[u][1].first = cost[u][p];
-        dp_parent_uses_me[u][1].second.push_back(num[u][p]);
-        do_city(u, dp_parent_uses_me[u]);
-        do_city(u, dp_individual[u]);
-        for (const auto &[w, x] : adj[u]) if (x != p) {
-            if (city[x]) {
-                if (seen[x]) {
-                    cycle = true;
-                }
-                if (cycle) {
-                    continue;
-                }
-                f(f, x, u);
-                auto dp_to = dp_parent_uses_me[u];
-                for (int done = 1; done <= n; done += 1) {
-                    for (int from = n-done; from >= 0; from -= 1) {
-                        if (dp_to[from+done].first > dp_parent_uses_me[u][from].first+dp_parent_uses_me[x][done].first) {
-                            dp_to[from+done].second = dp_parent_uses_me[u][from].second;
-                            for (const auto &y : dp_parent_uses_me[x][done].second) {
-                                dp_to[from+done].second.push_back(y);
-                            }
-                            dp_to[from+done].first = dp_parent_uses_me[u][from].first+dp_parent_uses_me[x][done].first;
-                        }
-                    }
-                }
-                dp_parent_uses_me[u] = dp_to;
-                dp_to = dp_individual[u];
-                for (int done = 1; done <= n; done += 1) {
-                    for (int from = n-done; from >= 0; from -= 1) {
-                        if (dp_to[from+done].first > dp_individual[u][from].first+dp_parent_uses_me[x][done].first) {
-                            dp_to[from+done].second = dp_individual[u][from].second;
-                            for (const auto &y : dp_parent_uses_me[x][done].second) {
-                                dp_to[from+done].second.push_back(y);
-                            }
-                            dp_to[from+done].first = dp_individual[u][from].first+dp_parent_uses_me[x][done].first;
-                        }
-                    }
-                }
-                dp_individual[u] = dp_to;
-            }
-        }
-    };
-    for (int i = 1; i <= n; i += 1) {
-        dfs(dfs, i, i);
-    }
-    assert((n == m) == cycle);
-    int best_u = -1;
-    int best_val = 1e18;
-    for (int i = 1; i <= n; i += 1) if (city[i]) {
-        if (dp_individual[i][k].first < best_val) {
-            best_val = dp_individual[i][k].first;
-            best_u = i;
+        int tm = (tl + tr) >> 1;
+        if (pos <= tm) {
+            st(u == -1 ? -1 : LL[u], tl, tm, pos, val);
+            recalc(sz-1, u == -1 ? -1 : RR[u]);
+        } else {
+            st(u == -1 ? -1 : RR[u], tm+1, tr, pos, val);
+            recalc(u == -1 ? -1 : LL[u], sz-1);
         }
     }
-    if (!cycle) {
-        clog << "MIN COST (DFS): " << best_val << "\n";
-        for (const auto &x : dp_individual[best_u][k].second) {
-            cout << x << "\n";
+};
+
+signed main() {
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+
+    int n, L, R;
+    cin >> n >> L >> R;
+    vector<int> a(n);
+    for (auto &x : a) cin >> x;
+
+    SegmentTree segTree(n);
+    vector<int> trees(n+1, -1);
+    for (int i = n-1; i >= 0; i--) {
+        segTree.st(trees[i+1], 0, n, a[i], i);
+        trees[i] = segTree.sz - 1;
+    }
+
+    vector<vector<int>> pos(n+2);
+    for (int i = 0; i < n; i++) pos[a[i]].push_back(i);
+    int zero = 0;
+    for (int i = 0; i < n; i += 1) {
+        zero += a[i] == 0;
+    }
+    for (int i = 0; i <= n; i++) pos[i].push_back(n);
+
+    for (int i = L; i <= R; i++) {
+        if (i == 0) {
+            cout << n - zero << " ";
+            continue;
         }
-        return 0;
-    }
-    vector<int> ans;
-    if (best_u != -1) {
-        ans = dp_individual[best_u][k].second;
-    }
-    dp_individual.assign(n+1, vector<pair<int, vector<int>>>(n+1, pair<int, vector<int>>{(int)1e18, {}}));
-    for (const auto &x : order) {
-        clog << x << "o";
-    }clog << "\n";
-    for (const auto &x : order) {
-        dp_individual[x][0].first = 0;
-        do_city(x, dp_individual[x]);
-    }
-    vector<pair<int, vector<int>>> curr(n+1, pair<int, vector<int>>{(int)1e18, {}}), dp_to;
-    curr.reserve(3000);
-    dp_to.reserve(2001);
-    for (int l = 0; l < order.size(); l += 1) {
-        fill(curr.begin(), curr.end(), pair<int, vector<int>>{(int)1e18, {}});
-        curr[0].first = 0;
-        int prev = -1;
-        int add = 0;
-        int cnt_add = 0;
-        vector<int> shi;
-        int biggest = -1;
-        int biggest_val = -1;
-        for (int x = l; ;) {
-            if (prev != -1) {
-                add += cost[order[prev]][order[x]];
-                if (cost[order[prev]][order[x]] > biggest_val) {
-                    biggest_val = cost[order[prev]][order[x]];
-                    biggest = num[order[prev]][order[x]];
-                }
-                cnt_add += 1;
-                shi.push_back(num[order[prev]][order[x]]);
+        int start = 0, tot = 0;
+        for (const auto &x : pos[i]) {
+            while (true) {
+                int nxt = segTree.get_max(trees[start], 0, n, 0, i-1);
+                if (nxt < x) tot++;
+                start = nxt + 1;
+                if (start >= x) break;
             }
-            prev = x;
-            if (x != l) {
-                dp_to = curr;
-                for (int done = 1; done <= n; done += 1) {
-                    for (int from = n-done; from >= 0; from -= 1) {
-                        if (dp_to[from+done].first > curr[from].first+dp_individual[order[x]][done].first) {
-                            dp_to[from+done].second = curr[from].second;
-                            for (const auto &y : dp_individual[order[x]][done].second) {
-                                dp_to[from+done].second.push_back(y);
-                            }
-                            dp_to[from+done].first = curr[from].first+dp_individual[order[x]][done].first;
-                        }
-                    }
-                }
-                swap(curr, dp_to);
-            }
-            if ((x+1)%order.size() == l) {
-                if (cost[order[x]][order[l]] > biggest_val) {
-                    biggest_val = cost[order[x]][order[l]];
-                    biggest = num[order[x]][order[l]];
-                }
-                add += cost[order[x]][order[l]];
-                cnt_add += 1;
-                shi.push_back(num[order[x]][order[l]]);
-            }
-            if (k-cnt_add >= 0) {
-                if (curr[k-cnt_add].first+add < best_val) {
-                    best_val = curr[k-cnt_add].first+add;
-                    ans = curr[k-cnt_add].second;
-                    for (const auto &sh : shi) {
-                        ans.push_back(sh);
-                    }
-                }
-            }
-            if (k-(cnt_add-1) >= 0 && (x+1)%order.size() == l) {
-                if (curr[k-(cnt_add-1)].first+(add-biggest_val) < best_val) {
-                    best_val = curr[k-(cnt_add-1)].first+(add-biggest_val);
-                    ans = curr[k-(cnt_add-1)].second;
-                    for (const auto &sh : shi) if (sh != biggest) {
-                            ans.push_back(sh);
-                        }
-                }
-            }
-            if ((x+1)%order.size() == l) {
-                break;
-            }
-            (x += 1) %= order.size();
+            start = x + 1;
         }
+        cout << tot << " ";
     }
-    clog << "Min cost: " << best_val << "!!\n";
-    for (const auto &x : ans) {
-        cout << x << "\n";
-    }
+    cout << "\n";
 }
