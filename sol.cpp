@@ -1,69 +1,58 @@
 #include <bits/stdc++.h>
 using namespace std;
 #define int long long
-const int MOD = 1e9+7;
 signed main() {
-    int n, m;
-    cin >> n >> m;
-    vector<int> tot(m+1, 1);
-    struct Node {
-        int val = 0;
-        int lz = 0;
-    };
-    vector<Node> ST(4e6+10);
-    auto relax = [&] (int u, int tl, int tr) -> void {
-        ST[2*u+1].lz += ST[u].lz;
-        ST[2*u+2].lz += ST[u].lz;
-        int tm = (tl + tr) >> 1;
-        int szl = tm-tl+1;
-        int szr = tr-(tm+1)+1;
-        ST[2*u+1].val += ST[u].lz*szl;
-        ST[2*u+2].val += ST[u].lz*szr;
-        ST[u].lz = 0;
-    };
-    auto incr = [&] (auto f, int u, int tl, int tr, int l, int r, int val) -> void {
-        if (tl == l && tr == r) {
-            ST[u].val += val;
-            ST[u].lz += val;
-            return;
+    bitset<1'000'000> seen;
+    for (int tt = 0; tt <= 11; tt += 1) {
+        seen.reset();
+        ofstream cout("output"+string(1, char('0'+tt/10))+string(1, '0'+tt%10)+".txt");
+        ifstream cin("input"+string(1, char('0'+tt/10))+string(1, '0'+tt%10)+".txt");
+        string s;
+        vector<string> strings;
+        while (getline(cin, s)) {
+            strings.push_back(s);
         }
-        relax(u, tl, tr);
-        int tm = (tl + tr) >> 1;
-        if (l <= tm) {
-            f(f, 2*u+1, tl, tm, l, min(r, tm), val);
+        int n = strings.size();
+        int NVM = 0;
+        string curr;
+        auto dfs = [&] (auto f, int u) -> void {
+            seen[u] = true;
+            for (int j = 0; j < n; j += 1) if (!seen[j]) {
+                // i ----> j
+                for (int k = 0; k < 30; k += 1) {
+                    if (equal(strings[u].begin()+k, strings[u].end(), strings[j].begin())) {
+                        for (int d = 0; d < 50-k; d += 1) {
+                            curr.pop_back();
+                        }
+                        curr += strings[j];
+//                        std::cout << ++NVM << "\n";
+                        f(f, j);
+//                        std::cout << tt << "::::" << u << " ->> " << j << "(" << k << ")\n";
+                        return;
+                    }
+                }
+            }
+        };
+        vector<string> ans;
+        for (int i = 0; i < n; i += 1) {
+            if (!seen[i]) {
+                curr = strings[i];
+                dfs(dfs, i);
+                std::cout << curr.size() << ":)\n";
+                ans.push_back(curr);
+                curr = "";
+            }
         }
-        if (r >= tm+1) {
-            f(f, 2*u+2, tm+1, tr, max(l, tm+1), r, val);
+        vector<string> final;
+        for (const auto &x : ans) {
+            for (int i = 0; i+500 <= x.size(); i += 500) {
+                final.push_back(x.substr(i, 500));
+            }
         }
-        ST[u].val += ST[2*u+1].val + ST[2*u+2].val;
-    };
-    auto get = [&] (auto f, int u, int tl, int tr, int pos) -> int {
-        if (tl == tr) {
-            return ST[u].val;
+        final.resize(100);
+        cout << final.size() << "\n";
+        for (const auto &x : final) {
+            cout << x << "\n";
         }
-        relax(u, tl, tr);
-        int tm = (tl + tr) >> 1;
-        if (pos <= tm) {
-            return f(f, 2*u+1, tl, tm, pos);
-        } else {
-            return f(f, 2*u+2, tm+1, tr, pos);
-        }
-    };
-    for (int i = 0; i < n; i += 1) {
-        int l, r;
-        cin >> l >> r;
-        incr(incr, 0, 1, m, l, r, 1);
-        for (int j = 1; j <= m; j += 1) {
-            (tot[j] *= r / j - (l-1) / j) %= MOD;
-        }
-    }
-    cout << get(get, 0, 1, m, 3) << "!\n";
-    for (int i = m; i >= 1; i -= 1) {
-        for (int j = i + i; j <= m; j += i) {
-            ((tot[i] -= tot[j]) += MOD) %= MOD;
-        }
-    }
-    for (int i = 1; i <= m; i += 1) {
-        cout << tot[i] << "\n";
     }
 }
