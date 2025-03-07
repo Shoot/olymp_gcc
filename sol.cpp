@@ -2,57 +2,57 @@
 using namespace std;
 #define int long long
 signed main() {
-    bitset<1'000'000> seen;
-    for (int tt = 0; tt <= 11; tt += 1) {
-        seen.reset();
-        ofstream cout("output"+string(1, char('0'+tt/10))+string(1, '0'+tt%10)+".txt");
-        ifstream cin("input"+string(1, char('0'+tt/10))+string(1, '0'+tt%10)+".txt");
-        string s;
-        vector<string> strings;
-        while (getline(cin, s)) {
-            strings.push_back(s);
-        }
-        int n = strings.size();
-        int NVM = 0;
-        string curr;
-        auto dfs = [&] (auto f, int u) -> void {
-            seen[u] = true;
-            for (int j = 0; j < n; j += 1) if (!seen[j]) {
-                // i ----> j
-                for (int k = 0; k < 30; k += 1) {
-                    if (equal(strings[u].begin()+k, strings[u].end(), strings[j].begin())) {
-                        for (int d = 0; d < 50-k; d += 1) {
-                            curr.pop_back();
-                        }
-                        curr += strings[j];
-//                        std::cout << ++NVM << "\n";
-                        f(f, j);
-//                        std::cout << tt << "::::" << u << " ->> " << j << "(" << k << ")\n";
-                        return;
-                    }
-                }
+    int n, k, s;
+    cin >> n >> k >> s;
+    s -= 1;
+    string S;
+    cin >> S;
+    int maxi = 0;
+    auto rightleftleft = [&] () -> void {
+        vector<int> left; // hodov-by-cnt
+        vector<int> leftval;
+        for (int i = s-1; i >= 0; i -= 1) {
+            if (S[i] == '#') {
+                left.push_back(s-i);
+                leftval.push_back(i);
             }
-        };
-        vector<string> ans;
+        }
+        vector<int> next_to_the_right(n), next_to_the_left(n);
+        int to_the_right = n;
+        for (int i = n-1; i >= 0; i -= 1) {
+            next_to_the_right[i] = to_the_right;
+            if (S[i] == '#') {
+                to_the_right = i;
+            }
+        }
+        int to_the_left = -1;
         for (int i = 0; i < n; i += 1) {
-            if (!seen[i]) {
-                curr = strings[i];
-                dfs(dfs, i);
-                std::cout << curr.size() << ":)\n";
-                ans.push_back(curr);
-                curr = "";
+            next_to_the_left[i] = to_the_left;
+            if (S[i] == '#') {
+                to_the_left = i;
             }
         }
-        vector<string> final;
-        for (const auto &x : ans) {
-            for (int i = 0; i+500 <= x.size(); i += 500) {
-                final.push_back(x.substr(i, 500));
+        int curr = 0;
+        for (int i = s; i < n; i += 1) {
+            curr += S[i] == '#';
+            int done = i-s;
+            int left_available = k-2*done;
+            auto it = upper_bound(left.begin(), left.end(), left_available);
+            if (it != left.begin()) {
+                it--;
+                int from = next_to_the_left[leftval[it-left.begin()]]+1;
+                int to = next_to_the_right[i]-1;
+                maxi = max(maxi, to-from+1);
+            } else if (k-done >= 0) {
+                int from = next_to_the_left[s]+1;
+                int to = next_to_the_right[i]-1;
+                maxi = max(maxi, to-from+1);
             }
         }
-        final.resize(100);
-        cout << final.size() << "\n";
-        for (const auto &x : final) {
-            cout << x << "\n";
-        }
-    }
+    };
+    rightleftleft();
+    reverse(S.begin(), S.end());
+    s = n - s - 1;
+    rightleftleft();
+    cout << maxi << "\n";
 }
