@@ -1,91 +1,121 @@
 #include <bits/stdc++.h>
 using namespace std;
-//#define int long long
-signed main() {
-    int n;
-    cin >> n;
-    vector<int> a(n);
-    for (auto &x : a) {
-        cin >> x;
+int main() {
+    string A;
+    string B;
+    cin >> A >> B;
+    reverse(A.begin(), A.end());
+    reverse(B.begin(), B.end());
+    while (A.size() < B.size()) {
+        A.push_back('0');
     }
-    long long ans = 0;
-    // массив позиций элемента value на отрезке [l, r]
-    vector<vector<pair<int,int>>> tree(4*n+10);
-    auto build = [&] (auto f, int u, int tl, int tr) -> void {
-        if (tl == tr) {
-            tree[u] = {{a[tl], tl}};
-            return;
-        }
-        int tm = (tl + tr) >> 1;
-        f(f, 2*u+1, tl, tm);
-        f(f, 2*u+2, tm+1, tr);
-        int it1 = 0;
-        int it2 = 0;
-        for (int i = 0; i < tr-tl+1; i += 1) {
-            if (it1 == tree[2*u+1].size() || it2 != tree[2*u+2].size() && tree[2*u+2][it2] < tree[2*u+1][it1]) {
-                tree[u].push_back(tree[2*u+2][it2++]);
+    while (B.size() < A.size()) {
+        B.push_back('0');
+    }
+    reverse(A.begin(), A.end());
+    reverse(B.begin(), B.end());
+    auto sub = [&] (string a, string b) -> string {
+        bool carry = false;
+        string result(a.size(), 'x');
+        for (int i = a.size(); i >= 0; i -= 1) {
+            int ai = a[i] - '0';
+            int bi = b[i] - '0';
+            ai -= carry;
+            if (ai < bi) {
+                ai += 10;
+                carry = true;
             } else {
-                tree[u].push_back(tree[2*u+1][it1++]);
+                carry = false;
             }
+            result[i] = '0' + (ai - bi);
         }
+        return result;
     };
-    build(build, 0, 0, n-1);
-    vector<int> ret;
-    auto gt = [&] (auto f, int u, int tl, int tr, int l, int r, int val) -> void {
-        if (l == tl && r == tr) {
-            auto it = lower_bound(tree[u].begin(), tree[u].end(), pair<int,int>{val, -1e9}); // tree[u].begin()
-            auto it2 = upper_bound(tree[u].begin(), tree[u].end(), pair<int,int>{val, 1e9});
-            while (it != it2) {
-                ret.push_back(it->second);
-                it += 1;
+    auto calc = [&] (string x, string y) -> string {
+        string result = x;
+        for (int i = 0; i < x.size(); i += 1) {
+            int su = (x[i] - '0') + (y[i] - '0');
+            if (su >= 10) {
+                for (int j = i; j < x.size(); j += 1) {
+                    result[j] = '0';
+                }
+                if (i == 0) {
+                    result.insert(result.begin(), '1');
+                } else {
+                    result[i-1] += 1;
+                }
+                bool carry = false;
+                for (int j = result.size(); j >= 0; j -= 1) {
+                    result[j] += carry;
+                    if (result[j] >= '0'+10) {
+                        result[j] -= 10;
+                        carry = true;
+                    } else {
+                        carry = false;
+                    }
+                }
+                if (carry) {
+                    result.insert(result.begin(), '1');
+                }
+                int su10idx = -1;
+                while (y.size() < result.size()) {
+                    y.insert(y.begin(), '0');
+                }
+                for (int j = 0; j < result.size(); j += 1) {
+                    if ((result[j]-'0')+(y[j]-'0') == 10) {
+                        su10idx = j;
+                    }
+                }
+                if (su10idx != -1) {
+                    result[su10idx] = '0';
+                    int not9 = su10idx-1;
+                    for (; not9 >= 0; not9 -= 1) {
+                        if ((result[not9]-'0')+(y[not9]-'0') == 9) {
+                            result[not9] = '0';
+                        } else {
+                            break;
+                        }
+                    }
+                    if (not9 == -1) {
+                        result.insert(result.begin(), '1');
+                    } else {
+                        result[not9] += 1;
+                    }
+                }
+                carry = false;
+                for (int j = result.size(); j >= 0; j -= 1) {
+                    result[j] += carry;
+                    if (result[j] >= '0'+10) {
+                        result[j] -= 10;
+                        carry = true;
+                    } else {
+                        carry = false;
+                    }
+                }
+                if (carry) {
+                    result.insert(result.begin(), '1');
+                }
+                while (result.size() > x.size()) {
+                    x.insert(x.begin(), '0');
+                }
+                return sub(result, x);
             }
-            return;
         }
-        int tm = (tl + tr) >> 1;
-        if (l <= tm) {
-            f(f, 2*u+1, tl, tm, l, min(r, tm), val);
-        }
-        if (r >= tm+1) {
-            f(f, 2*u+2, tm+1, tr, max(l, tm+1), r, val);
-        }
+        return sub(result, x);
     };
-    vector<vector<int>> ST(20, vector<int>(n));
-    ST[0] = a;
-    for (int i = 1; i < 20; i += 1) {
-        for (int j = 0; j < n; j += 1) {
-            ST[i][j] = ST[i-1][j];
-            int sz = 1 << (i-1);
-            if (j+sz < n) {
-                ST[i][j] = min(ST[i][j], ST[i-1][j+sz]);
-            }
-        }
+    string add_to_A = calc(A, B);
+    string add_to_B = calc(B, A);
+    reverse(add_to_A.begin(), add_to_A.end());
+    reverse(add_to_B.begin(), add_to_B.end());
+    while (add_to_A.size() < add_to_B.size()) add_to_A.push_back('0');
+    while (add_to_A.size() > add_to_B.size()) add_to_B.push_back('0');
+    reverse(add_to_A.begin(), add_to_A.end());
+    reverse(add_to_B.begin(), add_to_B.end());
+    auto ans = min(add_to_A, add_to_B);
+    reverse(ans.begin(), ans.end());
+    while (ans.size() > 1 && ans.back() == '0') {
+        ans.pop_back();
     }
-    auto gt_min = [&] (int l, int r) -> int {
-        int sz = __lg(r-l+1);
-        return min(ST[sz][l], ST[sz][r-(1<<sz)+1]);
-    };
-    auto godo = [&] (auto f, int l, int r) -> void {
-        if (l > r) {
-            return;
-        }
-        ret.clear();
-        gt(gt, 0, 0, n-1, l, r, gt_min(l, r));
-        assert(ret.size());
-        int i = ret[(ret.size()-1)/2];
-        int j = i;
-        while (j >= l && a[j] % a[i] == 0) {
-            j -= 1;
-        }
-        long long szl = i-j;
-        j = i;
-        while (j <= r && a[j] % a[i] == 0) {
-            j += 1;
-        }
-        long long szr = j-i;
-        ans += szl*szr;
-        f(f, l, i-1);
-        f(f, i+1, r);
-    };
-    godo(godo, 0, n-1);
+    reverse(ans.begin(), ans.end());
     cout << ans << "\n";
 }
