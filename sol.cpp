@@ -1,58 +1,100 @@
 #include <bits/stdc++.h>
 using namespace std;
-#define int long long
-int dp[2][1 << 10][1001];
+const int C = 250;
 signed main() {
-    int n, k;
-    cin >> n >> k;
-    vector<int> w(n+1);
+    int n, q;
+    cin >> n >> q;
+    vector<int> a(n+1);
     for (int i = 1; i <= n; i += 1) {
-        cin >> w[i];
+        cin >> a[i];
     }
-    vector<int> c(n+1);
-    for (int i = 1; i <= n; i += 1) {
-        cin >> c[i];
-    }
-    vector<vector<int>> adj(n+1);
-    for (int i = 0; i < n-1; i += 1) {
-        int u, v;
-        cin >> u >> v;
-        adj[u].push_back(v);
-        adj[v].push_back(u);
-    }
-    bitset<10'000> seen;
-    auto dfs = [&] (auto f, int u) -> void {
-        seen[u] = true;
-        dp[1][1 << (c[u]-1)][u] = w[u];
-        for (const auto &x : adj[u]) {
-            if (!seen[x]) {
-                f(f, x);
-                // Подмаски 3^n - итого O(n*(3^n)) - норм (1000*59049=6e7)
-                // Подмаски 4^n - итого O(n*(4^n)) - не норм (1000*1048576=1e9)
-                // Всего подмасок всех подмасок = (1 + x)^n = \sum_{k=0}^n \binom{n}{k} x^k = 3^n
-                for (int from = (1 << 10) - 1; from >= 0; from -= 1) {
-                    int other = ((1 << 10) - 1) ^ from;
-                    for (int add = other; add; (add-=1)&=other /*Перебираем подмаски add маски other*/) {
-                        for (int add_on = 0; add_on <= 1; add_on += 1) {
-                            dp[0][from | add][u] = max(dp[0][from | add][u], dp[add_on][add][x] + dp[0][from][u]);
-                        }
-                    }
-                }
-                for (int from = (1 << 10) - 1; from >= 0; from -= 1) {
-                    int other = ((1 << 10) - 1) ^ from;
-                    for (int add = other; add; (add-=1)&=other /*Перебираем подмаски add маски other*/) {
-                        dp[1][from|add][u] = max(dp[1][from|add][u], dp[0][add][x]+dp[1][from][u]);
-                    }
-                }
-            }
+    auto b = a; b.erase(b.begin());
+    sort(b.begin(), b.end());
+    b.erase(unique(b.begin(), b.end()), b.end());
+    // Можно прибавлять эту единицу на суффиксе и отвечать минимум на всем массиве, при чем не забудем отнять от всего l-1
+    // a[i] - значение для последнего числа i в отсортированном текущем подмассиве
+    struct Node {
+        int val = 2e9;
+        int lz = 0;
+    };
+    vector<Node> ST(4*5e4+10);
+    auto push = [&] (int u) -> void {
+        ST[2*u+1].lz += ST[u].lz;
+        ST[2*u+1].val += ST[u].lz;
+        ST[2*u+2].lz += ST[u].lz;
+        ST[2*u+2].val += ST[u].lz;
+        ST[u].lz = 0;
+    };
+    auto inc = [&] (auto f, int u, int tl, int tr, int l, int r, int val) -> void {
+        if (tl == l && tr == r) {
+            ST[u].val += val;
+            ST[u].lz += val;
+            return;
+        }
+        push(u);
+        int tm = (tl + tr) >> 1;
+        if (l <= tm) {
+            f(f, 2*u+1, tl, tm, l, min(r, tm), val);
+        }
+        if (r >= tm+1) {
+            f(f, 2*u+2, tm+1, tr, max(l, tm+1), r, val);
+        }
+        ST[u].val = min(ST[2*u+1].val, ST[2*u+2].val);
+    };
+    vector<int> cnt(5e5);
+    auto rel = [&] (int x) -> int {
+        return lower_bound(b.begin(), b.end(), x) - b.begin();
+    };
+    auto add = [&] (int x) -> void {
+        int y = rel(x);
+        if (!(cnt[y]++)) {
+            inc(inc, 0, 0, 5e4, y, y, -2e9);
+            inc(inc, 0, 0, 5e4, y, y, x);
+        }
+        inc(inc, 0, 0, 5e4, y, 5e4, -1);
+    };
+    auto remove = [&] (int x) -> void {
+        int y = rel(x);
+        if (!(--cnt[y])) {
+            inc(inc, 0, 0, 5e4, y, y, 2e9);
+            inc(inc, 0, 0, 5e4, y, y, -x);
+        }
+        inc(inc, 0, 0, 5e4, y, 5e4, 1);
+    };
+    struct Query {
+        int l;
+        int r;
+        int idx;
+        auto operator<=>(const Query &other) const {
+            return make_tuple(l/C, r, idx) < make_tuple(other.l/C, other.r, other.idx);
         }
     };
-    dfs(dfs, 1);
-    int maxi = -1;
-    for (int on = 0; on <= 1; on += 1) {
-        for (int colors_subset = 0; colors_subset < (1 << 10); colors_subset += 1) {
-            maxi = max(maxi, dp[on][colors_subset][1]);
-        }
+    vector<Query> queries(q);
+    for (int i = 0; i < q; i += 1) {
+        int l, r;
+        cin >> l >> r;
+        queries[i] = {l, r, i};
     }
-    cout << maxi << "\n";
+    vector<int> ans(q);
+    sort(queries.begin(), queries.end());
+    int last_l = 1;
+    int last_r = 0;
+    for (const auto [l, r, idx] : queries) {
+        while (r > last_r) {
+            add(a[++last_r]);
+        }
+        while (l < last_l) {
+            add(a[--last_l]);
+        }
+        while (last_l < l) {
+            remove(a[last_l++]);
+        }
+        while (last_r > r) {
+            remove(a[last_r--]);
+        }
+        ans[idx] = ST.front().val - (l-1);
+    }
+    for (const auto &x : ans) {
+        cout << x << "\n";
+    }
 }
