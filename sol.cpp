@@ -1,100 +1,165 @@
 #include <bits/stdc++.h>
 using namespace std;
-const int C = 250;
+#pragma GCC optimize("Ofast,no-stack-protector")
+#pragma GCC target("sse,sse2,sse3,ssse3,sse4,popcnt,abm,mmx,avx,avx2")
+#pragma GCC optimize("unroll-loops")
+#pragma GCC optimize("vpt")
+#pragma GCC optimize("rename-registers")
+#pragma GCC optimize("move-loop-invariants")
+#pragma GCC optimize("unswitch-loops")
+#pragma GCC optimize(3)
+#pragma GCC optimize("O3")
+#pragma GCC optimize("inline")
+#pragma GCC optimize("-fgcse")
+#pragma GCC optimize("-fgcse-lm")
+#pragma GCC optimize("-fipa-sra")
+#pragma GCC optimize("-ftree-pre")
+#pragma GCC optimize("-ftree-vrp")
+#pragma GCC optimize("-fpeephole2")
+#pragma GCC optimize("-fsched-spec")
+#pragma GCC optimize("-falign-jumps")
+#pragma GCC optimize("-falign-loops")
+#pragma GCC optimize("-falign-labels")
+#pragma GCC optimize("-fdevirtualize")
+#pragma GCC optimize("-fcaller-saves")
+#pragma GCC optimize("-fcrossjumping")
+#pragma GCC optimize("-fthread-jumps")
+#pragma GCC optimize("-freorder-blocks")
+#pragma GCC optimize("-fschedule-insns")
+#pragma GCC optimize("inline-functions")
+#pragma GCC optimize("-ftree-tail-merge")
+#pragma GCC optimize("-fschedule-insns2")
+#pragma GCC optimize("-fstrict-aliasing")
+#pragma GCC optimize("-falign-functions")
+#pragma GCC optimize("-fcse-follow-jumps")
+#pragma GCC optimize("-fsched-interblock")
+#pragma GCC optimize("-fpartial-inlining")
+#pragma GCC optimize("-freorder-functions")
+#pragma GCC optimize("-findirect-inlining")
+#pragma GCC optimize("-fhoist-adjacent-loads")
+#pragma GCC optimize("-frerun-cse-after-loop")
+#pragma GCC optimize("inline-small-functions")
+#pragma GCC optimize("-finline-small-functions")
+#pragma GCC optimize("-ftree-switch-conversion")
+#pragma GCC optimize("-foptimize-sibling-calls")
+#pragma GCC optimize("-fexpensive-optimizations")
+#pragma GCC optimize("inline-functions-called-once")
+#pragma GCC optimize("-fdelete-null-pointer-checks")
 signed main() {
-    int n, q;
-    cin >> n >> q;
-    vector<int> a(n+1);
-    for (int i = 1; i <= n; i += 1) {
-        cin >> a[i];
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    vector<vector<int>> trees(32, vector<int>(2e5*4+10));
+    int n, k;
+    cin >> n >> k;
+    vector<vector<int>> a(n, vector<int>(k));
+    for (auto &x : a) {
+        for (auto &y : x) {
+            cin >> y;
+        }
     }
-    auto b = a; b.erase(b.begin());
-    sort(b.begin(), b.end());
-    b.erase(unique(b.begin(), b.end()), b.end());
-    // Можно прибавлять эту единицу на суффиксе и отвечать минимум на всем массиве, при чем не забудем отнять от всего l-1
-    // a[i] - значение для последнего числа i в отсортированном текущем подмассиве
-    struct Node {
-        int val = 2e9;
-        int lz = 0;
-    };
-    vector<Node> ST(4*5e4+10);
-    auto push = [&] (int u) -> void {
-        ST[2*u+1].lz += ST[u].lz;
-        ST[2*u+1].val += ST[u].lz;
-        ST[2*u+2].lz += ST[u].lz;
-        ST[2*u+2].val += ST[u].lz;
-        ST[u].lz = 0;
-    };
-    auto inc = [&] (auto f, int u, int tl, int tr, int l, int r, int val) -> void {
-        if (tl == l && tr == r) {
-            ST[u].val += val;
-            ST[u].lz += val;
+    vector<vector<int>> shit(32, vector<int>(2e5+2));
+    auto build = [&] (auto f, vector<int>& tree, int u, int tl, int tr, vector<int>& s) -> void {
+        if (tl == tr) {
+            tree[u] = s[tl];
             return;
         }
-        push(u);
         int tm = (tl + tr) >> 1;
+        f(f, tree, 2*u+1, tl, tm, s);
+        f(f, tree, 2*u+2, tm+1, tr, s);
+        tree[u] = max(tree[2*u+1], tree[2*u+2]);
+    };
+    auto add = [&] (auto f, vector<int>& tree, int u, int tl, int tr, int pos, int val) -> void {
+        if (tl == tr) {
+            tree[u] += val;
+            return;
+        }
+        int tm = (tl + tr) >> 1;
+        if (pos <= tm) {
+            f(f, tree, 2*u+1, tl, tm, pos, val);
+        } else {
+            f(f, tree, 2*u+2, tm+1, tr, pos, val);
+        }
+        tree[u] = max(tree[2*u+1], tree[2*u+2]);
+    };
+    auto get_max = [&] (auto f, const vector<int>& tree, int u, int tl, int tr, int l, int r) -> int {
+        if (tl == l && tr == r) {
+            return tree[u];
+        }
+        int tm = (tl + tr) >> 1;
+        int ret = -1e9;
         if (l <= tm) {
-            f(f, 2*u+1, tl, tm, l, min(r, tm), val);
+            ret = max(ret, f(f, tree, 2*u+1, tl, tm, l, min(r, tm)));
         }
         if (r >= tm+1) {
-            f(f, 2*u+2, tm+1, tr, max(l, tm+1), r, val);
+            ret = max(ret, f(f, tree, 2*u+2, tm+1, tr, max(tm+1, l), r));
         }
-        ST[u].val = min(ST[2*u+1].val, ST[2*u+2].val);
+        return ret;
     };
-    vector<int> cnt(5e5);
-    auto rel = [&] (int x) -> int {
-        return lower_bound(b.begin(), b.end(), x) - b.begin();
-    };
-    auto add = [&] (int x) -> void {
-        int y = rel(x);
-        if (!(cnt[y]++)) {
-            inc(inc, 0, 0, 5e4, y, y, -2e9);
-            inc(inc, 0, 0, 5e4, y, y, x);
+    for (int i = 0; i < n; i += 1) {
+        for (int j = 0; j < (1 << k); j += 1) {
+            int su = 0;
+            for (int y = 0; y < k; y += 1) {
+                if (j&(1<<y)) {
+                    su += a[i][y];
+                } else {
+                    su += -a[i][y];
+                }
+            }
+            shit[j][i] = su;
         }
-        inc(inc, 0, 0, 5e4, y, 5e4, -1);
-    };
-    auto remove = [&] (int x) -> void {
-        int y = rel(x);
-        if (!(--cnt[y])) {
-            inc(inc, 0, 0, 5e4, y, y, 2e9);
-            inc(inc, 0, 0, 5e4, y, y, -x);
-        }
-        inc(inc, 0, 0, 5e4, y, 5e4, 1);
-    };
-    struct Query {
-        int l;
-        int r;
-        int idx;
-        auto operator<=>(const Query &other) const {
-            return make_tuple(l/C, r, idx) < make_tuple(other.l/C, other.r, other.idx);
-        }
-    };
-    vector<Query> queries(q);
-    for (int i = 0; i < q; i += 1) {
-        int l, r;
-        cin >> l >> r;
-        queries[i] = {l, r, i};
     }
-    vector<int> ans(q);
-    sort(queries.begin(), queries.end());
-    int last_l = 1;
-    int last_r = 0;
-    for (const auto [l, r, idx] : queries) {
-        while (r > last_r) {
-            add(a[++last_r]);
-        }
-        while (l < last_l) {
-            add(a[--last_l]);
-        }
-        while (last_l < l) {
-            remove(a[last_l++]);
-        }
-        while (last_r > r) {
-            remove(a[last_r--]);
-        }
-        ans[idx] = ST.front().val - (l-1);
+    for (int i = 0; i < 32; i += 1) {
+        build(build, trees[i], 0, 0, 2e5, shit[i]);
     }
-    for (const auto &x : ans) {
-        cout << x << "\n";
+    int q;
+    cin >> q;
+    vector<int> temp_shit(1<<k);
+    for (int ii = 0; ii < q; ii += 1) {
+        int tp;
+        cin >> tp;
+        if (tp == 1) {
+            int idx;
+            cin >> idx;
+            idx -= 1;
+            for (int j = 0; j < (1 << k); j += 1) {
+                int su = 0;
+                for (int y = 0; y < k; y += 1) {
+                    if (j&(1<<y)) {
+                        su += -a[idx][y];
+                    } else {
+                        su += a[idx][y];
+                    }
+                }
+                add(add, trees[j], 0, 0, 2e5, idx, su);
+            }
+            for (auto &x : a[idx]) {
+                cin >> x;
+            }
+            for (int j = 0; j < (1 << k); j += 1) {
+                int su = 0;
+                for (int y = 0; y < k; y += 1) {
+                    if (j&(1<<y)) {
+                        su += a[idx][y];
+                    } else {
+                        su += -a[idx][y];
+                    }
+                }
+                add(add, trees[j], 0, 0, 2e5, idx, su);
+            }
+        } else {
+            int l, r;
+            cin >> l >> r;
+            l -= 1;
+            r -= 1;
+            int maxi = -1;
+            for (int j = 0; j < (1 << k); j += 1) {
+                temp_shit[j] = get_max(get_max, trees[j], 0, 0, 2e5, l, r);
+            }
+            for (int j = 0; j < (1 << k); j += 1) {
+                maxi = max(maxi, + temp_shit[j] +
+                                 temp_shit[((1 << k) - 1) ^ j]);
+            }
+            cout << maxi << "\n";
+        }
     }
 }
