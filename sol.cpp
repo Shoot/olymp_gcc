@@ -1,7 +1,7 @@
 #include <bits/stdc++.h>
 using namespace std;
-#pragma GCC optimize("Ofast,no-stack-protector")
-#pragma GCC optimize("unroll-loops")
+#pragma GCC optimize("O3", "unroll-loops")
+#pragma GCC target("popcnt")
 signed main() {
     ios::sync_with_stdio(0);
     cin.tie(0);
@@ -11,7 +11,7 @@ signed main() {
     if ((tree_n >> 1) == n) {
         tree_n >>= 1;
     }
-    vector<vector<int>> trees(32, vector<int>(2*tree_n-1));
+    vector<vector<int>> trees(32, vector<int>(2*tree_n));
     vector<vector<int>> shit(32, vector<int>(tree_n));
     vector<vector<int>> a(n, vector<int>(k));
     for (auto &x : a) {
@@ -21,38 +21,35 @@ signed main() {
     }
     auto build = [&] (vector<int>& tree, vector<int>& s) -> void {
         for (int i = 0; i < tree_n; i += 1) {
-            tree[i+tree_n-1] = s[i];
+            tree[i+tree_n] = s[i];
         }
-        for (int i = tree_n-2; i >= 0; i -= 1) {
-            tree[i] = max(tree[2*i+1], tree[2*i+2]);
+        for (int i = tree_n-1; i >= 0; i -= 1) {
+            tree[i] = max(tree[2*i], tree[2*i+1]);
         }
     };
     auto add = [&] (auto f, vector<int>& tree, int pos, int val) -> void {
-        pos += tree_n-1;
+        pos += tree_n;
         tree[pos] += val;
-        pos=pos%2==1?pos>>1:(pos-1)>>1;
-        while (true) {
-            tree[pos] = max(tree[pos*2+1], tree[pos*2+2]);
-            pos=pos%2==1?pos>>1:(pos-1)>>1;
-            if (!pos) {
-                break;
-            }
+        pos >>= 1;
+        while (pos > 0) {
+            tree[pos] = max(tree[pos*2], tree[pos*2+1]);
+            pos >>= 1;
         }
         return;
     };
     auto get_max = [&] (const vector<int>& tree, int l, int r) -> int {
-        l += tree_n - 1;
-        r += tree_n - 1;
+        l += tree_n;
+        r += tree_n;
         int ret = -1e9;
         while (l <= r) {
-            if (!(l&1)) {
+            if (l&1) {
                 ret = max(ret, tree[l++]);
             }
-            if (r&1) {
+            if (!(r&1)) {
                 ret = max(ret, tree[r--]);
             }
-            l=l%2==1?l>>1:(l-1)>>1;
-            r=r%2==1?r>>1:(r-1)>>1;
+            l >>= 1;
+            r >>= 1;
         }
         return ret;
     };
