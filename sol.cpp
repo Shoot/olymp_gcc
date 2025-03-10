@@ -1,97 +1,58 @@
 #include <bits/stdc++.h>
 using namespace std;
 #pragma GCC optimize("Ofast,no-stack-protector")
-#pragma GCC target("sse,sse2,sse3,ssse3,sse4,popcnt,abm,mmx,avx,avx2")
 #pragma GCC optimize("unroll-loops")
-#pragma GCC optimize("vpt")
-#pragma GCC optimize("rename-registers")
-#pragma GCC optimize("move-loop-invariants")
-#pragma GCC optimize("unswitch-loops")
-#pragma GCC optimize(3)
-#pragma GCC optimize("O3")
-#pragma GCC optimize("inline")
-#pragma GCC optimize("-fgcse")
-#pragma GCC optimize("-fgcse-lm")
-#pragma GCC optimize("-fipa-sra")
-#pragma GCC optimize("-ftree-pre")
-#pragma GCC optimize("-ftree-vrp")
-#pragma GCC optimize("-fpeephole2")
-#pragma GCC optimize("-fsched-spec")
-#pragma GCC optimize("-falign-jumps")
-#pragma GCC optimize("-falign-loops")
-#pragma GCC optimize("-falign-labels")
-#pragma GCC optimize("-fdevirtualize")
-#pragma GCC optimize("-fcaller-saves")
-#pragma GCC optimize("-fcrossjumping")
-#pragma GCC optimize("-fthread-jumps")
-#pragma GCC optimize("-freorder-blocks")
-#pragma GCC optimize("-fschedule-insns")
-#pragma GCC optimize("inline-functions")
-#pragma GCC optimize("-ftree-tail-merge")
-#pragma GCC optimize("-fschedule-insns2")
-#pragma GCC optimize("-fstrict-aliasing")
-#pragma GCC optimize("-falign-functions")
-#pragma GCC optimize("-fcse-follow-jumps")
-#pragma GCC optimize("-fsched-interblock")
-#pragma GCC optimize("-fpartial-inlining")
-#pragma GCC optimize("-freorder-functions")
-#pragma GCC optimize("-findirect-inlining")
-#pragma GCC optimize("-fhoist-adjacent-loads")
-#pragma GCC optimize("-frerun-cse-after-loop")
-#pragma GCC optimize("inline-small-functions")
-#pragma GCC optimize("-finline-small-functions")
-#pragma GCC optimize("-ftree-switch-conversion")
-#pragma GCC optimize("-foptimize-sibling-calls")
-#pragma GCC optimize("-fexpensive-optimizations")
-#pragma GCC optimize("inline-functions-called-once")
-#pragma GCC optimize("-fdelete-null-pointer-checks")
 signed main() {
     ios::sync_with_stdio(0);
     cin.tie(0);
-    vector<vector<int>> trees(32, vector<int>(2e5*4+10));
     int n, k;
     cin >> n >> k;
+    int tree_n = 1 << (32 - __builtin_clz(n));
+    if ((tree_n >> 1) == n) {
+        tree_n >>= 1;
+    }
+    vector<vector<int>> trees(32, vector<int>(2*tree_n-1));
+    vector<vector<int>> shit(32, vector<int>(tree_n));
     vector<vector<int>> a(n, vector<int>(k));
     for (auto &x : a) {
         for (auto &y : x) {
             cin >> y;
         }
     }
-    vector<vector<int>> shit(32, vector<int>(2e5+2));
-    auto build = [&] (auto f, vector<int>& tree, int u, int tl, int tr, vector<int>& s) -> void {
-        if (tl == tr) {
-            tree[u] = s[tl];
-            return;
+    auto build = [&] (vector<int>& tree, vector<int>& s) -> void {
+        for (int i = 0; i < tree_n; i += 1) {
+            tree[i+tree_n-1] = s[i];
         }
-        int tm = (tl + tr) >> 1;
-        f(f, tree, 2*u+1, tl, tm, s);
-        f(f, tree, 2*u+2, tm+1, tr, s);
-        tree[u] = max(tree[2*u+1], tree[2*u+2]);
+        for (int i = tree_n-2; i >= 0; i -= 1) {
+            tree[i] = max(tree[2*i+1], tree[2*i+2]);
+        }
     };
-    auto add = [&] (auto f, vector<int>& tree, int u, int tl, int tr, int pos, int val) -> void {
-        if (tl == tr) {
-            tree[u] += val;
-            return;
+    auto add = [&] (auto f, vector<int>& tree, int pos, int val) -> void {
+        pos += tree_n-1;
+        tree[pos] += val;
+        pos=pos%2==1?pos>>1:(pos-1)>>1;
+        while (true) {
+            tree[pos] = max(tree[pos*2+1], tree[pos*2+2]);
+            pos=pos%2==1?pos>>1:(pos-1)>>1;
+            if (!pos) {
+                break;
+            }
         }
-        int tm = (tl + tr) >> 1;
-        if (pos <= tm) {
-            f(f, tree, 2*u+1, tl, tm, pos, val);
-        } else {
-            f(f, tree, 2*u+2, tm+1, tr, pos, val);
-        }
-        tree[u] = max(tree[2*u+1], tree[2*u+2]);
+        return;
     };
-    auto get_max = [&] (auto f, const vector<int>& tree, int u, int tl, int tr, int l, int r) -> int {
-        if (tl == l && tr == r) {
-            return tree[u];
-        }
-        int tm = (tl + tr) >> 1;
+    auto get_max = [&] (const vector<int>& tree, int l, int r) -> int {
+        l += tree_n - 1;
+        r += tree_n - 1;
         int ret = -1e9;
-        if (l <= tm) {
-            ret = max(ret, f(f, tree, 2*u+1, tl, tm, l, min(r, tm)));
-        }
-        if (r >= tm+1) {
-            ret = max(ret, f(f, tree, 2*u+2, tm+1, tr, max(tm+1, l), r));
+        while (l <= r) {
+            if (!(l&1)) {
+                ret = max(ret, tree[l++]);
+            }
+            if (r&1) {
+                ret = max(ret, tree[r--]);
+            }
+            l=l%2==1?l>>1:(l-1)>>1;
+            r=r%2==1?r>>1:(r-1)>>1;
         }
         return ret;
     };
@@ -109,7 +70,7 @@ signed main() {
         }
     }
     for (int i = 0; i < 32; i += 1) {
-        build(build, trees[i], 0, 0, 2e5, shit[i]);
+        build(trees[i], shit[i]);
     }
     int q;
     cin >> q;
@@ -130,7 +91,7 @@ signed main() {
                         su += a[idx][y];
                     }
                 }
-                add(add, trees[j], 0, 0, 2e5, idx, su);
+                add(add, trees[j], idx, su);
             }
             for (auto &x : a[idx]) {
                 cin >> x;
@@ -144,7 +105,7 @@ signed main() {
                         su += -a[idx][y];
                     }
                 }
-                add(add, trees[j], 0, 0, 2e5, idx, su);
+                add(add, trees[j], idx, su);
             }
         } else {
             int l, r;
@@ -153,11 +114,10 @@ signed main() {
             r -= 1;
             int maxi = -1;
             for (int j = 0; j < (1 << k); j += 1) {
-                temp_shit[j] = get_max(get_max, trees[j], 0, 0, 2e5, l, r);
+                temp_shit[j] = get_max(trees[j], l, r);
             }
             for (int j = 0; j < (1 << k); j += 1) {
-                maxi = max(maxi, + temp_shit[j] +
-                                 temp_shit[((1 << k) - 1) ^ j]);
+                maxi = max(maxi, + temp_shit[j] + temp_shit[((1 << k) - 1) ^ j]);
             }
             cout << maxi << "\n";
         }
