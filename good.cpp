@@ -1,93 +1,104 @@
 #include <bits/stdc++.h>
 using namespace std;
-signed main() {
-    int n, m;
-    cin >> n >> m;
-    vector<string> a(n);
+#define int long long
+#define LU [0][0]
+constexpr int MOD = 1e9+7;
+vector<vector<int>> M(1000, vector<int>(1000));
+ostream& operator<<(ostream& out, const vector<vector<int>>& mat) {
+    for (const auto &x : mat) {
+        for (const auto &y : x) {
+            out << y << " ";
+        }out << "\n";
+    }
+    return out;
+}
+void operator*=(vector<vector<int>> &a, const vector<vector<int>>& b) {
+//    cout << a;
+//    cout << "XXX\n";
+//    cout << b;
     for (auto &x : a) {
-        cin >> x;
+        assert(x.size() == a[0].size());
     }
-    vector<vector<int>> border(n, vector<int>(m));
-    queue<pair<int,int>> q;
-    vector<vector<int>> dist(n, vector<int>(m, 1e9));
-    for (int i = 0; i < n; i += 1) {
-        for (int j = 0; j < m; j += 1) {
-            if (a[i][j] == 'H') {
-                q.push({i, j});
-                dist[i][j] = 0;
+    for (auto &y : b) {
+        assert(y.size() == b[0].size());
+    }
+    int skal_size = a[0].size();
+    assert(a[0].size() == b.size());
+    for (int i = 0; i < a.size(); i += 1) {
+        for (int j = 0; j < b[0].size(); j += 1) {
+            M[i][j] = 0;
+            for (int k = 0; k < skal_size; k += 1) {
+                M[i][j] += a[i][k] * b[k][j] % MOD;
             }
-            if (a[i][j] == '#') {
-                continue;
-            }
-            for (int di = -1; di <= 1; di += 1) {
-                for (int dj = -1; dj <= 1; dj += 1) {
-                    if (di != 0 || dj != 0) {
-//                        if (abs(di)+abs(dj) == 2) {
-//                            continue;
-//                        }
-                        int ni = i + di;
-                        int nj = j + dj;
-                        if (ni >= 0 && ni < n && nj >= 0 && nj < m) {
-                            if (a[ni][nj] == '#') {
-                                border[i][j] += 1;
-                            }
-                        }
-                    }
-                }
-            }
+            M[i][j] %= MOD;
         }
     }
-    vector<vector<int>> border_ugl(n, vector<int>(m));
-    for (int i = 0; i < n; i += 1) {
-        for (int j = 0; j < m; j += 1) {
-            if (a[i][j] == '#') {
-                continue;
-            }
-            for (int di = -1; di <= 1; di += 1) {
-                for (int dj = -1; dj <= 1; dj += 1) {
-                    if (di != 0 || dj != 0) {
-                        if (abs(di)+abs(dj) != 2) {
-                            continue;
-                        }
-                        int ni = i + di;
-                        int nj = j + dj;
-                        if (ni >= 0 && ni < n && nj >= 0 && nj < m) {
-                            if (a[ni][nj] == '#') {
-                                border_ugl[i][j] += 1;
-                            }
-                        }
-                    }
-                }
-            }
+    for (auto &x : a) {
+        x.resize(b[0].size());
+    }
+    for (int i = 0; i < a.size(); i += 1) {
+        for (int j = 0; j < a[i].size(); j += 1) {
+            a[i][j] = M[i][j];
         }
     }
-    for (int i = 0; i < n; i += 1) {
-        for (int j = 0; j < m; j += 1) {
-            if (border[i][j] >= 3) {
-//                border[i][j] = 0;
-            } else if (border_ugl[i][j] == 2) {
-//                border[i][j] = 9;
-            }
+}
+void operator^=(vector<vector<int>>& mat, int b) {
+    assert(b >= 0);
+    assert(mat.size() == mat[0].size());
+    vector<vector<int>> ret(mat.size(), vector<int>(mat.size()));
+    for (int i = 0; i < mat.size(); i += 1) {
+        ret[i][i] = 1;
+    }
+    while (b) {
+        if (b&1) {
+            ret *= mat;
         }
+        mat *= mat;
+        b >>= 1;
     }
-    for (int i = 0; i < n; i += 1) {
-        for (int j = 0; j < m; j += 1) {
-            cout << border[i][j];
-        }cout << "\n";
+    mat = ret;
+}
+signed main() {
+    vector<vector<int>> oper = {
+            {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            {1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            {0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            {0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0},
+            {0, 1, 1, 1, 1, 1, 1, 1, 2, 1, 0, 0, 0, 0},
+            {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0},
+            {0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0},
+            {0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0},
+            {1, 2, 1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0},
+            {0, 2, 0, 0, 0, 0, 0, 0, 1, 0, 2, 0, 0, 0},
+            {0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 1, 1},
+            {0, 2, 0, 0, 0, 0, 0, 0, 2, 0, 3, 0, 1, 0}
+    };
+    int n;
+    cin >> n;
+    if (n == 0) {
+        cout << n << "\n";
+        return 0;
     }
-//    int mini = 1e9;
-//    for (int di = -1; di <= 1; di += 1) {
-//        for (int dj = -1; dj <= 1; dj += 1) {
-//            if (di != 0 || dj != 0) {
-//                int ni = hi + di;
-//                int nj = hj + dj;
-//                mini = min(mini, dist[ni][nj]);
-//            }
-//        }
-//    }
-    for (int i = 0; i < n; i += 1) {
-        for (int j = 0; j < m; j += 1) {
-            cout << border[i][j];
-        }cout << "\n";
-    }
+    oper ^= n-1;
+    vector<vector<int>> base = {
+            {1},
+            {1},
+            {1},
+            {0},
+            {0},
+            {0},
+            {0},
+            {0},
+            {1},
+            {0},
+            {1},
+            {3},
+            {0},
+            {2}
+    };
+    oper *= base;
+//    cout << oper;
+    cout << oper[6][0] << "\n";
 }
