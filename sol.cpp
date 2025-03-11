@@ -1,122 +1,92 @@
 #include <bits/stdc++.h>
 using namespace std;
-#pragma GCC optimize("O3", "unroll-loops")
-#pragma GCC target("popcnt")
-signed main() {
-    ios::sync_with_stdio(0);
-    cin.tie(0);
-    int n, k;
-    cin >> n >> k;
-    int tree_n = 1 << (32 - __builtin_clz(n));
-    if ((tree_n >> 1) == n) {
-        tree_n >>= 1;
+#define int long long
+#define LU [0][0]
+constexpr int MOD = 1e9+7;
+vector<vector<int>> M(1000, vector<int>(1000));
+ostream& operator<<(ostream& out, const vector<vector<int>>& mat) {
+    for (const auto &x : mat) {
+        for (const auto &y : x) {
+            out << y << " ";
+        }out << "\n";
     }
-    vector<vector<int>> trees(32, vector<int>(2*tree_n));
-    vector<vector<int>> shit(32, vector<int>(tree_n));
-    vector<vector<int>> a(n, vector<int>(k));
+    return out;
+}
+void operator*=(vector<vector<int>> &a, const vector<vector<int>>& b) {
+//    cout << a;
+//    cout << "XXX\n";
+//    cout << b;
     for (auto &x : a) {
-        for (auto &y : x) {
-            cin >> y;
+        assert(x.size() == a[0].size());
+    }
+    for (auto &y : b) {
+        assert(y.size() == b[0].size());
+    }
+    int skal_size = a[0].size();
+    assert(a[0].size() == b.size());
+    for (int i = 0; i < a.size(); i += 1) {
+        for (int j = 0; j < b[0].size(); j += 1) {
+            M[i][j] = 0;
+            for (int k = 0; k < skal_size; k += 1) {
+                M[i][j] += a[i][k] * b[k][j] % MOD;
+            }
+            M[i][j] %= MOD;
         }
     }
-    auto build = [&] (vector<int>& tree, vector<int>& s) -> void {
-        for (int i = 0; i < tree_n; i += 1) {
-            tree[i+tree_n] = s[i];
+    for (auto &x : a) {
+        x.resize(b[0].size());
+    }
+    for (int i = 0; i < a.size(); i += 1) {
+        for (int j = 0; j < a[i].size(); j += 1) {
+            a[i][j] = M[i][j];
         }
-        for (int i = tree_n-1; i >= 0; i -= 1) {
-            tree[i] = max(tree[2*i], tree[2*i+1]);
+    }
+}
+void operator^=(vector<vector<int>>& mat, int b) {
+    assert(b >= 0);
+    assert(mat.size() == mat[0].size());
+    vector<vector<int>> ret(mat.size(), vector<int>(mat.size()));
+    for (int i = 0; i < mat.size(); i += 1) {
+        ret[i][i] = 1;
+    }
+    while (b) {
+        if (b&1) {
+            ret *= mat;
         }
+        mat *= mat;
+        b >>= 1;
+    }
+    mat = ret;
+}
+signed main() {
+    vector<vector<int>> oper = {
+            {2, 1, 0, -1+MOD},
+            {2, 1, 1, -2+MOD},
+            {0, 1, 0, 0},
+            {1, 0, 0, 0}
     };
-    auto add = [&] (auto f, vector<int>& tree, int pos, int val) -> void {
-        pos += tree_n;
-        tree[pos] += val;
-        pos >>= 1;
-        while (pos > 0) {
-            tree[pos] = max(tree[pos*2], tree[pos*2+1]);
-            pos >>= 1;
-        }
-        return;
+    int n;
+    cin >> n;
+    if (n == 0) {
+        assert(false);
+    }
+    oper ^= n-1;
+    vector<vector<int>> base = {
+            {0},
+            {1},
+            {0},
+            {0}
     };
-    auto get_max = [&] (const vector<int>& tree, int l, int r) -> int {
-        l += tree_n;
-        r += tree_n;
-        int ret = -1e9;
-        while (l <= r) {
-            if (l&1) {
-                ret = max(ret, tree[l++]);
-            }
-            if (!(r&1)) {
-                ret = max(ret, tree[r--]);
-            }
-            l >>= 1;
-            r >>= 1;
-        }
-        return ret;
-    };
-    for (int i = 0; i < n; i += 1) {
-        for (int j = 0; j < (1 << k); j += 1) {
-            int su = 0;
-            for (int y = 0; y < k; y += 1) {
-                if (j&(1<<y)) {
-                    su += a[i][y];
-                } else {
-                    su += -a[i][y];
-                }
-            }
-            shit[j][i] = su;
-        }
+    oper *= base;
+    int fast_ans = oper LU;
+    vector<int> fib(n+1);
+    vector<int> d(n+1);
+    fib[0] = 0;
+    fib[1] = 1;
+    for (int i = 2; i <= n; i += 1) {
+        fib[i] = (fib[i-1] + fib[i-2]) % MOD;
+        d[i] = (fib[i] * fib[i-1] + d[i-1]) % MOD;
     }
-    for (int i = 0; i < 32; i += 1) {
-        build(trees[i], shit[i]);
-    }
-    int q;
-    cin >> q;
-    vector<int> temp_shit(1<<k);
-    for (int ii = 0; ii < q; ii += 1) {
-        int tp;
-        cin >> tp;
-        if (tp == 1) {
-            int idx;
-            cin >> idx;
-            idx -= 1;
-            for (int j = 0; j < (1 << k); j += 1) {
-                int su = 0;
-                for (int y = 0; y < k; y += 1) {
-                    if (j&(1<<y)) {
-                        su += -a[idx][y];
-                    } else {
-                        su += a[idx][y];
-                    }
-                }
-                add(add, trees[j], idx, su);
-            }
-            for (auto &x : a[idx]) {
-                cin >> x;
-            }
-            for (int j = 0; j < (1 << k); j += 1) {
-                int su = 0;
-                for (int y = 0; y < k; y += 1) {
-                    if (j&(1<<y)) {
-                        su += a[idx][y];
-                    } else {
-                        su += -a[idx][y];
-                    }
-                }
-                add(add, trees[j], idx, su);
-            }
-        } else {
-            int l, r;
-            cin >> l >> r;
-            l -= 1;
-            r -= 1;
-            int maxi = -1;
-            for (int j = 0; j < (1 << k); j += 1) {
-                temp_shit[j] = get_max(trees[j], l, r);
-            }
-            for (int j = 0; j < (1 << k); j += 1) {
-                maxi = max(maxi, + temp_shit[j] + temp_shit[((1 << k) - 1) ^ j]);
-            }
-            cout << maxi << "\n";
-        }
-    }
+    cout << "d[n] = " << d[n] << "\n";
+    cout << fast_ans << "\n";
 }
