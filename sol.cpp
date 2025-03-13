@@ -1,86 +1,113 @@
 #include <bits/stdc++.h>
 using namespace std;
+#pragma GCC optimize("O3", "unroll-loops")
+#pragma GCC target("popcnt")
+#define int long long
+__int128 MOD = (1LL << 61) - 1;
+int mul(int a, int b) {
+    __int128 res = __int128(a) * b;
+    int ret = (res&MOD) + (res>>61);
+    if (ret >= MOD) {
+        ret -= MOD;
+    }
+    return ret;
+}
 signed main() {
-    int n, m;
-    cin >> n >> m;
-    vector<string> a(n);
-    for (auto &x : a) {
-        cin >> x;
-    }
-    vector<pair<int,int>> pts;
-    int hi = -1, hj = -1;
-    for (int i = 0; i < n; i += 1) {
-        for (int j = 0; j < m; j += 1) {
-            if (a[i][j] == '#') {
-                pts.push_back({i,j});
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    int T;
+    cin >> T;
+    auto powm = [&] (int a, int b) -> int {
+        int ret = 1;
+        while (b) {
+            if (b&1) {
+                ret = mul(ret, a);
             }
-            if (a[i][j] == 'H') {
-                assert(hi == -1 && hj == -1);
-                hi = i;
-                hj = j;
-            }
+            a = mul(a, a);
+            b >>= 1;
         }
-    }
-    assert(hi != -1 && hj != -1);
-    sort(pts.begin(), pts.end());
-    auto [ii, jj] = pts.front();
-    int dii = -1;
-    if (jj == hj && ii > hi) {
-        reverse(pts.begin(), pts.end());
-        dii = 1;
-    }
-    vector<vector<bool>> ok(n, vector<bool>(m, true));
-    auto [cuti, cutj] = pts.front();
-    for (int i = cuti; i >= 0 && i < n; i += dii) {
-        ok[i][cutj] = false;
-    }
-    for (int i = 0; i < n; i += 1) {
-        for (int j = 0; j < m; j += 1) {
-            if (a[i][j] == '#') {
-                ok[i][j] = false;
-            }
+        return ret;
+    };
+    for (int tt = 0; tt < T; tt += 1) {
+        string s;
+        cin >> s;
+        int n = s.size();
+        vector<int> cost(n+1, 1e9);
+        vector<int> p(n+1, -1);
+        vector<int> L(n+1, -1);
+        cost[0] = 0;
+        int base = 401;
+        vector<int> basepow(n);
+        vector<int> ibasepow(n);
+        basepow[0] = 1;
+        for (int i = 1; i < n; i += 1) {
+            basepow[i] = mul(basepow[i-1], base);
         }
-    }
-    queue<pair<int,int>> q;
-    q.push({hi,hj});
-    vector<vector<int>> dist(n, vector<int>(m, 1e9));
-    dist[hi][hj] = 0;
-    while (!q.empty()) {
-        auto [i, j] = q.front();
-        q.pop();
-        for (int di = -1; di <= 1; di += 1) {
-            for (int dj = -1; dj <= 1; dj += 1) {
-                int ni = i + di;
-                int nj = j + dj;
-                if (ni < 0 || ni >= n || nj < 0 || nj >= m || !ok[ni][nj]) {
-                    continue;
-                }
-                if (dist[ni][nj] > dist[i][j] + 1) {
-                    dist[ni][nj] = dist[i][j] + 1;
-                    q.push({ni, nj});
+        ibasepow.back() = powm(basepow.back(), MOD-2);
+        for (int i = n-2; i >= 0; i -= 1) {
+            ibasepow[i] = mul(ibasepow[i+1], base);
+        }
+        vector<int> h(n);
+        for (int i = 0; i < n; i += 1) {
+            h[i] = mul(s[i], basepow[i]);
+            if (i) {
+                h[i] += h[i-1];
+                if (h[i] >= MOD) {
+                    h[i] -= MOD;
                 }
             }
         }
-    }
-    int mini = 1e9;
-//    for (int i = 0; i < n; i += 1) {
-//        for (int j = 0; j < m; j += 1) {
-//            if (dist[i][j]==1e9) {
-//                cout << "x";
-//                continue;
-//            }
-//            cout << dist[i][j]%10;
-//        }cout << "\n";
-//    }
-    for (int i = cuti+dii; i >= 0 && i < n; i += dii) {
-        for (int di_left = -1; di_left <= 1; di_left += 1) {
-            for (int di_right = -1; di_right <= 1; di_right += 1) {
-                if (i+di_left < 0 || i+di_left >= n || i+di_right < 0 || i+di_right >= n) {
-                    continue;
+        auto hash = [&] (int l, int r) -> int {
+            int res = h[r];
+            if (l) {
+                res += MOD-h[l-1];
+                if (res >= MOD) {
+                    res -= MOD;
                 }
-                mini = min(mini, dist[i+di_left][cutj-1]+dist[i+di_right][cutj+1]+2);
+            }
+            res = mul(res, ibasepow[l]);
+            return res;
+        };
+        // символ за 9
+        // последовательность за 20
+
+        // damn(2, 3): daMn -> damNm -> damnMn -> damnmNm
+        // damn(3, 3): dAmn -> daMna -> damNam -> damnAmn
+        unordered_map<int, int> starts;
+        starts.reserve(n*n+10);
+        for (int i = n-1; i >= 0; i -= 1) {
+            for (int j = i; j < n; j += 1) {
+                starts[hash(i, j)] = i;
             }
         }
+        for (int i = 1; i <= n; i += 1) {
+            p[i] = i-1;
+            cost[i] = cost[i-1] + 9;
+            for (int prev = i-1; prev >= 0; prev -= 1) {
+                int start_pointer = starts[hash(prev, i-1)];
+                if (start_pointer < prev) {
+                    if (cost[i] > cost[prev] + 20) {
+                        L[i] = prev - start_pointer;
+                        cost[i] = cost[prev] + 20;
+                        p[i] = prev;
+                    }
+                }
+            }
+        }
+        int curr = n;
+        vector<string> ans;
+        while (curr) {
+            if (cost[p[curr]]+9==cost[curr]) {
+                ans.push_back(string(1, s[p[curr]]));
+            } else {
+                ans.push_back("("+to_string(L[curr])+","+to_string(curr-p[curr])+")");
+            }
+            curr = p[curr];
+        }
+        reverse(ans.begin(), ans.end());
+        for (const auto &x : ans) {
+            cout << x;
+        }cout << "\n";
+//        cout << cost[n] << "\n";
     }
-    cout << mini << "\n";
 }
