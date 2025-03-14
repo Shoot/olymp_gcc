@@ -1,95 +1,129 @@
 #include <bits/stdc++.h>
 using namespace std;
+#pragma GCC optimize("O3", "unroll-loops")
+#pragma GCC target("popcnt")
 signed main() {
-    int q;
-    cin >> q;
-    for (int ii = 0; ii < q; ii += 1) {
-        string s;
-        cin >> s;
-        int n = int(s.size());
-        int atarg, btarg, abrest, barest;
-        cin >> atarg >> btarg >> abrest >> barest;
-        int _abtarg = abrest;
-        int _batarg = barest;
-        vector<int> chetABs, chetBAs;
-        vector<int> nechet;
-        vector<string> temp;
-        for (int i = 0; i < n; i += 1) {
-            if (!i || s[i] == s[i-1]) {
-                temp.push_back(string(1, s[i]));
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    int n;
+    cin >> n;
+    vector<vector<int>> adj(n+1);
+    vector<set<int>> adjSET(n+1);
+    vector<vector<int>> iadj(n+1);
+    for (int i = 1; i <= n; i += 1) {
+        for (int j = i+1; j <= n; j += 1) {
+            bool exists;
+            cin >> exists;
+            if (exists) {
+                adj[i].push_back(j);
+                adjSET[i].insert(j);
+                iadj[j].push_back(i);
             } else {
-                temp.back().push_back(s[i]);
+                adj[j].push_back(i);
+                adjSET[j].insert(i);
+                iadj[i].push_back(j);
             }
         }
-        for (const auto &x : temp) {
-            if (x.size() % 2 == 0) {
-                if (x.front() == 'A') {
-                    chetABs.push_back(x.size());
-                } else {
-                    chetBAs.push_back(x.size());
+    }
+    bitset<2'001> seen;
+    vector<int> topo;
+    auto dfs = [&] (auto f, int u) -> void {
+        seen[u] = true;
+        for (const auto &x : adj[u]) {
+            if (!seen[x]) {
+                f(f, x);
+            }
+        }
+        topo.push_back(u);
+    };
+    vector<int> curr;
+    curr.reserve(2'001);
+    vector<int> comp(n+1, 1e9);
+    auto idfs = [&] (auto f, int u) -> void {
+        seen[u] = true;
+        for (const auto &x : iadj[u]) {
+            if (!seen[x]) {
+                comp[x] = comp[u];
+                f(f, x);
+            }
+        }
+        curr.push_back(u);
+    };
+    for (int i = 1; i <= n; i += 1) {
+        if (!seen[i]) {
+            dfs(dfs, i);
+        }
+    }
+    reverse(topo.begin(), topo.end());
+    int C = 0;
+    vector<vector<int>> comps;
+    vector<vector<int>> COMPadj(n+1);
+    auto dfsshit = [&] (auto f, int u, vector<int>& p, bitset<2'001>& s) -> void {
+        s[u] = true;
+        for (const auto &x : COMPadj[u]) {
+            if (!s[x]) {
+                f(f, x, p, s);
+            }
+        }
+        p.push_back(u);
+    };
+    bitset<2'001> insbitset;
+    seen.reset();
+    for (const auto &x : topo) {
+        if (!seen[x]) {
+            curr.clear();
+            insbitset.reset();
+            comp[x] = C++;
+            idfs(idfs, x);
+            for (const auto &y : curr) {
+                for (const auto &z : adj[y]) {
+                    if (comp[z] == comp[y]) {
+                        COMPadj[y].push_back(z);
+                    }
                 }
-            } else {
-                nechet.push_back(x.size());
+            }
+            vector<int> instopo;
+            dfsshit(dfsshit, curr[0], instopo, insbitset);
+            reverse(instopo.begin(), instopo.end());
+            comps.push_back(instopo);
+        }
+    }
+    vector<int> ans;
+    ans.reserve(2'001);
+    vector<vector<int>> shit(n+1);
+    for (int i = 1; i <= n; i += 1) {
+        if (shit[comp[i]].empty()) {
+            insbitset.reset();
+            ans.clear();
+            dfsshit(dfsshit, i, ans, insbitset);
+            reverse(ans.begin(), ans.end());
+            if (ans.size() == 1 || adjSET[ans.back()].contains(ans.front())) {
+                shit[comp[i]] = ans;
             }
         }
-        sort(chetABs.rbegin(), chetABs.rend());
-        for (; chetABs.size(); ) {
-            while (abrest) {
-                chetABs.back() -= 2;
-                abrest -= 1;
-                if (!chetABs.back()) {
-                    break;
-                }
+    }
+    for (int i = 1; i <= n; i += 1) {
+        int st = -1;
+        int dop = 0;
+        for (int j = comp[i]; j < C; j += 1) {
+            dop += comps[j].size();
+        }
+        cout << dop << " ";
+        for (int j = 0; j < shit[comp[i]].size(); j += 1) {
+            if (shit[comp[i]][j] == i) {
+                st = j;
             }
-            if (chetABs.back() == 0) {
-                chetABs.pop_back();
-            } else {
-                break;
+            if (st != -1) {
+                cout << shit[comp[i]][j] << " ";
             }
         }
-        sort(chetBAs.rbegin(), chetBAs.rend());
-        for (; chetBAs.size(); ) {
-            while (barest) {
-                chetBAs.back() -= 2;
-                barest -= 1;
-                if (!chetBAs.back()) {
-                    break;
-                }
-            }
-            if (chetBAs.back() == 0) {
-                chetBAs.pop_back();
-            } else {
-                break;
-            }
+        for (int j = 0; j < st; j += 1) {
+            cout << shit[comp[i]][j] << " ";
         }
-        while (chetABs.size() && barest) {
-            int maxi = min(chetABs.back()-2, barest*2);
-            barest -= maxi/2;
-            chetABs.back() -= maxi+2;
-            if (chetABs.back() == 0) {
-                chetABs.pop_back();
+        for (int j = comp[i]+1; j < C; j += 1) {
+            for (const auto &x : comps[j]) {
+                cout << x << " ";
             }
-        }
-        while (chetBAs.size() && abrest) {
-            int maxi = min(chetBAs.back()-2, abrest*2);
-            abrest -= maxi/2;
-            chetBAs.back() -= maxi+2;
-            if (chetBAs.back() == 0) {
-                chetBAs.pop_back();
-            }
-        }
-        int max_undecided_basically_any_hell_yea = 0;
-        for (const auto &x : nechet) {
-            max_undecided_basically_any_hell_yea += x/2;
-        }max_undecided_basically_any_hell_yea = min(max_undecided_basically_any_hell_yea, abrest+barest);
-        int our_decided_ab_cnt = _abtarg-abrest;
-        int our_decided_ba_cnt = _batarg-barest;
-        int our_a_cnt = count(s.begin(), s.end(), 'A') - our_decided_ab_cnt - our_decided_ba_cnt - max_undecided_basically_any_hell_yea;
-        int our_b_cnt = count(s.begin(), s.end(), 'B') - our_decided_ab_cnt - our_decided_ba_cnt - max_undecided_basically_any_hell_yea;
-        if (our_a_cnt > atarg || our_b_cnt > btarg) {
-            cout << "NO\n";
-            continue;
-        }
-        cout << "YES\n";
+        }cout << "\n";
     }
 }
