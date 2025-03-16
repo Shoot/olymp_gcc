@@ -3,14 +3,16 @@ using namespace std;
 signed main() {
     ios::sync_with_stdio(0);
     cin.tie(0);
-    int n;
-    cin >> n;
+    int n, q;
+    cin >> n >> q;
+    vector<int> a(n+1);
+    for (int i = 1; i <= n; i += 1) {
+        cin >> a[i];
+    }
     vector<vector<int>> adj(n+1);
-    vector<pair<int,int>> edges(n-1);
     for (int i = 0; i < n-1; i += 1) {
         int u, v;
         cin >> u >> v;
-        edges[i] = {u,v};
         adj[u].push_back(v);
         adj[v].push_back(u);
     }
@@ -58,87 +60,54 @@ signed main() {
     auto second_inside = [&] (int a, int b) -> bool {
         return tin[a] <= tin[b] && tout[b] <= tout[a];
     };
-    struct Node {
-        int su = 0;
-        int lz = 0;
-    };
-    vector<Node> ST(4*n+10);
-    auto push = [&] (int u, int tl, int tr) -> void {
-        int tm = (tl + tr) >> 1;
-        int szl = tm-tl+1;
-        int szr = tr-(tm+1)+1;
-        ST[2*u+1].lz += ST[u].lz;
-        ST[2*u+1].su += ST[u].lz*szl;
-        ST[2*u+2].lz += ST[u].lz;
-        ST[2*u+2].su += ST[u].lz*szr;
-        ST[u].lz = 0;
-    };
-    auto inc = [&] (auto f, int u, int tl, int tr, int l, int r, int val) -> void {
-        if (tl == l && tr == r) {
-            ST[u].lz += val;
-            ST[u].su += val*(tr-tl+1);
+    auto A = a;
+    for (int i = 1; i <= n; i += 1) {
+        A[tin[i]] = a[i];
+    }
+    vector<vector<int>> ST(4*n+10);
+    auto build = [&] (auto f, int u, int tl, int tr) -> void {
+        if (tl == tr) {
+            ST[u] = {A[tl]};
             return;
         }
-        push(u, tl, tr);
         int tm = (tl + tr) >> 1;
-        if (l <= tm) {
-            f(f, 2*u+1, tl, tm, l, min(r, tm), val);
-        }
-        if (r >= tm+1) {
-            f(f, 2*u+2, tm+1, tr, max(l, tm+1), r, val);
-        }
-        ST[u].su = ST[2*u+1].su + ST[2*u+2].su;
+        f(f, 2*u+1, tl, tm);
+        f(f, 2*u+2, tm+1, tr);
+        ST[u].resize(tr-tl+1);
+        merge(ST[2*u+1].begin(), ST[2*u+1].end(), ST[2*u+2].begin(), ST[2*u+2].end(), ST[u].begin());
     };
-    auto gt = [&] (auto f, int u, int tl, int tr, int l, int r) -> int {
+    build(build, 0, 0, n-1);
+    auto gt = [&] (auto f, int u, int tl, int tr, int l, int r, int val) -> int {
         if (tl == l && tr == r) {
-            return ST[u].su;
+            auto it = upper_bound(ST[u].begin(), ST[u].end(), val);
+            if (it == ST[u].end()) {
+                return 2e9;
+            }
+            return *it;
         }
-        push(u, tl, tr);
         int tm = (tl + tr) >> 1;
-        int ret = 0;
+        int ret = 2e9;
         if (l <= tm) {
-            ret += f(f, 2*u+1, tl, tm, l, min(r, tm));
+            ret = min(ret, f(f, 2*u+1, tl, tm, l, min(r, tm), val));
         }
         if (r >= tm+1) {
-            ret += f(f, 2*u+2, tm+1, tr, max(l, tm+1), r);
+            ret = min(ret, f(f, 2*u+2, tm+1, tr, max(l, tm+1), r, val));
         }
         return ret;
     };
-    auto up = [&] (int& a, const int& b, int& ans) {
+    auto up = [&] (int& a, const int& b, int& ans, const int& x) {
         while (!second_inside(top[a], b)) {
-            ans += gt(gt, 0, 0, n-1, tin[top[a]], tin[a]);
+            ans = min(ans, gt(gt, 0, 0, n-1, tin[top[a]], tin[a], x));
             a = p[top[a]];
         }
     };
-    auto upinc = [&] (int& a, const int& b, int x) {
-        while (!second_inside(top[a], b)) {
-            inc(inc, 0, 0, n-1, tin[top[a]], tin[a], x);
-            a = p[top[a]];
-        }
-    };
-    auto sum_on_path = [&] (int u, int v) -> int {
-        int ans = 0;
-        up(u, v, ans);
-        up(v, u, ans);
-        ans += gt(gt, 0, 0, n - 1, min(tin[u], tin[v]), max(tin[u], tin[v]));
-        return ans;
-    };
-    int q;
-    cin >> q;
     for (int i = 0; i < q; i += 1) {
-        int u, v;
-        cin >> u >> v;
-        upinc(u, v, 1);
-        upinc(v, u, 1);
-        if (u != v) {
-            inc(inc, 0, 0, n-1, min(tin[u], tin[v])+!!!!!!!!!!!!!!!!!!!!!!!!!!!!1, max(tin[u], tin[v]), 1);
-        }
+        int u, v, x;
+        cin >> u >> v >> x;
+        int ans = 2e9;
+        up(u, v, ans, x);
+        up(v, u, ans, x);
+        ans = min(ans, gt(gt, 0, 0, n-1, min(tin[u], tin[v]), max(tin[u], tin[v]), x));
+        cout << (ans==2e9?-1:ans) << "\n";
     }
-    for (auto &[u, v] : edges) {
-        // u -> v !!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        if (tin[u] > tin[v]) {
-            swap(u, v);
-        }
-        cout << sum_on_path(v, v) << " ";
-    }cout << "\n";
 }
