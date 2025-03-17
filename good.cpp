@@ -1,76 +1,55 @@
-#include <iostream>
-#include <vector>
-#include <set>
-
+#include <bits/stdc++.h>
+//97
 using namespace std;
-
-// Function to perform component-wise AND between two binary vectors
-vector<int> vectorAND(const vector<int>& v1, const vector<int>& v2) {
-    vector<int> result(v1.size());
-    for (size_t i = 0; i < v1.size(); ++i) {
-        result[i] = v1[i] & v2[i];
+#pragma GCC optimize("Ofast,unroll-loops")
+mt19937 mt(time(0));
+signed main() {
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+    int n = 1e9, m = 1e9;
+    cin >> n >> m;
+    int k = 7000;
+    cin >> k;
+    vector<pair<int,int>> pts(k);
+    for (auto &[x, y] : pts) {
+        cin >> x >> y;
+//        x = mt();
+//        y = mt();
     }
-    return result;
-}
-
-// Function to print a binary vector
-void printVector(const vector<int>& v) {
-    for (int bit : v) {
-        cout << bit;
+    int maxi = 1;
+    sort(pts.begin(), pts.end());
+    vector<bitset<7000>> ok(7000);
+    for (auto &x : ok) {
+        x.set();
     }
-    cout << endl;
-}
-
-// Function to compute the number of distinct vectors achievable using AND
-int countDistinctANDVectors(vector<vector<int>>& vectors) {
-    // Use a set to store unique vectors
-    set<vector<int>> uniqueVectors(vectors.begin(), vectors.end());
-
-    bool newVectorAdded = true;
-    while (newVectorAdded) {
-        newVectorAdded = false;
-        set<vector<int>> newVectorsToAdd;
-
-        // Try ANDing every pair of vectors in the current set
-        for (const auto& v1 : uniqueVectors) {
-            for (const auto& v2 : uniqueVectors) {
-                vector<int> andResult = vectorAND(v1, v2);
-                if (uniqueVectors.find(andResult) == uniqueVectors.end()) {
-                    newVectorsToAdd.insert(andResult);
-                    newVectorAdded = true;
+//    int OPS = 0;
+    for (int i = 0; i < k; i += 1) {
+        for (int j = ok[i]._Find_next(i); j < k; j = ok[i]._Find_next(j)) {
+            ok[i][j] = false;
+            int dx = pts[j].first - pts[i].first;
+            int dy = pts[j].second - pts[i].second;
+            int cnt = 2;
+            int last = j;
+            for (int f = ok[j]._Find_next(j); f < k; f = ok[last]._Find_next(f)) {
+                if ((pts[f].first - pts[last].first) < dx || (pts[f].first - pts[last].first) == dx && (pts[f].second - pts[last].second) < dy) {
+                    f = lower_bound(pts.begin()+f+1, pts.end(), pair<int,int>{pts[last].first+dx, pts[last].second+dy}) - pts.begin();
+                    if (!ok[last][f]) {
+                        f = ok[last]._Find_next(f);
+                    }
+                }
+                if (f >= k || (pts[f].first - pts[last].first) > dx || (pts[f].first - pts[last].first) == dx && (pts[f].second - pts[last].second) > dy) {
+                    break;
+                }
+//                OPS += 1;
+                ok[last][f] = false;
+                if ((pts[f].first - pts[last].first) == dx && (pts[f].second - pts[last].second) == dy) {
+                    cnt += 1;
+                    last = f;
                 }
             }
-        }
-
-        // Add newly found vectors to the set
-        for (const auto& v : newVectorsToAdd) {
-            uniqueVectors.insert(v);
+            maxi = max(maxi, cnt);
         }
     }
-
-    // Print all distinct vectors
-    cout << "Distinct vectors:" << endl;
-    for (const auto& v : uniqueVectors) {
-        printVector(v);
-    }
-
-    return uniqueVectors.size();
-}
-
-int main() {
-    // Example input: a set of binary vectors
-    vector<vector<int>> vectors = {
-            {1, 1, 0, 1, 0, 1, 0},
-            {1, 0, 1, 1, 0, 0, 0},
-            {0, 1, 1, 0, 1, 1, 1},
-            {0, 1, 0, 0, 1, 0, 0},
-    };
-
-    // Compute the number of distinct vectors achievable using AND
-    int numDistinctVectors = countDistinctANDVectors(vectors);
-
-    // Output the result
-    cout << "Number of distinct vectors: " << numDistinctVectors << endl;
-
-    return 0;
+    cout << maxi << "\n";
+//    clog << OPS << "\n";
 }
