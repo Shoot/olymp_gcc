@@ -43,7 +43,7 @@
 				}
 			],
 			"type" : "STRING",
-			"value" : "Debug"
+			"value" : "Release"
 		},
 		{
 			"name" : "CMAKE_CACHEFILE_DIR",
@@ -55,7 +55,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/Users/whoami/CLionProjects/olymp_gcc/cmake-build-debug"
+			"value" : "/Users/whoami/CLionProjects/olymp_gcc/cmake-build-release"
 		},
 		{
 			"name" : "CMAKE_CACHE_MAJOR_VERSION",
@@ -151,10 +151,10 @@
 				},
 				{
 					"name" : "HELPSTRING",
-					"value" : "No help, variable specified on the command line."
+					"value" : "CXX compiler"
 				}
 			],
-			"type" : "UNINITIALIZED",
+			"type" : "STRING",
 			"value" : "/opt/homebrew/bin/g++"
 		},
 		{
@@ -511,7 +511,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/Users/whoami/CLionProjects/olymp_gcc/cmake-build-debug/CMakeFiles/pkgRedirects"
+			"value" : "/Users/whoami/CLionProjects/olymp_gcc/cmake-build-release/CMakeFiles/pkgRedirects"
 		},
 		{
 			"name" : "CMAKE_GENERATOR",
@@ -1150,30 +1150,6 @@
 			"value" : "FALSE"
 		},
 		{
-			"name" : "Python3_EXECUTABLE",
-			"properties" : 
-			[
-				{
-					"name" : "HELPSTRING",
-					"value" : "No help, variable specified on the command line."
-				}
-			],
-			"type" : "UNINITIALIZED",
-			"value" : "/Users/whoami/CLionProjects/olymp_gcc/venv/bin/python"
-		},
-		{
-			"name" : "Python_EXECUTABLE",
-			"properties" : 
-			[
-				{
-					"name" : "HELPSTRING",
-					"value" : "No help, variable specified on the command line."
-				}
-			],
-			"type" : "UNINITIALIZED",
-			"value" : "/Users/whoami/CLionProjects/olymp_gcc/venv/bin/python"
-		},
-		{
 			"name" : "olymp_gcc_BINARY_DIR",
 			"properties" : 
 			[
@@ -1183,7 +1159,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/Users/whoami/CLionProjects/olymp_gcc/cmake-build-debug"
+			"value" : "/Users/whoami/CLionProjects/olymp_gcc/cmake-build-release"
 		},
 		{
 			"name" : "olymp_gcc_IS_TOP_LEVEL",
