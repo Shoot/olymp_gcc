@@ -1,0 +1,121 @@
+#include <bits/stdc++.h>
+using namespace std;
+signed main() {
+    atomic<int> right_total = 0;
+    volatile int total = 0;
+    vector<thread> threads;
+    struct Node {
+        int p;
+        bool iam;
+        vector<bool> want;
+        bool victim;
+        Node(int p_, bool iam_) {
+            iam = iam_;
+            want.assign(2, false);
+            p = p_;
+        }
+    };
+    struct P_Mutex {
+        int N;
+        vector<Node> tree;
+        vector<pair<int, bool>> get_v;
+        mutex perfect;
+        vector<bool> WW;
+        int VV;
+        void build(int l, int r, int p, bool iam) {
+            if (l == r) {
+                get_v[l] = {p, iam};
+                return;
+            }
+            tree.push_back(Node(p, iam));
+            int m = (l + r) >> 1;
+            int v = tree.size()-1;
+            build(l, m, v, 0);
+            build(m+1, r, v, 1);
+        }
+        P_Mutex(int cnt) {
+            assert(cnt == 2);
+            WW.resize(2);
+            N = cnt;
+            get_v.resize(N);
+            build(0, N-1, -1, 0);
+        }
+        void lock(int index) {
+//            perfect.lock();
+            while (WW[1-index] && VV == index) {
+
+            }
+//            int curr_v = get_v[index].first;
+//            int side = get_v[index].second;
+//            while (curr_v != -1) {
+//                tree[curr_v].want[side] = true;
+//                tree[curr_v].victim = side;
+//                while (tree[curr_v].want[1-side] && tree[curr_v].victim == side) {
+//
+//                }
+//                curr_v = tree[curr_v].p;
+//                side = tree[curr_v].iam;
+//            }
+        }
+        void unlock(int index) {
+            WW[index] = false;
+
+//            perfect.unlock();
+
+//            int curr_v = get_v[index].first;
+//            int side = get_v[index].second;
+//            while (curr_v != -1) {
+//                tree[curr_v].want[side] = false;
+//                curr_v = tree[curr_v].p;
+//                side = tree[curr_v].iam;
+//            }
+        }
+    };
+    int TOT = 2;
+    volatile int each_liveness[TOT];
+    P_Mutex M(TOT+1);
+    auto f = [&] (int index) -> void {
+        cout << index << "!\n";
+        while (true) {
+            M.lock(index);
+            each_liveness[index] += 1;
+            right_total += 1;
+            total += 1;
+            M.unlock(index);
+        }
+    };
+    for (int i = 0; i < TOT; i += 1) {
+        threads.push_back(thread(f, i));
+        threads.back().detach();
+    }
+    while (true) {
+        this_thread::sleep_for(100ms);
+        M.lock(TOT);
+        cout << "1. " << right_total << " " << total << "   ";
+        int su = 0;
+        for (int i = 0; i < TOT; i += 1) {
+            su += each_liveness[i];
+        }
+        cout << su << "(";
+        for (int i = 0; i < TOT; i += 1) {
+            cout << each_liveness[i] << " ";
+        }cout << ")\n";
+
+
+
+        this_thread::sleep_for(100ms);
+        cout << "2. " << right_total << " " << total << "   ";
+        su = 0;
+        for (int i = 0; i < TOT; i += 1) {
+            su += each_liveness[i];
+        }
+        cout << su << "(";
+        for (int i = 0; i < TOT; i += 1) {
+            cout << each_liveness[i] << " ";
+        }cout << ")\n";
+
+
+
+        M.unlock(TOT);
+    }
+}
