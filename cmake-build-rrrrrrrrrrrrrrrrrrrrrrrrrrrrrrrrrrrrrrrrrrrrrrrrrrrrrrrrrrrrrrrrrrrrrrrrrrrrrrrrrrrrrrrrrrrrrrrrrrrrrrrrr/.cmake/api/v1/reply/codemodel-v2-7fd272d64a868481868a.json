@@ -39,7 +39,7 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "olymp_gcc::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-olymp_gcc-Release-7d4c8d43a47e47acf59c.json",
+					"jsonFile" : "target-olymp_gcc-Release-b0e1077a0180e195fb32.json",
 					"name" : "olymp_gcc",
 					"projectIndex" : 0
 				}
@@ -49,7 +49,7 @@
 	"kind" : "codemodel",
 	"paths" : 
 	{
-		"build" : "/Users/whoami/CLionProjects/olymp_gcc/cmake-build-release",
+		"build" : "/Users/whoami/CLionProjects/olymp_gcc/cmake-build-rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
 		"source" : "/Users/whoami/CLionProjects/olymp_gcc"
 	},
 	"version" : 

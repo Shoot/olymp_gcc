@@ -1,28 +1,6 @@
-#include <bits/stdc++.h>
-using namespace std;
-signed main() {
-    atomic<int> right_total = 0;
-    int total = 0;
-    vector<int> each_liveness(4, 0);
-    vector<thread> threads;
-    auto f = [&] (int index) -> void {
-        cout << index << "!\n";
-        while (true) {
-            each_liveness[index] += 1;
-            right_total += 1;
-            total += 1;
-        }
-    };
-    for (int i = 0; i < 4; i += 1) {
-        threads.push_back(thread(f, i));
-        threads.back().detach();
-    }
-    while (true) {
-        this_thread::sleep_for(100ms);
-        cout << right_total << " " << total << "   ";
-        cout << accumulate(each_liveness.begin(), each_liveness.end(), 0ll) << "   ";
-        for (const auto &x : each_liveness) {
-            cout << x << " ";
-        }cout << "\n";
-    }
-}
+7 4
+3 6 4 1 2 5 7
+2 5
+1 4
+5 7
+3 6
