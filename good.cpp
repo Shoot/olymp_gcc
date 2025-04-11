@@ -2,72 +2,60 @@
 using namespace std;
 #define int long long
 signed main() {
-    // Запросы
-    //0  is_sorted(a.begin()+l, a.begin()+r+1)
-    //1  sort(a.begin()+l, a.begin()+r+1)
-    //2  return a[i]
-    //3  a[i] = x
-    int n, q;
-    cin >> n >> q;
-    vector<int> a(n);
-    for (auto &x : a) {
-        cin >> x;
-    }
-    struct Q {
-        int tp;
-        int l;
-        int r;
-        int i;
-        int x;
-    };
-    vector<Q> qs;
-    for (int ii = 0; ii < q; ii += 1) {
-        int l, r;
-        cin >> l >> r;
-        l -= 1;
-        r -= 1;
-        qs.push_back({0, l, r});
-        qs.push_back({1, l, r});
-    }
-    auto gosimple = [&] () -> void {
-        auto b = a;
-        for (const auto &[tp, l, r, nvm1, nvm2] : qs) {
-            if (tp == 0) {
-                cout << (is_sorted(b.begin()+l, b.begin()+r+1)?"YES":"NO") << "\n";
-            }
-            if (tp == 1) {
-                sort(b.begin()+l, b.begin()+r+1);
-            }
+    int n, m;
+    while (cin >> n >> m) {
+        vector<vector<pair<int,int>>> adj(n+1);
+        for (int i = 0; i < m; i += 1) {
+            int u, v, w;
+            cin >> u >> v >> w;
+            adj[u].push_back({w, v});
         }
-    };
-    auto gofast = [&] () -> void {
-        auto b = a;
-        vector<vector<int>> vv;
-        set<int> starts;
-        vv.push_back({b[0]});
-        starts.insert(0);
-        for (int i = 1; i < n; i += 1) {
-            if (b[i-1] <= b[i]) {
-                vv.back().push_back(b[i]);
-            } else {
-                starts.insert(i);
-                vv.push_back({b[i]});
+        auto can = [&] (int x) -> bool {
+            vector<int> d(n+1);
+            vector<bool> curr(n+1);
+            vector<int> done(n+1);
+            queue<int> q;
+            for (int i = 1; i <= n; i += 1) {
+                q.push(i);
             }
-        }
-        for (const auto &[tp, l, r, nvm1, nvm2] : qs) {
-            if (tp == 0) {
-                if (*(--starts.upper_bound(r)) <= l) {
-                    cout << "YES\n";
-                } else {
-                    cout << "NO\n";
+            while (!q.empty()) {
+                auto tp = q.front();
+                q.pop();
+                for (const auto &[w, v] : adj[tp]) {
+                    if (d[v] > d[tp] + w - x) {
+                        d[v] = d[tp] + w - x;
+                        if (!curr[v]) {
+                            curr[v] = true;
+                            q.push(v);
+                            done[v] += 1;
+                            if (done[v] > n) {
+                                return false;
+                            }
+                        }
+                    }
                 }
             }
-            if (tp == 1) {
-
+            return true;
+        };
+        int l = -1e11, r = 1e11;
+        int good = -1e18;
+        while (l <= r) {
+            int mid = (l + r) >> 1;
+            if (can(mid)) {
+                good = mid;
+                l = mid + 1;
+            } else {
+                r = mid - 1;
             }
         }
-    };
-    gosimple();
-    cout << "----\n";
-    gofast();
+        if (good < 0) {
+            cout << "No Solution\n";
+            continue;
+        }
+        if (good == 1e11) {
+            cout << "Infinite\n";
+            continue;
+        }
+        cout << good << "\n";
+    }
 }
