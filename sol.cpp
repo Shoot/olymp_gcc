@@ -12,144 +12,144 @@ signed main() {
     ios::sync_with_stdio(0);
     cin.tie(0);
 #endif
-    int n, m;
-    cin >> n >> m;
-    vector<vector<int>> check(n);
-    vector<int> need(n);
-    for (int i = 0; i < m; i += 1) {
-        int p;
-        cin >> p;
-        p -= 1;
-        check[p].push_back(i);
-    }
-    for (auto &x : need) {
-        cin >> x;
-    }
-    int k;
-    cin >> k;
-    enum Type{ADD, ASK};
-    struct Ask {
-        int owner;
-        Ask(int x) {
-            owner = x;
+    int n, m, q;
+    cin >> n >> m >> q;
+    vector<int> p(n+m);
+    vector<int> sz(n+m, 1);
+    iota(p.begin(), p.end(), 0ll);
+    auto find = [&] (auto f, int u) -> int {
+        return p[u] == u ? u : f(f, p[u]);
+    };
+    auto unite = [&] (int u, int v) -> void {
+        u = find(find, u);
+        v = find(find, v);
+        if (u != v) {
+            if (sz[u] > sz[v]) {
+                swap(u, v);
+            }
+            p[u] = v;
+            sz[v] += sz[u];
         }
     };
-    struct Add {
-        int l;
-        int r;
-        int x;
-        int i;
-        Add(int v, int w, int y, int z) {
-            l = v;
-            r = w;
-            x = y;
-            i = z;
-        }
-    };
-    struct Query {
-        Type tp;
-        void* ptr;
-        Query(Type y, void* z) {
-            tp = y;
-            ptr = z;
-        }
-    };
-    vector<Query> qs;
-    for (int i = 0; i < n; i += 1) {
-        qs.push_back(Query(ASK, new Ask(i)));
-    }
-    for (int i = 1; i <= k; i += 1) {
-        int l, r, x;
-        cin >> l >> r >> x;
-        l -= 1;
-        r -= 1;
-        qs.push_back(Query(ADD, new Add(l, r, x, i)));
-    }
-    vector<int> undecided; // [owner_id]
-    for (int i = 0; i < n; i += 1) {
-        undecided.push_back(i);
-    }
-    vector<int> l(n, 0);
-    vector<int> r(n, k);
-    vector<int> good(n, k+1);
-    vector<__int128> done(n);
-    vector<int> nw;
-    nw.reserve(1e6);
-    undecided.reserve(1e6);
-    auto get_idx = [&] (const Query& q) -> int {
-        if (q.tp == ADD) {
-            return reinterpret_cast<Add*>(q.ptr)->i;
-        }
-        int ow = reinterpret_cast<Ask*>(q.ptr)->owner;
-        return (l[ow] + r[ow]) >> 1;
-    };
-    auto do_layer = [&] () -> void {
-        sort(qs.begin(), qs.end(), [&] (const Query& q1, const Query& q2) {
-            if (get_idx(q1) == get_idx(q2)) {
-                return q1.tp < q2.tp;
-            }
-            return get_idx(q1) < get_idx(q2);
-        });
-        vector<__int128> curr(m);
-        auto inc = [&] (int r, const int val) -> void { // r \in [0, m-1]
-            if (!(r >= 0 && r < m)) return;
-            r += 1;
-            for (; r <= m; r += r & -r) {
-                curr[r-1] += val;
-            }
-        };
-        auto gt = [&] (int idx) -> __int128 {
-            if (!(idx >= 0 && idx < m)) return 0;
-            idx += 1;
-            __int128 ret = 0;
-            for (; idx; idx -= idx & -idx) {
-                ret += curr[idx-1];
-            }
-            return ret;
-        };
-        for (const auto &[tp, ptr] : qs) {
-            if (tp == ADD) {
-                auto add = reinterpret_cast<Add*>(ptr);
-                if (add->l <= add->r) {
-                    inc(add->l, add->x);
-                    inc((add->r)+1, -(add->x));
-                } else {
-                    inc(add->l, add->x);
-                    inc(m, -(add->x));
-                    inc(0, add->x);
-                    inc((add->r)+1, -(add->x));
-                }
-            } else {
-                auto ask = reinterpret_cast<Ask*>(ptr);
-                for (const auto &x : check[ask->owner]) {
-                    done[ask->owner] += gt(x);
-                }
-            }
-        }
-    };
-    while (undecided.size()) {
-        nw.clear();
-        fill(done.begin(), done.end(), 0);
-        do_layer();
-        for (const auto &owner_id : undecided) {
-            int mid = (l[owner_id] + r[owner_id]) >> 1;
-            if (done[owner_id] >= need[owner_id]) {
-                r[owner_id] = mid-1;
-                good[owner_id] = mid;
-            } else {
-                l[owner_id] = mid+1;
-            }
-            if (l[owner_id] <= r[owner_id]) {
-                nw.push_back(owner_id);
-            }
-        }
-        swap(undecided, nw);
-    }
-    for (const auto &x : good) {
-        if (x == k+1) {
-            cout << "NIE\n";
+    vector<pair<int,int>> edges;
+    for (int i = 0; i < q; i += 1) {
+        int I, J;
+        char val;
+        cin >> I >> J >> val;
+        if (val == 'B') {
+            edges.push_back({I-1, n+J-1});
         } else {
-            cout << x << "\n";
+            edges.push_back({n+J-1, I-1});
         }
-    }cout << "\n";
+    }
+    auto E = edges;
+    vector<vector<int>> change(q);
+    vector<int> curr(edges.size());
+    iota(curr.begin(), curr.end(), 0ll);
+    vector<int> comp_idx(n+m);
+    vector<int> topo;
+    topo.reserve(1e6);
+    vector<bool> seen(1e6);
+    auto assign_comp_idxes = [&] (const vector<forward_list<int>>& adj_curr, const vector<forward_list<int>>& iadj_curr) -> void {
+        int N = adj_curr.size();
+        fill(seen.begin(), seen.begin()+N, false);
+        auto dfs = [&] (auto f, int u) -> void {
+            if (seen[u]) {
+                return;
+            }
+            seen[u] = true;
+            for (const auto &x : adj_curr[u]) {
+                f(f, x);
+            }
+            topo.push_back(u);
+        };
+        topo.clear();
+        for (int i = 0; i < N; i += 1) {
+            dfs(dfs, i);
+        }
+        reverse(topo.begin(), topo.end());
+        auto mark = [&] (auto f, int u) -> void {
+            seen[u] = true;
+            for (const auto &x : iadj_curr[u]) {
+                if (!seen[x]) {
+                    comp_idx[x] = comp_idx[u];
+                    f(f, x);
+                }
+            }
+        };
+        int curr_comp_idx = 0;
+        fill(seen.begin(), seen.begin()+N, false);
+        for (const auto &x : topo) {
+            if (!seen[x]) {
+                comp_idx[x] = curr_comp_idx++;
+                mark(mark, x);
+            }
+        }
+    };
+    vector<int> id(n+m, -1);
+    vector<int> by_id(n+m, -1);
+    auto go = [&] (auto f, int l, int r, int le, int re) -> void { // l, r -- это про бинпоиск
+        if (!(le <= re) || !(l <= r)) {
+            return;
+        }
+        vector<forward_list<int>> adj, iadj;
+        int mid = (l + r) >> 1;
+        for (int i = le; i <= re; i += 1) {
+            auto &[u, v] = edges[curr[i]];
+            for (const auto &w : {u, v}) {
+                if (id[w] == -1) {
+                    id[w] = adj.size();
+                    by_id[id[w]] = w;
+                    adj.push_back({});
+                    iadj.push_back({});
+                }
+            }
+            u = id[u];
+            v = id[v];
+            if (curr[i] <= mid) {
+                adj[u].push_front(v);
+                iadj[v].push_front(u);
+            }
+        }
+        // clear id array
+        for (int i = 0; i < adj.size(); i += 1) {
+            id[by_id[i]] = -1;
+        }
+        assign_comp_idxes(adj, iadj);
+        int first_diff = partition(curr.begin()+le, curr.begin()+re+1, [&] (const int& e) {
+            return comp_idx[edges[e].first] == comp_idx[edges[e].second];
+        }) - curr.begin();
+        for (int i = le; i < first_diff; i += 1) {
+            change[mid].push_back(curr[i]);
+        }
+        if (l == r) {
+            return;
+        }
+        for (int i = first_diff; i <= re; i += 1) {
+            auto &[u, v] = edges[curr[i]];
+            u = comp_idx[u];
+            v = comp_idx[v];
+        }
+        f(f, l, mid-1, le, first_diff-1);
+        f(f, mid+1, r, first_diff, re);
+    };
+    go(go, 0, q-1, 0, q-1);
+    int ans = 0;
+    for (int i = 0; i < q; i += 1) {
+        for (const auto &edge_idx : change[i]) {
+            auto u = find(find, E[edge_idx].first);
+            auto v = find(find, E[edge_idx].second);
+            if (u != v) {
+                if (sz[u] > 1) {
+                    ans -= sz[u] * sz[u];
+                }
+                if (sz[v] > 1) {
+                    ans -= sz[v] * sz[v];
+                }
+                ans += (sz[u] + sz[v]) * (sz[u] + sz[v]);
+                unite(u, v);
+            }
+        }
+        cout << ans << "\n";
+    }
 }

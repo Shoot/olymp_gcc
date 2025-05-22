@@ -1,124 +1,84 @@
-#include <bits/stdc++.h>
-using namespace std;
-
-#define ll long long
-
-inline int read() {
-    int x = 0; char ch = getchar();
-    while (!isdigit(ch)) ch = getchar();
-    while (isdigit(ch)) x = 10 * x + ch - '0', ch = getchar();
-    return x;
-}
-
-const int N = 400005;
-
-int f[N], sz[N];
-int row[N], col[N], tot;
-int n, m, q;
-
-ll ans;
-
-int find(int x) {
-    return f[x] == x ? x : f[x] = find(f[x]);
-}
-ll calc(int x) {
-    if (x == 1) return 0;
-    else return 1ll * x * x;
-}
-void merge(int x, int y) {
-    x = find(x), y = find(y);
-    if (x == y) {
-        return ;
-    }
-    ans -= calc(sz[x]) + calc(sz[y]);
-    f[x] = y, sz[y] += sz[x];
-    ans += calc(sz[y]);
-}
-
-vector<int> adj[N], event[N];
-stack<int> stk;
-bool instk[N];
-int dfn[N], low[N], dtot, scc[N], stot;
-void tarjan(int u) {
-    dfn[u] = low[u] = ++dtot;
-    stk.push(u), instk[u] = 1;
-    for (auto v: adj[u]) {
-        if (!dfn[v]) {
-            tarjan(v);
-            low[u] = min(low[u], low[v]);
-        } else if (instk[v]) {
-            low[u] = min(low[u], dfn[v]);
+//! https://github.com/kth-competitive-programming/kactl/blob/main/content/graph/SCC.h
+//! @code
+//!   {
+//!     vector<vi> adj(n);
+//!     auto [num_sccs, scc_id] = sccs(adj);
+//!   }
+//!   vector<basic_string<int>> adj(n);
+//!   auto [num_sccs, scc_id] = sccs(adj);
+//! @endcode
+//! scc_id[v] = id, 0<=id<num_sccs
+//! for each edge u -> v: scc_id[u] >= scc_id[v]
+//! @time O(n + m)
+//! @space O(n)
+auto sccs(const auto& adj) {
+    int n = ssize(adj), num_sccs = 0, q = 0, s = 0;
+    vector<int> scc_id(n, -1), tin(n), st(n);
+    auto dfs = [&](auto&& self, int v) -> int {
+        int low = tin[v] = ++q;
+        st[s++] = v;
+        for (int u : adj[v])
+            if (scc_id[u] < 0)
+                low = min(low, tin[u] ?: self(self, u));
+        if (tin[v] == low) {
+            while (scc_id[v] < 0) scc_id[st[--s]] = num_sccs;
+            num_sccs++;
         }
-    }
-    if (dfn[u] == low[u]) {
-        int y;
-        ++stot;
-        do {
-            y = stk.top(); stk.pop();
-            instk[y] = 0, scc[y] = stot;
-        } while (y != u);
-    }
+        return low;
+    };
+    for (int i = 0; i < n; i++)
+        if (!tin[i]) dfs(dfs, i);
+    return pair{num_sccs, scc_id};
 }
-
-bool vis[N];
-void solve(int L, int R, vector<array<int, 3>> queries) {
-    int mid = L + R >> 1;
-    vector<int> nodes;
-    for (auto [u, v, id]: queries) {
-        if (!vis[u]) vis[u] = 1, dfn[u] = 0, adj[u].clear(), nodes.push_back(u);
-        if (!vis[v]) vis[v] = 1, dfn[v] = 0, adj[v].clear(), nodes.push_back(v);
-        if (id <= mid) {
-            adj[u].push_back(v);
+//! https://codeforces.com/blog/entry/91608
+//! @code
+//!   auto joins = offline_incremental_scc(eds, n);
+//! @endcode
+//! joins[i] = minimum prefix of edges [0, joins[i]] for
+//!   eds[i][0] and eds[i][1] to be in the same SCC
+//! joins[i] = m if they're never in the same SCC
+//! joins[i] = -1 if eds[i][0] == eds[i][1]
+//! @time O((n + m) log m)
+//! @space O(n + m)
+vector<int> offline_incremental_scc(
+        vector<array<int, 2>> eds, int n) {
+    int m = ssize(eds);
+    vector<int> ids(n, -1), joins(m, m), idx(m), vs(n),
+            scc_id;
+    iota(begin(idx), end(idx), 0);
+    vector<basic_string<int>> adj;
+    auto divide_and_conquer = [&](auto&& self, auto el,
+                                  auto er, int tl, int tr) {
+        adj.clear();
+        int mid = midpoint(tl, tr);
+        for (auto it = el; it != er; it++) {
+            auto& [u, v] = eds[*it];
+            for (int w : {u, v}) {
+                if (ids[w] != -1) continue;
+                ids[w] = ssize(adj);
+                vs[ssize(adj)] = w;
+                adj.emplace_back();
+            }
+            u = ids[u], v = ids[v];
+            if (*it <= mid) adj[u] += v;
         }
-    }
-    dtot = stot = 0;
-    for (auto u: nodes) {
-        if (!dfn[u]) tarjan(u);
-        vis[u] = 0;
-    }
-
-    // printf("solve [%d, %d], ", L, R);
-    // for (auto [u, v, id]: queries) printf("(%d, %d) ", u, v);
-    // puts("");
-    // for (auto u: nodes) {
-    //     printf("dfn[%d] = %d, ", u, dfn[u]);
-    // }
-
-    vector<array<int, 3>> qL, qR;
-    for (auto [u, v, id]: queries) {
-        if (scc[u] == scc[v]) {
-            if (id <= mid)
-                event[mid].push_back(id), qL.push_back({u, v, id});
-        } else {
-            qR.push_back({scc[u], scc[v], id});
+        for (int i = 0; i < ssize(adj); i++) ids[vs[i]] = -1;
+        scc_id = sccs(adj).second;
+        auto split = partition(el, er, [&](int i) {
+            return scc_id[eds[i][0]] == scc_id[eds[i][1]];
+        });
+        for (auto it = el; it != split; it++) joins[*it] = mid;
+        if (tr - tl == 1) return;
+        for (auto it = split; it != er; it++) {
+            auto& [u, v] = eds[*it];
+            u = scc_id[u], v = scc_id[v];
         }
-    }
-    if (L == R) return ;
-    solve(L, mid, qL), solve(mid + 1, R, qR);
-}
-
-int main() {
-    n = read(), m = read(), q = read();
-    for (int i = 1; i <= n; i++) row[i] = ++tot;
-    for (int i = 1; i <= m; i++) col[i] = ++tot;
-    vector<array<int, 3>> queries;
-    for (int i = 1; i <= q; i++) {
-        int x = read(), y = read();
-        char c;
-        c = getchar();
-        while (c != 'R' && c != 'B') c = getchar();
-        if (c == 'B') queries.push_back({row[x], col[y], i});
-        else queries.push_back({col[y], row[x], i});
-    }
-    solve(1, q, queries);
-
-    for (int i = 1; i <= tot; i++) f[i] = i, sz[i] = 1;
-    for (int i = 1; i <= q; i++) {
-        cout << i << ": ";
-        for (auto t: event[i])
-            cout << t << " ", merge(queries[t - 1][0], queries[t - 1][1]);
-        cout << "\n";
-        printf("%lld\n", ans);
-    }
-    return 0;
+        self(self, el, split, tl, mid);
+        self(self, split, er, mid, tr);
+    };
+    // uses -1 as the lower bound to correctly handle
+    // self-edges
+    divide_and_conquer(divide_and_conquer, begin(idx),
+                       end(idx), -1, m);
+    return joins;
 }
