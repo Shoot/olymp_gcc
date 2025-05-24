@@ -12,142 +12,74 @@ signed main() {
     ios::sync_with_stdio(0);
     cin.tie(0);
 #endif
-    int n, m, q;
-    cin >> n >> m >> q;
-    vector<int> p(n+m);
-    vector<int> sz(n+m, 1);
-    iota(p.begin(), p.end(), 0ll);
-    auto find = [&] (auto f, int u) -> int {
-        return p[u] == u ? u : f(f, p[u]);
-    };
-    auto unite = [&] (int u, int v) -> void {
-        u = find(find, u);
-        v = find(find, v);
-        if (u != v) {
-            if (sz[u] > sz[v]) {
-                swap(u, v);
+    int T = 1;
+    cin >> T;
+    vector<int> div(1'000'001);
+    for (int i = 2; i < div.size(); i += 1) {
+        if (!div[i]) {
+            div[i] = i;
+            for (int j = i*i; j < div.size(); j += i) {
+                if (!div[j]) {
+                    div[j] = i;
+                }
             }
-            p[u] = v;
-            sz[v] += sz[u];
-        }
-    };
-    vector<pair<int,int>> edges;
-    for (int i = 0; i < q; i += 1) {
-        int I, J;
-        char val;
-        cin >> I >> J >> val;
-        if (val == 'B') {
-            edges.push_back({I-1, n+J-1});
-        } else {
-            edges.push_back({n+J-1, I-1});
         }
     }
-    auto E = edges;
-    vector<vector<int>> change(q);
-    vector<int> curr(edges.size());
-    iota(curr.begin(), curr.end(), 0ll);
-    vector<int> comp_idx(n+m);
-    vector<int> topo;
-    topo.reserve(1e6);
-    vector<bool> seen(1e6);
-    auto assign_comp_idxes = [&] (const vector<forward_list<int>>& adj_curr, const vector<forward_list<int>>& iadj_curr) -> void {
-        int N = adj_curr.size();
-        fill(seen.begin(), seen.begin()+N, false);
-        auto dfs = [&] (auto f, int u) -> void {
-            if (seen[u]) {
-                return;
+    bitset<1'000'001> prime;
+    for (int i = 2; i < prime.size(); i += 1) {
+        if (i/div[i] == 1) {
+            prime[i] = true;
+        }
+    }
+    bitset<1'000'001> good;
+    for (int i = 2; i < good.size(); i += 1) {
+        if (!prime[i] && prime[i/div[i]]) {
+            good[i] = true;
+        }
+    }
+    for (int tt = 0; tt < T; tt += 1) {
+        int n;
+        cin >> n;
+        vector<int> a(n);
+        for (auto &x : a) {
+            cin >> x;
+        }
+        sort(a.begin(), a.end());
+        int ans = 0;
+        int cnt_prime = 0;
+        vector<int> cnt(n+1), cnt_div_by_i(n+1);
+        vector<int> primes;
+        primes.reserve(1000);
+        auto get_primes = [&] (const int x) -> void {
+            primes.clear();
+            int last_lp = 0;
+            int temp = x;
+            while (temp != 1) {
+                if (div[temp] != last_lp) {
+                    last_lp = div[temp];
+                    primes.push_back(last_lp);
+                }
+                temp /= div[temp];
             }
-            seen[u] = true;
-            for (const auto &x : adj_curr[u]) {
-                f(f, x);
-            }
-            topo.push_back(u);
         };
-        topo.clear();
-        for (int i = 0; i < N; i += 1) {
-            dfs(dfs, i);
-        }
-        reverse(topo.begin(), topo.end());
-        auto mark = [&] (auto f, int u) -> void {
-            seen[u] = true;
-            for (const auto &x : iadj_curr[u]) {
-                if (!seen[x]) {
-                    comp_idx[x] = comp_idx[u];
-                    f(f, x);
+        int sz = 0;
+        for (int i = 0; i < n; i += 1) {
+            cnt_prime += prime[a[i]];
+            cnt[a[i]] += 1;
+            get_primes(a[i]);
+            if (i && a[i-1] != a[i]) {
+                for (int j = a[i-1]; j <= n; j += a[i-1]) {
+                    cnt_div_by_i[j] += sz;
                 }
+                sz = 1;
+            } else {
+                sz += 1;
             }
-        };
-        int curr_comp_idx = 0;
-        fill(seen.begin(), seen.begin()+N, false);
-        for (const auto &x : topo) {
-            if (!seen[x]) {
-                comp_idx[x] = curr_comp_idx++;
-                mark(mark, x);
-            }
-        }
-    };
-    vector<int> id(n+m, -1);
-    vector<int> by_id(n+m, -1);
-    auto go = [&] (auto f, int l, int r, int le, int re) -> void { // l, r -- это про бинпоиск
-        if (!(le <= re) || !(l <= r)) {
-            return;
-        }
-        vector<forward_list<int>> adj, iadj;
-        int mid = (l + r) >> 1;
-        for (int i = le; i <= re; i += 1) {
-            auto &[u, v] = edges[curr[i]];
-            for (const auto &w : {u, v}) {
-                if (id[w] == -1) {
-                    id[w] = adj.size();
-                    by_id[id[w]] = w;
-                    adj.push_back({});
-                    iadj.push_back({});
-                }
-            }
-            u = id[u];
-            v = id[v];
-            if (curr[i] <= mid) {
-                adj[u].push_front(v);
-                iadj[v].push_front(u);
-            }
-        }
-        // clear id array
-        for (int i = 0; i < adj.size(); i += 1) {
-            id[by_id[i]] = -1;
-        }
-        assign_comp_idxes(adj, iadj);
-        int first_diff = partition(curr.begin()+le, curr.begin()+re+1, [&] (const int& e) {
-            return comp_idx[edges[e].first] == comp_idx[edges[e].second];
-        }) - curr.begin();
-        for (int i = le; i < first_diff; i += 1) {
-            change[mid].push_back(curr[i]);
-        }
-        if (l == r) {
-            return;
-        }
-        for (int i = first_diff; i <= re; i += 1) {
-            auto &[u, v] = edges[curr[i]];
-            u = comp_idx[u];
-            v = comp_idx[v];
-        }
-        f(f, l, mid-1, le, first_diff-1);
-        f(f, mid+1, r, first_diff, re);
-    };
-    go(go, 0, q-1, 0, q-1);
-    int ans = 0;
-    for (int i = 0; i < q; i += 1) {
-        for (const auto &edge_idx : change[i]) {
-            auto u = find(find, E[edge_idx].first);
-            auto v = find(find, E[edge_idx].second);
-            if (u != v) {
-                if (sz[u] > 1) {
-                    ans -= sz[u] * sz[u];
-                }
-                if (sz[v] > 1) {
-                    ans -= sz[v] * sz[v];
-                }
-                ans += (sz[u] + sz[v]) * (sz[u] + sz[v]);
-                unite(u, v);
+            if (prime[a[i]]) {
+                ans += cnt_prime - cnt[a[i]];
+            } else if (good[a[i]]) {
+                ans += cnt[a[i]];
+                ans += cnt_div_by_i[a[i]];
             }
         }
         cout << ans << "\n";
