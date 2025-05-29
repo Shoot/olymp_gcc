@@ -4,6 +4,9 @@ using namespace std;
 #ifdef LO
 #pragma GCC optimize("trapv")
 #endif
+#ifndef LO
+#pragma GCC optimize("Ofast,unroll-loops")
+#endif
 constexpr int MOD = (119<<23)+1;
 //constexpr int MOD = 1e9+7;
 signed main() {
@@ -13,75 +16,66 @@ signed main() {
     cin.tie(0);
 #endif
     int T = 1;
-    cin >> T;
-    vector<int> div(1'000'001);
-    for (int i = 2; i < div.size(); i += 1) {
-        if (!div[i]) {
-            div[i] = i;
-            for (int j = i*i; j < div.size(); j += i) {
-                if (!div[j]) {
-                    div[j] = i;
+//    cin >> T;
+//    for (int tt = 0; tt < T; tt += 1) {
+    int n, k;
+    cin >> n >> k;
+    vector<vector<int>> adj(n+1);
+    for (int i = 0; i < n-1; i += 1) {
+        int u, v;
+        cin >> u >> v;
+        adj[u].push_back(v);
+        adj[v].push_back(u);
+    }
+    vector<unordered_map<int,int>> cnt_d(n+1);
+    int ans = 0;
+    vector<vector<int>> match_with(n+1, vector<int>(k+1));
+    auto dfs = [&] (auto f, int u, int p, int d) -> int {
+        int sz = 1;
+        int argmax = -1;
+        int f_argmax = -1;
+        for (const auto &x : adj[u]) {
+            if (x != p) {
+                int chsz = f(f, x, u, d+1);
+                if (chsz > f_argmax) {
+                    argmax = x;
+                    f_argmax = chsz;
+                }
+                sz += chsz;
+            }
+        }
+
+        match_with[u][0] = 1;
+        for (const auto &x : adj[u]) {
+            if (x != p) {
+                for (int dist = 1; dist <= k; dist += 1) {
+                    if (cnt_d[x].count(d+dist)) {
+                        ans += cnt_d[x][d+dist]*match_with[u][k-dist];
+                    }
+                }
+                for (int dist = 1; dist <= k; dist += 1) {
+                    if (cnt_d[x].count(d+dist)) {
+                        match_with[u][dist] += cnt_d[x][d+dist];
+                    }
                 }
             }
         }
-    }
-    bitset<1'000'001> prime;
-    for (int i = 2; i < prime.size(); i += 1) {
-        if (i/div[i] == 1) {
-            prime[i] = true;
-        }
-    }
-    bitset<1'000'001> good;
-    for (int i = 2; i < good.size(); i += 1) {
-        if (!prime[i] && prime[i/div[i]]) {
-            good[i] = true;
-        }
-    }
-    for (int tt = 0; tt < T; tt += 1) {
-        int n;
-        cin >> n;
-        vector<int> a(n);
-        for (auto &x : a) {
-            cin >> x;
-        }
-        sort(a.begin(), a.end());
-        int ans = 0;
-        int cnt_prime = 0;
-        vector<int> cnt(n+1), cnt_div_by_i(n+1);
-        vector<int> primes;
-        primes.reserve(1000);
-        auto get_primes = [&] (const int x) -> void {
-            primes.clear();
-            int last_lp = 0;
-            int temp = x;
-            while (temp != 1) {
-                if (div[temp] != last_lp) {
-                    last_lp = div[temp];
-                    primes.push_back(last_lp);
+        if (argmax != -1) {
+            swap(cnt_d[argmax], cnt_d[u]);
+            for (const auto &x : adj[u]) {
+                if (x != p && x != argmax) {
+                    for (const auto &[a, b] : cnt_d[x]) {
+                        cnt_d[u][a] += b;
+                    }
                 }
-                temp /= div[temp];
-            }
-        };
-        int sz = 0;
-        for (int i = 0; i < n; i += 1) {
-            cnt_prime += prime[a[i]];
-            cnt[a[i]] += 1;
-            get_primes(a[i]);
-            if (i && a[i-1] != a[i]) {
-                for (int j = a[i-1]; j <= n; j += a[i-1]) {
-                    cnt_div_by_i[j] += sz;
-                }
-                sz = 1;
-            } else {
-                sz += 1;
-            }
-            if (prime[a[i]]) {
-                ans += cnt_prime - cnt[a[i]];
-            } else if (good[a[i]]) {
-                ans += cnt[a[i]];
-                ans += cnt_div_by_i[a[i]];
             }
         }
-        cout << ans << "\n";
-    }
+        cnt_d[u][d] += 1;
+        return sz;
+    };
+    dfs(dfs, 1, -1, 1);
+//    for (const auto &[a, b] : cnt_d[1]) {
+//        cout << a << ": " << b << "\n";
+//    }
+    cout << ans << "\n";
 }
