@@ -18,83 +18,100 @@ signed main() {
     ios::sync_with_stdio(0);
     cin.tie(0);
 #endif
+    int n=1e9;
+    vector<int> X(12);
+    for (int i = 0; i < 12; i += 1) {
+        X[i] = n%10;
+        n /= 10;
+    }
+    int curr = 0;
+    vector<pair<string, int>> saved;
+    auto save = [&] () -> void {
+        saved.push_back({to_string(curr)+to_string(curr+1), curr});
+        sort(saved.back().first.begin(), saved.back().first.end());
+    };
+    auto cnt = [&] (auto f, int pos, int prev, bool less, bool first, bool second, bool break9s) -> void {
+        if (pos == 0) {
+            if (break9s) {
+                curr *= 10;
+                curr += 9;
+                save();
+                curr /= 10;
+                return;
+            }
+            if (less) {
+                for (int i = !first; i <= 9; i += 1) {
+                    curr *= 10;
+                    curr += i;
+                    save();
+                    curr /= 10;
+                }
+                return;
+            }
+            for (int i = !first; i <= min(9ll, less?9ll:X[pos]); i += 1) {
+                curr *= 10;
+                curr += i;
+                save();
+                curr /= 10;
+            }
+            return;
+        }
+        int ret = 0;
+        if (first&&!second) { // zeros after first non-zero
+            curr *= 10;
+            curr += 0;
+            f(f, pos - 1, prev, less || (0 < X[pos]), true, false, break9s);
+            curr /= 10;
+        }
+        if (!break9s) {
+            for (int i = first&&!second; i < prev; i += 1) { // create small char before nines
+                curr *= 10;
+                curr += i;
+                f(f, pos-1, i, less||(i<X[pos]), first||i, second||(first&&i), true);
+                curr /= 10;
+            }
+        }
+        if (break9s) {
+            if (less || 9<=X[pos]) {
+                curr *= 10;
+                curr += 9;
+                f(f, pos-1, 9, less||(9<X[pos]), true, second||9, true);
+                curr /= 10;
+            }
+            return;
+        }
+        if (first) {
+            for (int i = max(prev, 1ll); i <= min(9ll, less?9ll:X[pos]); i += 1) {
+                curr *= 10;
+                curr += i;
+                f(f, pos-1, i, less||(i<X[pos]), true, true, break9s);
+                curr /= 10;
+            }
+        } else {
+            for (int i = prev; i <= min(9ll, less?9ll:X[pos]); i += 1) {
+                curr *= 10;
+                curr += i;
+                f(f, pos-1, i, less||(i<X[pos]), i>0, false, break9s);
+                curr /= 10;
+            }
+        }
+        return;
+    };
+    cnt(cnt, 11, 0, false, false, false, false);
+    vector<int> nw;
+    sort(saved.begin(), saved.end());
+    nw.push_back(saved.front().second);
+    for (int i = 1; i < saved.size(); i += 1) {
+        if (saved[i].first != saved[i-1].first) {
+            nw.push_back(saved[i].second);
+        }
+    }
+    sort(nw.begin(), nw.end());
     int T = 1;
     cin >> T;
     for (int tt = 0; tt < T; tt += 1) {
-        int n, q;
-        cin >> n >> q;
-        vector<int> a(n);
-        vector<vector<tuple<int,int,int>>> qs(n+1);
-        for (int i = 0; i < n; i += 1) {
-            cin >> a[i];
-            qs[a[i]].push_back({i, 0, 1});
-        }
-        struct Node {
-            int all;
-            int overall;
-            int l;
-            int r;
-        };
-        vector<Node> ST(4*n+10);
-        vector<int> used_with_val(4*n+10);
-        int CURR_TREE_VAL = 0;
-        auto st = [&] (auto f, int u, int tl, int tr, int pos, int val) -> void {
-            used_with_val[u] = CURR_TREE_VAL;
-            if (tl == tr) {
-                ST[u].overall = ST[u].l = ST[u].r = max(val, 0ll);
-                ST[u].all = val;
-                return;
-            }
-            int tm = (tl + tr) >> 1;
-            int L = 2*u+1;
-            int R = 2*u+2;
-            if (pos <= tm) {
-                f(f, L, tl, tm, pos, val);
-                if (used_with_val[R] != CURR_TREE_VAL) {
-                    ST[R].overall = ST[R].l = ST[R].r = 0;
-                    ST[R].all = -1*(tr-(tm+1)+1);
-                }
-            } else {
-                f(f, R, tm+1, tr, pos, val);
-                if (used_with_val[L] != CURR_TREE_VAL) {
-                    ST[L].overall = ST[L].l = ST[L].r = 0;
-                    ST[L].all = -1*(tm-tl+1);
-                }
-            }
-            ST[u].all = ST[L].all + ST[R].all;
-            ST[u].l = max(ST[L].l, ST[L].all+ST[R].l);
-            ST[u].r = max(ST[R].r, ST[L].r+ST[R].all);
-            ST[u].overall = max({ST[L].overall, ST[R].overall, ST[L].r+ST[R].l});
-        };
-        vector<int> ans(q);
-        for (int ii = 0; ii < q; ii += 1) {
-            int pos, val;
-            cin >> pos >> val;
-            pos -= 1;
-            qs[a[pos]].push_back({pos, ii, -1});
-            a[pos] = val;
-            qs[val].push_back({pos, ii, 1});
-        }
-        vector<vector<int>> add(q), del(q);
-        for (CURR_TREE_VAL = 1; CURR_TREE_VAL <= n; CURR_TREE_VAL += 1) {
-            for (int i = 0; i < qs[CURR_TREE_VAL].size(); i += 1) {
-                const auto &[pos, q_idx, tp] = qs[CURR_TREE_VAL][i];
-                st(st, 0, 0, n-1, pos, tp);
-                add[q_idx].push_back(ST[0].overall/2);
-                if (i+1 < qs[CURR_TREE_VAL].size()) {
-                    del[get<1>(qs[CURR_TREE_VAL][i+1])].push_back(ST[0].overall/2);
-                }
-            }
-        }
-        multiset<int> must;
-        for (int ii = 0; ii < q; ii += 1) {
-            for (const auto &x : add[ii]) {
-                must.insert(x);
-            }
-            for (const auto &x : del[ii]) {
-                must.erase(must.find(x));
-            }
-            cout << *must.rbegin() << " ";
-        }cout << "\n";
+        int N;
+        cin >> N;
+        cout << upper_bound(nw.begin(), nw.end(), N)-nw.begin() << "\n";
     }
 }
