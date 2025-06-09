@@ -1,8 +1,8 @@
 #include <bits/stdc++.h>
 using namespace std;
 #define int long long
-#define YES(x) cout << (x?"YES":"NO")
-#define NO(x) cout << (x?"NO":"YES")
+#define YES(x) cout << (x?"YES\n":"NO\n")
+#define NO(x) cout << (x?"NO\n":"YES\n")
 #ifdef LO
 #pragma GCC optimize("trapv")
 #endif
@@ -20,126 +20,81 @@ signed main() {
 #endif
     int T = 1;
     cin >> T;
-    // +3 - 1 = 2
-    // +2 - 2 = 0
-    // +1 - 3 = -2
-    // +0 - 4 = -4
-//    map<pair<int,int>,set<pair<int,int>>> vals;
-//    vals[{4,1}] = {{0, 0}};
-//    queue<pair<int,int>> q;
-//    q.push({4, 1});
-    int di[4] = {0, 0, 1, -1};
-    int dj[4] = {1, -1, 0, 0};
-//    while (!q.empty()) {
-//        auto [p, s] = q.front();
-//        cout << p << " " << s << "\n";
-//        q.pop();
-//        for (const auto &[x, y] : vals[{p, s}]) {
-//            for (int k = 0; k < 4; k += 1) {
-//                int nx = x + di[k];
-//                int ny = y + dj[k];
-//                if (!vals[{p, s}].count({nx, ny})) {
-//                    int adj = 0;
-//                    adj += vals[{p, s}].count({nx+1, ny});
-//                    adj += vals[{p, s}].count({nx-1, ny});
-//                    adj += vals[{p, s}].count({nx, ny+1});
-//                    adj += vals[{p, s}].count({nx, ny-1});
-//                    int p_inc = 4 - adj;
-//                    p_inc -= 4 - p_inc;
-//                    int s_inc = 1;
-//                    assert(p_inc == -2 || p_inc == 0 || p_inc == 2 || p_inc == -4);
-//                    int nws = s+s_inc;
-//                    int nwp = p+p_inc;
-//                    if (s == 3 && p == 8) {
-//                        cout << nx << " " << ny << "\n";
-//                        cout << nwp << nws << adj << "LDDD\n";
-//                    }
-//                    if (!vals.count({nwp, nws})) {
-//                        vals[{nwp, nws}] = vals[{p, s}];
-//                        vals[{nwp, nws}].insert({nx, ny});
-//                        if (vals[{nwp, nws}].size() < 50000 && nwp <= 100 && nws <= 100) {
-//                            q.push({nwp, nws});
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }
-//    for (const auto &[x, y] : vals[{8, 3}]) {
-//        cout << x << "$" << y << "\n";
-//    }
     for (int tt = 0; tt < T; tt += 1) {
-        // p_contrib = 4-adj
-//        0 <= p_contrib <= 3
-        // s_contrib = 1
-        int p, s;
-        cin >> p >> s;
-        if (p == 4*s) {
-            cout << 1 << "\n";
-            cout << 1 << " " << 1 << "\n";
-            continue;
+        int n, q;
+        cin >> n >> q;
+        vector<int> a(n);
+        vector<vector<tuple<int,int,int>>> qs(n+1);
+        for (int i = 0; i < n; i += 1) {
+            cin >> a[i];
+            qs[a[i]].push_back({i, 0, 1});
         }
-        if (p > 3*s) {
-            cout << -1 << "\n";
-            continue;
-        }
-        int P = 4, S = 1;
-        double need = double(p) / s;
-        set<pair<int,int>> vals = {{0, 0}};
-        while (true) {
-            if (vals.size() > 1000) {
-                vals.clear();
-                break;
+        struct Node {
+            int all;
+            int overall;
+            int l;
+            int r;
+        };
+        vector<Node> ST(4*n+10);
+        vector<int> used_with_val(4*n+10);
+        int CURR_TREE_VAL = 0;
+        auto st = [&] (auto f, int u, int tl, int tr, int pos, int val) -> void {
+            used_with_val[u] = CURR_TREE_VAL;
+            if (tl == tr) {
+                ST[u].overall = ST[u].l = ST[u].r = max(val, 0ll);
+                ST[u].all = val;
+                return;
             }
-            int g = __gcd(P, S);
-            if (P/g == p && S/g == s) {
-                break;
-            }
-            double have = double(P) / S;
-            bool need_more = have < need;
-            pair<int,int> best = {-1, -1};
-            int best_val = need_more ? -1e18 : 1e18;
-            int best_adj = need_more ? 1e18 : -1e18;
-            for (const auto &[x, y] : vals) {
-                for (int k = 0; k < 4; k += 1) {
-                    int nx = x + di[k];
-                    int ny = y + dj[k];
-                    if (!vals.count({nx, ny})) {
-                        int adj = 0;
-                        adj += vals.count({nx+1, ny});
-                        adj += vals.count({nx-1, ny});
-                        adj += vals.count({nx, ny+1});
-                        adj += vals.count({nx, ny-1});
-                        int p_inc = 4 - adj;
-                        p_inc -= 4 - p_inc;
-                        int s_inc = 1;
-                        assert(p_inc == -2 || p_inc == 0 || p_inc == 2 || p_inc == -4);
-                        int nws = s+s_inc;
-                        int nwp = p+p_inc;
-                        adj += vals.count({nx+1, ny+1});
-                        adj += vals.count({nx+1, ny-1});
-                        adj += vals.count({nx-1, ny+1});
-                        adj += vals.count({nx-1, ny-1});
-                        if ((need_more && (p_inc > best_val || (p_inc == best_val && adj < best_adj))) || (!need_more && (p_inc < best_val || (p_inc == best_val && adj > best_adj)))) {
-                            best_val = p_inc;
-                            best = {nx, ny};
-                            best_adj = adj;
-                        }
-                    }
+            int tm = (tl + tr) >> 1;
+            int L = 2*u+1;
+            int R = 2*u+2;
+            if (pos <= tm) {
+                f(f, L, tl, tm, pos, val);
+                if (used_with_val[R] != CURR_TREE_VAL) {
+                    ST[R].overall = ST[R].l = ST[R].r = 0;
+                    ST[R].all = -1*(tr-(tm+1)+1);
+                }
+            } else {
+                f(f, R, tm+1, tr, pos, val);
+                if (used_with_val[L] != CURR_TREE_VAL) {
+                    ST[L].overall = ST[L].l = ST[L].r = 0;
+                    ST[L].all = -1*(tm-tl+1);
                 }
             }
-            vals.insert(best);
-            S += 1;
-            P += best_val;
+            ST[u].all = ST[L].all + ST[R].all;
+            ST[u].l = max(ST[L].l, ST[L].all+ST[R].l);
+            ST[u].r = max(ST[R].r, ST[L].r+ST[R].all);
+            ST[u].overall = max({ST[L].overall, ST[R].overall, ST[L].r+ST[R].l});
+        };
+        vector<int> ans(q);
+        for (int ii = 0; ii < q; ii += 1) {
+            int pos, val;
+            cin >> pos >> val;
+            pos -= 1;
+            qs[a[pos]].push_back({pos, ii, -1});
+            a[pos] = val;
+            qs[val].push_back({pos, ii, 1});
         }
-        if (!vals.size()) {
-            cout << -1 << "\n";
-            continue;
+        vector<vector<int>> add(q), del(q);
+        for (CURR_TREE_VAL = 1; CURR_TREE_VAL <= n; CURR_TREE_VAL += 1) {
+            for (int i = 0; i < qs[CURR_TREE_VAL].size(); i += 1) {
+                const auto &[pos, q_idx, tp] = qs[CURR_TREE_VAL][i];
+                st(st, 0, 0, n-1, pos, tp);
+                add[q_idx].push_back(ST[0].overall/2);
+                if (i+1 < qs[CURR_TREE_VAL].size()) {
+                    del[get<1>(qs[CURR_TREE_VAL][i+1])].push_back(ST[0].overall/2);
+                }
+            }
         }
-        cout << vals.size() << "\n";
-        for (const auto &[x, y] : vals) {
-            cout << x << " " << y << "\n";
-        }
-//        cout << "IDK\n";
+        multiset<int> must;
+        for (int ii = 0; ii < q; ii += 1) {
+            for (const auto &x : add[ii]) {
+                must.insert(x);
+            }
+            for (const auto &x : del[ii]) {
+                must.erase(must.find(x));
+            }
+            cout << *must.rbegin() << " ";
+        }cout << "\n";
     }
 }
