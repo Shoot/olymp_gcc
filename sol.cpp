@@ -1,157 +1,56 @@
-#include<bits/stdc++.h>
-
+#include <bits/stdc++.h>
 using namespace std;
-
-using i64 = long long;
-
-constexpr int inf = 1e9;
-array<int, 8> dx{0, 0, 1, -1, 1, 1, -1, -1};
-array<int, 8> dy{1, -1, 0, 0, -1, 1, -1, 1};
-
-void solve() {
-    int n, r, k;
-    cin >> n >> r >> k;
-    --r;
-
-    vector a(n, vector<int>(n));
-    for (int i = 0; i < n; ++i) {
-        for (int j = 0; j < n; ++j) {
-            cin >> a[i][j];
+#define int long long
+#define YES(x) cout << (x?"YES\n":"NO\n")
+#define NO(x) cout << (x?"NO\n":"YES\n")
+#ifdef LO
+#pragma GCC optimize("trapv")
+#endif
+#ifndef LO
+#pragma GCC optimize("Ofast,unroll-loops")
+#endif
+constexpr int MOD = (119<<23)+1;
+//constexpr int MOD = 967276608647009887ll;
+//constexpr int MOD = 1e9+7;
+signed main() {
+#ifndef LO
+    clog << "FIO\n";
+    ios::sync_with_stdio(0);
+    cin.tie(0);
+#endif
+    int T = 1;
+    cin >> T;
+    for (int tt = 0; tt < T; tt += 1) {
+        int p, s;
+        cin >> p >> s;
+        int g = __gcd(p, s);
+        p /= g, s /= g;
+        if (p%2) {
+            p *= 2, s *= 2;
         }
-    }
-
-    vector b(n, vector<int>(n));
-    for (int i = 0; i < n; ++i) {
-        string s;
-        cin >> s;
-        for (int j = 0; j < n; ++j) {
-            b[i][j] = s[j] - '0';
-        }
-    }
-
-    auto in = [&](int i, int j) {
-        return (0 <= i && i < n && 0 <= j && j < n);
-    };
-
-    priority_queue<array<int, 3>, vector<array<int, 3>>, greater<>> pq;
-    pq.push({a[0][0], 0, 0});
-    vector dis(n, vector<int>(n, inf));
-    dis[0][0] = a[0][0];
-    while (pq.size()) {
-        auto [mx, i, j] = pq.top();
-        pq.pop();
-        if (dis[i][j] != mx) {
-            continue;
-        }
-        for (int dir = 0; dir < 4; ++dir) {
-            int ni = i + dx[dir];
-            int nj = j + dy[dir];
-            if (in(ni, nj) && dis[ni][nj] > max(mx, a[ni][nj])) {
-                int nmx = max(mx, a[ni][nj]);
-                dis[ni][nj] = nmx;
-                pq.push({nmx, ni, nj});
-            }
-        }
-    }
-    int mouf = dis[r][n - 1];
-
-    vector dont(n, vector<int>(n));
-    auto run = [&](auto &&run, int i, int j) -> void {
-        cout << i << j << ":DD\n";
-        for (int dir = 0; dir < 8; ++dir) {
-            int ni = i + dx[dir];
-            int nj = j + dy[dir];
-            if (in(ni, nj) && dont[ni][nj] == 0) {
-                dont[ni][nj] = 1;
-                if (a[ni][nj] > mouf) {
-                    run(run, ni, nj);
+        bool done = false;
+        for (int S = s, P = p; S <= (int)5e4; S += s, P += p) {
+            // make rectangle with "eaten" part (not hole), p=const
+            int side1 = P/2/2, side2 = P/2/2+(P/2)%2;
+            // sides equal as possible for gt area variabiliy
+            if (S >= side1+side2-1 /* eaten as possible, looks like a 90deg corner */
+            && S <= side1*side2 /* not eaten at all */) {
+                /* start constructing from "90deg corner" to "not eaten at all" */
+                done = true;
+                cout << S << "\n";
+                for (int i = 0; i < side1; i += 1, S -= 1) {
+                    cout << i << " " << 0 << "\n";
                 }
-            }
-        }
-    };
-
-    for (int j = 0; j < n; ++j) {
-        dont[0][j] = 1;
-        if (a[0][j] > mouf) {
-            run(run, 0, j);
-        }
-    }
-    for (int i = 0; i <= r; ++i) {
-        dont[i][n - 1] = 1;
-        if (a[i][n - 1] > mouf) {
-            run(run, i, n - 1);
-        }
-    }
-    for (auto &x : dont) {
-        for (auto &y : x) {
-            cout << y << " ";
-        }cout << "\n";
-    }
-    int L = 1, R = 2e6;
-    while (L <= R) {
-        int mid = (L + R) / 2;
-        for (int j = 0; j < n; ++j) {
-            if ((mid > mouf && dont[n - 1][j]) || (mid > a[n - 1][j] && b[n - 1][j] == 0)) {
-                continue;
-            }
-            pq.push({max(0, mid - a[n - 1][j]), n - 1, j});
-        }
-        for (int i = r; i < n; ++i) {
-            if ((mid > mouf && dont[i][n - 1]) || (mid > a[i][n - 1] && b[i][n - 1] == 0)) {
-                continue;
-            }
-            pq.push({max(0, mid - a[i][n - 1]), i, n - 1});
-        }
-        fill(dis.begin(), dis.end(), vector<int>(n, inf));
-        while (pq.size()) {
-            auto [cost, i, j] = pq.top();
-            pq.pop();
-            dis[i][j] = min(dis[i][j], cost);
-            if (dis[i][j] != cost) {
-                continue;
-            }
-            for (int dir = 0; dir < 8; ++dir) {
-                int ni = i + dx[dir];
-                int nj = j + dy[dir];
-                if (in(ni, nj)) {
-                    if ((mid > mouf && dont[ni][nj]) || (mid > a[ni][nj] && b[ni][nj] == 0)) {
-                        continue;
-                    }
-                    if (dis[ni][nj] > cost + max(0, mid - a[ni][nj])) {
-                        int ncost = cost + max(0, mid - a[ni][nj]);
-                        dis[ni][nj] = ncost;
-                        pq.push({ncost, ni, nj});
+                for (int i = 0; i < side1; i += 1) {
+                    for (int j = 1; j < side2 && S; j += 1, S -= 1) {
+                        cout << i << " " << j << "\n";
                     }
                 }
+                break;
             }
         }
-        int minCost = inf;
-        if (mid <= mouf) {
-            for (int j = 0; j < n; ++j) {
-                minCost = min(minCost, dis[0][j]);
-            }
-            for (int i = 0; i <= r; ++i) {
-                minCost = min(minCost, dis[i][n - 1]);
-            }
+        if (!done) {
+            cout << -1 << "\n";
         }
-        for (int i = 1; i < n; ++i) {
-            minCost = min(minCost, dis[i][0]);
-        }
-        if (minCost <= k) {
-            L = mid + 1;
-        } else {
-            R = mid - 1;
-        }
-    }
-
-    cout << mouf << " " << R << "\n";
-}
-
-int main() {
-    ios::sync_with_stdio(0), cin.tie(0);
-    int t = 1;
-    cin >> t;
-    while (t--) {
-        solve();
     }
 }
