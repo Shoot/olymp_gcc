@@ -14,6 +14,7 @@ template <typename T> using ordered_set =  tree<T, null_type, less<T>, rb_tree_t
 //constexpr int MOD = (119<<23)+1;
 //constexpr int MOD = 967276608647009887ll;
 //constexpr int MOD = 1e9+7;
+constexpr int INF = 1e6;
 signed main() {
 #ifndef LO
     clog << "FIO\n";
@@ -23,67 +24,110 @@ signed main() {
     int T=1;
 //    cin >> T;
     for (int tt = 0; tt < T; tt += 1) {
-        int n;
-        cin >> n;
-        vector<int> a(n+1), a2(n+1);
-        for (int i = 1; i <= n; i += 1) {
-            cin >> a[i];
-            a2[i] = -a[i];
+        int shops, refiners, m;
+        cin >> shops >> refiners >> m;
+        vector<int> need(shops+1);
+        for (int i = 1; i <= shops; i += 1) {
+            cin >> need[i];
         }
-        vector<int> r_gt(n+1, n+1);
-        vector<int> st;
-        for (int i = n; i >= 1; i -= 1) {
-            while (!st.empty() && a[st.back()] <= a[i]) {
-                st.pop_back();
-            }
-            if (!st.empty()) {
-                r_gt[i] = st.back();
-            }
-            st.push_back(i);
+        vector<int> have(refiners+1);
+        for (int i = 1; i <= refiners; i += 1) {
+            cin >> have[i];
         }
-        vector<int> r_lt(n+1, n+1); // considering_only_values_after__r_gt
-        st.clear();
-        vector<vector<int>> qs(n+2);
-        for (int i = n; i >= 1; i -= 1) {
-            qs[r_gt[i]].push_back(i);
+        vector<tuple<int,int,int>> edges(m);
+        for (auto &[u, v, w] : edges) {
+            cin >> u >> v >> w;
+            v += shops;
         }
-        vector<int> st_vals;
-        for (int i = n; i >= 1; i -= 1) {
-            while (!st.empty() && a[st.back()] >= a[i]) {
-                st.pop_back();
-                st_vals.pop_back();
+        int target_flow_value = accumulate(need.begin(), need.end(), 0ll);
+        auto can = [&] (const int x) -> bool {
+            int src = 0;
+            int snk = shops+refiners+1;
+            struct Edge { // u -> v
+                int v;
+                int adjv_idx; // u <- v index in adj[v]
+                int cap;
+            };
+            vector<vector<Edge>> adj(snk+1);
+            auto add_edge = [&] (int u, int v, int cap) -> void {
+                int adj_v_idx = adj[v].size();
+                int adj_u_idx = adj[u].size();
+                adj[u].push_back(Edge(v, adj_v_idx, cap));
+                adj[v].push_back(Edge(u, adj_u_idx, 0));
+            };
+            vector<vector<int>> cap(snk+1, vector<int>(snk+1));
+            for (int i = 1; i <= shops; i += 1) {
+                add_edge(src, i, need[i]);
             }
-            for (const auto &j : qs[i]) {
-                int it = upper_bound(st_vals.begin(), st_vals.end(), a[j])-st_vals.begin()-1;
-                if (it != -1) {
-                    r_lt[j] = st[it];
+            for (int i = shops+1; i <= shops+refiners; i += 1) {
+                add_edge(i, snk, have[i-shops]);
+            }
+            for (const auto &[u, v, w] : edges) {
+                if (w <= x) {
+                    cap[u][v] = INF;
+                    add_edge(u, v, INF);
                 }
             }
-            st.push_back(i);
-            st_vals.push_back(a[i]);
-        }
-        vector<vector<int>> max_r_lt(20, vector<int>(n+1));
-        vector<vector<int>> get_to(20, vector<int>(n+1));
-        max_r_lt[0] = r_lt;
-        get_to[0] = r_gt;
-        for (int i = 1; i < 20; i += 1) {
-            for (int j = 1; j <= n; j += 1) {
-                get_to[i][j] = (get_to[i-1][j]==n+1)?(n+1):get_to[i-1][get_to[i-1][j]];
-                max_r_lt[i][j]=(get_to[i-1][j]==n+1)?(n+1):max(max_r_lt[i-1][j], max_r_lt[i-1][get_to[i-1][j]]);
-            }
-        }
-        int q;
-        cin >> q;
-        for (int ii = 0; ii < q; ii += 1) {
-            int l, r;
-            cin >> l >> r;
-            for (int bt = 19; bt >= 0; bt -= 1) {
-                if (max_r_lt[bt][l] <= r) {
-                    l = get_to[bt][l];
+            auto bfs = [&] () -> vector<int> {
+                queue<int> q;
+                q.push(src);
+                vector<int> layer(snk+1);
+                layer[src] = 1;
+                while (!q.empty()) {
+                    auto v = q.front();
+                    q.pop();
+                    for (const auto &e : adj[v]) {
+                        if (e.cap&&!layer[e.v]) {
+                            layer[e.v] = layer[v]+1;
+                            q.push(e.v);
+                        }
+                    }
+                }
+                return layer;
+            };
+            int total = 0;
+            while (true) {
+                auto layer = bfs();
+                if (!layer[snk]) {
+                    break;
+                }
+                vector<int> it(snk+1);
+                auto dfs = [&] (auto f, int u, int flow) -> int {
+                    if (u == snk) {
+                        return flow;
+                    }
+                    for (; it[u] < adj[u].size(); it[u] += 1) {
+                        auto &uv = adj[u][it[u]];
+                        if (!uv.cap || layer[uv.v] != layer[u]+1) {
+                            continue;
+                        }
+                        auto &vu = adj[uv.v][uv.adjv_idx];
+                        int got = f(f, uv.v, min(uv.cap, flow));
+                        if (got) {
+                            uv.cap -= got;
+                            vu.cap += got;
+                            return got;
+                        }
+                    }
+                    return 0ll;
+                };
+                while (int inc = dfs(dfs, src, INF)) {
+                    total += inc;
                 }
             }
-            YES(max_r_lt[0][l] > r && get_to[0][l] <= r);
-            cout << endl;
+            return total == target_flow_value;
+        };
+        int good = INF+1;
+        int l = 1, r = INF;
+        while (l <= r) {
+            int mid = (l + r) >> 1;
+            if (can(mid)) {
+                good = mid;
+                r = mid-1;
+            } else {
+                l = mid+1;
+            }
         }
+        cout << (good==INF+1?-1:good) << "\n";
     }
 }
