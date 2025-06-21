@@ -116,27 +116,24 @@ signed main() {
         }
         return ret;
     };
-    vector<Node> _1(4*n+10), _2(4*n+10);
-    auto gt_on_path_to_root = [&] (int u) -> int {
-        int ret = gt(gt, 0, 0, n-1, 0, tout1[u], _1);
+    vector<Node> vals(4*n+10), cancelled(4*n+10);
+    auto inc_on_path_to_root = [&] (int u, int x) -> void {
+        inc(inc, 0, 0, n-1, 0, tout1[u], x, vals);
         if (tout2[u]-1 >= 0) {
-            ret -= gt(gt, 0, 0, n-1, 0, tout2[u]-1, _2);
+            inc(inc, 0, 0, n-1, 0, tout2[u]-1, -x, cancelled);
         }
-        return ret;
     };
     auto inc_vertex = [&] (int u, int x) -> void {
-        inc(inc, 0, 0, n-1, tin1[u], tin1[u], x, _1);
-        inc(inc, 0, 0, n-1, tout2[u], tout2[u], x, _2);
+        inc(inc, 0, 0, n-1, tin1[u], tin1[u], x, vals);
     };
     auto gt_vertex = [&] (int u) -> int {
-        return gt(gt, 0, 0, n-1, tout2[u], tout2[u], _2);
+        return gt(gt, 0, 0, n-1, tin1[u], tin1[u], vals)-gt(gt, 0, 0, n-1, tout2[u], tout2[u], cancelled);
     };
     auto inc_subtree = [&] (int u, int x) -> void {
-        inc(inc, 0, 0, n-1, tin1[u], tout1[u], x, _1);
-        inc(inc, 0, 0, n-1, tin2[u], tout2[u], x, _2);
+        inc(inc, 0, 0, n-1, tin1[u], tout1[u], x, vals);
     };
     auto gt_subtree = [&] (int u) -> int {
-        return gt(gt, 0, 0, n-1, tin1[u], tout1[u], _1);
+        return gt(gt, 0, 0, n-1, tin1[u], tout1[u], vals)-gt(gt, 0, 0, n-1, tin2[u], tout2[u], cancelled);
     };
     auto LCA = [&] (int u, int v) -> int {
         if (d[u] < d[v]) {
@@ -159,16 +156,14 @@ signed main() {
         }
         return up[0][u];
     };
-    auto gt_path = [&] (int u, int v) -> int {
+    auto inc_path = [&] (int u, int v, int x) -> void {
         int lca = LCA(u, v);
-        int ret = 0;
-        ret += gt_on_path_to_root(u);
-        ret += gt_on_path_to_root(v);
-        ret -= gt_vertex(lca);
+        inc_on_path_to_root(u, x);
+        inc_on_path_to_root(v, x);
+        inc_vertex(lca, -x);
         if (up[0][lca] != lca) {
-            ret -= 2ll*gt_on_path_to_root(up[0][lca]);
+            inc_on_path_to_root(up[0][lca], -2ll*x);
         }
-        return ret;
     };
     for (int i = 0; i < n; i += 1) {
         inc_vertex(i, a[i]);
