@@ -3,14 +3,29 @@ from random import randint
 
 # system("g++ sol.cpp -o CPP")
 def add_test():
-    n = randint(2, 20)
-    one = ""
-    another = ""
-    for i in range(n):
-        one += chr(ord('a')+randint(0, 1))
-    x = randint(0, n-1)
+    qs = int(2)
+    txt = f"""10 {qs}
+0 0 0 0 0
+0 0 0 0 0
+1 8
+2 5
+3 5
+3 8
+4 9
+4 10
+5 6
+6 9
+7 9\n"""
+    maxi = int(1e9)
+    for i in range(qs):
+        tp = randint(1, 2)
+        if tp == 1:
+            txt += f"{1} {randint(1, 6)} {randint(1, maxi)}\n"
+        else:
+            txt += f"{2} {randint(1, 6)} {randint(1, 6)}\n"
+
     with open('001.dat', 'w') as f:
-        f.write(f"{one}\n{one[x:]+one[:x]}")
+        f.write(f"{txt}")
 def stable ():
     system("./his < 001.dat > his.ans")
     # print('ok')
