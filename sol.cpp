@@ -26,7 +26,8 @@ signed main() {
 //#ifdef LO
 //    cout << unitbuf;
 //#endif
-    int n=12;
+    const int n=14; // 4??
+    const int mul=1; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     int worst_tree_val = -INF;
     mt19937 mt(time(0));
     int tries = 0;
@@ -63,6 +64,20 @@ signed main() {
         int mini_i = -1;
         int mini_rt = -1;
         for (int i = 0; i < (1<<(n-1)); i += 1) {
+            if (100ll*i/(1<<(n-1)) != 100ll*(i-1)/(1<<(n-1))) {
+                cout << 100ll*i/(1<<(n-1)) << "% = " << i << " / " << (1<<(n-1)) << "\n";
+                cout << mini << "\n";
+                for (auto &[u, v] : edges) {
+                    cout << u << " " << v << "\n";
+                }
+                cout << "\n";
+
+                for (int I = 0; I < n-1; I += 1) {
+                    if (mini_i&(1<<I)) {
+                        cout << edges[I].first << " " << edges[I].second << "\n";
+                    }
+                }
+            }
             for (int rt = 0; rt == 0; rt += 1) {
                 vector<bool> heavy(n-1);
                 vector<vector<pair<bool,int>>> wadj(n);
@@ -73,6 +88,7 @@ signed main() {
                 vector<int> head(n, -INF), end(n, -INF);
                 vector<int> par(n, -INF);
                 vector<int> d(n, -INF);
+                vector<int> leaves;
                 auto dfs = [&] (auto f, int u, int hd) -> void {
                     if (hd == -1) {
                         hd = u;
@@ -84,6 +100,9 @@ signed main() {
                     for (const auto &[w, x] : wadj[u]) {
                         leaf &= x == par[u];
                         cnt += x != par[u] && w;
+                    }
+                    if (leaf) {
+                        leaves.push_back(u);
                     }
                     for (const auto &[w, x] : wadj[u]) {
                         if (x != par[u]) {
@@ -101,17 +120,24 @@ signed main() {
                 };
                 dfs(dfs, rt, -1);
                 int metric = 0;
-                for (int j = 0; j < n; j += 1) {
-                    int tot = 0;
+//                for (int j = 0; j < n; j += 1) {
+                for (const int &j : leaves) {
+                    int tot = 1;
                     int x = j;
                     while (x != rt) {
                         if (head[x] != x) {
                             if (end[x] == x) {
                                 tot += 1;
                             } else {
-                                tot += __lg(d[end[x]]-d[head[x]]+1-1)+2;
+                                tot += min(__lg((d[end[x]]-d[head[x]]+1)*mul-1)+2, (d[x]-d[head[x]]+1)*mul);
                             }
                             x = head[x];
+                            if (x != rt) {
+                                x = par[x];
+                            } else {
+                                tot -= 1;
+                                break;
+                            }
                         } else {
                             x = par[x];
                             tot += 1;
@@ -150,5 +176,34 @@ signed main() {
 //        int x;
 //        cin >> x;
     };
-    gen_tree(gen_tree, 1);
+//    gen[1] = 0;
+//    gen[2] = 1;
+//    gen[3] = 2;
+//    gen[4] = 3;
+//    gen[5] = 4;
+//    gen[6] = 4;
+//    gen[7] = 4;
+//    gen[8] = 7;
+//    gen[9] = 7;
+//    gen[10] = 2;
+//    gen[11] = 10;
+//    gen[12] = 1;
+//    gen[13] = 12;
+//    gen[14] = 12;
+//    gen[15] = 14;
+//    gen[16] = 14;
+//    gen[17] = 27;
+//    gen[18] = 17;
+//    gen[19] = 18;
+//    gen[20] = 18;
+//    gen[21] = 17;
+//    gen[22] = 28;
+//    gen[23] = 22;
+//    gen[24] = 22;
+//    gen[25] = 24;
+//    gen[26] = 24;
+//    gen[27] = 5;
+//    gen[28] = 5;
+    go();
+//    gen_tree(gen_tree, 1);
 }
