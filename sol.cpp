@@ -17,70 +17,89 @@ template <typename T> using ordered_set =  tree<T, null_type, less<T>, rb_tree_t
 //constexpr int MOD = 1e9+7;
 constexpr int INF = 1e18;
 signed main() {
+    ofstream cout("hh_with_palka_sum.txt");
 #ifndef LO
-    clog << "FIO\n";
+    clog << "FIO" << endl;
     ios::sync_with_stdio(0);
     cin.tie(0);
 #endif
 #ifdef LO
     cout << unitbuf;
 #endif
-    ifstream fin("nice.txt");
-    vector<int> dp(2);
-    vector<pair<int,int>> ch(2);
-    vector<int> palka(2);
-    for (int i = 2; ; i += 1) {
-        string s;
-        if (!getline(fin, s)) {
-            break;
+    auto fenw_ops = [&] (const int x) -> int {
+        if (x <= 1) {
+            assert(false);
         }
-        dp.push_back({});
-        ch.push_back({});
-        palka.push_back({});
-        stringstream ss(s);
-        getline(ss, s, '(');
-        getline(ss, s, ',');
-        assert(stoi(s) == i);
-        getline(ss, s, ' ');
-        getline(ss, s, ' ');
-        dp[i] = stoi(s);
-        getline(ss, s, '|');
-        ch[i].first = stoi(s);
-        getline(ss, s, ' ');
-        getline(ss, s, '|');
-        ch[i].second = stoi(s);
-        getline(ss, s, ' ');
-        getline(ss, s);
-        palka[i] = stoi(s);
-//        cout << i << " " << dp[i] << " " << palka[i] << " " << ch[i].first << " " << ch[i].second << "\n";
-        assert(ss.eof());
-    }
-    cout << "MAX n: " << dp.size()-1 << "\n";
-    int curr = 1;
-    auto print = [&] (auto f, const int x) -> int {
-        assert(x < dp.size());
-        if (!x) {
-            return -1;
-        }
-        int U = curr++;
-        int u = U;
-        for (int i = 0; i < palka[x]-1; i += 1) {
-            int v = curr++;
-            cout << u << " " << v << "\n";
-            u = v;
-        }
-        int v1 = f(f, ch[x].first), v2 = f(f, ch[x].second);
-        if (v1 != -1) {
-            cout << u << " " << v1 << "\n";
-        }
-        if (v2 != -1) {
-            cout << u << " " << v2 << "\n";
-        }
-        return U;
+        return __lg(x-1)+2;
     };
-    int n;
-    while (cin >> n) {
-        cout << dp[n] << ":\n";
-        print(print, n);
+    int N = 5e5;
+    vector<int> dp(N+1);
+    vector<pair<int,int>> ch(N+1);
+    vector<int> palka(N+1);
+    vector<int> palka_cnt(N+1);
+    for (int i = 1; i <= N; i += 1) {
+        int rest = i-1;
+        palka_cnt[i] = 1; // very tail
+        for (int j = 1; j < i; j += 1) {
+            if (j > fenw_ops(i)) {
+                break;
+            }
+            rest -= 1;
+            palka_cnt[i] += j;
+        }
+        palka_cnt[i] += rest * fenw_ops(i);
     }
+    dp[1] = 1;
+    for (int i = 2; i <= N; i += 1) {
+        for (int use = 1; use <= i; use += 1) {
+            if ((use&(use-1)) && fenw_ops(use+1) < (1<<__lg(use))) {
+                continue;
+            }
+            for (int one = 0; i-use-one >= one; one += 1) {
+                int another = i-use-one;
+                if (!one) {
+                    int x = dp[another];
+                    x += palka_cnt[use];
+                    if (dp[i] < x) {
+                        ch[i] = {one, another};
+                        palka[i] = use;
+                    }
+                    dp[i] = max(dp[i], x);
+                } else {
+                    int x = min({dp[one]+one*1                         +   dp[another]+another*1,
+                                 dp[one]+min(use, fenw_ops(use+1))*one +   dp[another]+another*0,
+                                 dp[one]+one*0                         +   dp[another]+another*min(use, fenw_ops(use+1))});
+                    x += palka_cnt[use];
+                    if (dp[i] < x) {
+                        ch[i] = {one, another};
+                        palka[i] = use;
+                    }
+                    dp[i] = max(dp[i], x);
+                }
+            }
+        }
+//        cout << "(" << i << ", " << dp[i] << ")\n";
+        cout << "(" << i << ", " << dp[i] << " " << ch[i].first << "|" << dp[ch[i].first] << " " << ch[i].second << "|" << dp[ch[i].second] << "), " << palka[i] << "\n";
+    }
+//    int curr = 1;
+//    auto print = [&] (auto f, const int x) -> int {
+//        if (!x) {
+//            return -1;
+//        }
+//        int U = curr++;
+//        int u = U;
+//        for (int i = 0; i < palka[x]-1; i += 1) {
+//            int v = curr++;
+//            cout << u << " " << v << "\n";
+//            u = v;
+//        }
+//        int v1 = f(f, ch[x].first), v2 = f(f, ch[x].second);
+//        if (v1 != -1) {
+//            cout << u << " " << v1 << "\n";
+//        }
+//        if (v2 != -1) {
+//            cout << u << " " << v2 << "\n";
+//        }
+//        return U;
+//    };
 }
