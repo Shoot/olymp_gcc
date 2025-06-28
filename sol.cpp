@@ -22,188 +22,65 @@ signed main() {
     ios::sync_with_stdio(0);
     cin.tie(0);
 #endif
+#ifdef LO
     cout << unitbuf;
-//#ifdef LO
-//    cout << unitbuf;
-//#endif
-    const int n=14; // 4??
-    const int mul=1; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    int worst_tree_val = -INF;
-    mt19937 mt(time(0));
-    int tries = 0;
-    vector<int> gen(n);
-    std::function<void()> go;
-    auto gen_tree = [&] (auto f, int i) -> void {
-        if (i == n) {
-            go();
-            return;
+#endif
+    ifstream fin("nice.txt");
+    vector<int> dp(2);
+    vector<pair<int,int>> ch(2);
+    vector<int> palka(2);
+    for (int i = 2; ; i += 1) {
+        string s;
+        if (!getline(fin, s)) {
+            break;
         }
-        for (int j = 0; j < i; j += 1) {
-            gen[i] = j;
-            f(f, i+1);
-        }
-    };
-    int total_trees = 1;
-    for (int i = 2; i < n; i += 1) {
-        total_trees *= i;
+        dp.push_back({});
+        ch.push_back({});
+        palka.push_back({});
+        stringstream ss(s);
+        getline(ss, s, '(');
+        getline(ss, s, ',');
+        assert(stoi(s) == i);
+        getline(ss, s, ' ');
+        getline(ss, s, ' ');
+        dp[i] = stoi(s);
+        getline(ss, s, '|');
+        ch[i].first = stoi(s);
+        getline(ss, s, ' ');
+        getline(ss, s, '|');
+        ch[i].second = stoi(s);
+        getline(ss, s, ' ');
+        getline(ss, s);
+        palka[i] = stoi(s);
+//        cout << i << " " << dp[i] << " " << palka[i] << " " << ch[i].first << " " << ch[i].second << "\n";
+        assert(ss.eof());
     }
-    go = [&] () -> void {
-        tries += 1;
-//        vector<int> repl(n);
-//        iota(repl.begin(), repl.end(), 0);
-//        shuffle(repl.begin(), repl.end(), mt);
-        vector<vector<int>> adj(n);
-        vector<pair<int,int>> edges;
-        for (int i = 1; i < n; i += 1) {
-            int u = i, v = gen[i];
-            edges.push_back({v, u});
-            adj[v].push_back(u);
-            adj[u].push_back(v);
+    cout << "MAX n: " << dp.size()-1 << "\n";
+    int curr = 1;
+    auto print = [&] (auto f, const int x) -> int {
+        assert(x < dp.size());
+        if (!x) {
+            return -1;
         }
-        int mini = INF;
-        int mini_i = -1;
-        int mini_rt = -1;
-        for (int i = 0; i < (1<<(n-1)); i += 1) {
-            if (100ll*i/(1<<(n-1)) != 100ll*(i-1)/(1<<(n-1))) {
-                cout << 100ll*i/(1<<(n-1)) << "% = " << i << " / " << (1<<(n-1)) << "\n";
-                cout << mini << "\n";
-                for (auto &[u, v] : edges) {
-                    cout << u << " " << v << "\n";
-                }
-                cout << "\n";
-
-                for (int I = 0; I < n-1; I += 1) {
-                    if (mini_i&(1<<I)) {
-                        cout << edges[I].first << " " << edges[I].second << "\n";
-                    }
-                }
-            }
-            for (int rt = 0; rt == 0; rt += 1) {
-                vector<bool> heavy(n-1);
-                vector<vector<pair<bool,int>>> wadj(n);
-                for (int j = 0; j < n-1; j += 1) {
-                    wadj[edges[j].first].push_back({bool((1<<j)&i), edges[j].second});
-                    wadj[edges[j].second].push_back({bool((1<<j)&i), edges[j].first});
-                }
-                vector<int> head(n, -INF), end(n, -INF);
-                vector<int> par(n, -INF);
-                vector<int> d(n, -INF);
-                vector<int> leaves;
-                auto dfs = [&] (auto f, int u, int hd) -> void {
-                    if (hd == -1) {
-                        hd = u;
-                        head[u] = u;
-                    }
-                    end[u] = u;
-                    bool leaf = true;
-                    int cnt = 0;
-                    for (const auto &[w, x] : wadj[u]) {
-                        leaf &= x == par[u];
-                        cnt += x != par[u] && w;
-                    }
-                    if (leaf) {
-                        leaves.push_back(u);
-                    }
-                    for (const auto &[w, x] : wadj[u]) {
-                        if (x != par[u]) {
-                            d[x] = d[u]+1;
-                            par[x] = u;
-                            if (w && cnt == 1) {
-                                head[x] = head[u];
-                                f(f, x, u);
-                                end[u] = end[x];
-                            } else {
-                                f(f, x, -1);
-                            }
-                        }
-                    }
-                };
-                dfs(dfs, rt, -1);
-                int metric = 0;
-//                for (int j = 0; j < n; j += 1) {
-                for (const int &j : leaves) {
-                    int tot = 1;
-                    int x = j;
-                    while (x != rt) {
-                        if (head[x] != x) {
-                            if (end[x] == x) {
-                                tot += 1;
-                            } else {
-                                tot += min(__lg((d[end[x]]-d[head[x]]+1)*mul-1)+2, (d[x]-d[head[x]]+1)*mul);
-                            }
-                            x = head[x];
-                            if (x != rt) {
-                                x = par[x];
-                            } else {
-                                tot -= 1;
-                                break;
-                            }
-                        } else {
-                            x = par[x];
-                            tot += 1;
-                        }
-                    }
-                    metric = max(metric, tot);
-                }
-                if (metric < mini) {
-                    mini_i = i;
-                    mini_rt = rt;
-                    mini = metric;
-                }
-            }
+        int U = curr++;
+        int u = U;
+        for (int i = 0; i < palka[x]-1; i += 1) {
+            int v = curr++;
+            cout << u << " " << v << "\n";
+            u = v;
         }
-//        if (worst_tree_val == mini /*&& !(tries&0b111111)*/) {
-//            cout << "HI" << mini << " " << tries << "\n";
-//        }
-        if (100ll*tries/total_trees != 100ll*(tries-1)/total_trees) {
-            cout << 100ll*tries/total_trees << "% = " << tries << " / " << total_trees << "\n";
+        int v1 = f(f, ch[x].first), v2 = f(f, ch[x].second);
+        if (v1 != -1) {
+            cout << u << " " << v1 << "\n";
         }
-        if (worst_tree_val < mini) {
-            for (auto &[u, v] : edges) {
-                cout << u << " " << v << "\n";
-            }
-            cout << "\n";
-            for (int i = 0; i < n-1; i += 1) {
-                if (mini_i&(1<<i)) {
-                    cout << edges[i].first << " " << edges[i].second << "\n";
-                }
-            }
-            worst_tree_val = mini;
-            cout << mini_i << " " << mini_rt << " = heavy edges, root\n";
-            cout << mini << " " << worst_tree_val << "!\n";
-            cout << "==================================\n";
+        if (v2 != -1) {
+            cout << u << " " << v2 << "\n";
         }
-//        int x;
-//        cin >> x;
+        return U;
     };
-//    gen[1] = 0;
-//    gen[2] = 1;
-//    gen[3] = 2;
-//    gen[4] = 3;
-//    gen[5] = 4;
-//    gen[6] = 4;
-//    gen[7] = 4;
-//    gen[8] = 7;
-//    gen[9] = 7;
-//    gen[10] = 2;
-//    gen[11] = 10;
-//    gen[12] = 1;
-//    gen[13] = 12;
-//    gen[14] = 12;
-//    gen[15] = 14;
-//    gen[16] = 14;
-//    gen[17] = 27;
-//    gen[18] = 17;
-//    gen[19] = 18;
-//    gen[20] = 18;
-//    gen[21] = 17;
-//    gen[22] = 28;
-//    gen[23] = 22;
-//    gen[24] = 22;
-//    gen[25] = 24;
-//    gen[26] = 24;
-//    gen[27] = 5;
-//    gen[28] = 5;
-    go();
-//    gen_tree(gen_tree, 1);
+    int n;
+    while (cin >> n) {
+        cout << dp[n] << ":\n";
+        print(print, n);
+    }
 }
