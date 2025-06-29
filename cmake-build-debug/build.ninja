@@ -65,6 +65,7 @@ build CMakeFiles/olymp_gcc.dir/sol.cpp.o: CXX_COMPILER__olymp_gcc_unscanned_Debu
 
 build olymp_gcc: CXX_EXECUTABLE_LINKER__olymp_gcc_Debug CMakeFiles/olymp_gcc.dir/sol.cpp.o
   FLAGS = -ftrapv -DLO -D_GLIBCXX_DEBUG -g -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk
+  LINK_FLAGS = -Wl,-stack_size,0x20000000
   OBJECT_DIR = CMakeFiles/olymp_gcc.dir
   POST_BUILD = :
   PRE_LINK = :
