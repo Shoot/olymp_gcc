@@ -4,10 +4,7 @@ using namespace std;
 signed main() {
     ios::sync_with_stdio(0);
     cin.tie(0);
-    int n, q;
-    cin >> n >> q;
-    int g1, g2;
-    cin >> g1 >> g2;
+    int n = 15555, q = 15555;
     struct Node {
         int val=0;
         int l=-1;
@@ -123,38 +120,87 @@ signed main() {
     };
     vector<int> roots(q+1, -1);
     for (int i = 1; i <= n; i += 1) {
-        roots[0] = incx(incx, roots[0], 1, n, 0, min(n, 100), i, 0, 1);
+        roots[0] = incx(incx, roots[0], 1, n, 0, min(n, 100), i, i%(min(n, 100)+1), 1);
     }
-    int ra = 0;
-    auto gen = [&] () -> int {
-        (ra = g1*ra+g2) %= n;
-        return ra;
+    uniform_int_distribution<int> I(1, n);
+    uniform_int_distribution<int> TP(1, 2);
+    uniform_int_distribution<int> VAL(0, min(n, 100));
+    vector<int> d(q+1);
+    mt19937 mt(time(0));
+//    int ops = 1'0000'0000;
+    vector<vector<int>> up(20, vector<int>(q+1));
+    auto LCA = [&] (int u, int v) -> int {
+        if (d[u] < d[v]) {
+            swap(u, v);
+        }
+        int diff = d[u] - d[v];
+        for (int i = 0; i < 20; i += 1) {
+            if (diff&(1<<i)) {
+                u = up[i][u];
+            }
+        }
+        if (u == v) {
+            return u;
+        }
+        for (int i = 19; i >= 0; i -= 1) {
+            if (up[i][u] != up[i][v]) {
+                u = up[i][u];
+                v = up[i][v];
+            }
+        }
+        return up[0][u];
     };
+    auto dist = [&] (int u, int v) -> int {
+        int lca = LCA(u, v);
+        return abs(d[u]-d[lca])+abs(d[v]-d[lca]);
+    };
+    ofstream testout("antidfs.txt");
+    testout << n << " " << q << "\n";
+    set<int> shit;
     for (int i = 1; i <= q; i += 1) {
-        int tp, from;
-        cin >> tp >> from;
+        int tp = TP(mt);
+        int from = -1;
+        int bestdist = -1;
+        uniform_int_distribution<int> FROM(0, i-1);
+        for (int j = 0; j < 10; j += 1) {
+            int x = FROM(mt);
+            if (dist(x, i-1) > bestdist) {
+                from = x;
+                bestdist = dist(x, i-1);
+            }
+        }
+        d[i] = d[from]+1;
+        up[0][i] = from;
+        for (int j = 1; j < 20; j += 1) {
+            up[j][i] = up[j-1][up[j-1][i]];
+        }
+//        cout << from << " " << i << "\n";
         roots[i] = roots[from];
+        testout << tp << " " << from << " ";
         if (tp == 1) {
-            int idx, val;
-            cin >> idx >> val;
+            int idx=I(mt), val=VAL(mt);
+            shit.insert(idx);
             int prev_val = gt_prev_val(gt_prev_val, roots[i], 1, n, 0, min(n, 100), idx);
             roots[i] = incx(incx, roots[i], 1, n, 0, min(n, 100), idx, prev_val, -1);
             roots[i] = incx(incx, roots[i], 1, n, 0, min(n, 100), idx, val, 1);
+            testout << idx << " " << val << "\n";
         }
         if (tp == 2) {
-            int valL, valR;
-            cin >> valL >> valR;
-            int iL = gen()+1;
-            int iR = gen()+1;
-            if (!(iL <= iR)) {
-                swap(iL, iR);
+            int valL=VAL(mt), valR=VAL(mt);
+            if (!(valL <= valR)) {
+                swap(valL, valR);
             }
+            int ops = 0;
+            int iL = n, iR = 1;
+            while (ops < 5 || !(iL <= iR)) {
+                iL = min(iL, I(mt));
+                iR = max(iR, I(mt));
+                ops += 1;
+            }
+            testout << iL << " " << iR << " " << valL << " " << valR << "\n";
             int ans = gt(gt, roots[i], 1, n, 0, min(n, 100), iL, iR, valL, valR);
             cout << ans << "\n";
-            g1 += ans;
-            if (g1 >= n) {
-                g1 -= n;
-            }
         }
     }
+    cout << shit.size() << "!!\n";
 }
