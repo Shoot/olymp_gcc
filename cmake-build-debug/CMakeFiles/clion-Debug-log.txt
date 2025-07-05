@@ -1,4 +1,5 @@
 /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/Applications/CLion.app/Contents/bin/ninja/mac/aarch64/ninja -DCMAKE_CXX_COMPILER=/opt/homebrew/bin/g++-14 -DCMAKE_OSX_SYSROOT:PATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk -G Ninja -S /Users/whoami/CLionProjects/olymp_gcc -B /Users/whoami/CLionProjects/olymp_gcc/cmake-build-debug
+-- 0x20000000
 -- Configuring done (0.1s)
 -- Generating done (0.0s)
 -- Build files have been written to: /Users/whoami/CLionProjects/olymp_gcc/cmake-build-debug
