@@ -15,7 +15,7 @@ using namespace std;
 #ifndef LO
 #pragma GCC optimize("Ofast,unroll-loops")
 #endif
-//constexpr int MOD = (119<<23)+1;
+constexpr int MOD = (119<<23)+1;
 //constexpr int MOD = 967276608647009887ll;
 //constexpr int MOD = 1e9+7;
 constexpr int INF = 1e18;
@@ -28,52 +28,70 @@ signed main() {
 #ifdef LO
     cout << unitbuf;
 #endif
-    int T;
-    cin >> T;
-    for (int tt = 0; tt < T; tt += 1) {
-        int n, MOD;
-        cin >> n >> MOD;
-//        vector<int> cnt_free(n+1, 1);
-//        vector<int> ans(n+1);
-//        for (int i = 1; i <= n; i += 1) {
-//            vector<int> nw(n+1, 0);
-//            for (int use_here = 0; use_here <= i; use_here += 1) {
-////                if (i == 1) {
-////                    if (use_here) {
-////                        continue;
-////                    }
-////                }
-////                if (i == 2 && use_here > 1) {
-////                    continue;
-////                }
-////                cout << i << ": " << use_here << ": " << cnt_free[use_here]*(use_here==0?1:(use_here))%MOD << "\n";
-////                if (use_here) {
-//                    (ans[i] += cnt_free[use_here]*(use_here==0?1:(use_here))%MOD) %= MOD;
-////                }
-//                for (int j = 0; j <= n; j += 1) {
-//                    if (j > use_here || j == 0) {
-//                        (nw[j] += cnt_free[use_here]*(use_here==0?1:(use_here))%MOD) %= MOD;
-//                    }
-//                }
-//            }
-//            cnt_free = nw;
-//        }
-//        cout << ans[n] << "\n";
-        vector<vector<int>> dp(n+1, vector<int>(n+1));
-        dp[n][0] = 1;
-        int ans = 0;
-        // m_i — matching
-        // number of arrays is    П_{m_i != 0} m_i     =     a(m)
-        // we simply want \Sigma_{every possible m} a(m)
-        for (int cand = n; cand >= 1; cand -= 1) {
-            for (int occ = 0; occ <= n-cand; occ += 1) {
-                (dp[cand-1][occ] += dp[cand][occ]) %= MOD;
-                (dp[cand-1][occ+1] += dp[cand][occ]*(n+1-cand-occ)*cand) %= MOD;
+//    int T;
+//    cin >> T;
+//    for (int tt = 0; tt < T; tt += 1) {
+//    }
+    int n;
+    cin >> n;
+    vector<int> _2(n+1, 1);
+    for (int i = 1; i <= n; i += 1) {
+        _2[i] = _2[i-1]*2%MOD;
+    }
+    struct Node {
+        int val=0;
+        int subtree_sum=0;
+        int dp=0;
+        vector<int> ch;
+        Node() {
+            ch.assign(2, -1);
+        }
+    };
+    vector<Node> nds;
+    nds.push_back({});
+    auto mknode = [&] () -> int {
+        nds.push_back({});
+        return nds.size()-1;
+    };
+    auto gtsz = [&] (int u) -> int {
+        return u == -1 ? 0 : nds[u].subtree_sum;
+    };
+    auto updsz = [&] (int u) -> void {
+        nds[u].subtree_sum = nds[u].val;
+        for (const auto &x : nds[u].ch) {
+            nds[u].subtree_sum += gtsz(x);
+        }
+    };
+    auto upd_dp = [&] (int u) -> void { // returns колво способов выбрать подмножество строк
+        // из поддерева в боре чтобы все ок было для всех infinity строк которые имеют u как префикс
+        int ret = 1;
+        for (const auto &x : nds[u].ch) { // в каждом из сыновей
+            (ret *= (x==-1?0:nds[x].dp)) %= MOD;
+        }
+//        ret += (1ll << (nds[u].subtree_sum-nds[u].val)) * ((1ll << nds[u].val)-1/*отняли тк пустое не подходит*/); // что-то в родителе
+        (ret += _2[nds[u].subtree_sum-nds[u].val] * (_2[nds[u].val]-1) % MOD) %= MOD;
+        nds[u].dp = ret;
+    };
+    for (int i = 0; i < n; i += 1) {
+        // dp[u] = П_{(v in ch[u])}dp[v]  +   (u != 0)*(2^(subtree_sz[u]-1))
+        string s;
+        cin >> s;
+        auto dfs = [&] (auto f, int u, int j) -> void {
+            if (j == s.size()) {
+                nds[u].val += 1;
+                updsz(u);
+                upd_dp(u);
+                return;
             }
-        }
-        for (int occ = 0; occ <= n; occ += 1) {
-            (ans += dp[/*cand=*/0][occ]) %= MOD;
-        }
-        cout << ans << "\n";
+            int& to = nds[u].ch[s[j]-'A'];
+            if (to == -1) {
+                to = mknode();
+            }
+            f(f, to, j+1);
+            updsz(u);
+            upd_dp(u);
+        };
+        dfs(dfs, 0, 0);
+        cout << nds[0].dp << "\n";
     }
 }
