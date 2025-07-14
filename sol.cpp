@@ -1,4 +1,3 @@
-//#include <bits/extc++.h>
 #include <bits/stdc++.h>
 using namespace std;
 #define int long long
@@ -134,63 +133,71 @@ signed main() {
             }
         }
         // 0 = down, 1 = left, 2 = up, 3 = right
-        vector<function<int(int, int, int, int, const vector<vector<int>>, const vector<vector<int>>&)>> f = {
-        [&] (int r, int c, int end, int mnozh, const vector<vector<int>>& s, const vector<vector<int>>& rect) -> int {
+        auto t0 = [&] (int r, int c, int end, int mnozh, const vector<vector<int>>& s, const vector<vector<int>>& rect) -> int {
             return s[r][c] - (valid(end+1, c+(end-r)*mnozh+mnozh)?s[end+1][c+(end-r)*mnozh+mnozh]:0) - (mnozh==-1?rect_sum(rect, end+1, c+(end-r)*mnozh, n-1, c):rect_sum(rect, end+1, c, n-1, c+(end-r)*mnozh));
-        },
-        [&] (int r, int c, int end, int mnozh, const vector<vector<int>>& s, const vector<vector<int>>& rect) -> int {
+        };
+        auto t1 = [&] (int r, int c, int end, int mnozh, const vector<vector<int>>& s, const vector<vector<int>>& rect) -> int {
             return s[r][c] - (valid(r+(c-end)*mnozh+mnozh, end-1)?s[r+(c-end)*mnozh+mnozh][end-1]:0) - (mnozh==-1?rect_sum(rect, r+(c-end)*mnozh, 0, r, end-1):rect_sum(rect, r, 0, r+(c-end)*mnozh, end-1));
-        },
-        [&] (int r, int c, int end, int mnozh, const vector<vector<int>>& s, const vector<vector<int>>& rect) -> int {
+        };
+        auto t2 = [&] (int r, int c, int end, int mnozh, const vector<vector<int>>& s, const vector<vector<int>>& rect) -> int {
             return s[r][c] - (valid(end-1, c+(r-end)*mnozh+mnozh)?s[end-1][c+(r-end)*mnozh+mnozh]:0) - (mnozh==-1?rect_sum(rect, 0, c+(r-end)*mnozh, end-1, c):rect_sum(rect, 0, c, end-1, c+(r-end)*mnozh));
-        },
-        [&] (int r, int c, int end, int mnozh, const vector<vector<int>>& s, const vector<vector<int>>& rect) -> int {
+        };
+        auto t3 = [&] (int r, int c, int end, int mnozh, const vector<vector<int>>& s, const vector<vector<int>>& rect) -> int {
             return s[r][c] - (valid(r+(end-c)*mnozh+mnozh, end+1)?s[r+(end-c)*mnozh+mnozh][end+1]:0) - (mnozh==-1?rect_sum(rect, r+(end-c)*mnozh, end+1, r, m-1):rect_sum(rect, r, end+1, r+(end-c)*mnozh, m-1));
-        }
         };
         auto treug = [&] (int r, int c, int end, int i, int j, int k) -> int {
             int mnozh = k?1:-1;
             int cancel=i==0?n-1-r:i==3?m-1-c:i==2?r:c;
-            return f[j](r, c, end, mnozh, SU[i][j][k], R[i]) - f[j](r, c, end, mnozh, SU_A[i][j][k], R_A[i])*cancel;
+            if (j == 0) {
+                return t0(r, c, end, mnozh, SU[i][j][k], R[i]) - t0(r, c, end, mnozh, SU_A[i][j][k], R_A[i])*cancel;
+            }
+            if (j == 1) {
+                return t1(r, c, end, mnozh, SU[i][j][k], R[i]) - t1(r, c, end, mnozh, SU_A[i][j][k], R_A[i])*cancel;
+            }
+            if (j == 2) {
+                return t2(r, c, end, mnozh, SU[i][j][k], R[i]) - t2(r, c, end, mnozh, SU_A[i][j][k], R_A[i])*cancel;
+            }
+            if (j == 3) {
+                return t3(r, c, end, mnozh, SU[i][j][k], R[i]) - t3(r, c, end, mnozh, SU_A[i][j][k], R_A[i])*cancel;
+            }
+            assert(false);
         };
         for (int ii = 0; ii < q; ii += 1) {
             int lr, lc, rr, rc;
             cin >> lr >> lc >> rr >> rc;
             lr -= 1, rr -= 1, lc -= 1, rc -= 1;
+//            lr = mt()%n;
+//            rr = mt()%(n-lr)+lr;
+//            lc = mt()%m;
+//            rc = mt()%(m-lc)+lc;
+//            cout << ii << " " << chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now()-start).count() << endl;
             int w = rc - lc + 1;
             int h = rr - lr + 1;
+            int C = min(h/2, w/2);
             if (h <= w) {
-                int levo = (h>2?treug(rr-1, lc, rr-min(w/2, h/2)+(min(h, w)%2==0), 1, 2, 1):0) + (h>3?treug(lr+1, lc, lr+min(w/2, h/2)-1, 1, 0, 1):0);
-                int pravo = (h>2?treug(rr-1, rc, rr-min(w/2, h/2)+(min(h, w)%2==0), 3, 2, 0):0) + (h>3?treug(lr+1, rc, lr+min(w/2, h/2)-1, 3, 0, 0):0);
-//                cout << levo << " " << pravo << " ";
-                int niz = treug(rr, rc, rc+1-min(w/2, h/2), 0, 1, 0) + treug(rr, lc, lc-1+min(w/2, h/2), 0, 3, 0);
-                niz += rect_sum(R[0], lr+min(w/2, h/2), lc+min(w/2, h/2), rr, rc-min(w/2, h/2))-rect_sum(R_A[0], lr+min(w/2, h/2), lc+min(w/2, h/2), rr, rc-min(w/2, h/2))*(n-1-rr);
-//                cout << niz << " ";
+                int levo = (h>2?treug(rr-1, lc, rr-C+((min(h, w)&1)==0), 1, 2, 1):0) + (h>3?treug(lr+1, lc, lr+C-1, 1, 0, 1):0);
+                int pravo = (h>2?treug(rr-1, rc, rr-C+((min(h, w)&1)==0), 3, 2, 0):0) + (h>3?treug(lr+1, rc, lr+C-1, 3, 0, 0):0);
+                int niz = treug(rr, rc, rc+1-C, 0, 1, 0) + treug(rr, lc, lc-1+C, 0, 3, 0);
+                niz += rect_sum(R[0], lr+C, lc+C, rr, rc-C)-rect_sum(R_A[0], lr+C, lc+C, rr, rc-C)*(n-1-rr);
                 int ans = levo+pravo+niz;
                 if (h > 1) {
-                    int verh = treug(lr, lc, lc-1+min(w/2, h/2), 2, 3, 1) + treug(lr, rc, rc+1-min(w/2, h/2), 2, 1, 1);
-                    verh += rect_sum(R[2], lr, lc+min(w/2, h/2), lr+min(w/2, h/2)-1, rc-min(w/2, h/2)) - rect_sum(R_A[2], lr, lc+min(w/2, h/2), lr+min(w/2, h/2)-1, rc-min(w/2, h/2))*(lr);
-//                    cout << verh << " ";
+                    int verh = treug(lr, lc, lc-1+C, 2, 3, 1) + treug(lr, rc, rc+1-C, 2, 1, 1);
+                    verh += rect_sum(R[2], lr, lc+C, lr+C-1, rc-C) - rect_sum(R_A[2], lr, lc+C, lr+C-1, rc-C)*(lr);
                     ans += verh;
                 }
                 cout << ans << "\n";
-//                cout << "\n";
             } else {
-                int niz = (w>2?treug(rr, rc-1, rc-min(w/2, h/2)+(min(h, w)%2==0), 0, 1, 0):0) + (w>3?treug(rr, lc+1, lc+min(w/2, h/2)-1, 0, 3, 0):0);
-                int verh = (w>2?treug(lr, lc+1, lc+min(w/2, h/2)-(min(h, w)%2==0), 2, 3, 1):0) + (w>3?treug(lr, rc-1, rc-min(w/2, h/2)+1, 2, 1, 1):0);
-//                cout << niz << " " << verh << " ";
-                int levo = treug(rr, lc, rr+1-min(w/2, h/2), 1, 2, 1) + treug(lr, lc, lr-1+min(w/2, h/2), 1, 0, 1);
-                levo += rect_sum(R[1], lr+min(w/2, h/2), lc, rr-min(w/2, h/2), rc-min(w/2, h/2))-rect_sum(R_A[1], lr+min(w/2, h/2), lc, rr-min(w/2, h/2), rc-min(w/2, h/2))*(lc);
-//                cout << levo << " ";
+                int niz = (w>2?treug(rr, rc-1, rc-C+((min(h, w)&1)==0), 0, 1, 0):0) + (w>3?treug(rr, lc+1, lc+C-1, 0, 3, 0):0);
+                int verh = (w>2?treug(lr, lc+1, lc+C-((min(h, w)&1)==0), 2, 3, 1):0) + (w>3?treug(lr, rc-1, rc-C+1, 2, 1, 1):0);
+                int levo = treug(rr, lc, rr+1-C, 1, 2, 1) + treug(lr, lc, lr-1+C, 1, 0, 1);
+                levo += rect_sum(R[1], lr+C, lc, rr-C, rc-C)-rect_sum(R_A[1], lr+C, lc, rr-C, rc-C)*(lc);
                 int ans = niz+verh+levo;
                 if (w > 1) {
-                    int pravo = treug(rr, rc, rr+1-min(w/2, h/2), 3, 2, 0) + treug(lr, rc, lr-1+min(w/2, h/2), 3, 0, 0);
-                    pravo += rect_sum(R[3], lr+min(w/2, h/2), rc-min(w/2, h/2)+1, rr-min(w/2, h/2), rc)-rect_sum(R_A[3], lr+min(w/2, h/2), rc-min(w/2, h/2)+1, rr-min(w/2, h/2), rc)*(m-1-rc);
-//                    cout << pravo << " ";
+                    int pravo = treug(rr, rc, rr+1-C, 3, 2, 0) + treug(lr, rc, lr-1+C, 3, 0, 0);
+                    pravo += rect_sum(R[3], lr+C, rc-C+1, rr-C, rc)-rect_sum(R_A[3], lr+C, rc-C+1, rr-C, rc)*(m-1-rc);
                     ans += pravo;
                 }
                 cout << ans << "\n";
-//                cout << "\n";
             }
         }
     }
