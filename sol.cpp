@@ -15,10 +15,10 @@ using namespace std;
 #ifndef LO
 #pragma GCC optimize("Ofast,unroll-loops")
 #endif
-constexpr int MOD = (119<<23)+1;
+//constexpr int MOD = (119<<23)+1;
 //constexpr int MOD = 967276608647009887ll;
 //constexpr int MOD = 1e9+7;
-constexpr int INF = 1e18;
+//constexpr int INF = 1e18;
 signed main() {
     int T;
     cin >> T;
@@ -48,8 +48,10 @@ signed main() {
             if (type == 2) {
                 return i+1;
             }
-            assert(type == 3);
-            return m-j;
+            if (type == 3) {
+                return m-j;
+            }
+            assert(false);
         };
         for (int k = 0; k < 4; k += 1) {
             for (int i = 0; i < n; i += 1) {
@@ -85,13 +87,6 @@ signed main() {
             ans += lc&&lr?v[lr-1][lc-1]:0;
             return ans;
         };
-//        auto rect_sum_ = [&] (const vector<vector<int>>& v, int lr, int lc, int rr, int rc, int mnozh) -> int {
-//            if (mnozh == 1) {
-//                swap(lr, rr);
-//                swap(lc, rc);
-//            }
-//            return rect_sum(v, lr, lc, rr, rc);
-//        };
         auto valid = [&] (int i, int j) -> bool {
             return i>=0&&i<n&&j>=0&&j<m;
         };
@@ -153,53 +148,25 @@ signed main() {
                 }
             }
         }
-//        for (int i = 0; i < n; i += 1) {
-//            for (int j = 0; j < m; j += 1) {
-//                cout << val(0, i, j)*a[i][j] << " ";
-//            }cout << "\n";
-//        }cout << "\n";
-//        for (int i = 0; i < n; i += 1) {
-//            for (int j = 0; j < m; j += 1) {
-//                cout << rect_sum(R[0], i, j, i, j) << " ";
-//            }cout << "\n";
-//        }cout << "\n";
-//        for (int i = 0; i < n; i += 1) {
-//            for (int j = 0; j < m; j += 1) {
-//                cout << SU[0][1][0][i][j] << " ";
-//            }cout << "\n";
-//        }
         // 0 = down, 1 = left, 2 = up, 3 = right
-        map<int, function<int(int, int, int, int, const vector<vector<int>>, const vector<vector<int>>&)>> f;
-        f[1] = [&] (int r, int c, int end, int mnozh, const vector<vector<int>>& s, const vector<vector<int>>& rect) -> int {
-            return s[r][c] - (valid(r+(c-end)*mnozh+mnozh, end-1)?s[r+(c-end)*mnozh+mnozh][end-1]:0) - (mnozh==-1?rect_sum(rect, r+(c-end)*mnozh, 0, r, end-1):rect_sum(rect, r, 0, r+(c-end)*mnozh, end-1));
-        };
-        f[3] = [&] (int r, int c, int end, int mnozh, const vector<vector<int>>& s, const vector<vector<int>>& rect) -> int {
-            return s[r][c] - (valid(r+(end-c)*mnozh+mnozh, end+1)?s[r+(end-c)*mnozh+mnozh][end+1]:0) - (mnozh==-1?rect_sum(rect, r+(end-c)*mnozh, end+1, r, n-1):rect_sum(rect, r, end+1, r+(end-c)*mnozh, m-1));
-        };
-        f[0] = [&] (int r, int c, int end, int mnozh, const vector<vector<int>>& s, const vector<vector<int>>& rect) -> int {
+        vector<function<int(int, int, int, int, const vector<vector<int>>, const vector<vector<int>>&)>> f = {
+        [&] (int r, int c, int end, int mnozh, const vector<vector<int>>& s, const vector<vector<int>>& rect) -> int {
             return s[r][c] - (valid(end+1, c+(end-r)*mnozh+mnozh)?s[end+1][c+(end-r)*mnozh+mnozh]:0) - (mnozh==-1?rect_sum(rect, end+1, c+(end-r)*mnozh, n-1, c):rect_sum(rect, end+1, c, n-1, c+(end-r)*mnozh));
-        };
-        f[2] = [&] (int r, int c, int end, int mnozh, const vector<vector<int>>& s, const vector<vector<int>>& rect) -> int {
+        },
+        [&] (int r, int c, int end, int mnozh, const vector<vector<int>>& s, const vector<vector<int>>& rect) -> int {
+            return s[r][c] - (valid(r+(c-end)*mnozh+mnozh, end-1)?s[r+(c-end)*mnozh+mnozh][end-1]:0) - (mnozh==-1?rect_sum(rect, r+(c-end)*mnozh, 0, r, end-1):rect_sum(rect, r, 0, r+(c-end)*mnozh, end-1));
+        },
+        [&] (int r, int c, int end, int mnozh, const vector<vector<int>>& s, const vector<vector<int>>& rect) -> int {
             return s[r][c] - (valid(end-1, c+(r-end)*mnozh+mnozh)?s[end-1][c+(r-end)*mnozh+mnozh]:0) - (mnozh==-1?rect_sum(rect, 0, c+(r-end)*mnozh, end-1, c):rect_sum(rect, 0, c, end-1, c+(r-end)*mnozh));
+        },
+        [&] (int r, int c, int end, int mnozh, const vector<vector<int>>& s, const vector<vector<int>>& rect) -> int {
+            return s[r][c] - (valid(r+(end-c)*mnozh+mnozh, end+1)?s[r+(end-c)*mnozh+mnozh][end+1]:0) - (mnozh==-1?rect_sum(rect, r+(end-c)*mnozh, end+1, r, n-1):rect_sum(rect, r, end+1, r+(end-c)*mnozh, m-1));
+        }
         };
         auto treug = [&] (int r, int c, int end, int i, int j, int k) -> int {
             int mnozh = k?1:-1;
-            int cancel=i==0?min(n-1-end, n-1-r):i==3?min(m-1-end, m-1-c):i==2?min(end, r):min(end, c);
-//            if (j == 2) {
-//                int su = SU     [i][j][k][r][c] - (valid(end-1, c+(r-end)*mnozh+mnozh)?SU  [i][j][k][end-1][c+(r-end)*mnozh+mnozh]:0);
-//                int sum_a = SU_A[i][j][k][r][c] - (valid(end-1, c+(r-end)*mnozh+mnozh)?SU_A[i][j][k][end-1][c+(r-end)*mnozh+mnozh]:0);
-//                return su - sum_a*cancel;
-//            }
-//            if (j == 0) {
-//                int su = SU     [i][j][k][r][c] - (valid(end+1, c+(end-r)*mnozh+mnozh)?SU  [i][j][k][end+1][c+(end-r)*mnozh+mnozh]:0);
-//                int sum_a = SU_A[i][j][k][r][c] - (valid(end+1, c+(end-r)*mnozh+mnozh)?SU_A[i][j][k][end+1][c+(end-r)*mnozh+mnozh]:0);
-//                return su - sum_a*cancel;
-//            }
+            int cancel=i==0?n-1-r:i==3?m-1-c:i==2?r:c;
             return f[j](r, c, end, mnozh, SU[i][j][k], R[i]) - f[j](r, c, end, mnozh, SU_A[i][j][k], R_A[i])*cancel;
-//            if (j == 3) {
-//                return t3(r, c, end, mnozh, SU[i][j][k], R[i]) - t3(r, c, end, mnozh, SU_A[i][j][k], R_A[i])*cancel;
-//            }
-//            assert(false);
         };
         for (int ii = 0; ii < q; ii += 1) {
             int lr, lc, rr, rc;
@@ -207,15 +174,29 @@ signed main() {
             lr -= 1, rr -= 1, lc -= 1, rc -= 1;
             int w = rc - lc + 1;
             int h = rr - lr + 1;
-            int nizp = treug(rr, rc, rc+1-min(w/2, h/2), 0, 1, 0);
-            cout << nizp << "!!\n";
-            assert(nizp == treug(rr, rc, rc, 0, 1, 0));
-//            int niz = treug(rr, rc, rc+1-min(w/2, h/2), 0, 1, 0) + treug(rr, lc, lc-1+min(w/2, h/2), 0, 3, 0); // нижняя сторона сделана
-//            int verh = treug(lr, lc, lc-1+min(w/2, h/2), 2, 3, 1) + treug(lr, rc, rc+1-min(w/2, h/2), 2, 1, 1);
-//            int levo = treug(rr, lc, rr+1-min(w/2, h/2), 1, 2, 0) + treug(lr, lc, lr-1+min(w/2, h/2), 1, 0, 0);
-//            int pravo = treug(rr, rc, rr+1-min(w/2, h/2), 3, 2, 1) + treug(lr, rc, lr-1+min(w/2, h/2), 3, 0, 1);
-//            cout << niz << " " << verh << " " << levo << " " << pravo << "\n";
-//            cout << niz+verh+levo+pravo << "\n";
+            if (h <= w) {
+                int levo = (h>2?treug(rr-1, lc, rr-min(w/2, h/2), 1, 2, 0):0) + (h>3?treug(lr+1, lc, lr+min(w/2, h/2), 1, 0, 0):0);
+                int pravo = (h>2?treug(rr-1, rc, rr-min(w/2, h/2), 3, 2, 1):0) + (h>3?treug(lr+1, rc, lr+min(w/2, h/2), 3, 0, 1):0);
+                cout << levo << " " << pravo << " ";
+                int niz = treug(rr, rc, rc+1-min(w/2, h/2), 0, 1, 0) + treug(rr, lc, lc-1+min(w/2, h/2), 0, 3, 0);
+                cout << niz << " ";
+                if (h > 1) {
+                    int verh = treug(lr, lc, lc-1+min(w/2, h/2), 2, 3, 1) + treug(lr, rc, rc+1-min(w/2, h/2), 2, 1, 1);
+                    cout << verh << " ";
+                }
+                cout << "\n";
+            } else {
+                int niz = (w>2?treug(rr, rc-1, rc-min(w/2, h/2), 0, 1, 0):0) + (w>3?treug(rr, lc+1, lc+min(w/2, h/2), 0, 3, 0):0);
+                int verh = (w>2?treug(lr, lc+1, lc+min(w/2, h/2), 2, 3, 1):0) + (w>3?treug(lr, rc-1, rc-min(w/2, h/2), 2, 1, 1):0);
+                cout << niz << " " << verh << " ";
+                int levo = treug(rr, lc, rr+1-min(w/2, h/2), 1, 2, 0) + treug(lr, lc, lr-1+min(w/2, h/2), 1, 0, 0);
+                cout << levo << " ";
+                if (w > 1) {
+                    int pravo = treug(rr, rc, rr+1-min(w/2, h/2), 3, 2, 1) + treug(lr, rc, lr-1+min(w/2, h/2), 3, 0, 1);
+                    cout << pravo << " ";
+                }
+                cout << "\n";
+            }
         }
     }
 }
