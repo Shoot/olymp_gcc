@@ -179,11 +179,16 @@ signed main() {
                 int pravo = (h>2?treug(rr-1, rc, rr-min(w/2, h/2), 3, 2, 1):0) + (h>3?treug(lr+1, rc, lr+min(w/2, h/2), 3, 0, 1):0);
                 cout << levo << " " << pravo << " ";
                 int niz = treug(rr, rc, rc+1-min(w/2, h/2), 0, 1, 0) + treug(rr, lc, lc-1+min(w/2, h/2), 0, 3, 0);
+                niz += rect_sum(R[0], lr+min(w/2, h/2), lc+min(w/2, h/2), rr, rc-min(w/2, h/2))-rect_sum(R_A[0], lr+min(w/2, h/2), lc+min(w/2, h/2), rr, rc-min(w/2, h/2))*(n-1-rr);
                 cout << niz << " ";
+                int ans = levo+pravo+niz;
                 if (h > 1) {
                     int verh = treug(lr, lc, lc-1+min(w/2, h/2), 2, 3, 1) + treug(lr, rc, rc+1-min(w/2, h/2), 2, 1, 1);
+                    verh += rect_sum(R[2], 0, lc+min(w/2, h/2), lr+min(w/2, h/2)-1, rc-min(w/2, h/2)) - rect_sum(R_A[2], 0, lc+min(w/2, h/2), lr+min(w/2, h/2)-1, rc-min(w/2, h/2))*(lr);
                     cout << verh << " ";
+                    ans += verh;
                 }
+                clog << ans << "\n";
                 cout << "\n";
             } else {
                 int niz = (w>2?treug(rr, rc-1, rc-min(w/2, h/2), 0, 1, 0):0) + (w>3?treug(rr, lc+1, lc+min(w/2, h/2), 0, 3, 0):0);
