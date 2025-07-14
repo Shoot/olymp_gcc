@@ -1,25 +1,10 @@
 //#include <bits/extc++.h>
 #include <bits/stdc++.h>
 using namespace std;
-//using namespace __gnu_pbds;
-//template <typename T> using ordered_set =  tree<T, null_type, less<T>, rb_tree_tag, tree_order_statistics_node_update>;
 #define int long long
-//#define double long double
-#define YES(x) cout << (x?"YES\n":"NO\n")
-#define ALICE(x) cout << (x?"Alice\n":"Bob\n")
-#define BOB(x) cout << (x?"Bob\n":"Alice\n")
-#define NO(x) cout << (x?"NO\n":"YES\n")
-#ifdef LO
-#pragma GCC optimize("trapv")
-#endif
-#ifndef LO
-#pragma GCC optimize("Ofast,unroll-loops")
-#endif
-//constexpr int MOD = (119<<23)+1;
-//constexpr int MOD = 967276608647009887ll;
-//constexpr int MOD = 1e9+7;
-//constexpr int INF = 1e18;
 signed main() {
+    ios::sync_with_stdio(0);
+    cin.tie(0);
     int T;
     cin >> T;
     for (int tt = 0; tt < T; tt += 1) {
@@ -135,8 +120,8 @@ signed main() {
             }
             for (int j = m-1; j >= 0; j -= 1) {
                 for (int i = 0; i < n; i += 1) {
-                    SU[k][3][0][i][j] = SU[k][3][1][i][j] = rect_sum(R[k], i, j, i, n-1);
-                    SU_A[k][3][0][i][j] = SU_A[k][3][1][i][j] = rect_sum(R_A[k], i, j, i, n-1);
+                    SU[k][3][0][i][j] = SU[k][3][1][i][j] = rect_sum(R[k], i, j, i, m-1);
+                    SU_A[k][3][0][i][j] = SU_A[k][3][1][i][j] = rect_sum(R_A[k], i, j, i, m-1);
                     if (valid(i+1, j+1)) {
                         SU[k][3][1][i][j] += SU[k][3][1][i+1][j+1];
                         SU_A[k][3][1][i][j] += SU_A[k][3][1][i+1][j+1];
@@ -160,7 +145,7 @@ signed main() {
             return s[r][c] - (valid(end-1, c+(r-end)*mnozh+mnozh)?s[end-1][c+(r-end)*mnozh+mnozh]:0) - (mnozh==-1?rect_sum(rect, 0, c+(r-end)*mnozh, end-1, c):rect_sum(rect, 0, c, end-1, c+(r-end)*mnozh));
         },
         [&] (int r, int c, int end, int mnozh, const vector<vector<int>>& s, const vector<vector<int>>& rect) -> int {
-            return s[r][c] - (valid(r+(end-c)*mnozh+mnozh, end+1)?s[r+(end-c)*mnozh+mnozh][end+1]:0) - (mnozh==-1?rect_sum(rect, r+(end-c)*mnozh, end+1, r, n-1):rect_sum(rect, r, end+1, r+(end-c)*mnozh, m-1));
+            return s[r][c] - (valid(r+(end-c)*mnozh+mnozh, end+1)?s[r+(end-c)*mnozh+mnozh][end+1]:0) - (mnozh==-1?rect_sum(rect, r+(end-c)*mnozh, end+1, r, m-1):rect_sum(rect, r, end+1, r+(end-c)*mnozh, m-1));
         }
         };
         auto treug = [&] (int r, int c, int end, int i, int j, int k) -> int {
@@ -175,32 +160,37 @@ signed main() {
             int w = rc - lc + 1;
             int h = rr - lr + 1;
             if (h <= w) {
-                int levo = (h>2?treug(rr-1, lc, rr-min(w/2, h/2), 1, 2, 0):0) + (h>3?treug(lr+1, lc, lr+min(w/2, h/2), 1, 0, 0):0);
-                int pravo = (h>2?treug(rr-1, rc, rr-min(w/2, h/2), 3, 2, 1):0) + (h>3?treug(lr+1, rc, lr+min(w/2, h/2), 3, 0, 1):0);
-                cout << levo << " " << pravo << " ";
+                int levo = (h>2?treug(rr-1, lc, rr-min(w/2, h/2)+(min(h, w)%2==0), 1, 2, 1):0) + (h>3?treug(lr+1, lc, lr+min(w/2, h/2)-1, 1, 0, 1):0);
+                int pravo = (h>2?treug(rr-1, rc, rr-min(w/2, h/2)+(min(h, w)%2==0), 3, 2, 0):0) + (h>3?treug(lr+1, rc, lr+min(w/2, h/2)-1, 3, 0, 0):0);
+//                cout << levo << " " << pravo << " ";
                 int niz = treug(rr, rc, rc+1-min(w/2, h/2), 0, 1, 0) + treug(rr, lc, lc-1+min(w/2, h/2), 0, 3, 0);
                 niz += rect_sum(R[0], lr+min(w/2, h/2), lc+min(w/2, h/2), rr, rc-min(w/2, h/2))-rect_sum(R_A[0], lr+min(w/2, h/2), lc+min(w/2, h/2), rr, rc-min(w/2, h/2))*(n-1-rr);
-                cout << niz << " ";
+//                cout << niz << " ";
                 int ans = levo+pravo+niz;
                 if (h > 1) {
                     int verh = treug(lr, lc, lc-1+min(w/2, h/2), 2, 3, 1) + treug(lr, rc, rc+1-min(w/2, h/2), 2, 1, 1);
-                    verh += rect_sum(R[2], 0, lc+min(w/2, h/2), lr+min(w/2, h/2)-1, rc-min(w/2, h/2)) - rect_sum(R_A[2], 0, lc+min(w/2, h/2), lr+min(w/2, h/2)-1, rc-min(w/2, h/2))*(lr);
-                    cout << verh << " ";
+                    verh += rect_sum(R[2], lr, lc+min(w/2, h/2), lr+min(w/2, h/2)-1, rc-min(w/2, h/2)) - rect_sum(R_A[2], lr, lc+min(w/2, h/2), lr+min(w/2, h/2)-1, rc-min(w/2, h/2))*(lr);
+//                    cout << verh << " ";
                     ans += verh;
                 }
-                clog << ans << "\n";
-                cout << "\n";
+                cout << ans << "\n";
+//                cout << "\n";
             } else {
-                int niz = (w>2?treug(rr, rc-1, rc-min(w/2, h/2), 0, 1, 0):0) + (w>3?treug(rr, lc+1, lc+min(w/2, h/2), 0, 3, 0):0);
-                int verh = (w>2?treug(lr, lc+1, lc+min(w/2, h/2), 2, 3, 1):0) + (w>3?treug(lr, rc-1, rc-min(w/2, h/2), 2, 1, 1):0);
-                cout << niz << " " << verh << " ";
-                int levo = treug(rr, lc, rr+1-min(w/2, h/2), 1, 2, 0) + treug(lr, lc, lr-1+min(w/2, h/2), 1, 0, 0);
-                cout << levo << " ";
+                int niz = (w>2?treug(rr, rc-1, rc-min(w/2, h/2)+(min(h, w)%2==0), 0, 1, 0):0) + (w>3?treug(rr, lc+1, lc+min(w/2, h/2)-1, 0, 3, 0):0);
+                int verh = (w>2?treug(lr, lc+1, lc+min(w/2, h/2)-(min(h, w)%2==0), 2, 3, 1):0) + (w>3?treug(lr, rc-1, rc-min(w/2, h/2)+1, 2, 1, 1):0);
+//                cout << niz << " " << verh << " ";
+                int levo = treug(rr, lc, rr+1-min(w/2, h/2), 1, 2, 1) + treug(lr, lc, lr-1+min(w/2, h/2), 1, 0, 1);
+                levo += rect_sum(R[1], lr+min(w/2, h/2), lc, rr-min(w/2, h/2), rc-min(w/2, h/2))-rect_sum(R_A[1], lr+min(w/2, h/2), lc, rr-min(w/2, h/2), rc-min(w/2, h/2))*(lc);
+//                cout << levo << " ";
+                int ans = niz+verh+levo;
                 if (w > 1) {
-                    int pravo = treug(rr, rc, rr+1-min(w/2, h/2), 3, 2, 1) + treug(lr, rc, lr-1+min(w/2, h/2), 3, 0, 1);
-                    cout << pravo << " ";
+                    int pravo = treug(rr, rc, rr+1-min(w/2, h/2), 3, 2, 0) + treug(lr, rc, lr-1+min(w/2, h/2), 3, 0, 0);
+                    pravo += rect_sum(R[3], lr+min(w/2, h/2), rc-min(w/2, h/2)+1, rr-min(w/2, h/2), rc)-rect_sum(R_A[3], lr+min(w/2, h/2), rc-min(w/2, h/2)+1, rr-min(w/2, h/2), rc)*(m-1-rc);
+//                    cout << pravo << " ";
+                    ans += pravo;
                 }
-                cout << "\n";
+                cout << ans << "\n";
+//                cout << "\n";
             }
         }
     }
