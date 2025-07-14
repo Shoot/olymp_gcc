@@ -20,92 +20,202 @@ constexpr int MOD = (119<<23)+1;
 //constexpr int MOD = 1e9+7;
 constexpr int INF = 1e18;
 signed main() {
-#ifndef LO
-    clog << "FIO\n";
-    ios::sync_with_stdio(0);
-    cin.tie(0);
-#endif
-#ifdef LO
-    cout << unitbuf;
-#endif
     int T;
     cin >> T;
     for (int tt = 0; tt < T; tt += 1) {
-        int n;
-        cin >> n;
-        vector<vector<int>> adj(n+1);
-        vector<int> d(n+1);
-        vector<int> P(n+1);
-        d[1] = 1;
-        for (int i = 2; i <= n; i += 1) {
-            cin >> P[i];
-            d[i] = d[P[i]]+1;
-            adj[P[i]].push_back(i);
+        int n, m;
+        cin >> n >> m;
+        vector<vector<int>> a(n, vector<int>(m));
+        for (auto &x : a) {
+            for (auto &y : x) {
+                cin >> y;
+            }
         }
-        vector<int> tree(n);
-        auto add = [&] (int idx, int inc) -> void {
-            for (idx += 1; idx-1 < tree.size(); idx += idx&-idx) {
-                tree[idx-1] += inc;
+        int q;
+        cin >> q;
+        // [к какой стенке][куда идет треугольник ч1 (нлвп)][куда идет треугольник ч2: += по той коорде которая меняется или -= ]
+        vector<vector<vector<vector<vector<int>>>>> SU(4, vector<vector<vector<vector<int>>>>(4, vector<vector<vector<int>>>(2, vector<vector<int>>(n, vector<int>(m)))));
+        vector<vector<vector<vector<vector<int>>>>> SU_A(4, vector<vector<vector<vector<int>>>>(4, vector<vector<vector<int>>>(2, vector<vector<int>>(n, vector<int>(m)))));
+        vector<vector<vector<int>>> R(4, vector<vector<int>>(n, vector<int>(m)));
+        vector<vector<vector<int>>> R_A(4, vector<vector<int>>(n, vector<int>(m)));
+        auto val = [&] (int type, int i, int j) -> int {
+            if (type == 0) {
+                return n-i;
             }
-        };
-        auto gt = [&] (int idx) -> int {
-            int ret = 0;
-            for (idx += 1; idx > 0; idx -= idx&-idx) {
-                ret += tree[idx-1];
+            if (type == 1) {
+                return j+1;
             }
-            return ret;
-        };
-        vector<int> tin(n+1), tout(n+1);
-        int t = 0;
-        auto dfs = [&] (auto f, int u) -> void {
-            tin[u] = t++;
-            for (const auto &x : adj[u]) {
-                f(f, x);
+            if (type == 2) {
+                return i+1;
             }
-            tout[u] = t-1;
+            assert(type == 3);
+            return m-j;
         };
-        dfs(dfs, 1);
-        auto inc_v = [&] (int u) -> void {
-            add(tin[u], 1);
-        };
-        auto gt_v = [&] (int u) -> int {
-            return gt(tout[u]) - gt(tin[u]-1);
-        };
-
-        int c = 1, greatest_c_ch = 0;
-        inc_v(1);
-        for (int i = 2; i <= n; i += 1) {
-            inc_v(i);
-            if (tin[i] > tin[c] && tout[i] <= tout[c]) {
-                int l = 0, r = adj[c].size()-1;
-                int good = -1; // = second_on_path(c, /* -> */ i)
-                while (l <= r) {
-                    int mid = (l + r) >> 1;
-                    if (tout[adj[c][mid]] >= tout[i]) {
-                        good = mid;
-                        r = mid-1;
-                    } else {
-                        l = mid+1;
+        for (int k = 0; k < 4; k += 1) {
+            for (int i = 0; i < n; i += 1) {
+                for (int j = 0; j < m; j += 1) {
+                    R[k][i][j] = val(k, i, j)*a[i][j];
+                    R_A[k][i][j] = a[i][j];
+                    if (i) {
+                        R[k][i][j] += R[k][i-1][j];
+                        R_A[k][i][j] += R_A[k][i-1][j];
+                    }
+                    if (j) {
+                        R[k][i][j] += R[k][i][j-1];
+                        R_A[k][i][j] += R_A[k][i][j-1];
+                    }
+                    if (i && j) {
+                        R[k][i][j] -= R[k][i-1][j-1];
+                        R_A[k][i][j] -= R_A[k][i-1][j-1];
                     }
                 }
-                assert(good != -1);
-                int u = adj[c][good];
-                if (gt_v(u) > i/2) {
-                    c = u;
-                    greatest_c_ch = i/2;
-                } else {
-                    greatest_c_ch = max(greatest_c_ch, gt_v(u));
-                }
-            } else {
-                int u = P[c];
-                if (i-gt_v(c) > i/2) {
-                    c = u;
-                    greatest_c_ch = i/2;
-                } else {
-                    greatest_c_ch = max(greatest_c_ch, i-gt_v(c));
+            }
+        }
+        auto rect_sum = [&] (const vector<vector<int>>& v, int lr, int lc, int rr, int rc) -> int {
+            lr = max(lr, 0ll);
+            lc = max(lc, 0ll);
+            rr = min(rr, n-1);
+            rc = min(rc, m-1);
+            if (lr > rr || lc > rc) {
+                return 0;
+            }
+            int ans = v[rr][rc];
+            ans -= lc?v[rr][lc-1]:0;
+            ans -= lr?v[lr-1][rc]:0;
+            ans += lc&&lr?v[lr-1][lc-1]:0;
+            return ans;
+        };
+//        auto rect_sum_ = [&] (const vector<vector<int>>& v, int lr, int lc, int rr, int rc, int mnozh) -> int {
+//            if (mnozh == 1) {
+//                swap(lr, rr);
+//                swap(lc, rc);
+//            }
+//            return rect_sum(v, lr, lc, rr, rc);
+//        };
+        auto valid = [&] (int i, int j) -> bool {
+            return i>=0&&i<n&&j>=0&&j<m;
+        };
+        for (int k = 0; k < 4; k += 1) {
+            for (int i = n-1; i >= 0; i -= 1) {
+                for (int j = 0; j < m; j += 1) {
+                    SU[k][0][0][i][j] = SU[k][0][1][i][j] = rect_sum(R[k], i, j, n-1, j);
+                    SU_A[k][0][0][i][j] = SU_A[k][0][1][i][j] = rect_sum(R_A[k], i, j, n-1, j);
+                    if (valid(i+1, j+1)) {
+                        SU[k][0][1][i][j] += SU[k][0][1][i+1][j+1];
+                        SU_A[k][0][1][i][j] += SU_A[k][0][1][i+1][j+1];
+                    }
+                    if (valid(i+1, j-1)) {
+                        SU[k][0][0][i][j] += SU[k][0][0][i+1][j-1];
+                        SU_A[k][0][0][i][j] += SU_A[k][0][0][i+1][j-1];
+                    }
                 }
             }
-            cout << i-2*greatest_c_ch << " ";
-        }cout << "\n";
+            for (int i = 0; i < n; i += 1) {
+                for (int j = 0; j < m; j += 1) {
+                    SU[k][2][0][i][j] = SU[k][2][1][i][j] = rect_sum(R[k], 0, j, i, j);
+                    SU_A[k][2][0][i][j] = SU_A[k][2][1][i][j] = rect_sum(R_A[k], 0, j, i, j);
+                    if (valid(i-1, j+1)) {
+                        SU[k][2][1][i][j] += SU[k][2][1][i-1][j+1];
+                        SU_A[k][2][1][i][j] += SU_A[k][2][1][i-1][j+1];
+                    }
+                    if (valid(i-1, j-1)) {
+                        SU[k][2][0][i][j] += SU[k][2][0][i-1][j-1];
+                        SU_A[k][2][0][i][j] += SU_A[k][2][0][i-1][j-1];
+                    }
+                }
+            }
+            for (int j = 0; j < m; j += 1) {
+                for (int i = 0; i < n; i += 1) {
+                    SU[k][1][0][i][j] = SU[k][1][1][i][j] = rect_sum(R[k], i, 0, i, j);
+                    SU_A[k][1][0][i][j] = SU_A[k][1][1][i][j] = rect_sum(R_A[k], i, 0, i, j);
+                    if (valid(i+1, j-1)) {
+                        SU[k][1][1][i][j] += SU[k][1][1][i+1][j-1];
+                        SU_A[k][1][1][i][j] += SU_A[k][1][1][i+1][j-1];
+                    }
+                    if (valid(i-1, j-1)) {
+                        SU[k][1][0][i][j] += SU[k][1][0][i-1][j-1];
+                        SU_A[k][1][0][i][j] += SU_A[k][1][0][i-1][j-1];
+                    }
+                }
+            }
+            for (int j = m-1; j >= 0; j -= 1) {
+                for (int i = 0; i < n; i += 1) {
+                    SU[k][3][0][i][j] = SU[k][3][1][i][j] = rect_sum(R[k], i, j, i, n-1);
+                    SU_A[k][3][0][i][j] = SU_A[k][3][1][i][j] = rect_sum(R_A[k], i, j, i, n-1);
+                    if (valid(i+1, j+1)) {
+                        SU[k][3][1][i][j] += SU[k][3][1][i+1][j+1];
+                        SU_A[k][3][1][i][j] += SU_A[k][3][1][i+1][j+1];
+                    }
+                    if (valid(i-1, j+1)) {
+                        SU[k][3][0][i][j] += SU[k][3][0][i-1][j+1];
+                        SU_A[k][3][0][i][j] += SU_A[k][3][0][i-1][j+1];
+                    }
+                }
+            }
+        }
+//        for (int i = 0; i < n; i += 1) {
+//            for (int j = 0; j < m; j += 1) {
+//                cout << val(0, i, j)*a[i][j] << " ";
+//            }cout << "\n";
+//        }cout << "\n";
+//        for (int i = 0; i < n; i += 1) {
+//            for (int j = 0; j < m; j += 1) {
+//                cout << rect_sum(R[0], i, j, i, j) << " ";
+//            }cout << "\n";
+//        }cout << "\n";
+//        for (int i = 0; i < n; i += 1) {
+//            for (int j = 0; j < m; j += 1) {
+//                cout << SU[0][1][0][i][j] << " ";
+//            }cout << "\n";
+//        }
+        // 0 = down, 1 = left, 2 = up, 3 = right
+        map<int, function<int(int, int, int, int, const vector<vector<int>>, const vector<vector<int>>&)>> f;
+        f[1] = [&] (int r, int c, int end, int mnozh, const vector<vector<int>>& s, const vector<vector<int>>& rect) -> int {
+            return s[r][c] - (valid(r+(c-end)*mnozh+mnozh, end-1)?s[r+(c-end)*mnozh+mnozh][end-1]:0) - (mnozh==-1?rect_sum(rect, r+(c-end)*mnozh, 0, r, end-1):rect_sum(rect, r, 0, r+(c-end)*mnozh, end-1));
+        };
+        f[3] = [&] (int r, int c, int end, int mnozh, const vector<vector<int>>& s, const vector<vector<int>>& rect) -> int {
+            return s[r][c] - (valid(r+(end-c)*mnozh+mnozh, end+1)?s[r+(end-c)*mnozh+mnozh][end+1]:0) - (mnozh==-1?rect_sum(rect, r+(end-c)*mnozh, end+1, r, n-1):rect_sum(rect, r, end+1, r+(end-c)*mnozh, m-1));
+        };
+        f[0] = [&] (int r, int c, int end, int mnozh, const vector<vector<int>>& s, const vector<vector<int>>& rect) -> int {
+            return s[r][c] - (valid(end+1, c+(end-r)*mnozh+mnozh)?s[end+1][c+(end-r)*mnozh+mnozh]:0) - (mnozh==-1?rect_sum(rect, end+1, c+(end-r)*mnozh, n-1, c):rect_sum(rect, end+1, c, n-1, c+(end-r)*mnozh));
+        };
+        f[2] = [&] (int r, int c, int end, int mnozh, const vector<vector<int>>& s, const vector<vector<int>>& rect) -> int {
+            return s[r][c] - (valid(end-1, c+(r-end)*mnozh+mnozh)?s[end-1][c+(r-end)*mnozh+mnozh]:0) - (mnozh==-1?rect_sum(rect, 0, c+(r-end)*mnozh, end-1, c):rect_sum(rect, 0, c, end-1, c+(r-end)*mnozh));
+        };
+        auto treug = [&] (int r, int c, int end, int i, int j, int k) -> int {
+            int mnozh = k?1:-1;
+            int cancel=i==0?min(n-1-end, n-1-r):i==3?min(m-1-end, m-1-c):i==2?min(end, r):min(end, c);
+//            if (j == 2) {
+//                int su = SU     [i][j][k][r][c] - (valid(end-1, c+(r-end)*mnozh+mnozh)?SU  [i][j][k][end-1][c+(r-end)*mnozh+mnozh]:0);
+//                int sum_a = SU_A[i][j][k][r][c] - (valid(end-1, c+(r-end)*mnozh+mnozh)?SU_A[i][j][k][end-1][c+(r-end)*mnozh+mnozh]:0);
+//                return su - sum_a*cancel;
+//            }
+//            if (j == 0) {
+//                int su = SU     [i][j][k][r][c] - (valid(end+1, c+(end-r)*mnozh+mnozh)?SU  [i][j][k][end+1][c+(end-r)*mnozh+mnozh]:0);
+//                int sum_a = SU_A[i][j][k][r][c] - (valid(end+1, c+(end-r)*mnozh+mnozh)?SU_A[i][j][k][end+1][c+(end-r)*mnozh+mnozh]:0);
+//                return su - sum_a*cancel;
+//            }
+            return f[j](r, c, end, mnozh, SU[i][j][k], R[i]) - f[j](r, c, end, mnozh, SU_A[i][j][k], R_A[i])*cancel;
+//            if (j == 3) {
+//                return t3(r, c, end, mnozh, SU[i][j][k], R[i]) - t3(r, c, end, mnozh, SU_A[i][j][k], R_A[i])*cancel;
+//            }
+//            assert(false);
+        };
+        for (int ii = 0; ii < q; ii += 1) {
+            int lr, lc, rr, rc;
+            cin >> lr >> lc >> rr >> rc;
+            lr -= 1, rr -= 1, lc -= 1, rc -= 1;
+            int w = rc - lc + 1;
+            int h = rr - lr + 1;
+            int nizp = treug(rr, rc, rc+1-min(w/2, h/2), 0, 1, 0);
+            cout << nizp << "!!\n";
+            assert(nizp == treug(rr, rc, rc, 0, 1, 0));
+//            int niz = treug(rr, rc, rc+1-min(w/2, h/2), 0, 1, 0) + treug(rr, lc, lc-1+min(w/2, h/2), 0, 3, 0); // нижняя сторона сделана
+//            int verh = treug(lr, lc, lc-1+min(w/2, h/2), 2, 3, 1) + treug(lr, rc, rc+1-min(w/2, h/2), 2, 1, 1);
+//            int levo = treug(rr, lc, rr+1-min(w/2, h/2), 1, 2, 0) + treug(lr, lc, lr-1+min(w/2, h/2), 1, 0, 0);
+//            int pravo = treug(rr, rc, rr+1-min(w/2, h/2), 3, 2, 1) + treug(lr, rc, lr-1+min(w/2, h/2), 3, 0, 1);
+//            cout << niz << " " << verh << " " << levo << " " << pravo << "\n";
+//            cout << niz+verh+levo+pravo << "\n";
+        }
     }
 }
