@@ -132,35 +132,25 @@ signed main() {
                 }
             }
         }
+        vector<function<int(int, int, int, int, const vector<vector<int>>, const vector<vector<int>>&)>> f = {
+                [&] (int r, int c, int end, int mnozh, const vector<vector<int>>& s, const vector<vector<int>>& rect) -> int {
+                    return s[r][c] - (valid(end+1, c+(end-r)*mnozh+mnozh)?s[end+1][c+(end-r)*mnozh+mnozh]:0) - (mnozh==-1?rect_sum(rect, end+1, c+(end-r)*mnozh, n-1, c):rect_sum(rect, end+1, c, n-1, c+(end-r)*mnozh));
+                },
+                [&] (int r, int c, int end, int mnozh, const vector<vector<int>>& s, const vector<vector<int>>& rect) -> int {
+                    return s[r][c] - (valid(r+(c-end)*mnozh+mnozh, end-1)?s[r+(c-end)*mnozh+mnozh][end-1]:0) - (mnozh==-1?rect_sum(rect, r+(c-end)*mnozh, 0, r, end-1):rect_sum(rect, r, 0, r+(c-end)*mnozh, end-1));
+                },
+                [&] (int r, int c, int end, int mnozh, const vector<vector<int>>& s, const vector<vector<int>>& rect) -> int {
+                    return s[r][c] - (valid(end-1, c+(r-end)*mnozh+mnozh)?s[end-1][c+(r-end)*mnozh+mnozh]:0) - (mnozh==-1?rect_sum(rect, 0, c+(r-end)*mnozh, end-1, c):rect_sum(rect, 0, c, end-1, c+(r-end)*mnozh));
+                },
+                [&] (int r, int c, int end, int mnozh, const vector<vector<int>>& s, const vector<vector<int>>& rect) -> int {
+                    return s[r][c] - (valid(r+(end-c)*mnozh+mnozh, end+1)?s[r+(end-c)*mnozh+mnozh][end+1]:0) - (mnozh==-1?rect_sum(rect, r+(end-c)*mnozh, end+1, r, m-1):rect_sum(rect, r, end+1, r+(end-c)*mnozh, m-1));
+                }
+        };
         // 0 = down, 1 = left, 2 = up, 3 = right
-        auto t0 = [&] (int r, int c, int end, int mnozh, const vector<vector<int>>& s, const vector<vector<int>>& rect) -> int {
-            return s[r][c] - (valid(end+1, c+(end-r)*mnozh+mnozh)?s[end+1][c+(end-r)*mnozh+mnozh]:0) - (mnozh==-1?rect_sum(rect, end+1, c+(end-r)*mnozh, n-1, c):rect_sum(rect, end+1, c, n-1, c+(end-r)*mnozh));
-        };
-        auto t1 = [&] (int r, int c, int end, int mnozh, const vector<vector<int>>& s, const vector<vector<int>>& rect) -> int {
-            return s[r][c] - (valid(r+(c-end)*mnozh+mnozh, end-1)?s[r+(c-end)*mnozh+mnozh][end-1]:0) - (mnozh==-1?rect_sum(rect, r+(c-end)*mnozh, 0, r, end-1):rect_sum(rect, r, 0, r+(c-end)*mnozh, end-1));
-        };
-        auto t2 = [&] (int r, int c, int end, int mnozh, const vector<vector<int>>& s, const vector<vector<int>>& rect) -> int {
-            return s[r][c] - (valid(end-1, c+(r-end)*mnozh+mnozh)?s[end-1][c+(r-end)*mnozh+mnozh]:0) - (mnozh==-1?rect_sum(rect, 0, c+(r-end)*mnozh, end-1, c):rect_sum(rect, 0, c, end-1, c+(r-end)*mnozh));
-        };
-        auto t3 = [&] (int r, int c, int end, int mnozh, const vector<vector<int>>& s, const vector<vector<int>>& rect) -> int {
-            return s[r][c] - (valid(r+(end-c)*mnozh+mnozh, end+1)?s[r+(end-c)*mnozh+mnozh][end+1]:0) - (mnozh==-1?rect_sum(rect, r+(end-c)*mnozh, end+1, r, m-1):rect_sum(rect, r, end+1, r+(end-c)*mnozh, m-1));
-        };
         auto treug = [&] (int r, int c, int end, int i, int j, int k) -> int {
             int mnozh = k?1:-1;
             int cancel=i==0?n-1-r:i==3?m-1-c:i==2?r:c;
-            if (j == 0) {
-                return t0(r, c, end, mnozh, SU[i][j][k], R[i]) - t0(r, c, end, mnozh, SU_A[i][j][k], R_A[i])*cancel;
-            }
-            if (j == 1) {
-                return t1(r, c, end, mnozh, SU[i][j][k], R[i]) - t1(r, c, end, mnozh, SU_A[i][j][k], R_A[i])*cancel;
-            }
-            if (j == 2) {
-                return t2(r, c, end, mnozh, SU[i][j][k], R[i]) - t2(r, c, end, mnozh, SU_A[i][j][k], R_A[i])*cancel;
-            }
-            if (j == 3) {
-                return t3(r, c, end, mnozh, SU[i][j][k], R[i]) - t3(r, c, end, mnozh, SU_A[i][j][k], R_A[i])*cancel;
-            }
-            assert(false);
+            return f[j](r, c, end, mnozh, SU[i][j][k], R[i]) - f[j](r, c, end, mnozh, SU_A[i][j][k], R_A[i])*cancel;
         };
         for (int ii = 0; ii < q; ii += 1) {
             int lr, lc, rr, rc;
